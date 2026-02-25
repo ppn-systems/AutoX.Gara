@@ -18,7 +18,6 @@
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<MaxParallelProjectBuilds>10</MaxParallelProjectBuilds>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
 
