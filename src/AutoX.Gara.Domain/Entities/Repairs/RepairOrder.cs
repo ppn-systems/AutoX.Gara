@@ -44,7 +44,7 @@ public class RepairOrder
     /// <summary>
     /// Mã xe liên quan đến đơn sửa chữa.
     /// </summary>
-    public System.Int32 VehicleId { get; set; }
+    public System.Int32? VehicleId { get; set; }
 
     /// <summary>
     /// Thông tin chủ xe (Navigation Property).
