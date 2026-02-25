@@ -10,41 +10,72 @@ using Nalix.Framework.Injection;
 
 namespace AutoX.Gara.Infrastructure.Database;
 
-public class AutoDbContextFactory : IDesignTimeDbContextFactory<AutoDbContext>
+/// <summary>
+/// Factory dùng cho design-time để tạo <see cref="AutoXDbContext"/>.
+/// <para>
+/// Class này được Entity Framework Core sử dụng khi:
+/// <list type="bullet">
+/// <item>Chạy lệnh migration</item>
+/// <item>Cập nhật database schema</item>
+/// <item>Scaffold DbContext ở design-time</item>
+/// </list>
+/// </para>
+/// </summary>
+/// <remarks>
+/// Factory này không phụ thuộc vào ASP.NET runtime pipeline
+/// và sử dụng cấu hình được cung cấp từ <see cref="DatabaseOptions"/>.
+/// </remarks>
+public class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbContext>
 {
-    public AutoDbContext CreateDbContext(System.String[] args)
+    /// <summary>
+    /// Tạo mới một instance của <see cref="AutoXDbContext"/> tại design-time.
+    /// </summary>
+    /// <param name="args">
+    /// Tham số dòng lệnh được EF Core truyền vào (hiện tại không sử dụng).
+    /// </param>
+    /// <returns>
+    /// Một instance đã được cấu hình hoàn chỉnh của <see cref="AutoXDbContext"/>.
+    /// </returns>
+    /// <exception cref="System.InvalidOperationException">
+    /// Ném ra khi:
+    /// <list type="bullet">
+    /// <item>Không thể kết nối tới database</item>
+    /// <item>Loại database không được hỗ trợ</item>
+    /// </list>
+    /// </exception>
+    public AutoXDbContext CreateDbContext(System.String[] args)
     {
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
-            .Info($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] Start initialization sequence.");
+            .Info($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Start initialization sequence.");
 
         // Load cấu hình từ DatabaseOptions
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] Loading DatabaseOptions...");
+                                .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Loading DatabaseOptions...");
         DatabaseOptions configuration = ConfigurationManager.Instance.Get<DatabaseOptions>();
 
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] DatabaseType = {configuration.DatabaseType}, ConnectionString = {configuration.ConnectionString}");
+                                .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] DatabaseType = {configuration.DatabaseType}, ConnectionString = {configuration.ConnectionString}");
 
         // Kiểm tra kết nối đến database
         if (!configuration.DatabaseType.Equals("SQLite", System.StringComparison.OrdinalIgnoreCase) &&
-            !CanConnectToDatabase(configuration.ConnectionString))
+            !CAN_CONNECT_TO_DATABASE(configuration.ConnectionString))
         {
             InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] Cannot connect to the database at {configuration.ConnectionString}");
+                                    .Error($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Cannot connect to the database at {configuration.ConnectionString}");
             throw new System.InvalidOperationException($"Cannot connect to the database at {configuration.ConnectionString}");
         }
 
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] Database connectivity check passed.");
+                                .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Database connectivity check passed.");
 
-        DbContextOptionsBuilder<AutoDbContext> optionsBuilder = new();
+        DbContextOptionsBuilder<AutoXDbContext> optionsBuilder = new();
 
         try
         {
             if (configuration.DatabaseType.Equals("PostgreSQL", System.StringComparison.OrdinalIgnoreCase))
             {
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                    .Debug($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] Configuring DbContext for PostgreSQL.");
+                    .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Configuring DbContext for PostgreSQL.");
 
                 optionsBuilder.UseNpgsql(configuration.ConnectionString, npgsqlOptions =>
                 {
@@ -60,12 +91,12 @@ public class AutoDbContextFactory : IDesignTimeDbContextFactory<AutoDbContext>
                 .EnableServiceProviderCaching();
 
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Info($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] DbContext configured for PostgreSQL.");
+                                        .Info($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] DbContext configured for PostgreSQL.");
             }
             else if (configuration.DatabaseType.Equals("SQLite", System.StringComparison.OrdinalIgnoreCase))
             {
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Debug($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] Configuring DbContext for SQLite.");
+                                        .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Configuring DbContext for SQLite.");
 
                 optionsBuilder.UseSqlite(
                     $"Data Source={Directories.DataDirectory}\\Auto.db",
@@ -78,12 +109,12 @@ public class AutoDbContextFactory : IDesignTimeDbContextFactory<AutoDbContext>
                 .EnableServiceProviderCaching();
 
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Info($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] DbContext configured for SQLite.");
+                                        .Info($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] DbContext configured for SQLite.");
             }
             else
             {
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Warn($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] Unsupported database type: {configuration.DatabaseType}");
+                                        .Warn($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Unsupported database type: {configuration.DatabaseType}");
 
                 throw new System.InvalidOperationException($"Unsupported database type: {configuration.DatabaseType}");
             }
@@ -91,19 +122,21 @@ public class AutoDbContextFactory : IDesignTimeDbContextFactory<AutoDbContext>
         catch (System.Exception ex)
         {
             InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] Error configuring DbContext for {configuration.DatabaseType}.", ex);
+                                    .Error($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Error configuring DbContext for {configuration.DatabaseType}.", ex);
             throw;
         }
 
-        AutoDbContext dbContext = new(optionsBuilder.Options);
+        AutoXDbContext dbContext = new(optionsBuilder.Options);
 
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Info($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CreateDbContext)}] AutoDbContext successfully created.");
+                                .Info($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] AutoDbContext successfully created.");
 
         return dbContext;
     }
 
-    private static System.Boolean CanConnectToDatabase(System.String connectionString)
+    #region Private Methods
+
+    private static System.Boolean CAN_CONNECT_TO_DATABASE(System.String connectionString)
     {
         try
         {
@@ -113,7 +146,7 @@ public class AutoDbContextFactory : IDesignTimeDbContextFactory<AutoDbContext>
             System.Int32 port = builder.Port;
 
             InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Info($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CanConnectToDatabase)}] Pinging database server {host}:{port}...");
+                                    .Info($"[DB.{nameof(AutoXDbContextFactory)}:Internal] Pinging database server {host}:{port}...");
 
             using System.Net.NetworkInformation.Ping ping = new();
             System.Net.NetworkInformation.PingReply reply = ping.Send(host, 3000); // Timeout 1 giây
@@ -121,19 +154,21 @@ public class AutoDbContextFactory : IDesignTimeDbContextFactory<AutoDbContext>
             if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
             {
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Info($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CanConnectToDatabase)}] Ping to {host} successful.");
+                                        .Info($"[DB.{nameof(AutoXDbContextFactory)}:Internal] Ping to {host} successful.");
                 return true;
             }
 
             InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CanConnectToDatabase)}] Ping to {host} failed: {reply.Status}");
+                                    .Error($"[DB.{nameof(AutoXDbContextFactory)}:Internal] Ping to {host} failed: {reply.Status}");
             return false;
         }
         catch (System.Exception ex)
         {
             InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[DB.{nameof(AutoDbContextFactory)}:{nameof(CanConnectToDatabase)}] Error pinging database server.", ex);
+                                    .Error($"[DB.{nameof(AutoXDbContextFactory)}:Internal] Error pinging database server.", ex);
             return false;
         }
     }
+
+    #endregion Private Methods
 }

@@ -14,7 +14,7 @@ namespace AutoX.Gara.Infrastructure.Database;
 /// <summary>
 /// DbContext cho ứng dụng quản lý gara ô tô.
 /// </summary>
-public class AutoDbContext(DbContextOptions<AutoDbContext> options) : DbContext(options), IAutoDbContext
+public class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : DbContext(options), IAutoXDbContext
 {
     #region Properties
 
@@ -73,7 +73,7 @@ public class AutoDbContext(DbContextOptions<AutoDbContext> options) : DbContext(
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AutoDbContext).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AutoXDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
 
         CONFIGURE_ACCOUNT(modelBuilder);

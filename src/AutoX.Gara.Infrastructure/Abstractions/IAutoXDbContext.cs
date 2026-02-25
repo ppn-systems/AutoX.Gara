@@ -12,7 +12,7 @@ namespace AutoX.Gara.Infrastructure.Abstractions;
 /// <summary>
 /// Định nghĩa abstraction cho DbContext của hệ thống gara AutoX.
 /// </summary>
-public interface IAutoDbContext
+public interface IAutoXDbContext
 {
     /// <summary>
     /// Tập hợp các phương tiện (xe) trong hệ thống.
