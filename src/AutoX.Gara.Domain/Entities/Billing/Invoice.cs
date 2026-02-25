@@ -1,4 +1,6 @@
-﻿using AutoX.Gara.Domain.Entities.Customers;
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Domain.Enums;

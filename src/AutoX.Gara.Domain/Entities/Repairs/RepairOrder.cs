@@ -1,4 +1,6 @@
-﻿using AutoX.Gara.Domain.Entities.Billing;
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using AutoX.Gara.Domain.Entities.Billing;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Enums.Repairs;
 using System.Collections.Generic;
@@ -32,7 +34,7 @@ public class RepairOrder
     /// <summary>
     /// Id chủ xe.
     /// </summary>
-    public System.Int32 OwnerId { get; set; }
+    public System.Int32 CustomerId { get; set; }
 
     /// <summary>
     /// Id hóa đơn.
@@ -47,8 +49,8 @@ public class RepairOrder
     /// <summary>
     /// Thông tin chủ xe (Navigation Property).
     /// </summary>
-    [ForeignKey(nameof(OwnerId))]
-    public virtual Customer Owner { get; set; }
+    [ForeignKey(nameof(CustomerId))]
+    public virtual Customer Customer { get; set; }
 
     /// <summary>
     /// Thông tin hóa đơn liên quan (Navigation Property).

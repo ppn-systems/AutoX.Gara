@@ -1,4 +1,6 @@
-﻿using AutoX.Gara.Domain.Enums.Payments;
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;

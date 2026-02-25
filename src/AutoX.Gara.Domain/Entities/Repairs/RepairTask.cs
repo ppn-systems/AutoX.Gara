@@ -1,7 +1,8 @@
-﻿using AutoX.Gara.Domain.Entities.Billing;
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using AutoX.Gara.Domain.Entities.Billing;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Enums.Repairs;
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -15,8 +16,8 @@ public class RepairTask
 {
     #region Fields
 
-    private DateTime? _startDate;
-    private DateTime? _completionDate;
+    private System.DateTime? _startDate;
+    private System.DateTime? _completionDate;
 
     #endregion
 
@@ -27,22 +28,22 @@ public class RepairTask
     /// </summary>
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public Int32 Id { get; set; }
+    public System.Int32 Id { get; set; }
 
     /// <summary>
     /// Nhân viên thực hiện công việc sửa chữa.
     /// </summary>
-    public Int32 EmployeeId { get; set; }
+    public System.Int32 EmployeeId { get; set; }
 
     /// <summary>
     /// Các dịch vụ sử dụng.
     /// </summary>
-    public Int32 ServiceItemId { get; set; }
+    public System.Int32 ServiceItemId { get; set; }
 
     /// <summary>
     /// Id đơn sửa chữa liên quan.
     /// </summary>
-    public Int32 RepairOrderId { get; set; }
+    public System.Int32 RepairOrderId { get; set; }
 
     /// <summary>
     /// Thông tin nhân viên thực hiện (Navigation Property).
@@ -74,14 +75,14 @@ public class RepairTask
     /// <summary>
     /// Ngày bắt đầu công việc.
     /// </summary>
-    public DateTime? StartDate
+    public System.DateTime? StartDate
     {
         get => _startDate;
         set
         {
-            if (value.HasValue && value > DateTime.UtcNow)
+            if (value.HasValue && value > System.DateTime.UtcNow)
             {
-                throw new ArgumentException("Start date cannot be in the future.");
+                throw new System.ArgumentException("Start date cannot be in the future.");
             }
 
             _startDate = value;
@@ -92,19 +93,19 @@ public class RepairTask
     /// Thời gian ước tính để hoàn thành công việc (tính bằng giờ).
     /// </summary>
     [Range(0, 1000, ErrorMessage = "Estimated duration must be between 0 and 1000 hours.")]
-    public Double EstimatedDuration { get; set; } = 1.0;
+    public System.Double EstimatedDuration { get; set; } = 1.0;
 
     /// <summary>
     /// Ngày hoàn thành công việc sửa chữa (nếu đã xong).
     /// </summary>
-    public DateTime? CompletionDate
+    public System.DateTime? CompletionDate
     {
         get => _completionDate;
         set
         {
             if (value.HasValue && StartDate.HasValue && value < StartDate)
             {
-                throw new ArgumentException("Completion date cannot be earlier than start date.");
+                throw new System.ArgumentException("Completion date cannot be earlier than start date.");
             }
 
             _completionDate = value;
@@ -114,7 +115,7 @@ public class RepairTask
     /// <summary>
     /// Công việc đã hoàn thành chưa.
     /// </summary>
-    public Boolean IsCompleted => Status == RepairOrderStatus.Completed;
+    public System.Boolean IsCompleted => Status == RepairOrderStatus.Completed;
 
     #endregion
 }

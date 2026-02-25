@@ -1,4 +1,6 @@
-﻿using AutoX.Gara.Domain.Entities.Repairs;
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Domain.Enums.Customers;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;

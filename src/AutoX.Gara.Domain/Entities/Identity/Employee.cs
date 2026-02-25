@@ -1,4 +1,6 @@
-﻿using AutoX.Gara.Domain.Enums;
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
