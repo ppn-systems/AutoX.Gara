@@ -1,0 +1,121 @@
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using Nalix.Common.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace AutoX.Gara.Domain.Entities.Identity;
+
+/// <summary>
+/// Entity đại diện cho tài khoản người dùng trong hệ thống.
+/// </summary>
+[Table(nameof(Account))]
+public sealed class Account
+{
+    #region Fields
+
+    private System.String _username;
+
+    #endregion Fields
+
+    #region Identification Properties
+
+    /// <summary>
+    /// Khóa chính (ID tài khoản, tự động tạo).
+    /// </summary>
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public System.Int32 Id { get; }
+
+    /// <summary>
+    /// Tên đăng nhập (username). Dùng để đăng nhập hệ thống.
+    /// </summary>
+    [Required]
+    [MaxLength(50)]
+    [RegularExpression(@"^[a-zA-Z0-9_-]+$",
+        ErrorMessage = "Username can only contain letters, numbers, underscores, and hyphens.")]
+    public System.String Username
+    {
+        get => _username;
+        set => _username = value?.Trim().ToLower() ?? System.String.Empty;
+    }
+
+    /// <summary>
+    /// Chuỗi salt ngẫu nhiên được tạo ra để băm mật khẩu.
+    /// Salt giúp bảo vệ mật khẩu khỏi các cuộc tấn công từ điển và rainbow table.
+    /// </summary>
+    [Required]
+    [MaxLength(64)]
+    [Column(TypeName = "binary(64)")]
+    public System.Byte[] Salt { get; set; }
+
+    /// <summary>
+    /// Mật khẩu sau khi được băm bằng thuật toán PBKDF2.
+    /// Giá trị này được lưu trữ trong cơ sở dữ liệu để xác minh mật khẩu khi đăng nhập.
+    /// </summary>
+    [Required]
+    [MaxLength(64)]
+    [Column(TypeName = "binary(64)")]
+    public System.Byte[] Hash { get; set; }
+
+    #endregion Identification Properties
+
+    #region Role and Status Properties
+
+    /// <summary>
+    /// Vai trò của tài khoản trong hệ thống.
+    /// </summary>
+    [Required]
+    public PermissionLevel Role { get; set; } = PermissionLevel.NONE;
+
+    /// <summary>
+    /// Trạng thái hoạt động của tài khoản.
+    /// </summary>
+    public System.Boolean IsActive { get; private set; }
+
+    #endregion Role and Status Properties
+
+    #region Login Tracking Properties
+
+    /// <summary>
+    /// Số lần đăng nhập thất bại.
+    /// </summary>
+    [Required]
+    public System.Byte FailedLoginAttempts { get; set; } = 0;
+
+    /// <summary>
+    /// Thời gian đăng nhập thất bại gần nhất.
+    /// </summary>
+    public System.DateTime? LastFailedLogin { get; set; }
+
+    /// <summary>
+    /// Thời gian đăng nhập gần nhất.
+    /// </summary>
+    public System.DateTime? LastLogin { get; set; }
+
+    #endregion Login Tracking Properties
+
+    #region Audit Properties
+
+    /// <summary>
+    /// Ngày tạo tài khoản.
+    /// </summary>
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public System.DateTime CreatedAt { get; set; } = System.DateTime.UtcNow;
+
+    #endregion Audit Properties
+
+    #region APIs
+
+    /// <summary>
+    /// Kích hoạt tài khoản, đặt trạng thái IsActive thành true.
+    /// </summary>
+    public void Activate() => IsActive = true;
+
+    /// <summary>
+    /// Hủy hoạt động tài khoản, đặt trạng thái IsActive thành false.
+    /// </summary>
+    public void Deactivate() => IsActive = false;
+
+    #endregion APIs
+}
