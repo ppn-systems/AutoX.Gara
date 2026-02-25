@@ -23,4 +23,9 @@
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\AutoX.Gara.Shared\AutoX.Gara.Shared.csproj" />
+		<ProjectReference Include="..\AutoX.Gara.Infrastructure\AutoX.Gara.Infrastructure.csproj" />
+	</ItemGroup>
+
 </Project>
