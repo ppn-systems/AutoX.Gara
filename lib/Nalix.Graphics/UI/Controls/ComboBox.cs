@@ -4,6 +4,8 @@ using Nalix.Graphics.Abstractions;
 using Nalix.Graphics.Assets;
 using Nalix.Graphics.Entities;
 using Nalix.Graphics.Extensions;
+using Nalix.Graphics.Input;
+using Nalix.Graphics.Layout;
 using Nalix.Graphics.UI.Theme;
 using SFML.Graphics;
 using SFML.System;
@@ -16,7 +18,7 @@ namespace Nalix.Graphics.UI.Controls;
 /// ComboBox control supporting single and multiple selection modes.
 /// Uses dropdown with optional ScrollBar, themed rendering, and Unicode check marks.
 /// </summary>
-public class ComboBox : RenderObject, IUpdatable
+public class ComboBox<T> : RenderObject, IUpdatable where T : notnull
 {
 
     private const System.Single ItemHeight = 28f;
@@ -25,13 +27,17 @@ public class ComboBox : RenderObject, IUpdatable
 
     #region Fields
 
-    private readonly List<System.String> _items;
+    private static System.Boolean _wasMouseDownLastFrame = false;
+
+    private readonly List<T> _items;
     private readonly List<System.Int32> _selectedIndices = [];
     private readonly System.Boolean _isMultiSelect;
+    private readonly Texture _checkIconTexture;
+    private readonly Vector2f _checkIconSize = new(18f, 18f);
     private System.Boolean _dropdownOpen = false;
     private System.Int32 _hoveredIndex = -1;
 
-    private readonly RectangleShape _headerBox;
+    private readonly NineSlicePanel _headerPanel;
     private readonly Text _headerText;
     private readonly RectangleShape _dropdownBox;
     private readonly List<Text> _itemTexts = [];
@@ -39,7 +45,7 @@ public class ComboBox : RenderObject, IUpdatable
     private readonly ScrollBar _scrollBar;
 
     private System.Single _dropdownHeight = 0f;
-    private System.Single _width = 200f;
+    private System.Single _width = 180f;
 
     private Vector2f _position = new(0, 0);
 
@@ -76,7 +82,7 @@ public class ComboBox : RenderObject, IUpdatable
     /// <summary>
     /// Gets the items in the ComboBox.
     /// </summary>
-    public IReadOnlyList<System.String> Items => _items;
+    public IReadOnlyList<T> Items => _items;
 
     /// <summary>
     /// Gets the indices of selected items.
@@ -125,18 +131,19 @@ public class ComboBox : RenderObject, IUpdatable
     /// <param name="items">The fixed list of selectable items (string).</param>
     /// <param name="multiSelect">True to enable multi-selection. False: single-select.</param>
     /// <param name="width">ComboBox width in pixels.</param>
-    public ComboBox(IEnumerable<System.String> items, System.Boolean multiSelect = false, System.Single width = 200f)
+    public ComboBox(IEnumerable<T> items, System.Boolean multiSelect = false, System.Single width = 180f)
     {
         _font = EmbeddedAssets.JetBrainsMono.ToFont();
+        _checkIconTexture = EmbeddedAssets.Done.ToTexture();
+
         _items = [.. items];
         _isMultiSelect = multiSelect;
         _width = width;
 
-        // Header setup
-        _headerBox = new RectangleShape(new Vector2f(_width, HeaderHeight))
-        {
-            FillColor = Themes.PanelTheme.Normal
-        };
+        // Header panel = NineSlicePanel (giống Button)
+        _headerPanel = new NineSlicePanel(EmbeddedAssets.SquareOutline.ToTexture(), new Thickness(32), default);
+        _headerPanel.SetPosition(_position).SetSize(new Vector2f(_width, HeaderHeight));
+        _headerPanel.SetTintColor(Themes.PanelTheme.Normal);
 
         _headerText = new Text(_font)
         {
@@ -154,7 +161,7 @@ public class ComboBox : RenderObject, IUpdatable
             var t = new Text(_font)
             {
                 CharacterSize = 16,
-                DisplayedString = _items[i],
+                DisplayedString = _items[i]?.ToString() ?? "",
                 FillColor = Themes.TextTheme.Normal,
                 Position = new Vector2f(_position.X + 24f, _position.Y + HeaderHeight + (i * ItemHeight))
             };
@@ -188,8 +195,9 @@ public class ComboBox : RenderObject, IUpdatable
         var selected = new List<System.String>();
         foreach (System.Int32 idx in _selectedIndices)
         {
-            selected.Add(_items[idx]);
+            selected.Add(_items[idx]?.ToString() ?? "");
         }
+
         return selected;
     }
 
@@ -207,22 +215,27 @@ public class ComboBox : RenderObject, IUpdatable
             return;
         }
 
-        // Handle mouse click on header: toggle dropdown
-        Vector2i mouse = Nalix.Graphics.Input.MouseManager.Instance.GetMousePosition();
+        Vector2i mouse = MouseManager.Instance.GetMousePosition();
         System.Boolean mouseDown = Mouse.IsButtonPressed(Mouse.Button.Left);
 
-        var headerBounds = new FloatRect(_headerBox.Position, _headerBox.Size);
-        if (mouseDown && headerBounds.Contains(mouse))
+        var headerBounds = new FloatRect(_headerPanel.Position, new Vector2f((System.Single)(_headerPanel.Size.X * 1.5), (System.Single)(_headerPanel.Size.Y * 1.5)));
+
+        // Tạo bộ nhớ tạm cho trạng thái mouse trước đó
+
+
+        // Nếu click vào header
+        if (headerBounds.Contains(mouse))
         {
-            if (!_dropdownOpen)
+            // Chỉ toggle khi nhấn xuống lần đầu (tránh giữ chuột toggle liên tục)
+            if (mouseDown && !_wasMouseDownLastFrame)
             {
-                IsDropdownOpen = true;
+                IsDropdownOpen = !_dropdownOpen;
                 _hoveredIndex = -1;
             }
         }
         else if (mouseDown && _dropdownOpen)
         {
-            // Click outside: close dropdown
+            // Click ngoài dropdown để đóng lại
             var dropdownBounds = new FloatRect(_dropdownBox.Position, _dropdownBox.Size);
             if (!dropdownBounds.Contains(mouse))
             {
@@ -253,6 +266,12 @@ public class ComboBox : RenderObject, IUpdatable
                         _selectedIndices.Add(itemIdx);
                     }
                     _headerText.DisplayedString = GetHeaderText();
+
+                    FloatRect textBounds = _headerText.GetLocalBounds();
+                    _headerText.Position = new Vector2f(
+                        _headerPanel.Position.X + ((_headerPanel.Size.X - textBounds.Width) / 2f) - textBounds.Left,
+                        _headerPanel.Position.Y + ((_headerPanel.Size.Y - textBounds.Height) / 2f) - textBounds.Top + 15
+                    );
                 }
             }
 
@@ -262,6 +281,8 @@ public class ComboBox : RenderObject, IUpdatable
         {
             _hoveredIndex = -1;
         }
+        // Lưu trạng thái mouse cho frame kế tiếp
+        _wasMouseDownLastFrame = mouseDown;
     }
 
     /// <summary>
@@ -275,7 +296,7 @@ public class ComboBox : RenderObject, IUpdatable
         }
 
         // Draw header
-        target.Draw(_headerBox);
+        target.Draw(_headerPanel);
         target.Draw(_headerText);
 
         // Draw dropdown if open
@@ -318,15 +339,14 @@ public class ComboBox : RenderObject, IUpdatable
                 target.Draw(text);
 
                 // Draw check mark if selected
-                if (_selectedIndices.Contains(i))
+                if (_selectedIndices.Contains(i) && _checkIconTexture != null)
                 {
-                    var checkMark = new Text(_font, "✓")
+                    var checkMarkSprite = new Sprite(_checkIconTexture)
                     {
-                        CharacterSize = 16,
-                        FillColor = Themes.DataGridRowSelectionColor,
-                        Position = new Vector2f(_dropdownBox.Position.X + 4f, y + 4f)
+                        Position = new Vector2f(_dropdownBox.Position.X + _width - _checkIconSize.X - 15f, y + ((ItemHeight - _checkIconSize.Y) / 2f)),
+                        Scale = new Vector2f(_checkIconSize.X / _checkIconTexture.Size.X, _checkIconSize.Y / _checkIconTexture.Size.Y)
                     };
-                    target.Draw(checkMark);
+                    target.Draw(checkMarkSprite);
                 }
             }
 
@@ -349,12 +369,16 @@ public class ComboBox : RenderObject, IUpdatable
     /// </summary>
     private void UPDATE_LAYOUT()
     {
-        _headerBox.Position = _position;
-        _headerBox.Size = new Vector2f(_width, HeaderHeight);
-        _headerText.Position = new Vector2f(_position.X + 12f, _position.Y + 7f);
+        _headerPanel.SetPosition(_position).SetSize(new Vector2f(_width, HeaderHeight));
+
+        FloatRect textBounds = _headerText.GetLocalBounds();
+        _headerText.Position = new Vector2f(
+            _headerPanel.Position.X + ((_headerPanel.Size.X - textBounds.Width) / 2f) - textBounds.Left,
+            _headerPanel.Position.Y + ((_headerPanel.Size.Y - textBounds.Height) / 2f) - textBounds.Top + 15
+        );
 
         _dropdownHeight = (_items.Count > MaxDropdownItems ? MaxDropdownItems : _items.Count) * ItemHeight;
-        _dropdownBox.Position = new Vector2f(_position.X, _position.Y + HeaderHeight);
+        _dropdownBox.Position = new Vector2f(_position.X, _position.Y + HeaderHeight + 30);
         _dropdownBox.Size = new Vector2f(_width, _dropdownHeight);
         _dropdownBox.FillColor = Themes.DataGridRowBackgroundColor;
 
