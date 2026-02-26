@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<UseAppHost>true</UseAppHost>
+		<IsTrimmable>true</IsTrimmable>
+		<SelfContained>true</SelfContained>
+		<Deterministic>true</Deterministic>
+		<TargetFramework>net10.0</TargetFramework>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<PublishSingleFile>true</PublishSingleFile>
+		<PublishReadyToRun>false</PublishReadyToRun>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<RuntimeIdentifiers>win-x64;linux-x64;</RuntimeIdentifiers>
+		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+		<StartupObject>Nalix.Graphics.Sandbox.Program</StartupObject>
+	</PropertyGroup>
+	
+	<ItemGroup>
+	  <ProjectReference Include="..\Nalix.Graphics\Nalix.Graphics.csproj" />
+	</ItemGroup>
+	
+</Project>

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Nalix.Graphics/Nalix.Graphics.csproj" />
+  <Project Path="Nalix.Graphics.Sandbox/Nalix.Graphics.Sandbox.csproj" Id="fc04d8a9-32a4-489a-b65c-1bf356b3021f" />
+</Solution>

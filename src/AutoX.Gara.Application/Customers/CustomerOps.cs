@@ -24,6 +24,7 @@ public sealed class CustomerOps(AutoXDbContext context)
     /// <summary>
     /// Lấy danh sách khách hàng (phân trang), chỉ cho nhân viên.
     /// </summary>
+    [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_LIST)]
     public async System.Threading.Tasks.Task GetListAsync(
@@ -69,6 +70,7 @@ public sealed class CustomerOps(AutoXDbContext context)
     /// <summary>
     /// Tạo mới khách hàng, chỉ cho nhân viên.
     /// </summary>
+    [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_CREATE)]
     public async System.Threading.Tasks.Task CreateAsync(
@@ -136,6 +138,7 @@ public sealed class CustomerOps(AutoXDbContext context)
     /// <summary>
     /// Sửa thông tin khách hàng, chỉ cho nhân viên.
     /// </summary>
+    [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_UPDATE)]
     public async System.Threading.Tasks.Task UpdateAsync(
@@ -201,6 +204,7 @@ public sealed class CustomerOps(AutoXDbContext context)
     /// <summary>
     /// Xóa khách hàng, chỉ cho nhân viên.
     /// </summary>
+    [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
     [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_DELETE)]
     public async System.Threading.Tasks.Task DeleteAsync(

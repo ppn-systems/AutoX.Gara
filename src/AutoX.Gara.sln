@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Infrastructure",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Shared", "AutoX.Gara.Shared\AutoX.Gara.Shared.csproj", "{A74233AF-C60C-4C56-9AC6-3AB15DF450CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Frontend", "AutoX.Gara.Frontend\AutoX.Gara.Frontend.csproj", "{9D83F72F-EBB3-4A1B-8FDC-655DCCD60126}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Frontend", "AutoX.Gara.Frontend\AutoX.Gara.Frontend.csproj", "{E3BE00AF-D34D-661E-4AEE-56A202914B79}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,10 +41,10 @@ Global
 		{A74233AF-C60C-4C56-9AC6-3AB15DF450CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A74233AF-C60C-4C56-9AC6-3AB15DF450CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A74233AF-C60C-4C56-9AC6-3AB15DF450CE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9D83F72F-EBB3-4A1B-8FDC-655DCCD60126}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9D83F72F-EBB3-4A1B-8FDC-655DCCD60126}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9D83F72F-EBB3-4A1B-8FDC-655DCCD60126}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9D83F72F-EBB3-4A1B-8FDC-655DCCD60126}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3BE00AF-D34D-661E-4AEE-56A202914B79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3BE00AF-D34D-661E-4AEE-56A202914B79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3BE00AF-D34D-661E-4AEE-56A202914B79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3BE00AF-D34D-661E-4AEE-56A202914B79}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,14 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Đăng nhập Gara" Width="350" Height="220" WindowStartupLocation="CenterScreen">
+
+    <StackPanel Margin="20">
+        <TextBlock FontSize="18" Text="Đăng nhập" HorizontalAlignment="Center"/>
+        <TextBlock Text="Tài khoản:" Margin="0,12,0,0"/>
+        <TextBox Text="{Binding Username}" Width="240"/>
+        <TextBlock Text="Mật khẩu:" Margin="0,8,0,0"/>
+        <PasswordBox Password="{Binding Password}" Width="240"/>
+        <Button Content="Đăng nhập" Command="{Binding LoginCommand}" Width="110" Margin="0,14,0,0" HorizontalAlignment="Center"/>
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" FontSize="13" Margin="0,8,0,0" HorizontalAlignment="Center"/>
+    </StackPanel>
+</Window>
