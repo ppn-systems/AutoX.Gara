@@ -44,11 +44,8 @@ public sealed class HandshakeOps
         {
             await connection.SendAsync(
                 ControlType.ERROR,
-                ProtocolReason.UNSUPPORTED_PACKET,
+                ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
-
-            InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[APP.{nameof(HandshakeOps)}] invalid-packet-type ep={connection.RemoteEndPoint}");
 
             return;
         }
@@ -61,9 +58,6 @@ public sealed class HandshakeOps
                 ProtocolReason.MISSING_REQUIRED_FIELD,
                 ProtocolAdvice.FIX_AND_RETRY).ConfigureAwait(false);
 
-            InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[APP.{nameof(HandshakeOps)}] null-payload ep={connection.RemoteEndPoint}");
-
             return;
         }
 
@@ -74,9 +68,6 @@ public sealed class HandshakeOps
                 ControlType.ERROR,
                 ProtocolReason.VALIDATION_FAILED,
                 ProtocolAdvice.FIX_AND_RETRY).ConfigureAwait(false);
-
-            InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Debug($"[APP.{nameof(HandshakeOps)}] invalid-public-key len={packet.Data.Length} ep={connection.RemoteEndPoint}");
 
             return;
         }
