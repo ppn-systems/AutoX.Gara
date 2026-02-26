@@ -1,4 +1,4 @@
-﻿// Sample log message changes only - logic and structure unchanged
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
