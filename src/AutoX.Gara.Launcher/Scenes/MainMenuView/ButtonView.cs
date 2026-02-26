@@ -28,7 +28,6 @@ public class ButtonView : RenderObject
     private readonly Button _exit;
     private readonly Button _login;
     private readonly Button _register;
-    private readonly Button _settings;
 
     private readonly Button[] _buttons;
 
@@ -38,7 +37,6 @@ public class ButtonView : RenderObject
 
     public event System.Action ExitRequested;
     public event System.Action LoginRequested;
-    public event System.Action ServerRequested;
     public event System.Action RegisterRequested;
 
     #endregion Events
@@ -54,9 +52,8 @@ public class ButtonView : RenderObject
         _exit = new Button("EXIT");
         _login = new Button("LOGIN");
         _register = new Button("REGISTER");
-        _settings = new Button("SERVER");
 
-        _buttons = [_login, _register, _settings, _exit];
+        _buttons = [_login, _register, _exit];
 
         this.WIRE_HANDLERS();
         this.REGISTER_BUTTONS();
@@ -97,7 +94,6 @@ public class ButtonView : RenderObject
         this.ExitRequested = null;
         this.LoginRequested = null;
         this.RegisterRequested = null;
-        this.ServerRequested = null;
 
         base.OnBeforeDestroy();
     }
@@ -123,7 +119,6 @@ public class ButtonView : RenderObject
         _exit.RegisterClickHandler(() => ExitRequested?.Invoke());
         _login.RegisterClickHandler(() => LoginRequested?.Invoke());
         _register.RegisterClickHandler(() => RegisterRequested?.Invoke());
-        _settings.RegisterClickHandler(() => ServerRequested?.Invoke());
     }
 
     private void LAYOUT_BUTTONS()

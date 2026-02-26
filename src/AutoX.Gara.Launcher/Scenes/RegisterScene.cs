@@ -18,11 +18,12 @@ public sealed class RegisterScene : BaseScene
 
     protected override void LoadObjects()
     {
+        ButtonView button = new();
         BackButtonView backButton = new();
 
         backButton.BackRequested += () => SceneManager.Instance.ScheduleSceneChange(ConfigurationManager.Instance.Get<GraphicsConfig>().MainScene);
 
-        AddObject(backButton);
-        AddObject(new ButtonView());
+        base.AddObject(button);
+        base.AddObject(backButton);
     }
 }
