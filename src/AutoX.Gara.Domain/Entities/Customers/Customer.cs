@@ -122,12 +122,12 @@ public class Customer
     /// <summary>
     /// Loại khách hàng.
     /// </summary>
-    public CustomerType Type { get; set; } = CustomerType.Individual;
+    public CustomerType? Type { get; set; } = CustomerType.Individual;
 
     /// <summary>
     /// Cấp độ thành viên.
     /// </summary>
-    public MembershipLevel Membership { get; set; } = MembershipLevel.Standard;
+    public MembershipLevel? Membership { get; set; } = MembershipLevel.Standard;
 
     /// <summary>
     /// Công nợ của khách hàng.

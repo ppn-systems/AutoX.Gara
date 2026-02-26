@@ -17,20 +17,28 @@ public enum OpCommand : System.UInt16
     /// <summary>
     /// Lệnh để người chơi đăng nhập vào trò chơi.
     /// </summary>
-    LOGIN = 0x64,
+    LOGIN = 0x50,
 
     /// <summary>
     /// Lệnh để người chơi đăng xuất khỏi trò chơi.
     /// </summary>
-    LOGOUT = 0x65,
+    LOGOUT = 0x51,
 
     /// <summary>
     /// Lệnh để người chơi đăng ký tài khoản mới.
     /// </summary>
-    REGISTER = 0x66,
+    REGISTER = 0x52,
 
     /// <summary>
     /// Lệnh để người chơi thay đổi mật khẩu tài khoản.
     /// </summary>
-    CHANGE_PASSWORD = 0x67,
+    CHANGE_PASSWORD = 0x53,
+
+    CUSTOMER_LIST = 0x100,
+
+    CUSTOMER_CREATE = 0x101,
+
+    CUSTOMER_UPDATE = 0x102,
+
+    CUSTOMER_DELETE = 0x103,
 }
