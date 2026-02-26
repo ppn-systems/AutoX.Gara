@@ -39,5 +39,4 @@ public class AccountModel
     /// </summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public System.String Password { get; set; }
-
 }

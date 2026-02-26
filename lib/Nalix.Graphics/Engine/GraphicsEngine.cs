@@ -173,6 +173,16 @@ public class GraphicsEngine : SingletonBase<GraphicsEngine>, IUpdatable, System.
     }
 
     /// <summary>
+    /// Sets the icon for the game window.
+    /// </summary>
+    public void SetIcon(System.String base64)
+    {
+        System.Byte[] bytes = System.Convert.FromBase64String(base64);
+        using System.IO.MemoryStream ms = new(bytes);
+        this.SetIcon(new Image(ms));
+    }
+
+    /// <summary>
     /// Starts the main game window loop.
     /// </summary>
     /// <param name="strings">Optional command-line arguments (unused).</param>
