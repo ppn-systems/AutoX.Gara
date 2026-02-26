@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Build & Lang -->
+		<Nullable>disable</Nullable>
+		<IsPackable>true</IsPackable>
+		<OutputType>Library</OutputType>
+		<IsTrimmable>false</IsTrimmable>
+		<Deterministic>true</Deterministic>
+		<TargetFramework>net10.0</TargetFramework>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+		<!-- Versions -->
+		<Version>10.0.0</Version>
+		<FileVersion>10.0.0.0</FileVersion>
+
+		<!-- Package metadata -->
+		<Product>AutoX.Gara</Product>
+		<Authors>PPN Corporation</Authors>
+		<Company>PPN Corporation</Company>
+		<RepositoryType>git</RepositoryType>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\AutoX.Gara.Shared\AutoX.Gara.Shared.csproj" />
+	</ItemGroup>
+
+</Project>
