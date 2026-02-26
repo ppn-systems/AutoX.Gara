@@ -11,7 +11,7 @@ namespace AutoX.Gara.Launcher.Services;
 /// Uses CHACHA20-Poly1305 AEAD for authenticated encryption.
 /// No external dependencies beyond Nalix.Shared.Security.
 /// </summary>
-public static class CredentialService
+public static class ProtectedAuthStore
 {
     #region Fields
 
@@ -27,7 +27,7 @@ public static class CredentialService
 
     #region Constructor
 
-    static CredentialService() => CredentialFilePath = System.IO.Path.Combine(Directories.DataDirectory, "credentials.dat");
+    static ProtectedAuthStore() => CredentialFilePath = System.IO.Path.Combine(Directories.DataDirectory, "credentials.dat");
 
     #endregion Constructor
 

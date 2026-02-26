@@ -12,7 +12,7 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 
-namespace AutoX.Gara.Launcher.Scenes.LoginView;
+namespace AutoX.Gara.Launcher.Scenes.RegisterView;
 
 /// <summary>
 /// Represents the login screen UI with username/password input fields and action buttons.
@@ -25,11 +25,6 @@ internal sealed class ButtonView : RenderObject
     /// Raised when the user requests to submit the login form.
     /// </summary>
     public event System.Action SubmitRequested;
-
-    /// <summary>
-    /// Raised when the user requests to recover their password.
-    /// </summary>
-    public event System.Action ForgetPasswordRequested;
 
     /// <summary>
     /// Raised when the user toggles between username and password fields using Tab.
@@ -94,7 +89,6 @@ internal sealed class ButtonView : RenderObject
     private readonly Text _uLabel;
     private readonly Text _pLabel;
     private readonly Button _loginBtn;
-    private readonly Button _forgetpassBtn;
     private readonly Texture _texture;
     private readonly Vector2f _panelPos;
     private readonly PasswordField _pass;
@@ -151,7 +145,7 @@ internal sealed class ButtonView : RenderObject
             .SetTintColor(BgPanelColor);
 
         // Initialize text labels
-        _title = new Text(_font, "LOGIN", (System.UInt32)TitleFont)
+        _title = new Text(_font, "REGISTER", (System.UInt32)TitleFont)
         {
             FillColor = TitleColor
         };
@@ -197,16 +191,10 @@ internal sealed class ButtonView : RenderObject
 
         // Initialize buttons
         _loginBtn = new Button("OK", null, BtnWidth);
-        _forgetpassBtn = new Button("Forgot?", null, BtnWidth);
-
         _loginBtn.SetZIndex(2);
-        _forgetpassBtn.SetZIndex(2);
-
         _loginBtn.FontSize = 14;
-        _forgetpassBtn.FontSize = 14;
 
         _loginBtn.RegisterClickHandler(this.ON_LOGIN_CLICKED);
-        _forgetpassBtn.RegisterClickHandler(this.ON_FORGETPASS_CLICKED);
 
         this.LAYOUT();
     }
@@ -226,7 +214,6 @@ internal sealed class ButtonView : RenderObject
         _user.IsEnabled = !locked;
         _pass.IsEnabled = !locked;
         _loginBtn.IsEnabled = !locked;
-        _forgetpassBtn.IsEnabled = !locked;
         _loginBtn.Text = locked ? "Signing in..." : "Login";
     }
 
@@ -303,7 +290,6 @@ internal sealed class ButtonView : RenderObject
         _user.Update(dt);
         _pass.Update(dt);
         _loginBtn.Update(dt);
-        _forgetpassBtn.Update(dt);
     }
 
     /// <summary>
@@ -321,7 +307,6 @@ internal sealed class ButtonView : RenderObject
         _user.Draw(target);
         _pass.Draw(target);
         _loginBtn.Draw(target);
-        _forgetpassBtn.Draw(target);
 
         target.Draw(_title);
         target.Draw(_uLabel);
@@ -335,7 +320,6 @@ internal sealed class ButtonView : RenderObject
         // Clear all event subscribers
         this.TabToggled = null;
         this.SubmitRequested = null;
-        this.ForgetPasswordRequested = null;
 
         base.OnBeforeDestroy();
     }
@@ -370,7 +354,6 @@ internal sealed class ButtonView : RenderObject
         System.Single btnStartX = _panelPos.X + ((_actualPanelSize.X - totalBtnWidth) * 0.5f);
         System.Single btnY = _panelPos.Y + _actualPanelSize.Y - BtnRowOffsetFromBottom;
 
-        _forgetpassBtn.Position = new Vector2f(btnStartX, btnY);
         _loginBtn.Position = new Vector2f(btnStartX + BtnWidth + BtnSpacing - 20f, btnY);
     }
 
@@ -390,11 +373,6 @@ internal sealed class ButtonView : RenderObject
     /// Handles the login button click event.
     /// </summary>
     private void ON_LOGIN_CLICKED() => this.SubmitRequested?.Invoke();
-
-    /// <summary>
-    /// Handles the forget password button click event.
-    /// </summary>
-    private void ON_FORGETPASS_CLICKED() => this.ForgetPasswordRequested?.Invoke();
 
     /// <summary>
     /// Handles keyboard input for Tab, Enter, and Escape keys.

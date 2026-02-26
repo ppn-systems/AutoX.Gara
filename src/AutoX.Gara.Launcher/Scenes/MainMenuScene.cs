@@ -21,7 +21,7 @@ public sealed class MainMenuScene : BaseScene
         buttonView.ExitRequested += () => System.Environment.Exit(0);
         buttonView.LoginRequested += () => SceneManager.Instance.ScheduleSceneChange(SceneNameConstants.LoginScene);
         buttonView.ServerRequested += () => SceneManager.Instance.ScheduleSceneChange(SceneNameConstants.LoginScene);
-        buttonView.RegisterRequested += () => SceneManager.Instance.ScheduleSceneChange(SceneNameConstants.LoginScene);
+        buttonView.RegisterRequested += () => SceneManager.Instance.ScheduleSceneChange(SceneNameConstants.RegisterScene);
 
         base.AddObject(buttonView);
         base.AddObject(versionView);
