@@ -6,27 +6,28 @@
              x:Class="AutoX.Gara.Frontend.LoginPage"
              Title="Login">
 
-    <VerticalStackLayout Spacing="16" Margin="30">
+    <Grid>
+        <VerticalStackLayout Spacing="16" Margin="30">
 
-        <Image Source="car.png"
+            <Image Source="car.png"
                HeightRequest="60"
                HorizontalOptions="Center"
                Margin="0,0,0,6"/>
-        
-        <Label Text="MMK Login"
+
+            <Label Text="MMK Login"
                FontAttributes="Bold"
                FontSize="20"
                HorizontalOptions="Center"
                TextColor="White"/>
 
-        <Grid HeightRequest="48">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="32"/>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="32"/>
-            </Grid.ColumnDefinitions>
-            <!-- Cột 0 trống -->
-            <Entry Grid.Column="1"
+            <Grid HeightRequest="48">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32"/>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="32"/>
+                </Grid.ColumnDefinitions>
+                <!-- Cột 0 trống -->
+                <Entry Grid.Column="1"
                    Placeholder="Username"
                    Text="{Binding Username}"
                    FontSize="16"
@@ -34,19 +35,19 @@
                    BackgroundColor="#222"
                    TextColor="White"
                    Margin="0"/>
-            <!-- Cột 2 trống luôn -->
-        </Grid>
+                <!-- Cột 2 trống luôn -->
+            </Grid>
 
-        <!-- Password row: icon mắt ở cột 0 -->
-        <Grid HeightRequest="48">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="32"/>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="32"/>
-            </Grid.ColumnDefinitions>
-            <!-- Cột 0: trống luôn -->
-            <!-- Cột 1: Entry password -->
-            <Entry Grid.Column="1"
+            <!-- Password row: icon mắt ở cột 0 -->
+            <Grid HeightRequest="48">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32"/>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="32"/>
+                </Grid.ColumnDefinitions>
+                <!-- Cột 0: trống luôn -->
+                <!-- Cột 1: Entry password -->
+                <Entry Grid.Column="1"
                    Placeholder="Password"
                    IsPassword="{Binding IsPasswordHidden}"
                    Text="{Binding Password}"
@@ -55,21 +56,21 @@
                    BackgroundColor="#222"
                    TextColor="White"
                    Margin="0"/>
-            <!-- Cột 2: icon mắt -->
-            <Image Grid.Column="2"
+                <!-- Cột 2: icon mắt -->
+                <Image Grid.Column="2"
                    Source="{Binding PasswordIcon}"
                    WidthRequest="24"
                    HeightRequest="24"
                    VerticalOptions="Center"
                    HorizontalOptions="Center">
-                <Image.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding TogglePasswordCommand}" />
-                </Image.GestureRecognizers>
-            </Image>
-        </Grid>
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding TogglePasswordCommand}" />
+                    </Image.GestureRecognizers>
+                </Image>
+            </Grid>
 
-        <!-- Login button -->
-        <Button Text="Login"
+            <!-- Login button -->
+            <Button Text="Login"
                 Command="{Binding LoginCommand}" 
                 HeightRequest="46"
                 CornerRadius="12"
@@ -77,14 +78,58 @@
                 BackgroundColor="#3182ce"
                 TextColor="White"
                 FontSize="16"
-                Margin="32"/>
+                Margin="32,16,32,8"/>
 
-        <Label Text="{Binding ErrorMessage}"
-               TextColor="Red"
-               FontSize="14"
-               IsVisible="{Binding HasError}"
-               HorizontalOptions="Start"/>
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="Red"
+                   FontSize="12"
+                   IsVisible="{Binding HasError}"
+                   HorizontalOptions="Start"/>
+            
+        </VerticalStackLayout>
 
-    </VerticalStackLayout>
-    
+        <!-- Popup overlay -->
+        <Grid IsVisible="{Binding IsPopupVisible}"
+              BackgroundColor="#80000000"
+              ZIndex="100">
+            <Border Padding="24"
+                   BackgroundColor="White"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   WidthRequest="340">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="{Binding PopupTitle}" 
+                           FontSize="18" 
+                           FontAttributes="Bold" 
+                           TextColor="Black"/>
+                    
+                    <Label Text="{Binding PopupMessage}" 
+                           FontSize="15" 
+                           TextColor="Black"/>
+                    
+                    <Button Text="{Binding PopupButtonText}" 
+                            Command="{Binding ClosePopupCommand}"
+                            Margin="0"
+                            FontSize="15" 
+                            TextColor="#3182ce"
+                            BackgroundColor="Transparent"
+                            HorizontalOptions="End"/>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- Loading overlay -->
+        <Grid IsVisible="{Binding IsLoading}"
+              BackgroundColor="#80000000"
+              ZIndex="10">
+            <ActivityIndicator IsRunning="True"
+                               IsVisible="True"
+                               Color="White"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Center"
+                               WidthRequest="40"
+                               HeightRequest="40"/>
+        </Grid>
+        
+    </Grid>
 </ContentPage>

@@ -1,23 +1,19 @@
-﻿using AutoX.Gara.Shared.Packets;
-using Nalix.Common.Diagnostics;
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using AutoX.Gara.Shared.Packets;
 using Nalix.Common.Messaging.Packets.Abstractions;
 using Nalix.Framework.Injection;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
-using Nalix.Logging;
 using Nalix.Shared.Messaging.Catalog;
 
-namespace AutoX.Gara.Backend;
+namespace AutoX.Gara.Shared;
 
 public static class AppConfig
 {
     /// <summary>
     /// Initializes client components. Call this once at startup.
     /// </summary>
-    public static void Load()
+    public static void Register()
     {
-        InstanceManager.Instance.Register<ILogger>(NLogix.Host.Instance);
-
         // 1) Build packet catalog.
         PacketCatalogFactory factory = new();
 
