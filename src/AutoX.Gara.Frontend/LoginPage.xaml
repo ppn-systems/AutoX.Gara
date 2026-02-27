@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             Shell.NavBarIsVisible="False"
+             Shell.FlyoutBehavior="Disabled"
+             x:Class="AutoX.Gara.Frontend.LoginPage"
+             Title="Login">
+
+    <VerticalStackLayout Spacing="16" Margin="30">
+
+        <Image Source="car.png"
+               HeightRequest="60"
+               HorizontalOptions="Center"
+               Margin="0,0,0,6"/>
+        
+        <Label Text="MMK Login"
+               FontAttributes="Bold"
+               FontSize="20"
+               HorizontalOptions="Center"
+               TextColor="White"/>
+
+        <Grid HeightRequest="48">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="32"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="32"/>
+            </Grid.ColumnDefinitions>
+            <!-- Cột 0 trống -->
+            <Entry Grid.Column="1"
+                   Placeholder="Username"
+                   Text="{Binding Username}"
+                   FontSize="16"
+                   HeightRequest="48"
+                   BackgroundColor="#222"
+                   TextColor="White"
+                   Margin="0"/>
+            <!-- Cột 2 trống luôn -->
+        </Grid>
+
+        <!-- Password row: icon mắt ở cột 0 -->
+        <Grid HeightRequest="48">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="32"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="32"/>
+            </Grid.ColumnDefinitions>
+            <!-- Cột 0: trống luôn -->
+            <!-- Cột 1: Entry password -->
+            <Entry Grid.Column="1"
+                   Placeholder="Password"
+                   IsPassword="{Binding IsPasswordHidden}"
+                   Text="{Binding Password}"
+                   FontSize="16"
+                   HeightRequest="48"
+                   BackgroundColor="#222"
+                   TextColor="White"
+                   Margin="0"/>
+            <!-- Cột 2: icon mắt -->
+            <Image Grid.Column="2"
+                   Source="{Binding PasswordIcon}"
+                   WidthRequest="24"
+                   HeightRequest="24"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding TogglePasswordCommand}" />
+                </Image.GestureRecognizers>
+            </Image>
+        </Grid>
+
+        <!-- Login button -->
+        <Button Text="Login"
+                Command="{Binding LoginCommand}" 
+                HeightRequest="46"
+                CornerRadius="12"
+                FontAttributes="Bold"
+                BackgroundColor="#3182ce"
+                TextColor="White"
+                FontSize="16"
+                Margin="32"/>
+
+        <Label Text="{Binding ErrorMessage}"
+               TextColor="Red"
+               FontSize="14"
+               IsVisible="{Binding HasError}"
+               HorizontalOptions="Start"/>
+
+    </VerticalStackLayout>
+    
+</ContentPage>

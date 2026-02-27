@@ -9,5 +9,15 @@ public partial class App : Application
 {
     public App() => InitializeComponent();
 
-    protected override Window CreateWindow(IActivationState? activationState) => new(new AppShell());
+    protected override Window CreateWindow(IActivationState? activationState)
+    {
+        Window window = new(new AppShell())
+        {
+            // Chỉ Windows desktop mới đổi size window được
+            Width = 400,
+            Height = 480
+        };
+
+        return window;
+    }
 }

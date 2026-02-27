@@ -6,5 +6,13 @@ namespace AutoX.Gara.Frontend;
 
 public partial class AppShell : Shell
 {
-    public AppShell() => InitializeComponent();
+    public AppShell()
+    {
+        InitializeComponent();
+
+        Routing.RegisterRoute("MainPage", typeof(MainPage));
+        Routing.RegisterRoute("LoginPage", typeof(LoginPage));
+
+        base.GoToAsync("///LoginPage");
+    }
 }
