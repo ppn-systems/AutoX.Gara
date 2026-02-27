@@ -14,7 +14,7 @@ namespace AutoX.Gara.Infrastructure.Database;
 /// <summary>
 /// DbContext cho ứng dụng quản lý gara ô tô.
 /// </summary>
-public class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : DbContext(options), IAutoXDbContext
+public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : DbContext(options), IAutoXDbContext
 {
     #region Properties
 

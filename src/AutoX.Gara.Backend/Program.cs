@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Communication;
+using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared;
 using Nalix.Common.Diagnostics;
@@ -22,30 +23,36 @@ public static class Program
 
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "<Pending>")]
     public static void InitializeComponent()
     {
+        AutoXDbContextFactory factory = InstanceManager.Instance.GetOrCreateInstance<AutoXDbContextFactory>();
+        AutoXDbContext dbContext = factory.CreateDbContext(System.Array.Empty<System.String>());
+
+        InstanceManager.Instance.Register<AutoXDbContext>(dbContext);
         InstanceManager.Instance.Register<ILogger>(NLogix.Host.Instance);
 
-        AutoXDbContextFactory factory = InstanceManager.Instance.GetOrCreateInstance<AutoXDbContextFactory>();
-
-        PacketDispatchChannel channel = new(cfg => cfg
+        PacketDispatchChannel channel = new(dispatchOptions =>
+        {
             // Inbound
-            .WithInbound(new PermissionMiddleware())
-            .WithInbound(new ConcurrencyMiddleware())
-            .WithInbound(new RateLimitMiddleware())
-            .WithInbound(new UnwrapPacketMiddleware())
-            .WithInbound(new TimeoutMiddleware())
+            dispatchOptions.WithInbound(new PermissionMiddleware());
+            dispatchOptions.WithInbound(new ConcurrencyMiddleware());
+            dispatchOptions.WithInbound(new RateLimitMiddleware());
+            dispatchOptions.WithInbound(new UnwrapPacketMiddleware());
+            dispatchOptions.WithInbound(new TimeoutMiddleware());
+
             // Outbound
-            .WithOutbound(new WrapPacketMiddleware())
+            dispatchOptions.WithOutbound(new WrapPacketMiddleware());
             // Logging
-            .WithLogging(InstanceManager.Instance.GetExistingInstance<ILogger>())
-            .WithErrorHandling((exception, command)
+            dispatchOptions.WithLogging(InstanceManager.Instance.GetExistingInstance<ILogger>());
+            dispatchOptions.WithErrorHandling((exception, command)
                 => InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                           .Error($"Error handling command: {command}", exception))
+                                           .Error($"Error handling command: {command}", exception));
             // OPS
-            .WithHandler(() => new HandshakeOps())
-        //.WithHandler(() => new AccountOps(credentials))
-        );
+            dispatchOptions.WithHandler(() => new HandshakeOps());
+            dispatchOptions.WithHandler(() => new AccountOps(InstanceManager.Instance.GetExistingInstance<AutoXDbContext>()));
+            dispatchOptions.WithHandler(() => new CustomerOps(InstanceManager.Instance.GetExistingInstance<AutoXDbContext>()));
+        });
 
         AppConfig.Register();
     }

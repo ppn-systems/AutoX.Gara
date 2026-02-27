@@ -4,7 +4,6 @@ using AutoX.Gara.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Nalix.Common.Diagnostics;
-using Nalix.Common.Infrastructure.Environment;
 using Nalix.Framework.Configuration;
 using Nalix.Framework.Injection;
 
@@ -25,7 +24,7 @@ namespace AutoX.Gara.Infrastructure.Database;
 /// Factory này không phụ thuộc vào ASP.NET runtime pipeline
 /// và sử dụng cấu hình được cung cấp từ <see cref="DatabaseOptions"/>.
 /// </remarks>
-public class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbContext>
+public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbContext>
 {
     /// <summary>
     /// Tạo mới một instance của <see cref="AutoXDbContext"/> tại design-time.
@@ -98,9 +97,7 @@ public class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbContext>
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
                                         .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Configuring DbContext for SQLite.");
 
-                optionsBuilder.UseSqlite(
-                    $"Data Source={Directories.DataDirectory}\\Auto.db",
-                    sqliteOptions =>
+                optionsBuilder.UseSqlite(configuration.ConnectionString, sqliteOptions =>
                     {
                         sqliteOptions.CommandTimeout(60);
                         sqliteOptions.MigrationsHistoryTable("__MigrationsHistory");

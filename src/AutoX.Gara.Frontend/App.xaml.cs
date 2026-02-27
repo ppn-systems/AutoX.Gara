@@ -15,7 +15,7 @@ public partial class App : Application
         {
             // Chỉ Windows desktop mới đổi size window được
             Width = 400,
-            Height = 480
+            Height = 520
         };
 
         return window;

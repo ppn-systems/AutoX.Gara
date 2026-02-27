@@ -33,7 +33,7 @@ public class Employee
     /// </summary>
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.Int32 Id { get; set; }
+    public System.Int32 Id { get; protected set; }
 
     /// <summary>
     /// Tên nhân viên.

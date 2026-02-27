@@ -148,8 +148,8 @@ public partial class LoginViewModel : ObservableObject
             {
                 Shell.Current.Items.Remove(loginItem);
             }
-            Application.Current?.Windows[0].Width = 1000;
-            Application.Current?.Windows[0].Height = 700;
+            Application.Current?.Windows[0].Width = 1280;
+            Application.Current?.Windows[0].Height = 720;
             Shell.Current.GoToAsync("///MainPage");
         }
         else
@@ -162,7 +162,7 @@ public partial class LoginViewModel : ObservableObject
     private void TogglePasswordVisibility()
     {
         IsPasswordHidden = !IsPasswordHidden;
-        OnPropertyChanged(nameof(PasswordIcon)); // Để cập nhật icon nếu đổi trạng thái
+        OnPropertyChanged(nameof(PasswordIcon));
     }
 
     private async System.Threading.Tasks.Task InitConnectionAsync()

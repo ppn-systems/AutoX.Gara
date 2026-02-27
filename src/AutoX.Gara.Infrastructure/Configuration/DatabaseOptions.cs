@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using Nalix.Common.Infrastructure.Environment;
 using Nalix.Framework.Configuration.Binding;
 
 namespace AutoX.Gara.Infrastructure.Configuration;
@@ -17,5 +18,5 @@ public sealed class DatabaseOptions : ConfigurationLoader
     /// <summary>
     /// Default database connection string.
     /// </summary>
-    public System.String ConnectionString { get; init; } = "Data Source=AutoX.db";
+    public System.String ConnectionString { get; init; } = $"Data Source={System.IO.Path.Combine(Directories.DatabaseDirectory, "AutoX.db")}";
 }
