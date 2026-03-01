@@ -175,7 +175,7 @@ public partial class LoginViewModel : ObservableObject
         try
         {
             // Attempt connect
-            await client.ConnectAsync();
+            await client.ConnectAsync("192.168.1.10", 57206);
 
             // Khi connect thành công, thực hiện handshake
             System.Boolean handshakeSuccess = await client.HandshakeAsync(timeoutMs: 5000);
@@ -191,10 +191,10 @@ public partial class LoginViewModel : ObservableObject
                 ShowPopup("Handshake failed", "Cannot establish secure connection. Please try again.", "Try again");
             }
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
             IsLoading = false;
-            ShowPopup("Network error", "Cannot connect to server. Please check your network.", "Try again");
+            ShowPopup("Network error", ex.Message, "Try again");
         }
     }
 

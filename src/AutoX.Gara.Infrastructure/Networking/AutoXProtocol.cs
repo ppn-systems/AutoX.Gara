@@ -3,7 +3,6 @@
 using Nalix.Common.Connection;
 using Nalix.Common.Diagnostics;
 using Nalix.Common.Infrastructure.Connection;
-using Nalix.Common.Messaging.Packets.Abstractions;
 using Nalix.Framework.Injection;
 using Nalix.Network.Abstractions;
 using Nalix.Network.Protocols;
@@ -16,11 +15,11 @@ namespace AutoX.Gara.Infrastructure.Networking;
 /// </summary>
 public sealed class AutoXProtocol : Protocol
 {
-    private readonly IPacketDispatch<IPacket> s_Dispatch;
+    private readonly IPacketDispatch s_Dispatch;
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
         "Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
-    public AutoXProtocol(IPacketDispatch<IPacket> dispatch) : base() => s_Dispatch = dispatch;
+    public AutoXProtocol(IPacketDispatch dispatch) : base() => s_Dispatch = dispatch;
 
     /// <summary>
     /// Processes a received message from an active connection.

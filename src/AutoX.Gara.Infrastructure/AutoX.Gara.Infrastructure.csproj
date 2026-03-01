@@ -25,11 +25,11 @@
 
 	<!-- Nalix Framework -->
 	<ItemGroup>
-		<PackageReference Include="Nalix.Common" Version="10.2.0" />
-		<PackageReference Include="Nalix.Shared" Version="10.2.0" />
-		<PackageReference Include="Nalix.Logging" Version="10.2.0" />
-		<PackageReference Include="Nalix.Network" Version="10.2.0" />
-		<PackageReference Include="Nalix.Framework" Version="10.2.0" />
+		<PackageReference Include="Nalix.Common" Version="10.4.0" />
+		<PackageReference Include="Nalix.Shared" Version="10.4.0" />
+		<PackageReference Include="Nalix.Logging" Version="10.4.0" />
+		<PackageReference Include="Nalix.Network" Version="10.4.0" />
+		<PackageReference Include="Nalix.Framework" Version="10.4.0" />
 	</ItemGroup>
 
 	<!-- EF SQL -->

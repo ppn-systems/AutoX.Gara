@@ -25,7 +25,7 @@ public sealed class Account
     /// </summary>
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.Int32 Id { get; protected set; }
+    public System.Int32 Id { get; set; }
 
     /// <summary>
     /// Tên đăng nhập (username). Dùng để đăng nhập hệ thống.
