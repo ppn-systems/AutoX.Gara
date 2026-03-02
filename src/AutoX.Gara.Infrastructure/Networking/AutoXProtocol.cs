@@ -5,7 +5,9 @@ using Nalix.Common.Diagnostics;
 using Nalix.Common.Infrastructure.Connection;
 using Nalix.Framework.Injection;
 using Nalix.Network.Abstractions;
+using Nalix.Network.Connections;
 using Nalix.Network.Protocols;
+using System.Threading;
 
 namespace AutoX.Gara.Infrastructure.Networking;
 
@@ -17,9 +19,20 @@ public sealed class AutoXProtocol : Protocol
 {
     private readonly IPacketDispatch s_Dispatch;
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage(
-        "Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
-    public AutoXProtocol(IPacketDispatch dispatch) : base() => s_Dispatch = dispatch;
+    /// <inheritdoc/>
+    public AutoXProtocol(IPacketDispatch dispatch) : base()
+    {
+        s_Dispatch = dispatch;
+        IsAccepting = true; // Enable accepting connections by default
+        KeepConnectionOpen = true;
+    }
+
+    public override void OnAccept(IConnection connection, CancellationToken cancellationToken = default)
+    {
+        base.OnAccept(connection, cancellationToken);
+        InstanceManager.Instance.GetExistingInstance<ConnectionHub>()?
+                                .RegisterConnection(connection);
+    }
 
     /// <summary>
     /// Processes a received message from an active connection.
