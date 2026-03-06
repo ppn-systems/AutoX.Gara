@@ -72,7 +72,7 @@ public class AccountPacket : FrameBase, IPoolable, IPacketTransformer<AccountPac
     public static AccountPacket Deserialize(System.ReadOnlySpan<System.Byte> buffer)
     {
         AccountPacket packet = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                                           .Get<AccountPacket>();
+                                                       .Get<AccountPacket>();
 
         _ = LiteSerializer.Deserialize(buffer, ref packet);
         return packet;

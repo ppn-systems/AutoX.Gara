@@ -33,7 +33,6 @@ namespace AutoX.Gara.Backend;
 public static class Program
 {
     private static readonly System.Int32 IntervalInMinutes = 5;
-    private static readonly System.Int32 MaxRecordsPerFile = 100;
     private static readonly System.Threading.ManualResetEvent QuitEvent = new(false);
 
     [System.STAThread]
@@ -157,14 +156,14 @@ public static class Program
         PacketDispatchChannel channel = new(dispatchOptions =>
         {
             // Inbound
-            dispatchOptions.WithInbound(new PermissionMiddleware());
-            dispatchOptions.WithInbound(new ConcurrencyMiddleware());
-            dispatchOptions.WithInbound(new RateLimitMiddleware());
-            dispatchOptions.WithInbound(new UnwrapPacketMiddleware());
-            dispatchOptions.WithInbound(new TimeoutMiddleware());
+            dispatchOptions.WithMiddleware(new PermissionMiddleware());
+            dispatchOptions.WithMiddleware(new ConcurrencyMiddleware());
+            dispatchOptions.WithMiddleware(new RateLimitMiddleware());
+            dispatchOptions.WithMiddleware(new UnwrapPacketMiddleware());
+            dispatchOptions.WithMiddleware(new TimeoutMiddleware());
 
             // Outbound
-            dispatchOptions.WithOutbound(new WrapPacketMiddleware());
+            dispatchOptions.WithMiddleware(new WrapPacketMiddleware());
 
             // Logging
             dispatchOptions.WithLogging(InstanceManager.Instance.GetExistingInstance<ILogger>());
@@ -188,10 +187,12 @@ public static class Program
 
     private static System.Threading.Tasks.Task LISTEN_TO_KEYBOARD(IWorkerContext ctx, System.Threading.CancellationToken ct)
     {
-        return System.Threading.Tasks.Task.Run(() =>
+        return System.Threading.Tasks.Task.Run(async () =>
         {
             System.DateTime lastReportTime = System.DateTime.MinValue;
             const System.Double ReportCooldownSeconds = 5.0;
+
+            await System.Threading.Tasks.Task.Delay(50, ct);
 
             while (!ct.IsCancellationRequested)
             {
