@@ -7,6 +7,7 @@ using Nalix.Framework.Injection;
 using Nalix.Network.Abstractions;
 using Nalix.Network.Connections;
 using Nalix.Network.Protocols;
+using System.Diagnostics;
 using System.Threading;
 
 namespace AutoX.Gara.Infrastructure.Networking;
@@ -30,6 +31,7 @@ public sealed class AutoXProtocol : Protocol
     public override void OnAccept(IConnection connection, CancellationToken cancellationToken = default)
     {
         base.OnAccept(connection, cancellationToken);
+
         InstanceManager.Instance.GetExistingInstance<ConnectionHub>()?
                                 .RegisterConnection(connection);
     }
@@ -42,6 +44,7 @@ public sealed class AutoXProtocol : Protocol
     /// <param name="args">Event arguments containing the connection and message information.</param>
     public override void ProcessMessage(System.Object sender, IConnectEventArgs args)
     {
+        Debug.WriteLine($"[Server] Received packet from connection id={args.Connection.ID}");
         // Validate arguments and protocol state
         System.ArgumentNullException.ThrowIfNull(args);
 

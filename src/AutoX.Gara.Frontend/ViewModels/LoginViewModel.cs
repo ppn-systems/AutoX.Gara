@@ -1,9 +1,13 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Shared.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
+using Nalix.Common.Diagnostics;
 using Nalix.Framework.Injection;
+using Nalix.Logging;
+using Nalix.Logging.Sinks;
 using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
 using System.Linq;
@@ -172,13 +176,42 @@ public partial class LoginViewModel : ObservableObject
         IsLoading = true;
         IsNetworkReady = false;
 
+
+        // Đăng ký logger với custom log file name formatter
+        InstanceManager.Instance.Register<ILogger>(
+            new NLogix(cfg =>
+                cfg.RegisterTarget(
+                    new BatchFileLogTarget(cfg =>
+                    {
+                        // Tên file log mặc định (sẽ được custom bởi FormatLogFileName)
+                        cfg.LogFileName = "AutoX.log";
+                        // Định nghĩa FormatLogFileName để custom tên file log
+                        cfg.FormatLogFileName = defaultFileName =>
+                        {
+                            // Lấy ngày hiện tại (format yyyyMMdd)
+                            System.String datePart = System.DateTime.Now.ToString("yyyyMMdd");
+                            // Giữ lại extension nếu cần
+                            var ext = System.IO.Path.GetExtension(defaultFileName);
+                            // Trả về tên file log mong muốn
+                            return $"AutoX_{datePart}{ext}";
+                        };
+                    })
+                )
+            )
+        );
+
         try
         {
+            InstanceManager.Instance.GetExistingInstance<ILogger>()?.Info("Attempting to connect to server...");
+
             // Attempt connect
-            await client.ConnectAsync("192.168.1.10", 57206);
+            await client.ConnectAsync("127.0.0.1", 57206);
+
+            await System.Threading.Tasks.Task.Delay(5500); // Simulate some delay after connection
 
             // Khi connect thành công, thực hiện handshake
-            System.Boolean handshakeSuccess = await client.HandshakeAsync(timeoutMs: 5000);
+            client.Options.EncryptionKey = null;
+            System.Boolean handshakeSuccess = await client.HandshakeAsync((System.UInt16)OpCommand.HANDSHAKE, timeoutMs: 10000);
 
             IsLoading = false;
 
@@ -188,7 +221,8 @@ public partial class LoginViewModel : ObservableObject
             }
             else
             {
-                ShowPopup("Handshake failed", "Cannot establish secure connection. Please try again.", "Try again");
+                ShowPopup("Handshake failed", $"key_length={client.Options.EncryptionKey?.Length} IsConnected={client.IsConnected}", "Try again");
+                //ShowPopup("Handshake failed", "Cannot establish secure connection. Please try again.", "Try again");
             }
         }
         catch (System.Exception ex)

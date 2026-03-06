@@ -42,6 +42,11 @@ public static class Program
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "<Pending>")]
     public static void Main(System.String[] args)
     {
+        System.Console.OutputEncoding = System.Text.Encoding.UTF8;
+        System.Console.ForegroundColor = System.ConsoleColor.Green;
+        System.Console.WriteLine("Message with color");
+        System.Console.ResetColor();
+
         InitializeComponent();
 
         InstanceManager.Instance.GetExistingInstance<IListener>()?
