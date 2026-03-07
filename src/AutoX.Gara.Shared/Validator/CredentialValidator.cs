@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-namespace AutoX.Gara.Frontend.Services;
+namespace AutoX.Gara.Shared.Validator;
 
 /// <summary>
 /// Validation rules cho credentials — giống server để early-reject trước khi gửi packet.
@@ -11,7 +11,7 @@ public static class CredentialValidator
     /// <summary>
     /// Validate username: không rỗng, ≤50 ký tự, chỉ a-z A-Z 0-9 _ -
     /// </summary>
-    public static System.Boolean IsValidUsername(System.String? username)
+    public static System.Boolean IsValidUsername(System.String username)
     {
         if (System.String.IsNullOrWhiteSpace(username))
         {
@@ -37,7 +37,7 @@ public static class CredentialValidator
     /// <summary>
     /// Validate password: ≥8 ký tự, có hoa, thường, số, ký tự đặc biệt.
     /// </summary>
-    public static System.Boolean IsValidPassword(System.String? password)
+    public static System.Boolean IsValidPassword(System.String password)
         => !System.String.IsNullOrWhiteSpace(password)
         && password.Length >= 8
         && System.Linq.Enumerable.Any(password, System.Char.IsLower)

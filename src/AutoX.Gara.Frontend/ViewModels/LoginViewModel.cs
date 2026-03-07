@@ -2,7 +2,8 @@
 
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Services;
-using AutoX.Gara.Frontend.Shared.Results;
+using AutoX.Gara.Frontend.ViewModels.Results;
+using AutoX.Gara.Shared.Validator;
 using AutoX.Gara.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -75,7 +76,7 @@ public sealed partial class LoginViewModel : ObservableObject
     /// <summary>
     /// Constructor mặc định — dùng khi chưa có DI container (giữ tương thích với code cũ).
     /// </summary>
-    public LoginViewModel() : this(new NalixLoginService(), new ShellNavigationService()) { }
+    public LoginViewModel() : this(new LoginService(), new ShellNavigationService()) { }
 
     // ─── Property Change Hooks ────────────────────────────────────────────────
 

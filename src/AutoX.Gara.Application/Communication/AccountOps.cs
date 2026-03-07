@@ -4,16 +4,17 @@ using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Packets;
+using AutoX.Gara.Shared.Validator;
 using Nalix.Common.Connection;
 using Nalix.Common.Diagnostics;
 using Nalix.Common.Enums;
+using Nalix.Common.Infrastructure.Connection;
 using Nalix.Common.Messaging.Packets.Abstractions;
 using Nalix.Common.Messaging.Packets.Attributes;
 using Nalix.Common.Messaging.Protocols;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
 using Nalix.Shared.Security.Credentials;
-using System.Linq;
 
 namespace AutoX.Gara.Application.Communication;
 
@@ -32,6 +33,8 @@ public sealed class AccountOps(AutoXDbContext context)
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.NONE)]
     [PacketOpcode((System.UInt16)OpCommand.LOGIN)]
+    [PacketRateLimit(requestsPerSecond: 1, burst: 1)]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1862:Use the 'StringComparison' method overloads to perform case-insensitive string comparisons", Justification = "<Pending>")]
     public async System.Threading.Tasks.Task LoginAsync(
         IPacket p,
         IConnection connection)
@@ -46,14 +49,23 @@ public sealed class AccountOps(AutoXDbContext context)
             return;
         }
 
-        Account account = await s_account.GetFirstOrDefaultAsync(a => a.Username == packet.Account.Username);
+        Account account = await s_account.GetFirstOrDefaultAsync(a => a.Username == packet.Account.Username.Trim().ToLower());
 
         if (account == null)
         {
+            var allAccounts = await s_account.GetAsync(pageSize: 10); // lấy 1000 user đầu; tuỳ database
+            System.Console.WriteLine("==== Debug: Username trong database ====");
+
+            foreach (var acc in allAccounts)
+            {
+                System.Console.WriteLine($"- [{acc.Username}]");
+            }
+
+
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.NOT_FOUND,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
 
             return;
         }
@@ -66,7 +78,7 @@ public sealed class AccountOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.ACCOUNT_LOCKED,
-                ProtocolAdvice.BACKOFF_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.BACKOFF_RETRY, packet.SequenceId).ConfigureAwait(false);
 
             return;
         }
@@ -83,7 +95,7 @@ public sealed class AccountOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.UNAUTHENTICATED,
-                ProtocolAdvice.FIX_AND_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
 
             return;
         }
@@ -96,7 +108,7 @@ public sealed class AccountOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.FORBIDDEN,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
 
             return;
         }
@@ -110,13 +122,14 @@ public sealed class AccountOps(AutoXDbContext context)
             await s_account.SaveChangesAsync();
 
             connection.Level = account.Role;
+            connection.OnCloseEvent += OnAccountLogout;
             InstanceManager.Instance.GetOrCreateInstance<ConnectionHub>()
                                     .AssociateUsername(connection, packet.Account.Username);
 
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
-                ProtocolAdvice.NONE).ConfigureAwait(false);
+                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
         }
         catch (System.Exception ex)
         {
@@ -126,7 +139,7 @@ public sealed class AccountOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
 
@@ -147,22 +160,22 @@ public sealed class AccountOps(AutoXDbContext context)
             return;
         }
 
-        if (VALIDATE_USERNAME(packet.Account.Username))
+        if (!CredentialValidator.IsValidUsername(packet.Account.Username))
         {
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INVALID_USERNAME,
-                ProtocolAdvice.FIX_AND_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
 
             return;
         }
 
-        if (VALIDATE_PASSWORD(packet.Account.Password))
+        if (!CredentialValidator.IsValidPassword(packet.Account.Password))
         {
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.WEAK_PASSWORD,
-                ProtocolAdvice.FIX_AND_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
 
             return;
         }
@@ -172,7 +185,7 @@ public sealed class AccountOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.ALREADY_EXISTS,
-                ProtocolAdvice.FIX_AND_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
 
             return;
         }
@@ -182,7 +195,7 @@ public sealed class AccountOps(AutoXDbContext context)
 
         Account newAccount = new()
         {
-            Username = packet.Account.Username,
+            Username = packet.Account.Username.Trim().ToLower(),
             Salt = salt,
             Hash = hash,
             Role = PermissionLevel.GUEST,
@@ -205,7 +218,7 @@ public sealed class AccountOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
 
             return;
         }
@@ -213,43 +226,27 @@ public sealed class AccountOps(AutoXDbContext context)
         await connection.SendAsync(
             ControlType.NONE,
             ProtocolReason.NONE,
-            ProtocolAdvice.NONE).ConfigureAwait(false);
+            ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
 
         // TODO (pro): Gửi email xác thực nếu bạn dùng kịch bản kích hoạt email
     }
 
-    #region Private Methods
-
-    // Validate username: không rỗng, đúng format, đúng độ dài
-    private static System.Boolean VALIDATE_USERNAME(System.String username)
+    [System.Diagnostics.StackTraceHidden]
+    [System.Runtime.CompilerServices.MethodImpl(
+        System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+    private async void OnAccountLogout(System.Object sender, IConnectEventArgs args)
     {
-        if (System.String.IsNullOrWhiteSpace(username))
+        args.Connection.OnCloseEvent -= OnAccountLogout;
+
+        System.String username = InstanceManager.Instance.GetExistingInstance<ConnectionHub>()
+                                                         .GetUsername(args.Connection.ID);
+
+        Account account = await s_account.GetFirstOrDefaultAsync(a => a.Username == username);
+
+        if (account != null)
         {
-            return false;
+            account.Deactivate();
+            await s_account.SaveChangesAsync();
         }
-
-        if (username.Length > 50)
-        {
-            return false;
-        }
-
-        foreach (System.Char c in username)
-        {
-            if (!IS_ALLOWED_USERNAME_CHAR(c))
-            {
-                return false;
-            }
-        }
-
-        return true;
-
-        static System.Boolean IS_ALLOWED_USERNAME_CHAR(System.Char c) => c is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '_' or '-';
     }
-
-    // Validate password: dài ≥8, có hoa, thường, số, đặc biệt - bạn điều chỉnh theo nhu cầu
-    private static System.Boolean VALIDATE_PASSWORD(System.String password)
-        => !System.String.IsNullOrWhiteSpace(password) && password.Length >= 8 && password.Any(System.Char.IsLower)
-        && password.Any(System.Char.IsUpper) && password.Any(System.Char.IsDigit) && !password.All(System.Char.IsLetterOrDigit);
-
-    #endregion Private Methods
 }

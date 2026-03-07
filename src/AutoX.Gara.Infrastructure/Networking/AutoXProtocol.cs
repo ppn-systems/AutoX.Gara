@@ -76,9 +76,8 @@ public sealed class AutoXProtocol : Protocol
     /// <param name="args">Event arguments containing connection and processing results.</param>
     protected override void OnPostProcess(IConnectEventArgs args)
     {
-        var stack = System.Environment.StackTrace;
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[AutoX.{nameof(AutoXProtocol)}:{nameof(OnPostProcess)}] Post-processing connection id={args.Connection.ID} st={stack}");
+                                .Debug($"[AutoX.{nameof(AutoXProtocol)}:{nameof(OnPostProcess)}] Post-processing connection id={args.Connection.ID}");
 
         // TODO: Add post-processing logic if needed (audit, cleanup, stats)
     }

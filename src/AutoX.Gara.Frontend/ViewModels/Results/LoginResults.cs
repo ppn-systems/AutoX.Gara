@@ -2,7 +2,7 @@
 
 using Nalix.Common.Messaging.Protocols;
 
-namespace AutoX.Gara.Frontend.Shared.Results;
+namespace AutoX.Gara.Frontend.ViewModels.Results;
 
 /// <summary>
 /// Kết quả kết nối + handshake.

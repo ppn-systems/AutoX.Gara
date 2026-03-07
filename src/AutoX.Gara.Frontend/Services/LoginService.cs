@@ -1,12 +1,13 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Frontend.Shared.Results;
+using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Packets;
 using AutoX.Gara.UI.Services;
 using Nalix.Common.Messaging.Protocols;
 using Nalix.Framework.Injection;
+using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
 using Nalix.Shared.Messaging.Controls;
@@ -19,13 +20,15 @@ namespace AutoX.Gara.Frontend.Services;
 /// Implementation thực tế: kết nối → handshake → gửi LOGIN packet → đợi phản hồi.
 /// Toàn bộ network I/O nằm ở đây, ViewModel không biết gì về ReliableClient.
 /// </summary>
-public sealed class NalixLoginService : ILoginService
+public sealed class LoginService : ILoginService
 {
     // ─── Cấu hình ────────────────────────────────────────────────────────────
-    private const System.String ServerHost = "127.0.0.1";
+
     private const System.Int32 ServerPort = 57206;
-    private const System.Int32 HandshakeTimeoutMs = 10_000;
-    private const System.Int32 LoginTimeoutMs = 8_000;
+    private const System.String ServerHost = "127.0.0.1";
+
+    private const System.Int32 LoginTimeoutMs = 5_000;
+    private const System.Int32 HandshakeTimeoutMs = 5_000;
 
     // ─── ConnectAsync ─────────────────────────────────────────────────────────
 
@@ -35,7 +38,7 @@ public sealed class NalixLoginService : ILoginService
         {
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
-            await client.ConnectAsync(ServerHost, ServerPort);                  // TODO: forward ct khi Nalix hỗ trợ
+            await client.ConnectAsync(ServerHost, ServerPort, ct);
 
             System.Boolean ok = await client.HandshakeAsync((System.UInt16)OpCommand.HANDSHAKE, timeoutMs: HandshakeTimeoutMs, ct: ct);
 
@@ -61,18 +64,20 @@ public sealed class NalixLoginService : ILoginService
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
             // 1. Build packet
-            var model = new AccountModel { Username = username, Password = password };
-            var packet = new AccountPacket();
+            System.UInt32 sq = Csprng.NextUInt32();
+            AccountPacket packet = new();
+            AccountModel model = new() { Username = username, Password = password };
+
+            packet.SequenceId = sq;
             packet.Initialize((System.UInt16)OpCommand.LOGIN, model);
 
             // 2. TaskCompletionSource để "await" callback một lần
             //    Dùng thay Task.Delay polling — không có race condition
-            var tcs = new TaskCompletionSource<LoginResult>(
-                TaskCreationOptions.RunContinuationsAsynchronously);
+            TaskCompletionSource<LoginResult> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
             System.IDisposable? sub = null;
             sub = client.OnOnce<Directive>(
-                predicate: p => p.OpCode == (System.UInt16)OpCommand.LOGIN,
+                predicate: p => p.SequenceId == sq,
                 handler: resp =>
                 {
                     sub?.Dispose();
@@ -88,10 +93,10 @@ public sealed class NalixLoginService : ILoginService
             await client.SendAsync(packet, ct);
 
             // 4. Đợi kết quả với timeout + cancellation
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
-            var timeoutTask = Task.Delay(LoginTimeoutMs, cts.Token);
-            var winner = await Task.WhenAny(tcs.Task, timeoutTask);
+            Task timeoutTask = Task.Delay(LoginTimeoutMs, cts.Token);
+            Task winner = await Task.WhenAny(tcs.Task, timeoutTask);
 
             if (winner != tcs.Task)
             {
