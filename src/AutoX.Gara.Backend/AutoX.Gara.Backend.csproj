@@ -9,7 +9,6 @@
 		<Deterministic>true</Deterministic>
 		<TargetFramework>net10.0</TargetFramework>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<AssemblyName>gara-server</AssemblyName>
 
 		<!-- build luôn runtime -->
 		<SelfContained>true</SelfContained>

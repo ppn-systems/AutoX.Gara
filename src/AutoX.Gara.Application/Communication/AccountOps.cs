@@ -112,6 +112,11 @@ public sealed class AccountOps(AutoXDbContext context)
             connection.Level = account.Role;
             InstanceManager.Instance.GetOrCreateInstance<ConnectionHub>()
                                     .AssociateUsername(connection, packet.Account.Username);
+
+            await connection.SendAsync(
+                ControlType.NONE,
+                ProtocolReason.NONE,
+                ProtocolAdvice.NONE).ConfigureAwait(false);
         }
         catch (System.Exception ex)
         {

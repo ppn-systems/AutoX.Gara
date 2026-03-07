@@ -42,11 +42,6 @@ public static class Program
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "<Pending>")]
     public static void Main(System.String[] args)
     {
-        System.Console.OutputEncoding = System.Text.Encoding.UTF8;
-        System.Console.ForegroundColor = System.ConsoleColor.Green;
-        System.Console.WriteLine("Message with color");
-        System.Console.ResetColor();
-
         InitializeComponent();
 
         InstanceManager.Instance.GetExistingInstance<IListener>()?
@@ -139,7 +134,6 @@ public static class Program
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "<Pending>")]
     public static void InitializeComponent()
     {
-
 #if DEBUG
         ConfigurationManager.Instance.Get<NLogixOptions>()
                             .MinLevel = LogLevel.Meta;
@@ -153,10 +147,8 @@ public static class Program
         // Register application configuration
         AppConfig.Register();
 
-        AutoXDbContextFactory factory = InstanceManager.Instance.GetOrCreateInstance<AutoXDbContextFactory>();
-        AutoXDbContext dbContext = factory.CreateDbContext(System.Array.Empty<System.String>());
-
-        InstanceManager.Instance.Register<AutoXDbContext>(dbContext);
+        AutoXDbContextFactory factory = new();
+        InstanceManager.Instance.Register<AutoXDbContextFactory>(factory);
 
         PacketDispatchChannel channel = new(dispatchOptions =>
         {
@@ -178,8 +170,18 @@ public static class Program
 
             // OPS
             dispatchOptions.WithHandler(() => new HandshakeOps());
-            dispatchOptions.WithHandler(() => new AccountOps(InstanceManager.Instance.GetExistingInstance<AutoXDbContext>()));
-            dispatchOptions.WithHandler(() => new CustomerOps(InstanceManager.Instance.GetExistingInstance<AutoXDbContext>()));
+            dispatchOptions.WithHandler(() =>
+                new AccountOps(
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                                            .CreateDbContext(System.Array.Empty<System.String>())
+                )
+            );
+            dispatchOptions.WithHandler(() =>
+                new CustomerOps(
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                                            .CreateDbContext(System.Array.Empty<System.String>())
+                )
+            );
         });
 
         AutoXProtocol xProtocol = new(channel);
