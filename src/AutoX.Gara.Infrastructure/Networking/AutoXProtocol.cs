@@ -7,7 +7,6 @@ using Nalix.Framework.Injection;
 using Nalix.Network.Abstractions;
 using Nalix.Network.Connections;
 using Nalix.Network.Protocols;
-using System.Diagnostics;
 using System.Threading;
 
 namespace AutoX.Gara.Infrastructure.Networking;
@@ -44,7 +43,6 @@ public sealed class AutoXProtocol : Protocol
     /// <param name="args">Event arguments containing the connection and message information.</param>
     public override void ProcessMessage(System.Object sender, IConnectEventArgs args)
     {
-        Debug.WriteLine($"[Server] Received packet from connection id={args.Connection.ID}");
         // Validate arguments and protocol state
         System.ArgumentNullException.ThrowIfNull(args);
 
@@ -78,8 +76,9 @@ public sealed class AutoXProtocol : Protocol
     /// <param name="args">Event arguments containing connection and processing results.</param>
     protected override void OnPostProcess(IConnectEventArgs args)
     {
+        var stack = System.Environment.StackTrace;
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[AutoX.{nameof(AutoXProtocol)}:{nameof(OnPostProcess)}] Post-processing connection id={args.Connection.ID}");
+                                .Debug($"[AutoX.{nameof(AutoXProtocol)}:{nameof(OnPostProcess)}] Post-processing connection id={args.Connection.ID} st={stack}");
 
         // TODO: Add post-processing logic if needed (audit, cleanup, stats)
     }

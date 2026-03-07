@@ -1,340 +1,246 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Packets;
+using AutoX.Gara.Frontend.Abstractions;
+using AutoX.Gara.Frontend.Services;
+using AutoX.Gara.Frontend.Shared.Results;
+using AutoX.Gara.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Maui.Controls;
-using Nalix.Common.Diagnostics;
 using Nalix.Common.Messaging.Protocols;
-using Nalix.Framework.Injection;
-using Nalix.SDK.Transport;
-using Nalix.SDK.Transport.Extensions;
-using Nalix.Shared.Messaging.Controls;
-using System;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace AutoX.Gara.UI.ViewModels;
 
-public partial class LoginViewModel : ObservableObject
+/// <summary>
+/// <para>ViewModel cho màn hình đăng nhập.</para>
+/// <para>
+/// Trách nhiệm duy nhất (SRP):
+///   - Quản lý trạng thái UI (IsLoading, HasError, Popup...)
+///   - Điều phối luồng: validate → connect → login → navigate
+/// </para>
+/// <para>Không chứa: network code, navigation code, validation rules.</para>
+/// </summary>
+public sealed partial class LoginViewModel : ObservableObject
 {
-    #region Properties
+    // ─── Dependencies (DI) ───────────────────────────────────────────────────
 
-    public ICommand LoginCommand { get; }
-    public ICommand TogglePasswordCommand { get; }
-    public ICommand ClosePopupCommand { get; }
-    public ICommand RetryConnectionCommand { get; }
-    public ICommand PopupButtonCommand { get; private set; }
+    private readonly ILoginService _loginService;
+    private readonly INavigationService _navigation;
 
-    [ObservableProperty]
-    public partial bool IsLoading { get; set; }
+    // ─── Cancellation ────────────────────────────────────────────────────────
 
-    [ObservableProperty]
-    public partial bool IsPopupVisible { get; set; }
+    /// <summary>
+    /// Token để hủy login đang chạy khi user bấm nút khác / thoát màn hình.
+    /// </summary>
+    private CancellationTokenSource? _loginCts;
 
-    [ObservableProperty]
-    public partial string PopupTitle { get; set; }
+    // ─── Observable Properties ───────────────────────────────────────────────
 
-    [ObservableProperty]
-    public partial string PopupMessage { get; set; }
+    [ObservableProperty] public partial string Username { get; set; } = string.Empty;
+    [ObservableProperty] public partial string Password { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool IsPasswordHidden { get; set; } = true;
+    [ObservableProperty] public partial bool IsLoading { get; set; } = true;
+    [ObservableProperty] public partial bool IsNetworkReady { get; set; }
+    [ObservableProperty] public partial bool HasError { get; set; }
+    [ObservableProperty] public partial string? ErrorMessage { get; set; }
 
-    [ObservableProperty]
-    public partial string PopupButtonText { get; set; }
+    // ── Popup ─────────────────────────────────────────────────────────────────
+    [ObservableProperty] public partial bool IsPopupVisible { get; set; }
+    [ObservableProperty] public partial string PopupTitle { get; set; } = string.Empty;
+    [ObservableProperty] public partial string PopupMessage { get; set; } = string.Empty;
+    [ObservableProperty] public partial string PopupButtonText { get; set; } = "OK";
+    [ObservableProperty] public partial bool IsPopupRetry { get; set; }
 
-    [ObservableProperty]
-    public partial bool IsNetworkReady { get; set; }
-
-    [ObservableProperty]
-    public partial string Username { get; set; }
-
-    [ObservableProperty]
-    public partial string Password { get; set; }
-
-    [ObservableProperty]
-    public partial string? ErrorMessage { get; set; }
-
-    [ObservableProperty]
-    public partial bool HasError { get; set; }
-
-    [ObservableProperty]
-    public partial bool IsPasswordHidden { get; set; }
-
+    // ── Computed ──────────────────────────────────────────────────────────────
     public System.String PasswordIcon => IsPasswordHidden ? "eye_off.png" : "eye.png";
+    /// <summary>Dùng trong XAML thay Converter để tránh phụ thuộc StaticResource.</summary>
+    public System.Boolean IsNetworkNotReady => !IsNetworkReady;
+    public System.Boolean IsPopupNotRetry => !IsPopupRetry;
 
-    #endregion Properties
+    // ─── Constructor ─────────────────────────────────────────────────────────
 
-    #region Constructors
-
-    public LoginViewModel()
+    /// <summary>
+    /// Constructor nhận dependencies qua DI — dễ unit test hơn <c>InstanceManager</c>.
+    /// Nếu chưa dùng DI container, bạn có thể dùng constructor mặc định bên dưới.
+    /// </summary>
+    public LoginViewModel(ILoginService loginService, INavigationService navigation)
     {
-        HasError = false;
-        IsLoading = true;
-        IsPopupVisible = false;
-        IsPasswordHidden = true;
+        _loginService = loginService;
+        _navigation = navigation;
 
-        PopupButtonText = "OK";
-        PopupTitle = System.String.Empty;
-        PopupMessage = System.String.Empty;
-
-        Username = System.String.Empty;
-        Password = System.String.Empty;
-
-        LoginCommand = new AsyncRelayCommand(OnLoginAsync);
-        TogglePasswordCommand = new RelayCommand(TogglePasswordVisibility);
-        ClosePopupCommand = new RelayCommand(ClosePopup);
-        RetryConnectionCommand = new RelayCommand(ExecuteRetryConnection);
-
-        // Ban đầu, thiết lập command cho popup là đóng popup
-        PopupButtonCommand = ClosePopupCommand;
-
-        _ = InitConnectionAsync();
-    }
-
-    #endregion Constructors
-
-    #region Private Methods
-
-    // Method gọi lại khi nhấn Retry
-    private void ExecuteRetryConnection()
-    {
-        IsPopupVisible = false;
         _ = InitConnectionAsync();
     }
 
     /// <summary>
-    /// Hiển thị popup, đồng thời xác định nút bấm là OK hoặc Retry theo từng loại lỗi.
+    /// Constructor mặc định — dùng khi chưa có DI container (giữ tương thích với code cũ).
     /// </summary>
-    /// <param name="title"></param>
-    /// <param name="message"></param>
-    /// <param name="isRetry"></param>
-    private void ShowPopup(System.String title, System.String message, System.Boolean isRetry = false)
+    public LoginViewModel() : this(new NalixLoginService(), new ShellNavigationService()) { }
+
+    // ─── Property Change Hooks ────────────────────────────────────────────────
+
+    partial void OnIsNetworkReadyChanged(bool value)
+        => OnPropertyChanged(nameof(IsNetworkNotReady));
+
+    partial void OnIsPopupRetryChanged(bool value)
+        => OnPropertyChanged(nameof(IsPopupNotRetry));
+
+    [RelayCommand]
+    private async Task LoginAsync()
     {
-        PopupTitle = title;
-        PopupMessage = message;
-        IsPopupVisible = true;
+        // Hủy login trước đó nếu đang chạy (ví dụ user bấm nhanh 2 lần)
+        _loginCts?.Cancel();
+        _loginCts = new CancellationTokenSource();
+        var ct = _loginCts.Token;
 
-        if (isRetry)
+        ClearError();
+
+        // ── Validate input trước khi gửi network ──────────────────────────────
+        if (!ValidateInputs())
         {
-            PopupButtonText = "Try again";
-            PopupButtonCommand = RetryConnectionCommand;
-        }
-        else
-        {
-            PopupButtonText = "OK";
-            PopupButtonCommand = ClosePopupCommand;
-        }
-    }
-
-    private void ClosePopup() => IsPopupVisible = false;
-
-    private async Task OnLoginAsync()
-    {
-        HasError = false;
-        ErrorMessage = null;
-
-        if (System.String.IsNullOrWhiteSpace(Username))
-        {
-            ErrorMessage = "Username cannot be empty.";
-            HasError = true;
             return;
         }
 
-        if (System.String.IsNullOrWhiteSpace(Password))
-        {
-            ErrorMessage = "Password cannot be empty.";
-            HasError = true;
-            return;
-        }
-
-        //if (!VALIDATE_USERNAME(Username))
-        //{
-        //    ErrorMessage = "Username is invalid: only letters, numbers, '_' and '-' allowed and maximum 50 characters.";
-        //    HasError = true;
-        //    return;
-        //}
-
-        //if (!VALIDATE_PASSWORD(Password))
-        //{
-        //    ErrorMessage = "Password must be at least 8 characters, include upper/lowercase, numbers, and a special character.";
-        //    HasError = true;
-        //    return;
-        //}
-
+        IsLoading = true;
         try
         {
-            var client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            LoginResult result = await _loginService.AuthenticateAsync(Username, Password, ct);
 
-            // 1. Đóng gói dữ liệu thành AccountPacket
-            var accountModel = new Shared.Models.AccountModel
+            if (result.IsSuccess)
             {
-                Username = this.Username,
-                Password = this.Password
-            };
-            var packet = new AccountPacket();
-            packet.Initialize((UInt16)OpCommand.LOGIN, accountModel);
-
-            // 2. Đăng ký "lắng nghe" phản hồi login một lần duy nhất (OnOnce)
-            IDisposable? sub = null;
-            sub = client.OnOnce<Directive>(
-                p => p.OpCode == (UInt16)OpCommand.LOGIN, // lọc đúng loại trả về
-                resp =>
-                {
-                    IsLoading = false;
-                    sub?.Dispose(); // huỷ đăng ký sau khi nhận
-                    if (resp.Type == ControlType.NONE)
-                    {
-                        // Đăng nhập thành công
-                        ShellItem? loginItem = Shell.Current.Items.FirstOrDefault(i => i.Title == "Login");
-                        if (loginItem != null)
-                        {
-                            Shell.Current.Items.Remove(loginItem);
-                        }
-
-                        Application.Current?.Windows[0].Width = 1280;
-                        Application.Current?.Windows[0].Height = 720;
-                        Shell.Current.GoToAsync("///MainPage");
-                    }
-                    else
-                    {
-                        HandleLoginResponse(resp);
-                    }
-                });
-
-            // 3. Gửi packet tới server (thường là Send hoặc SendAsync)
-            await client.SendAsync(packet); // hoặc await client.SendAsync(packet);
-
-            // Có thể thêm timeout: nếu sau X giây không nhận được, thì báo lỗi
-            await Task.Delay(8000); // 8 giây (ví dụ)
-            if (IsLoading)
-            {
-                sub?.Dispose();
-                IsLoading = false;
-                ErrorMessage = "Login timeout.";
-                HasError = true;
+                await _navigation.GoToMainPageAsync();
+                return;
             }
+
+            HandleFailedLogin(result);
         }
-        catch (Exception ex)
+        finally
         {
+            // Đảm bảo IsLoading luôn được reset kể cả khi exception
             IsLoading = false;
-            ErrorMessage = $"Login error: {ex.Message}";
-            HasError = true;
         }
     }
 
-    private void HandleLoginResponse(Directive respPacket)
-    {
-        // Giả lập model phản hồi: bạn cần map lại nếu ControlType hay ControlPacket của bạn khác
-        var reason = respPacket.Reason;    // thuộc tính ProtocolReason
-        var advice = respPacket.Action;    // thuộc tính ProtocolAdvice
-        System.String error = reason switch
-        {
-            ProtocolReason.MALFORMED_PACKET => "Packet định dạng không hợp lệ, vui lòng thử lại.",
-            ProtocolReason.NOT_FOUND => "Tài khoản không tồn tại.",
-            ProtocolReason.ACCOUNT_LOCKED => "Tài khoản tạm bị khóa do nhập sai nhiều lần. Vui lòng thử lại sau.",
-            ProtocolReason.UNAUTHENTICATED => "Sai mật khẩu. Vui lòng kiểm tra lại.",
-            ProtocolReason.FORBIDDEN => "Tài khoản bị cấm sử dụng hoặc chưa kích hoạt. Vui lòng liên hệ quản trị viên.",
-            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống nội bộ. Vui lòng thử lại sau.",
-            _ => "Đăng nhập thất bại. Vui lòng thử lại."
-        };
-
-        switch (advice)
-        {
-            case ProtocolAdvice.FIX_AND_RETRY:
-                // Gợi ý hiện lỗi cho phép nhập lại tài khoản (không khóa nút login)
-                break;
-
-            case ProtocolAdvice.DO_NOT_RETRY:
-                // Hiện lỗi, disable login field, hoặc show popup cảnh báo! 
-                break;
-
-            case ProtocolAdvice.BACKOFF_RETRY:
-                // Có thể hiện đồng hồ đếm ngược
-                break;
-                // Các advice khác...
-        }
-
-        ErrorMessage = error;
-        HasError = true;
-        return;
-    }
-
+    [RelayCommand]
     private void TogglePasswordVisibility()
     {
         IsPasswordHidden = !IsPasswordHidden;
         OnPropertyChanged(nameof(PasswordIcon));
     }
 
-    /// <summary>
-    /// Kết nối mạng, hiển thị loading khi retry, hiện popup retry khi lỗi.
-    /// </summary>
-    private async System.Threading.Tasks.Task InitConnectionAsync()
+    [RelayCommand]
+    private void ClosePopup() => IsPopupVisible = false;
+
+    [RelayCommand]
+    private void RetryConnection()
     {
-        ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
-
-        IsLoading = true;
-        IsNetworkReady = false;
-
-        try
-        {
-            // Attempt connect
-            await client.ConnectAsync("127.0.0.1", 57206);
-
-            System.Boolean handshakeSuccess = await client.HandshakeAsync((System.UInt16)OpCommand.HANDSHAKE, timeoutMs: 10000);
-            IsLoading = false;
-
-            if (handshakeSuccess)
-            {
-                IsNetworkReady = true;
-            }
-            else
-            {
-                // Hiện popup dạng có nút Retry
-                ShowPopup("Handshake failed", $"key_length={client.Options.EncryptionKey?.Length} IsConnected={client.IsConnected}", isRetry: true);
-            }
-        }
-        catch (System.Exception ex)
-        {
-            IsLoading = false;
-            InstanceManager.Instance.GetExistingInstance<ILogger>()?.Error($"[ERROR] Failed to connect or handshake: {ex}");
-            // Hiện popup dạng có Retry
-            ShowPopup("Network error", ex.Message, isRetry: true);
-        }
+        IsPopupVisible = false;
+        _ = InitConnectionAsync();
     }
 
-    #endregion Private Methods
+    // ─── Private Helpers ─────────────────────────────────────────────────────
 
-    #region Private Validation
-
-    private static System.Boolean VALIDATE_USERNAME(System.String username)
+    private void ClearError()
     {
-        if (System.String.IsNullOrWhiteSpace(username))
+        HasError = false;
+        ErrorMessage = null;
+    }
+
+    /// <summary>
+    /// Validate username + password client-side, hiện lỗi ngay không cần gửi network.
+    /// </summary>
+    private System.Boolean ValidateInputs()
+    {
+        if (System.String.IsNullOrWhiteSpace(Username))
         {
+            SetError("Tên đăng nhập không được để trống.");
             return false;
         }
 
-        if (username.Length > 50)
+        if (System.String.IsNullOrWhiteSpace(Password))
         {
+            SetError("Mật khẩu không được để trống.");
             return false;
         }
 
-        foreach (System.Char c in username)
+        if (!CredentialValidator.IsValidUsername(Username))
         {
-            if (!IS_ALLOWED_USERNAME_CHAR(c))
-            {
-                return false;
-            }
+            SetError("Tên đăng nhập không hợp lệ: chỉ cho phép chữ cái, số, '_' và '-', tối đa 50 ký tự.");
+            return false;
+        }
+
+        if (!CredentialValidator.IsValidPassword(Password))
+        {
+            SetError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, thường, số và ký tự đặc biệt.");
+            return false;
         }
 
         return true;
-
-        static System.Boolean IS_ALLOWED_USERNAME_CHAR(System.Char c) => c is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '_' or '-';
     }
 
-    private static System.Boolean VALIDATE_PASSWORD(System.String password)
-        => !System.String.IsNullOrWhiteSpace(password) && password.Length >= 8 && password.Any(System.Char.IsLower)
-        && password.Any(System.Char.IsUpper) && password.Any(System.Char.IsDigit) && !password.All(System.Char.IsLetterOrDigit);
+    private void SetError(System.String message)
+    {
+        ErrorMessage = message;
+        HasError = true;
+    }
 
-    #endregion Private Validation
+    /// <summary>
+    /// Xử lý phản hồi lỗi từ server theo <see cref="ProtocolAdvice"/>:
+    /// - DO_NOT_RETRY  → khóa nút login
+    /// - BACKOFF_RETRY → hiện popup có nút retry
+    /// - FIX_AND_RETRY → chỉ hiện lỗi inline, cho phép nhập lại
+    /// </summary>
+    private void HandleFailedLogin(LoginResult result)
+    {
+        switch (result.Advice)
+        {
+            case ProtocolAdvice.DO_NOT_RETRY:
+                // Tài khoản bị cấm / chưa active — show popup, không cho retry
+                ShowPopup("Không thể đăng nhập", result.ErrorMessage!, isRetry: false);
+                break;
+
+            case ProtocolAdvice.BACKOFF_RETRY:
+                // Tài khoản bị lock tạm thời — show popup có nút retry
+                ShowPopup("Tài khoản bị khóa tạm thời", result.ErrorMessage!, isRetry: true);
+                break;
+
+            case ProtocolAdvice.FIX_AND_RETRY:
+            default:
+                // Sai pass / tài khoản không tồn tại — inline error, cho nhập lại
+                SetError(result.ErrorMessage!);
+                break;
+        }
+    }
+
+    private void ShowPopup(System.String title, System.String message, System.Boolean isRetry)
+    {
+        PopupTitle = title;
+        PopupMessage = message;
+        IsPopupRetry = isRetry;
+        PopupButtonText = isRetry ? "Thử lại" : "OK";
+        IsPopupVisible = true;
+    }
+
+    /// <summary>
+    /// Kết nối mạng + handshake khi màn hình load.
+    /// Gọi lại được khi user nhấn "Retry".
+    /// </summary>
+    private async Task InitConnectionAsync()
+    {
+        IsLoading = true;
+        IsNetworkReady = false;
+
+        ConnectionResult result = await _loginService.ConnectAsync();
+
+        IsLoading = false;
+
+        if (result.IsSuccess)
+        {
+            IsNetworkReady = true;
+        }
+        else
+        {
+            ShowPopup("Lỗi kết nối", result.ErrorMessage!, isRetry: true);
+        }
+    }
 }

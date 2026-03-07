@@ -34,6 +34,7 @@ public static class Program
 {
     private static readonly System.Int32 IntervalInMinutes = 5;
     private static readonly System.Threading.ManualResetEvent QuitEvent = new(false);
+    private static readonly TaskManager Task = InstanceManager.Instance.GetOrCreateInstance<TaskManager>();
 
     [System.STAThread]
     [System.Diagnostics.DebuggerNonUserCode]
@@ -139,7 +140,7 @@ public static class Program
                             .MinLevel = LogLevel.Meta;
 #else 
         ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Information;
+                            .MinLevel = LogLevel.Trace;
 #endif
 
         InstanceManager.Instance.Register<ILogger>(NLogix.Host.Instance);
@@ -196,20 +197,27 @@ public static class Program
     {
         return System.Threading.Tasks.Task.Run(async () =>
         {
-            System.DateTime lastReportTime = System.DateTime.MinValue;
+            const System.Double TileCooldownSeconds = 10.0;
             const System.Double ReportCooldownSeconds = 5.0;
 
-            await System.Threading.Tasks.Task.Delay(50, ct);
+            System.DateTime lastTileTime = System.DateTime.MinValue;
+            System.DateTime lastReportTime = System.DateTime.MinValue;
 
             while (!ct.IsCancellationRequested)
             {
+                System.DateTime now = Clock.NowUtc();
+
+                // Kiểm tra cooldown để tránh spam
+                if ((now - lastTileTime).TotalSeconds >= TileCooldownSeconds)
+                {
+                    System.Console.Title = $"AutoX | Level: {ConfigurationManager.Instance.Get<NLogixOptions>().MinLevel}";
+                }
+
                 if (System.Console.KeyAvailable)
                 {
                     System.ConsoleKeyInfo key = System.Console.ReadKey(intercept: true);
                     if (key.Key == System.ConsoleKey.R && (key.Modifiers & System.ConsoleModifiers.Control) != 0)
                     {
-                        System.DateTime now = Clock.NowUtc();
-
                         // Kiểm tra cooldown để tránh spam
                         if ((now - lastReportTime).TotalSeconds >= ReportCooldownSeconds)
                         {
@@ -221,8 +229,10 @@ public static class Program
                     }
 
                     ctx.Beat();
+                    await System.Threading.Tasks.Task.Delay(100, ct);
                 }
             }
+
         }, ct);
     }
 

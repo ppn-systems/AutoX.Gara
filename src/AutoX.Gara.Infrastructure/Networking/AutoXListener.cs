@@ -19,7 +19,6 @@ public sealed class AutoXListener : TcpListenerBase
         "Style", "IDE0290:Use primary constructor", Justification = "<Pending>")]
     public AutoXListener(IProtocol protocol) : base(protocol)
     {
-
     }
 
     // You can override methods or add additional behaviors here
