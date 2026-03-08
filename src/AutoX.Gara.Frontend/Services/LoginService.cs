@@ -1,18 +1,17 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Packets;
-using AutoX.Gara.UI.Services;
+using Nalix.Common.Diagnostics;
 using Nalix.Common.Messaging.Protocols;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
 using Nalix.Shared.Messaging.Controls;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AutoX.Gara.Frontend.Services;
 
@@ -32,7 +31,7 @@ public sealed class LoginService : ILoginService
 
     // ─── ConnectAsync ─────────────────────────────────────────────────────────
 
-    public async Task<ConnectionResult> ConnectAsync(CancellationToken ct = default)
+    public async System.Threading.Tasks.Task<ConnectionResult> ConnectAsync(System.Threading.CancellationToken ct = default)
     {
         try
         {
@@ -54,10 +53,10 @@ public sealed class LoginService : ILoginService
 
     // ─── AuthenticateAsync ────────────────────────────────────────────────────
 
-    public async Task<LoginResult> AuthenticateAsync(
+    public async System.Threading.Tasks.Task<LoginResult> AuthenticateAsync(
         System.String username,
         System.String password,
-        CancellationToken ct = default)
+        System.Threading.CancellationToken ct = default)
     {
         try
         {
@@ -70,10 +69,12 @@ public sealed class LoginService : ILoginService
 
             packet.SequenceId = sq;
             packet.Initialize((System.UInt16)OpCommand.LOGIN, model);
+            //AccountPacket.Encrypt(packet, client.Options.EncryptionKey, CipherSuiteType.SALSA20_POLY1305);
 
             // 2. TaskCompletionSource để "await" callback một lần
             //    Dùng thay Task.Delay polling — không có race condition
-            TaskCompletionSource<LoginResult> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            System.Threading.Tasks.TaskCompletionSource<LoginResult> tcs = new(
+                System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
             System.IDisposable? sub = null;
             sub = client.OnOnce<Directive>(
@@ -93,10 +94,10 @@ public sealed class LoginService : ILoginService
             await client.SendAsync(packet, ct);
 
             // 4. Đợi kết quả với timeout + cancellation
-            using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            using System.Threading.CancellationTokenSource cts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
 
-            Task timeoutTask = Task.Delay(LoginTimeoutMs, cts.Token);
-            Task winner = await Task.WhenAny(tcs.Task, timeoutTask);
+            System.Threading.Tasks.Task timeoutTask = System.Threading.Tasks.Task.Delay(LoginTimeoutMs, cts.Token);
+            System.Threading.Tasks.Task winner = await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask);
 
             if (winner != tcs.Task)
             {
@@ -112,6 +113,12 @@ public sealed class LoginService : ILoginService
         }
         catch (System.Exception ex)
         {
+            InstanceManager.Instance.GetOrCreateInstance<ILogger>().Error(ex.ToString());
+            if (ex.InnerException != null)
+            {
+                InstanceManager.Instance.GetOrCreateInstance<ILogger>().Error("Inner: " + ex.InnerException);
+            }
+
             return LoginResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
@@ -122,12 +129,12 @@ public sealed class LoginService : ILoginService
     {
         System.String message = reason switch
         {
-            ProtocolReason.MALFORMED_PACKET => "Gói tin không hợp lệ.",
             ProtocolReason.NOT_FOUND => "Tài khoản không tồn tại.",
-            ProtocolReason.ACCOUNT_LOCKED => "Tài khoản tạm bị khóa do nhập sai nhiều lần. Vui lòng thử lại sau 15 phút.",
+            ProtocolReason.MALFORMED_PACKET => "Gói tin không hợp lệ.",
+            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống. Vui lòng thử lại sau.",
             ProtocolReason.UNAUTHENTICATED => "Sai mật khẩu. Vui lòng kiểm tra lại.",
             ProtocolReason.FORBIDDEN => "Tài khoản bị cấm hoặc chưa được kích hoạt. Vui lòng liên hệ quản trị viên.",
-            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống. Vui lòng thử lại sau.",
+            ProtocolReason.ACCOUNT_LOCKED => "Tài khoản tạm bị khóa do nhập sai nhiều lần. Vui lòng thử lại sau 15 phút.",
             _ => "Đăng nhập thất bại. Vui lòng thử lại."
         };
 

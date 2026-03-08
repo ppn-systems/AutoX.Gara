@@ -2,11 +2,11 @@
   "solution": {
     "path": "AutoX.Gara.sln",
     "projects": [
-      "AutoX.Gara.Domain\\AutoX.Gara.Domain.csproj",
-      "AutoX.Gara.Shared\\AutoX.Gara.Shared.csproj",
-      "AutoX.Gara.Backend\\AutoX.Gara.Backend.csproj",
       "AutoX.Gara.Application\\AutoX.Gara.Application.csproj",
+      "AutoX.Gara.Backend\\AutoX.Gara.Backend.csproj",
+      "AutoX.Gara.Domain\\AutoX.Gara.Domain.csproj",
       "AutoX.Gara.Infrastructure\\AutoX.Gara.Infrastructure.csproj",
+      "AutoX.Gara.Shared\\AutoX.Gara.Shared.csproj"
     ]
   }
 }

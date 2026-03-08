@@ -63,15 +63,6 @@ public sealed class AccountOps(AutoXDbContext context)
 
         if (account == null)
         {
-            var allAccounts = await s_account.GetAsync(pageSize: 10); // lấy 1000 user đầu; tuỳ database
-            System.Console.WriteLine("==== Debug: Username trong database ====");
-
-            foreach (var acc in allAccounts)
-            {
-                System.Console.WriteLine($"- [{acc.Username}]");
-            }
-
-
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.NOT_FOUND,

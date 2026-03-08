@@ -1,10 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
-using AutoX.Gara.Frontend.Services;
 using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Validator;
-using AutoX.Gara.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Messaging.Protocols;
@@ -38,26 +36,30 @@ public sealed partial class LoginViewModel : ObservableObject
 
     // ─── Observable Properties ───────────────────────────────────────────────
 
-    [ObservableProperty] public partial string Username { get; set; } = string.Empty;
-    [ObservableProperty] public partial string Password { get; set; } = string.Empty;
-    [ObservableProperty] public partial bool IsPasswordHidden { get; set; } = true;
-    [ObservableProperty] public partial bool IsLoading { get; set; } = true;
-    [ObservableProperty] public partial bool IsNetworkReady { get; set; }
-    [ObservableProperty] public partial bool HasError { get; set; }
-    [ObservableProperty] public partial string? ErrorMessage { get; set; }
+    [ObservableProperty] public partial System.Boolean HasError { get; set; }
+    [ObservableProperty] public partial System.Boolean IsNetworkReady { get; set; }
+    [ObservableProperty] public partial System.Boolean IsLoading { get; set; } = true;
+    [ObservableProperty] public partial System.Boolean IsPasswordHidden { get; set; } = true;
+
+    [ObservableProperty] public partial System.String? ErrorMessage { get; set; }
+    [ObservableProperty] public partial System.String Username { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String Password { get; set; } = System.String.Empty;
 
     // ── Popup ─────────────────────────────────────────────────────────────────
-    [ObservableProperty] public partial bool IsPopupVisible { get; set; }
-    [ObservableProperty] public partial string PopupTitle { get; set; } = string.Empty;
-    [ObservableProperty] public partial string PopupMessage { get; set; } = string.Empty;
-    [ObservableProperty] public partial string PopupButtonText { get; set; } = "OK";
-    [ObservableProperty] public partial bool IsPopupRetry { get; set; }
+
+    [ObservableProperty] public partial System.Boolean IsPopupRetry { get; set; }
+    [ObservableProperty] public partial System.Boolean IsPopupVisible { get; set; }
+    [ObservableProperty] public partial System.String PopupButtonText { get; set; } = "OK";
+    [ObservableProperty] public partial System.String PopupTitle { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String PopupMessage { get; set; } = System.String.Empty;
+
 
     // ── Computed ──────────────────────────────────────────────────────────────
-    public System.String PasswordIcon => IsPasswordHidden ? "eye_off.png" : "eye.png";
-    /// <summary>Dùng trong XAML thay Converter để tránh phụ thuộc StaticResource.</summary>
-    public System.Boolean IsNetworkNotReady => !IsNetworkReady;
+
     public System.Boolean IsPopupNotRetry => !IsPopupRetry;
+    public System.Boolean IsNetworkNotReady => !IsNetworkReady;
+    public System.String PasswordIcon => IsPasswordHidden ? "eye_off.png" : "eye.png";
+
 
     // ─── Constructor ─────────────────────────────────────────────────────────
 
@@ -73,16 +75,11 @@ public sealed partial class LoginViewModel : ObservableObject
         _ = InitConnectionAsync();
     }
 
-    /// <summary>
-    /// Constructor mặc định — dùng khi chưa có DI container (giữ tương thích với code cũ).
-    /// </summary>
-    public LoginViewModel() : this(new LoginService(), new ShellNavigationService()) { }
-
     // ─── Property Change Hooks ────────────────────────────────────────────────
 
-    partial void OnIsNetworkReadyChanged(bool value) => OnPropertyChanged(nameof(IsNetworkNotReady));
-
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
+
+    partial void OnIsNetworkReadyChanged(bool value) => OnPropertyChanged(nameof(IsNetworkNotReady));
 
     [RelayCommand]
     private async Task LoginAsync()

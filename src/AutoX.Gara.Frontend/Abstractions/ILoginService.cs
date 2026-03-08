@@ -3,7 +3,7 @@
 using AutoX.Gara.Frontend.ViewModels.Results;
 using System.Threading;
 
-namespace AutoX.Gara.UI.Services;
+namespace AutoX.Gara.Frontend.Abstractions;
 
 /// <summary>
 /// Abstraction cho toàn bộ luồng login: connect → handshake → authenticate.
