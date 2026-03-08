@@ -42,10 +42,20 @@ public sealed class HandshakeOps
     {
         if (p is not Handshake packet)
         {
+            if (p is not IPacketSequenced ps)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.MALFORMED_PACKET,
+                    ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+
+                return;
+            }
+
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, ps.SequenceId).ConfigureAwait(false);
 
             return;
         }

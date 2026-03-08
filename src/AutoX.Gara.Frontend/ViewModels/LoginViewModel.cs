@@ -80,11 +80,9 @@ public sealed partial class LoginViewModel : ObservableObject
 
     // ─── Property Change Hooks ────────────────────────────────────────────────
 
-    partial void OnIsNetworkReadyChanged(bool value)
-        => OnPropertyChanged(nameof(IsNetworkNotReady));
+    partial void OnIsNetworkReadyChanged(bool value) => OnPropertyChanged(nameof(IsNetworkNotReady));
 
-    partial void OnIsPopupRetryChanged(bool value)
-        => OnPropertyChanged(nameof(IsPopupNotRetry));
+    partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
 
     [RelayCommand]
     private async Task LoginAsync()

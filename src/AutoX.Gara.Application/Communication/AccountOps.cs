@@ -41,10 +41,20 @@ public sealed class AccountOps(AutoXDbContext context)
     {
         if (p is not AccountPacket packet)
         {
+            if (p is not IPacketSequenced ps)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.MALFORMED_PACKET,
+                    ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+
+                return;
+            }
+
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, ps.SequenceId).ConfigureAwait(false);
 
             return;
         }
@@ -152,10 +162,20 @@ public sealed class AccountOps(AutoXDbContext context)
     {
         if (p is not AccountPacket packet)
         {
+            if (p is not IPacketSequenced ps)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.MALFORMED_PACKET,
+                    ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+
+                return;
+            }
+
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, ps.SequenceId).ConfigureAwait(false);
 
             return;
         }
