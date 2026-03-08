@@ -1,18 +1,15 @@
 ﻿using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Attributes;
 using Nalix.Common.Messaging.Packets.Abstractions;
 using Nalix.Common.Serialization;
-using Nalix.Framework.Injection;
-using Nalix.Shared.Memory.Pooling;
 using Nalix.Shared.Messaging;
 using Nalix.Shared.Serialization;
 
-namespace AutoX.Gara.Shared.Packets;
+namespace AutoX.Gara.Shared.Packets.Customers;
 
 [SerializePackable(SerializeLayout.Explicit)]
 [MagicNumber((System.UInt32)PacketMagic.CUSTOMER_LIST_REQUEST)]
-public sealed class CustomerListRequestPacket : FrameBase, IPacketSequenced
+public sealed class CustomersQueryPacket : FrameBase, IPacketSequenced
 {
     [SerializeOrder(0)]
     public System.UInt32 SequenceId { get; set; }
@@ -25,26 +22,15 @@ public sealed class CustomerListRequestPacket : FrameBase, IPacketSequenced
 
     public override System.UInt16 Length => 8;
 
-    /// <summary>
-    /// Đặt lại trạng thái để tái sử dụng từ pool.
-    /// </summary>
-    public override void ResetForPool()
-    {
-        Page = 1;
-        PageSize = 20;
-        SequenceId = 0;
-        OpCode = OpCommand.NONE.AsUInt16();
-    }
-
     /// <inheritdoc/>
-    public static AccountPacket Deserialize(System.ReadOnlySpan<System.Byte> buffer)
+    public static CustomersQueryPacket Deserialize(System.ReadOnlySpan<System.Byte> buffer)
     {
-        AccountPacket packet = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                                       .Get<AccountPacket>();
-
+        CustomersQueryPacket packet = new();
         _ = LiteSerializer.Deserialize(buffer, ref packet);
         return packet;
     }
+
+    public override void ResetForPool() => throw new System.NotImplementedException();
 
     /// <inheritdoc/>
     public override System.Byte[] Serialize() => LiteSerializer.Serialize(this);

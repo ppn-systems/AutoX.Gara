@@ -3,9 +3,9 @@
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Packets;
+using AutoX.Gara.Shared.Packets.Auth;
 using Nalix.Common.Diagnostics;
+using Nalix.Common.Enums;
 using Nalix.Common.Messaging.Protocols;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
@@ -63,13 +63,13 @@ public sealed class LoginService : ILoginService
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
             // 1. Build packet
+            LoginPacket packet = new();
             System.UInt32 sq = Csprng.NextUInt32();
-            AccountPacket packet = new();
-            AccountModel model = new() { Username = username, Password = password };
+            LoginRequestModel model = new() { Username = username, Password = password };
 
             packet.SequenceId = sq;
             packet.Initialize((System.UInt16)OpCommand.LOGIN, model);
-            //AccountPacket.Encrypt(packet, client.Options.EncryptionKey, CipherSuiteType.SALSA20_POLY1305);
+            LoginPacket.Encrypt(packet, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
             // 2. TaskCompletionSource để "await" callback một lần
             //    Dùng thay Task.Delay polling — không có race condition

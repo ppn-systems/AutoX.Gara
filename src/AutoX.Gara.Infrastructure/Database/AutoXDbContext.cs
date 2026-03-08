@@ -107,9 +107,6 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
         modelBuilder.Entity<Account>()
             .Property(a => a.Role)
             .HasConversion<System.Byte>();
-
-        modelBuilder.Entity<Account>()
-            .HasQueryFilter(a => a.IsActive);
     }
 
     private static void CONFIGURE_VEHICLE(ModelBuilder modelBuilder)

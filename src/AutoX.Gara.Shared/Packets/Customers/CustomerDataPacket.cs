@@ -13,14 +13,14 @@ using Nalix.Shared.Memory.Pooling;
 using Nalix.Shared.Messaging;
 using Nalix.Shared.Serialization;
 
-namespace AutoX.Gara.Shared.Packets;
+namespace AutoX.Gara.Shared.Packets.Customers;
 
 /// <summary>
 /// Packet for customer data, used in create/update/query operations.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
 [MagicNumber((System.UInt32)PacketMagic.CUSTOMER)]
-public class CustomerPacket : FrameBase, IPoolable, IPacketEncryptor<CustomerPacket>
+public class CustomerDataPacket : FrameBase, IPoolable, IPacketEncryptor<CustomerDataPacket>
 {
     public override System.UInt16 Length =>
         (System.UInt16)(sizeof(System.Int32) + (System.UInt16)
@@ -105,7 +105,7 @@ public class CustomerPacket : FrameBase, IPoolable, IPacketEncryptor<CustomerPac
     /// <summary>
     /// Default constructor: initializes default values.
     /// </summary>
-    public CustomerPacket()
+    public CustomerDataPacket()
     {
         // Nếu bạn có logic mặc định, thiết lập ở đây
         Name = System.String.Empty;
@@ -117,10 +117,10 @@ public class CustomerPacket : FrameBase, IPoolable, IPacketEncryptor<CustomerPac
     }
 
     /// <inheritdoc/>
-    public static CustomerPacket Deserialize(System.ReadOnlySpan<System.Byte> buffer)
+    public static CustomerDataPacket Deserialize(System.ReadOnlySpan<System.Byte> buffer)
     {
-        CustomerPacket packet = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                                           .Get<CustomerPacket>();
+        CustomerDataPacket packet = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
+                                                           .Get<CustomerDataPacket>();
 
         _ = LiteSerializer.Deserialize(buffer, ref packet);
         return packet;
@@ -149,7 +149,7 @@ public class CustomerPacket : FrameBase, IPoolable, IPacketEncryptor<CustomerPac
         DateOfBirth = null;
     }
 
-    public static CustomerPacket Encrypt(CustomerPacket packet, System.Byte[] key, CipherSuiteType algorithm)
+    public static CustomerDataPacket Encrypt(CustomerDataPacket packet, System.Byte[] key, CipherSuiteType algorithm)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
 
@@ -162,7 +162,7 @@ public class CustomerPacket : FrameBase, IPoolable, IPacketEncryptor<CustomerPac
         packet.Flags.AddFlag(PacketFlags.ENCRYPTED);
         return packet;
     }
-    public static CustomerPacket Decrypt(CustomerPacket packet, System.Byte[] key)
+    public static CustomerDataPacket Decrypt(CustomerDataPacket packet, System.Byte[] key)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
 

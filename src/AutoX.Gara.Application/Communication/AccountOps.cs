@@ -3,7 +3,7 @@
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Packets;
+using AutoX.Gara.Shared.Packets.Auth;
 using AutoX.Gara.Shared.Validator;
 using Nalix.Common.Connection;
 using Nalix.Common.Diagnostics;
@@ -30,7 +30,6 @@ public sealed class AccountOps(AutoXDbContext context)
 {
     private readonly DataRepository<Account> s_account = new(context);
 
-    [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.NONE)]
     [PacketOpcode((System.UInt16)OpCommand.LOGIN)]
     [PacketRateLimit(requestsPerSecond: 1, burst: 1)]
@@ -39,7 +38,7 @@ public sealed class AccountOps(AutoXDbContext context)
         IPacket p,
         IConnection connection)
     {
-        if (p is not AccountPacket packet)
+        if (p is not LoginPacket packet)
         {
             if (p is not IPacketSequenced ps)
             {
@@ -60,7 +59,6 @@ public sealed class AccountOps(AutoXDbContext context)
         }
 
         Account account = await s_account.GetFirstOrDefaultAsync(a => a.Username == packet.Account.Username.Trim().ToLower());
-
         if (account == null)
         {
             await connection.SendAsync(
@@ -144,14 +142,14 @@ public sealed class AccountOps(AutoXDbContext context)
         }
     }
 
-    [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.NONE)]
+    [PacketRateLimit(requestsPerSecond: 1, burst: 1)]
     [PacketOpcode((System.UInt16)OpCommand.REGISTER)]
     public async System.Threading.Tasks.Task RegisterAsync(
         IPacket p,
         IConnection connection)
     {
-        if (p is not AccountPacket packet)
+        if (p is not LoginPacket packet)
         {
             if (p is not IPacketSequenced ps)
             {

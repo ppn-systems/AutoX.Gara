@@ -3,7 +3,7 @@
 using Nalix.Common.Messaging.Packets;
 using Nalix.Common.Serialization;
 
-namespace AutoX.Gara.Shared.Models;
+namespace AutoX.Gara.Shared.Packets.Auth;
 
 /// <summary>
 /// ViewModel dành cho đăng nhập của người dùng hệ thống.
@@ -11,7 +11,7 @@ namespace AutoX.Gara.Shared.Models;
 /// Không lưu bất kỳ thông tin bảo mật nhạy cảm nào ngoài tài khoản và mật khẩu dạng clear text (chỉ để xác thực một lần).
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public class AccountModel
+public class LoginRequestModel
 {
     /// <summary>
     /// Tính tổng số byte thực tế (runtime) khi serialize Username và Password hiện tại (UTF-8).

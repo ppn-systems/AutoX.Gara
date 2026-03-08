@@ -3,7 +3,7 @@
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Packets;
+using AutoX.Gara.Shared.Packets.Customers;
 using Nalix.Common.Connection;
 using Nalix.Common.Enums;
 using Nalix.Common.Messaging.Packets.Abstractions;
@@ -31,7 +31,7 @@ public sealed class CustomerOps(AutoXDbContext context)
         IPacket p,
         IConnection connection)
     {
-        if (p is not CustomerListRequestPacket packet)
+        if (p is not CustomersQueryPacket packet)
         {
             // MALFORMED_PACKET: Packet từ client không đúng định dạng hoặc thiếu field cần thiết.
             await connection.SendAsync(
@@ -44,7 +44,7 @@ public sealed class CustomerOps(AutoXDbContext context)
 
         System.Collections.Generic.List<Customer> customers = await s_customer.GetAllAsync(packet.Page, packet.PageSize);
 
-        System.Collections.Generic.List<CustomerPacket> customerPackets = customers.ConvertAll(c => new CustomerPacket
+        System.Collections.Generic.List<CustomerDataPacket> customerPackets = customers.ConvertAll(c => new CustomerDataPacket
         {
             Type = c.Type,
             Name = c.Name,
@@ -60,7 +60,7 @@ public sealed class CustomerOps(AutoXDbContext context)
         });
 
         // Gửi trả về danh sách khách hàng cho client.
-        await connection.TCP.SendAsync(new CustomerListPacket()
+        await connection.TCP.SendAsync(new CustomersPacket()
         {
             Customers = customerPackets,
             SequenceId = packet.SequenceId
@@ -77,7 +77,7 @@ public sealed class CustomerOps(AutoXDbContext context)
         IPacket p,
         IConnection connection)
     {
-        if (p is not CustomerPacket packet ||
+        if (p is not CustomerDataPacket packet ||
             !IS_VALID_EMAIL(packet.Email) ||
             !IS_VALID_PHONE_NUMBER(packet.PhoneNumber))
         {
@@ -145,7 +145,7 @@ public sealed class CustomerOps(AutoXDbContext context)
         IPacket p,
         IConnection connection)
     {
-        if (p is not CustomerPacket packet ||
+        if (p is not CustomerDataPacket packet ||
             !IS_VALID_EMAIL(packet.Email) ||
             !IS_VALID_PHONE_NUMBER(packet.PhoneNumber))
         {
@@ -211,7 +211,7 @@ public sealed class CustomerOps(AutoXDbContext context)
         IPacket p,
         IConnection connection)
     {
-        if (p is not CustomerPacket packet || packet.CustomerId == null)
+        if (p is not CustomerDataPacket packet || packet.CustomerId == null)
         {
             // MALFORMED_PACKET: Packet xóa nhưng không đúng định dạng hoặc thiếu id.
             await connection.SendAsync(

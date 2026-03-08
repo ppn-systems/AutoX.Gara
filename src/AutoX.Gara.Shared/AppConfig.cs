@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Packets;
+using AutoX.Gara.Shared.Packets.Auth;
+using AutoX.Gara.Shared.Packets.Customers;
 using Nalix.Common.Messaging.Packets.Abstractions;
 using Nalix.Framework.Injection;
 using Nalix.Shared.Messaging.Catalog;
@@ -18,11 +19,11 @@ public static class AppConfig
         PacketCatalogFactory factory = new();
 
         // REGISTER packets here (single source of truth).
-        _ = factory.RegisterPacket<AccountPacket>();
+        _ = factory.RegisterPacket<LoginPacket>();
 
-        _ = factory.RegisterPacket<CustomerPacket>();
-        _ = factory.RegisterPacket<CustomerListPacket>();
-        _ = factory.RegisterPacket<CustomerListRequestPacket>();
+        _ = factory.RegisterPacket<CustomerDataPacket>();
+        _ = factory.RegisterPacket<CustomersPacket>();
+        _ = factory.RegisterPacket<CustomersQueryPacket>();
 
         IPacketCatalog catalog = factory.CreateCatalog();
 

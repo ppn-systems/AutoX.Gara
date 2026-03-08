@@ -2,7 +2,6 @@
 
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using AutoX.Gara.Shared.Models;
 using Nalix.Common.Attributes;
 using Nalix.Common.Enums;
 using Nalix.Common.Infrastructure.Caching;
@@ -16,21 +15,21 @@ using Nalix.Shared.Messaging;
 using Nalix.Shared.Security;
 using Nalix.Shared.Serialization;
 
-namespace AutoX.Gara.Shared.Packets;
+namespace AutoX.Gara.Shared.Packets.Auth;
 
 /// <summary>
 /// Gói tin chứa thông tin đăng nhập từ client (username, mật khẩu băm, metadata),
 /// dùng trong quá trình xác thực sau handshake.
 /// </summary>
-[SerializePackable(SerializeLayout.Sequential)]
+[SerializePackable(SerializeLayout.Explicit)]
 [MagicNumber((System.UInt32)PacketMagic.ACCOUNT)]
-public sealed class AccountPacket : FrameBase, IPoolable, IPacketTransformer<AccountPacket>, IPacketSequenced
+public class LoginPacket : FrameBase, IPoolable, IPacketTransformer<LoginPacket>, IPacketSequenced
 {
     /// <summary>
     /// Tổng độ dài gói tin (byte), gồm header và nội dung.
     /// </summary>
     [SerializeIgnore]
-    public override System.UInt16 Length => (System.UInt16)(PacketConstants.HeaderSize + Account.Length);
+    public override System.UInt16 Length => (System.UInt16)(PacketConstants.HeaderSize + Account.Length + sizeof(System.UInt32));
 
     [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
     public System.UInt32 SequenceId { get; set; }
@@ -38,16 +37,15 @@ public sealed class AccountPacket : FrameBase, IPoolable, IPacketTransformer<Acc
     /// <summary>
     /// Thông tin đăng nhập (username, mật khẩu băm, metadata).
     /// </summary>
-    [SensitiveData(DataSensitivityLevel.Critical)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
-    public AccountModel Account { get; set; }
+    public LoginRequestModel Account { get; set; }
 
     /// <summary>
     /// Khởi tạo mặc định với MagicNumber và CREDENTIALS rỗng.
     /// </summary>
-    public AccountPacket()
+    public LoginPacket()
     {
-        Account = new AccountModel();
+        Account = new LoginRequestModel();
         OpCode = OpCommand.NONE.AsUInt16();
         MagicNumber = PacketMagic.ACCOUNT.AsUInt32();
     }
@@ -55,10 +53,10 @@ public sealed class AccountPacket : FrameBase, IPoolable, IPacketTransformer<Acc
     /// <summary>
     /// Thiết lập OpCode và CREDENTIALS.
     /// </summary>
-    public void Initialize(System.UInt16 opCode, AccountModel account)
+    public void Initialize(System.UInt16 opCode, LoginRequestModel account)
     {
         OpCode = opCode;
-        Account = account;
+        Account = account ?? throw new System.ArgumentNullException(nameof(account));
     }
 
     /// <summary>
@@ -66,15 +64,15 @@ public sealed class AccountPacket : FrameBase, IPoolable, IPacketTransformer<Acc
     /// </summary>
     public override void ResetForPool()
     {
-        Account = new AccountModel();
+        Account = new LoginRequestModel();
         OpCode = OpCommand.NONE.AsUInt16();
     }
 
     /// <inheritdoc/>
-    public static AccountPacket Deserialize(System.ReadOnlySpan<System.Byte> buffer)
+    public static LoginPacket Deserialize(System.ReadOnlySpan<System.Byte> buffer)
     {
-        AccountPacket packet = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                                       .Get<AccountPacket>();
+        LoginPacket packet = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
+                                                       .Get<LoginPacket>();
 
         _ = LiteSerializer.Deserialize(buffer, ref packet);
         return packet;
@@ -87,27 +85,21 @@ public sealed class AccountPacket : FrameBase, IPoolable, IPacketTransformer<Acc
     public override System.Int32 Serialize(System.Span<System.Byte> buffer) => LiteSerializer.Serialize(this, buffer);
 
     /// <inheritdoc/>
-    public static AccountPacket Encrypt(AccountPacket packet, System.Byte[] key, CipherSuiteType algorithm) => EnvelopeEncryptor.Encrypt(packet, key, algorithm);
+    public static LoginPacket Encrypt(LoginPacket packet, System.Byte[] key, CipherSuiteType algorithm) => EnvelopeEncryptor.Encrypt(packet, key, algorithm);
 
     /// <inheritdoc/>
-    public static AccountPacket Decrypt(AccountPacket packet, System.Byte[] key) => EnvelopeEncryptor.Decrypt<AccountPacket>(packet, key);
+    public static LoginPacket Decrypt(LoginPacket packet, System.Byte[] key) => EnvelopeEncryptor.Decrypt(packet, key);
 
     /// <inheritdoc/>
-    public static AccountPacket Compress(AccountPacket packet)
+    public static LoginPacket Compress(LoginPacket packet)
     {
         if (packet?.Account == null)
         {
             throw new System.ArgumentNullException(nameof(packet));
         }
 
-        System.String username = packet.Account.Username.CompressToBase64();
-        System.String password = packet.Account.Password.CompressToBase64();
-
-        packet.Account = new AccountModel
-        {
-            Username = username,
-            Password = password
-        };
+        packet.Account.Username = packet.Account.Username.CompressToBase64();
+        packet.Account.Password = packet.Account.Password.CompressToBase64();
 
         packet.Flags.AddFlag(PacketFlags.COMPRESSED);
 
@@ -115,25 +107,18 @@ public sealed class AccountPacket : FrameBase, IPoolable, IPacketTransformer<Acc
     }
 
     /// <inheritdoc/>
-    public static AccountPacket Decompress(AccountPacket packet)
+    public static LoginPacket Decompress(LoginPacket packet)
     {
         if (packet?.Account == null)
         {
             throw new System.ArgumentNullException(nameof(packet));
         }
 
-        System.String username = packet.Account.Username.DecompressFromBase64();
-        System.String password = packet.Account.Password.DecompressFromBase64();
-
-        packet.Account = new AccountModel
-        {
-            Username = username,
-            Password = password
-        };
+        packet.Account.Username = packet.Account.Username.DecompressFromBase64();
+        packet.Account.Password = packet.Account.Password.DecompressFromBase64();
 
         packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
 
         return packet;
     }
-
 }
