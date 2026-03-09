@@ -4,11 +4,11 @@ using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Packets.Customers;
-using Nalix.Common.Connection;
-using Nalix.Common.Enums;
-using Nalix.Common.Messaging.Packets.Abstractions;
-using Nalix.Common.Messaging.Packets.Attributes;
-using Nalix.Common.Messaging.Protocols;
+using Nalix.Common.Networking.Abstractions;
+using Nalix.Common.Networking.Packets.Abstractions;
+using Nalix.Common.Networking.Packets.Attributes;
+using Nalix.Common.Networking.Protocols;
+using Nalix.Common.Security.Enums;
 using Nalix.Network.Connections;
 
 namespace AutoX.Gara.Application.Customers;

@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using Nalix.Common.Infrastructure.Environment;
+using Nalix.Common.Environment;
 using Nalix.Framework.Configuration.Binding;
 
 namespace AutoX.Gara.Infrastructure.Configuration;

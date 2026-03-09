@@ -3,7 +3,7 @@
 using AutoX.Gara.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Nalix.Common.Diagnostics;
+using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Framework.Configuration;
 using Nalix.Framework.Injection;
 

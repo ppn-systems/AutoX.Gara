@@ -4,14 +4,14 @@ using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Packets.Auth;
-using Nalix.Common.Diagnostics;
-using Nalix.Common.Enums;
-using Nalix.Common.Messaging.Protocols;
+using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Common.Networking.Protocols;
+using Nalix.Common.Security.Enums;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
-using Nalix.Shared.Messaging.Controls;
+using Nalix.Shared.Frames.Controls;
 
 namespace AutoX.Gara.Frontend.Services;
 

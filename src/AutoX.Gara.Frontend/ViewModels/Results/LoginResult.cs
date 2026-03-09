@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using Nalix.Common.Messaging.Protocols;
+using Nalix.Common.Networking.Protocols;
 
 namespace AutoX.Gara.Frontend.ViewModels.Results;
 

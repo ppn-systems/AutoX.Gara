@@ -6,7 +6,8 @@ using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Networking;
 using AutoX.Gara.Shared;
 using Nalix.Common.Concurrency;
-using Nalix.Common.Diagnostics;
+using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Common.Diagnostics.Enums;
 using Nalix.Framework.Configuration;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Options;
@@ -16,9 +17,9 @@ using Nalix.Logging;
 using Nalix.Logging.Configuration;
 using Nalix.Network.Abstractions;
 using Nalix.Network.Connections;
-using Nalix.Network.Dispatch;
 using Nalix.Network.Middleware.Inbound;
 using Nalix.Network.Middleware.Outbound;
+using Nalix.Network.Routing;
 using Nalix.Shared.Extensions;
 using Nalix.Shared.Memory.Pooling;
 
@@ -32,7 +33,8 @@ namespace AutoX.Gara.Backend;
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
 public static class Program
 {
-    private static readonly System.Int32 IntervalInMinutes = 5;
+    private const System.Int32 IntervalInMinutes = 5;
+
     private static readonly System.Threading.ManualResetEvent QuitEvent = new(false);
     private static readonly TaskManager Task = InstanceManager.Instance.GetOrCreateInstance<TaskManager>();
 
@@ -197,9 +199,10 @@ public static class Program
     {
         return System.Threading.Tasks.Task.Run(async () =>
         {
-            const System.Double TileCooldownSeconds = 10.0;
+            const System.Double TileCooldownSeconds = 1.0;
             const System.Double ReportCooldownSeconds = 5.0;
 
+            System.DateTime startTime = Clock.NowUtc();
             System.DateTime lastTileTime = System.DateTime.MinValue;
             System.DateTime lastReportTime = System.DateTime.MinValue;
 
@@ -210,7 +213,9 @@ public static class Program
                 // Kiểm tra cooldown để tránh spam
                 if ((now - lastTileTime).TotalSeconds >= TileCooldownSeconds)
                 {
-                    System.Console.Title = $"AutoX | Level: {ConfigurationManager.Instance.Get<NLogixOptions>().MinLevel}";
+                    System.TimeSpan runningTime = now - startTime;
+                    System.String runningTimeString = System.String.Format("{0:D2}:{1:D2}:{2:D2}", runningTime.Hours, runningTime.Minutes, runningTime.Seconds);
+                    System.Console.Title = $"AutoX  |  Level: {ConfigurationManager.Instance.Get<NLogixOptions>().MinLevel}  |  {Task.Title}  |  {runningTimeString}";
                 }
 
                 if (System.Console.KeyAvailable)

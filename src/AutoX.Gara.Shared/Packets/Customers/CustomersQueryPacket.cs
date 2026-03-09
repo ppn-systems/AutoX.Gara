@@ -1,8 +1,9 @@
 ﻿using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Attributes;
-using Nalix.Common.Messaging.Packets.Abstractions;
+using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Serialization;
-using Nalix.Shared.Messaging;
+using Nalix.Common.Serialization.Attributes;
+using Nalix.Common.Shared.Attributes;
+using Nalix.Shared.Frames;
 using Nalix.Shared.Serialization;
 
 namespace AutoX.Gara.Shared.Packets.Customers;

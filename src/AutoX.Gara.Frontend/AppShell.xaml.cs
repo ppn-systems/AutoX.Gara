@@ -2,7 +2,7 @@
 
 using AutoX.Gara.Shared;
 using Microsoft.Maui.Controls;
-using Nalix.Common.Diagnostics;
+using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Framework.Injection;
 using Nalix.Logging;
 using Nalix.Logging.Sinks;

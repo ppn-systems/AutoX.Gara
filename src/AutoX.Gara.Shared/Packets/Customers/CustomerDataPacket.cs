@@ -1,16 +1,17 @@
 ﻿using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Attributes;
-using Nalix.Common.Enums;
-using Nalix.Common.Infrastructure.Caching;
-using Nalix.Common.Messaging.Packets;
-using Nalix.Common.Messaging.Packets.Abstractions;
+using Nalix.Common.Networking.Caching;
+using Nalix.Common.Networking.Packets.Abstractions;
+using Nalix.Common.Networking.Packets.Enums;
+using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
+using Nalix.Common.Serialization.Attributes;
+using Nalix.Common.Shared.Attributes;
 using Nalix.Framework.Injection;
 using Nalix.Shared.Extensions;
+using Nalix.Shared.Frames;
 using Nalix.Shared.Memory.Pooling;
-using Nalix.Shared.Messaging;
 using Nalix.Shared.Serialization;
 
 namespace AutoX.Gara.Shared.Packets.Customers;

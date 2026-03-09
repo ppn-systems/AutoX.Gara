@@ -5,9 +5,7 @@ using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Validator;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Nalix.Common.Messaging.Protocols;
-using System.Threading;
-using System.Threading.Tasks;
+using Nalix.Common.Networking.Protocols;
 
 namespace AutoX.Gara.UI.ViewModels;
 
@@ -32,7 +30,7 @@ public sealed partial class LoginViewModel : ObservableObject
     /// <summary>
     /// Token để hủy login đang chạy khi user bấm nút khác / thoát màn hình.
     /// </summary>
-    private CancellationTokenSource? _loginCts;
+    private System.Threading.CancellationTokenSource? _loginCts;
 
     // ─── Observable Properties ───────────────────────────────────────────────
 
@@ -82,11 +80,11 @@ public sealed partial class LoginViewModel : ObservableObject
     partial void OnIsNetworkReadyChanged(bool value) => OnPropertyChanged(nameof(IsNetworkNotReady));
 
     [RelayCommand]
-    private async Task LoginAsync()
+    private async System.Threading.Tasks.Task LoginAsync()
     {
         // Hủy login trước đó nếu đang chạy (ví dụ user bấm nhanh 2 lần)
         _loginCts?.Cancel();
-        _loginCts = new CancellationTokenSource();
+        _loginCts = new System.Threading.CancellationTokenSource();
         var ct = _loginCts.Token;
 
         ClearError();
@@ -221,7 +219,7 @@ public sealed partial class LoginViewModel : ObservableObject
     /// Kết nối mạng + handshake khi màn hình load.
     /// Gọi lại được khi user nhấn "Retry".
     /// </summary>
-    private async Task InitConnectionAsync()
+    private async System.Threading.Tasks.Task InitConnectionAsync()
     {
         IsLoading = true;
         IsNetworkReady = false;

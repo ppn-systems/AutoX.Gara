@@ -1,16 +1,16 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Connection;
-using Nalix.Common.Diagnostics;
-using Nalix.Common.Enums;
-using Nalix.Common.Messaging.Packets.Abstractions;
-using Nalix.Common.Messaging.Packets.Attributes;
-using Nalix.Common.Messaging.Protocols;
+using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Common.Networking.Abstractions;
+using Nalix.Common.Networking.Packets.Abstractions;
+using Nalix.Common.Networking.Packets.Attributes;
+using Nalix.Common.Networking.Protocols;
+using Nalix.Common.Security.Enums;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
+using Nalix.Shared.Frames.Controls;
 using Nalix.Shared.Memory.Pooling;
-using Nalix.Shared.Messaging.Controls;
 using Nalix.Shared.Security.Asymmetric;
 using Nalix.Shared.Security.Hashing;
 

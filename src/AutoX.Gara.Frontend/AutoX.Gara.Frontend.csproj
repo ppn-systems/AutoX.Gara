@@ -66,8 +66,8 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.41" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.3" />
 		
-		<PackageReference Include="Nalix.SDK" Version="10.7.7" />
-		<PackageReference Include="Nalix.Logging" Version="10.7.6" />
+		<PackageReference Include="Nalix.SDK" Version="11.0.0" />
+		<PackageReference Include="Nalix.Logging" Version="11.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

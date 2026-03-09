@@ -2,9 +2,9 @@
 
 using AutoX.Gara.Shared.Packets.Auth;
 using AutoX.Gara.Shared.Packets.Customers;
-using Nalix.Common.Messaging.Packets.Abstractions;
+using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Framework.Injection;
-using Nalix.Shared.Messaging.Catalog;
+using Nalix.Shared.Registry;
 
 namespace AutoX.Gara.Shared;
 
@@ -16,7 +16,7 @@ public static class AppConfig
     public static void Register()
     {
         // 1) Build packet catalog.
-        PacketCatalogFactory factory = new();
+        PacketRegistryFactory factory = new();
 
         // REGISTER packets here (single source of truth).
         _ = factory.RegisterPacket<LoginPacket>();
@@ -25,7 +25,7 @@ public static class AppConfig
         _ = factory.RegisterPacket<CustomersPacket>();
         _ = factory.RegisterPacket<CustomersQueryPacket>();
 
-        IPacketCatalog catalog = factory.CreateCatalog();
+        PacketRegistry catalog = factory.CreateCatalog();
 
         // 2) Expose catalog through your current service locator.
         InstanceManager.Instance.Register<IPacketCatalog>(catalog);

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using Nalix.Common.Messaging.Packets;
 using Nalix.Common.Serialization;
+using Nalix.Common.Serialization.Attributes;
 
 namespace AutoX.Gara.Shared.Packets.Auth;
 
@@ -31,12 +31,12 @@ public class LoginRequestModel
     /// <summary>
     /// Tên đăng nhập của người dùng.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
+    [SerializeOrder(1)]
     public System.String Username { get; set; }
 
     /// <summary>
     /// Mật khẩu nhập vào từ người dùng (clear text, chỉ sử dụng để xác thực, không lưu trữ).
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(2)]
     public System.String Password { get; set; }
 }
