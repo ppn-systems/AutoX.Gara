@@ -4,12 +4,12 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
+using Nalix.Common.Security.Attributes;
 using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
 using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
-using Nalix.Shared.Security;
 
 namespace AutoX.Gara.Shared.Packets.Auth;
 
@@ -30,6 +30,7 @@ public sealed class LoginPacket : PacketBase<LoginPacket>, IPacketTransformer<Lo
     /// <summary>
     /// Gets or sets the login credentials model (username, hashed password, metadata).
     /// </summary>
+    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public LoginRequestModel Account { get; set; }
 
@@ -69,18 +70,6 @@ public sealed class LoginPacket : PacketBase<LoginPacket>, IPacketTransformer<Lo
         // OpCode already reset by base.ResetForPool(), but keep explicit reset for clarity.
         OpCode = OpCommand.LOGIN.AsUInt16();
     }
-
-    /// <summary>
-    /// Encrypt packet using envelope encryptor.
-    /// </summary>
-    public static LoginPacket Encrypt(LoginPacket packet, System.Byte[] key, CipherSuiteType algorithm) =>
-        EnvelopeEncryptor.Encrypt(packet, key, algorithm);
-
-    /// <summary>
-    /// Decrypt packet using envelope decryptor.
-    /// </summary>
-    public static LoginPacket Decrypt(LoginPacket packet, System.Byte[] key) =>
-        EnvelopeEncryptor.Decrypt(packet, key);
 
     /// <summary>
     /// Compress username/password fields and mark packet as compressed.

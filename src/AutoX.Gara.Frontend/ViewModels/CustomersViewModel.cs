@@ -7,6 +7,7 @@ using AutoX.Gara.Shared.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
+using System.Diagnostics;
 
 namespace AutoX.Gara.Frontend.ViewModels;
 
@@ -121,8 +122,9 @@ public sealed partial class CustomersViewModel : ObservableObject
 
         try
         {
-            CustomerListResult result = await _customerService.GetListAsync(
-                CurrentPage, DefaultPageSize, ct);
+            CustomerListResult result = await _customerService.GetListAsync(CurrentPage, DefaultPageSize, ct);
+
+            Debug.WriteLine($"[VM DEBUG] LoadAsync result: IsSuccess={result.IsSuccess}, Customers={result.Customers.Count}");
 
             if (result.IsSuccess)
             {
@@ -197,9 +199,7 @@ public sealed partial class CustomersViewModel : ObservableObject
         try
         {
             CustomerDataPacket data = BuildPacketFromForm();
-            CustomerWriteResult result = IsEditing
-                ? await _customerService.UpdateAsync(data, ct)
-                : await _customerService.CreateAsync(data, ct);
+            CustomerWriteResult result = IsEditing ? await _customerService.UpdateAsync(data, ct) : await _customerService.CreateAsync(data, ct);
 
             if (result.IsSuccess)
             {
@@ -365,11 +365,11 @@ public sealed partial class CustomersViewModel : ObservableObject
         if (IsEditing && SelectedCustomer is not null)
         {
             // Preserve original ID, type, membership, DOB when editing
-            data.CustomerId = SelectedCustomer.CustomerId;
             data.Type = SelectedCustomer.Type;
+            data.CreatedAt = SelectedCustomer.CreatedAt;
+            data.CustomerId = SelectedCustomer.CustomerId;
             data.Membership = SelectedCustomer.Membership;
             data.DateOfBirth = SelectedCustomer.DateOfBirth;
-            data.CreatedAt = SelectedCustomer.CreatedAt;
         }
         else
         {
@@ -400,16 +400,14 @@ public sealed partial class CustomersViewModel : ObservableObject
     }
 
     private static System.String MapWriteErrorToMessage(System.String serverMessage, ProtocolAdvice advice)
-        => advice == ProtocolAdvice.FIX_AND_RETRY
-            ? serverMessage
-            : serverMessage;
+        => advice == ProtocolAdvice.FIX_AND_RETRY ? serverMessage : serverMessage;
 
     private void ShowPopup(System.String title, System.String message, System.Boolean isRetry)
     {
         PopupTitle = title;
         PopupMessage = message;
         IsPopupRetry = isRetry;
-        PopupButtonText = isRetry ? "Thử lại" : "OK";
+        PopupButtonText = isRetry ? "Retry" : "OK";
         IsPopupVisible = true;
     }
 }

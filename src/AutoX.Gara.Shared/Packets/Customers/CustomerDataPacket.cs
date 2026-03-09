@@ -5,6 +5,7 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
+using Nalix.Common.Security.Attributes;
 using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
@@ -37,30 +38,35 @@ public sealed class CustomerDataPacket : PacketBase<CustomerDataPacket>, IPacket
     /// <summary>
     /// Gets or sets the full name of the customer.
     /// </summary>
+    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
     public System.String Name { get; set; }
 
     /// <summary>
     /// Gets or sets the email address of the customer.
     /// </summary>
+    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
     public System.String Email { get; set; }
 
     /// <summary>
     /// Gets or sets the phone number of the customer.
     /// </summary>
+    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
     public System.String PhoneNumber { get; set; }
 
     /// <summary>
     /// Gets or sets the physical address of the customer.
     /// </summary>
+    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
     public System.String Address { get; set; }
 
     /// <summary>
     /// Gets or sets the tax identification code of the customer.
     /// </summary>
+    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
     public System.String TaxCode { get; set; }
 
@@ -134,56 +140,6 @@ public sealed class CustomerDataPacket : PacketBase<CustomerDataPacket>, IPacket
 
         // Re-assert OpCode to default for clarity (base.ResetForPool already sets header fields).
         OpCode = OpCommand.NONE.AsUInt16();
-    }
-
-    // Serialize instance methods are inherited from PacketBase:
-    // public override byte[] Serialize() ...
-    // public override int Serialize(Span<byte> buffer) ...
-
-    /// <summary>
-    /// Encrypt sensitive string fields using provided key and algorithm.
-    /// </summary>
-    /// <exception cref="System.ArgumentNullException">Thrown when packet or key is null.</exception>
-    public static CustomerDataPacket Encrypt(CustomerDataPacket packet, System.Byte[] key, CipherSuiteType algorithm)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        System.ArgumentNullException.ThrowIfNull(key);
-
-        packet.Name = packet.Name.EncryptToBase64(key, algorithm);
-        packet.Email = packet.Email.EncryptToBase64(key, algorithm);
-        packet.Address = packet.Address.EncryptToBase64(key, algorithm);
-        packet.TaxCode = packet.TaxCode.EncryptToBase64(key, algorithm);
-        packet.PhoneNumber = packet.PhoneNumber.EncryptToBase64(key, algorithm);
-
-        packet.Flags.AddFlag(PacketFlags.ENCRYPTED);
-        return packet;
-    }
-
-    /// <summary>
-    /// Decrypt sensitive string fields using provided key.
-    /// </summary>
-    /// <exception cref="System.ArgumentNullException">Thrown when packet or key is null.</exception>
-    /// <exception cref="System.InvalidOperationException">Thrown when decryption fails.</exception>
-    public static CustomerDataPacket Decrypt(CustomerDataPacket packet, System.Byte[] key)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        System.ArgumentNullException.ThrowIfNull(key);
-
-        try
-        {
-            packet.Name = packet.Name.DecryptFromBase64(key);
-            packet.Email = packet.Email.DecryptFromBase64(key);
-            packet.Address = packet.Address.DecryptFromBase64(key);
-            packet.TaxCode = packet.TaxCode.DecryptFromBase64(key);
-            packet.PhoneNumber = packet.PhoneNumber.DecryptFromBase64(key);
-
-            packet.Flags.RemoveFlag(PacketFlags.ENCRYPTED);
-            return packet;
-        }
-        catch (System.Exception ex)
-        {
-            throw new System.InvalidOperationException("Failed to decrypt customer packet data.", ex);
-        }
     }
 
     /// <summary>

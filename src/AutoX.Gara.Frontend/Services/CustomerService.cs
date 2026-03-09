@@ -53,6 +53,8 @@ public sealed class CustomerService : ICustomerService
                 predicate: p => p.SequenceId == sq,
                 handler: resp =>
                 {
+                    System.Diagnostics.Debug.WriteLine("[CLIENT DEBUG] Nhận CustomersPacket từ server với seqid=" + sq);
+                    System.Diagnostics.Debug.WriteLine("[CLIENT DEBUG] Số lượng customer: " + resp.Customers.Count);
                     sub?.Dispose();
                     errSub?.Dispose();
                     tcs.TrySetResult(CustomerListResult.Success(resp.Customers));
@@ -63,6 +65,7 @@ public sealed class CustomerService : ICustomerService
                 predicate: p => p.SequenceId == sq,
                 handler: resp =>
                 {
+                    System.Diagnostics.Debug.WriteLine($"[CLIENT DEBUG] Nhận Directive ERROR từ server: {resp.Reason} ({resp.Action}), seqid={sq}");
                     sub?.Dispose();
                     errSub?.Dispose();
                     tcs.TrySetResult(CustomerListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
@@ -137,6 +140,8 @@ public sealed class CustomerService : ICustomerService
 
             data.OpCode = opcode;
             data.SequenceId = sq;
+
+            InstanceManager.Instance.GetOrCreateInstance<ILogger>().Info($"Sending packet with SeqId={sq} OpCode={opcode}");
 
             CustomerDataPacket.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 

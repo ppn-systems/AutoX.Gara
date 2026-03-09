@@ -11,6 +11,8 @@ using Nalix.Common.Networking.Packets.Attributes;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security.Enums;
 using Nalix.Network.Connections;
+using Nalix.Shared.Serialization;
+using System;
 
 namespace AutoX.Gara.Application.Customers;
 
@@ -58,6 +60,7 @@ public sealed class CustomerOps(AutoXDbContext context)
             System.Collections.Generic.List<CustomerDataPacket> customerPackets;
 
             customers = await s_customer.GetAllAsync(packet.Page, packet.PageSize) ?? [];
+
             customerPackets = customers.ConvertAll(c => new CustomerDataPacket
             {
                 Type = c.Type,
@@ -79,8 +82,8 @@ public sealed class CustomerOps(AutoXDbContext context)
                 SequenceId = packet.SequenceId
             };
 
-            await connection.TCP.SendAsync(customersPacket)
-                                .ConfigureAwait(false);
+            Boolean ok = await connection.TCP.SendAsync(LiteSerializer.Serialize(customersPacket))
+                                             .ConfigureAwait(false);
         }
         catch (System.Exception)
         {
@@ -105,16 +108,29 @@ public sealed class CustomerOps(AutoXDbContext context)
             !AccountValidation.IsValidEmail(packet.Email) ||
             !AccountValidation.IsValidVietnamPhoneNumber(packet.PhoneNumber))
         {
+            if (p is not IPacketSequenced ps)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.MALFORMED_PACKET,
+                    ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+
+                return;
+            }
+
             // MALFORMED_PACKET: Packet từ client không đúng định dạng hoặc thiếu field cần thiết.
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, ps.SequenceId).ConfigureAwait(false);
 
             return;
         }
+
         // Kiểm tra email/số điện thoại đã tồn tại
-        if (await s_customer.AnyAsync(c => c.Email == packet.Email || c.PhoneNumber == packet.PhoneNumber))
+        Boolean existed = await s_customer.AnyAsync(c => c.Email == packet.Email || c.PhoneNumber == packet.PhoneNumber);
+
+        if (existed)
         {
             // ALREADY_EXISTS: Email hoặc số điện thoại đã tồn tại trong database, không cho phép trùng.
             await connection.SendAsync(

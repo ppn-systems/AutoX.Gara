@@ -142,7 +142,7 @@ public static class Program
                             .MinLevel = LogLevel.Meta;
 #else 
         ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Trace;
+                            .MinLevel = LogLevel.Meta;
 #endif
 
         InstanceManager.Instance.Register<ILogger>(NLogix.Host.Instance);

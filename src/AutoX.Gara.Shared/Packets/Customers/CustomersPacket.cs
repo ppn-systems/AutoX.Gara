@@ -5,6 +5,7 @@ using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
+using Nalix.Common.Security.Attributes;
 using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
@@ -62,6 +63,7 @@ public sealed class CustomersPacket : PacketBase<CustomersPacket>, IPacketTransf
     /// <summary>
     /// Gets or sets the list of customer records for the current page.
     /// </summary>
+    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public List<CustomerDataPacket> Customers { get; set; } = [];
 
@@ -95,47 +97,6 @@ public sealed class CustomersPacket : PacketBase<CustomersPacket>, IPacketTransf
 
         // Let base reset other serializable properties/header if needed.
         base.ResetForPool();
-    }
-
-    // Serialize/Serialize(Span<byte>) are inherited from PacketBase.
-
-    /// <inheritdoc/>
-    /// <exception cref="System.ArgumentNullException">
-    /// Thrown when <paramref name="packet"/> or <paramref name="key"/> is <see langword="null"/>.
-    /// </exception>
-    public static CustomersPacket Encrypt(CustomersPacket packet, System.Byte[] key, CipherSuiteType algorithm)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        System.ArgumentNullException.ThrowIfNull(key);
-
-        for (System.Int32 i = 0; i < packet.Customers.Count; i++)
-        {
-            packet.Customers[i] = CustomerDataPacket.Encrypt(packet.Customers[i], key, algorithm);
-        }
-
-        packet.Flags.AddFlag(PacketFlags.ENCRYPTED);
-        return packet;
-    }
-
-    /// <inheritdoc/>
-    /// <exception cref="System.ArgumentNullException">
-    /// Thrown when <paramref name="packet"/> or <paramref name="key"/> is <see langword="null"/>.
-    /// </exception>
-    /// <exception cref="System.InvalidOperationException">
-    /// Thrown when decryption of one or more customer entries fails.
-    /// </exception>
-    public static CustomersPacket Decrypt(CustomersPacket packet, System.Byte[] key)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        System.ArgumentNullException.ThrowIfNull(key);
-
-        for (System.Int32 i = 0; i < packet.Customers.Count; i++)
-        {
-            packet.Customers[i] = CustomerDataPacket.Decrypt(packet.Customers[i], key);
-        }
-
-        packet.Flags.RemoveFlag(PacketFlags.ENCRYPTED);
-        return packet;
     }
 
     /// <inheritdoc/>
