@@ -1,6 +1,6 @@
 # 🚗 Nalix Garage Management System
 
-Hệ thống **Desktop Client–Server** dùng cho quản lý garage / kho / sửa chữa, xây dựng trên nền **.NET + Avalonia + Nalix.Network**.
+Hệ thống **Desktop Client–Server** dùng cho quản lý garage / kho / sửa chữa, xây dựng trên nền **.NET + MAUI + Nalix.Network**.
 
 Mục tiêu chính:
 
@@ -28,7 +28,7 @@ Mục tiêu chính:
 
 | Layer       | Công nghệ / Mô tả                                       |
 |------------ |---------------------------------------------------------|
-| UI          | Avalonia (.NET 8) – Desktop Client                      |
+| UI          | MAUI – Desktop Client                                   |
 | Business    | .NET 10 – Domain & Application logic                    |
 | Network     | Nalix.Network – TCP, message framing, serialization     |
 | Database    | SQL Server Express                                      |

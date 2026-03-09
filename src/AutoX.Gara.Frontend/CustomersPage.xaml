@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AutoX.Gara.Frontend.CustomersPage"
+             Title="Khách hàng"
+             BackgroundColor="#0f0f0f">
+
+    <Grid>
+
+        <!-- ═══ Main Content ══════════════════════════════════════════════════ -->
+        <Grid RowDefinitions="Auto,*,Auto"
+              Margin="24,16">
+
+            <!-- ── Header bar ─────────────────────────────────────────────── -->
+            <Grid Grid.Row="0"
+                  ColumnDefinitions="*,Auto"
+                  Margin="0,0,0,16">
+
+                <Label Grid.Column="0"
+                       Text="Danh sách khách hàng"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       VerticalOptions="Center"/>
+
+                <Button Grid.Column="1"
+                        Text="+ Thêm khách hàng"
+                        Command="{Binding OpenCreateFormCommand}"
+                        BackgroundColor="#2563eb"
+                        TextColor="White"
+                        CornerRadius="10"
+                        HeightRequest="42"
+                        Padding="20,0"
+                        FontSize="14"/>
+            </Grid>
+
+            <!-- ── Error inline ───────────────────────────────────────────── -->
+            <Label Grid.Row="0"
+                   Text="{Binding ErrorMessage}"
+                   TextColor="#ff6b6b"
+                   FontSize="12"
+                   IsVisible="{Binding HasError}"
+                   Margin="2,44,0,0"/>
+
+            <!-- ── Customer list ──────────────────────────────────────────── -->
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding Customers}"
+                            SelectionMode="None"
+                            BackgroundColor="Transparent">
+
+                <!-- Empty state -->
+                <CollectionView.EmptyView>
+                    <Label Text="Chưa có khách hàng nào."
+                           TextColor="#555"
+                           FontSize="14"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           Margin="0,40,0,0"/>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border BackgroundColor="#1a1a1a"
+                                StrokeThickness="1"
+                                Stroke="#2d2d2d"
+                                Margin="0,0,0,10"
+                                Padding="16,12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10"/>
+                            </Border.StrokeShape>
+
+                            <Grid ColumnDefinitions="*,Auto,Auto">
+
+                                <!-- Customer info -->
+                                <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                    <Label Text="{Binding Name}"
+                                           FontSize="15"
+                                           FontAttributes="Bold"
+                                           TextColor="White"/>
+                                    <Label Text="{Binding Email}"
+                                           FontSize="12"
+                                           TextColor="#888"/>
+                                    <Label Text="{Binding PhoneNumber}"
+                                           FontSize="12"
+                                           TextColor="#888"/>
+                                </VerticalStackLayout>
+
+                                <!-- Edit button -->
+                                <Button Grid.Column="1"
+                                        Text="Sửa"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenEditFormCommand}"
+                                        CommandParameter="{Binding .}"
+                                        BackgroundColor="#1e3a5f"
+                                        TextColor="#60a5fa"
+                                        CornerRadius="8"
+                                        HeightRequest="36"
+                                        Padding="14,0"
+                                        FontSize="13"
+                                        Margin="8,0,0,0"
+                                        VerticalOptions="Center"/>
+
+                                <!-- Delete button -->
+                                <Button Grid.Column="2"
+                                        Text="Xóa"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RequestDeleteCommand}"
+                                        CommandParameter="{Binding .}"
+                                        BackgroundColor="#3b1a1a"
+                                        TextColor="#f87171"
+                                        CornerRadius="8"
+                                        HeightRequest="36"
+                                        Padding="14,0"
+                                        FontSize="13"
+                                        Margin="8,0,0,0"
+                                        VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- ── Pagination ─────────────────────────────────────────────── -->
+            <Grid Grid.Row="2"
+                  ColumnDefinitions="Auto,*,Auto"
+                  Margin="0,12,0,0">
+
+                <Button Grid.Column="0"
+                        Text="← Trước"
+                        Command="{Binding PreviousPageCommand}"
+                        IsVisible="{Binding HasPreviousPage}"
+                        BackgroundColor="#1e1e1e"
+                        TextColor="#60a5fa"
+                        CornerRadius="8"
+                        HeightRequest="38"
+                        Padding="16,0"
+                        FontSize="13"/>
+
+                <Label Grid.Column="1"
+                       Text="{Binding CurrentPage, StringFormat='Trang {0}'}"
+                       TextColor="#888"
+                       FontSize="13"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"/>
+
+                <Button Grid.Column="2"
+                        Text="Tiếp →"
+                        Command="{Binding NextPageCommand}"
+                        IsVisible="{Binding HasNextPage}"
+                        BackgroundColor="#1e1e1e"
+                        TextColor="#60a5fa"
+                        CornerRadius="8"
+                        HeightRequest="38"
+                        Padding="16,0"
+                        FontSize="13"/>
+            </Grid>
+        </Grid>
+
+        <!-- ═══ Create / Edit Form Overlay ═══════════════════════════���═══════ -->
+        <Grid IsVisible="{Binding IsFormVisible}"
+              BackgroundColor="#99000000"
+              ZIndex="50">
+            <Border Padding="28,24"
+                    BackgroundColor="#1e1e1e"
+                    StrokeThickness="1"
+                    Stroke="#333"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    WidthRequest="400">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="12">
+
+                    <!-- Form title -->
+                    <Label Text="{Binding IsEditing, Converter={StaticResource BoolToStringConverter},
+                                  ConverterParameter='Chỉnh sửa khách hàng|Thêm khách hàng mới'}"
+                           FontSize="17"
+                           FontAttributes="Bold"
+                           TextColor="White"/>
+
+                    <!-- Name -->
+                    <Label Text="Họ và tên"
+                           FontSize="12"
+                           TextColor="#aaa"/>
+                    <Border BackgroundColor="#141414"
+                            StrokeThickness="1"
+                            Stroke="#2d2d2d"
+                            HeightRequest="44">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+                        <Entry Text="{Binding FormName}"
+                               Placeholder="Nhập họ và tên"
+                               PlaceholderColor="#555"
+                               TextColor="White"
+                               FontSize="14"
+                               BackgroundColor="Transparent"
+                               VerticalOptions="Center"
+                               ReturnType="Next"/>
+                    </Border>
+
+                    <!-- Email -->
+                    <Label Text="Email"
+                           FontSize="12"
+                           TextColor="#aaa"/>
+                    <Border BackgroundColor="#141414"
+                            StrokeThickness="1"
+                            Stroke="#2d2d2d"
+                            HeightRequest="44">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+                        <Entry Text="{Binding FormEmail}"
+                               Placeholder="Nhập email"
+                               PlaceholderColor="#555"
+                               TextColor="White"
+                               FontSize="14"
+                               BackgroundColor="Transparent"
+                               Keyboard="Email"
+                               VerticalOptions="Center"
+                               ReturnType="Next"/>
+                    </Border>
+
+                    <!-- Phone -->
+                    <Label Text="Số điện thoại"
+                           FontSize="12"
+                           TextColor="#aaa"/>
+                    <Border BackgroundColor="#141414"
+                            StrokeThickness="1"
+                            Stroke="#2d2d2d"
+                            HeightRequest="44">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+                        <Entry Text="{Binding FormPhone}"
+                               Placeholder="Nhập số điện thoại (VD: 0901234567)"
+                               PlaceholderColor="#555"
+                               TextColor="White"
+                               FontSize="14"
+                               BackgroundColor="Transparent"
+                               Keyboard="Telephone"
+                               VerticalOptions="Center"
+                               ReturnType="Next"/>
+                    </Border>
+
+                    <!-- Address -->
+                    <Label Text="Địa chỉ"
+                           FontSize="12"
+                           TextColor="#aaa"/>
+                    <Border BackgroundColor="#141414"
+                            StrokeThickness="1"
+                            Stroke="#2d2d2d"
+                            HeightRequest="44">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+                        <Entry Text="{Binding FormAddress}"
+                               Placeholder="Nhập địa chỉ"
+                               PlaceholderColor="#555"
+                               TextColor="White"
+                               FontSize="14"
+                               BackgroundColor="Transparent"
+                               VerticalOptions="Center"
+                               ReturnType="Next"/>
+                    </Border>
+
+                    <!-- Tax code -->
+                    <Label Text="Mã số thuế (tùy chọn)"
+                           FontSize="12"
+                           TextColor="#aaa"/>
+                    <Border BackgroundColor="#141414"
+                            StrokeThickness="1"
+                            Stroke="#2d2d2d"
+                            HeightRequest="44">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+                        <Entry Text="{Binding FormTaxCode}"
+                               Placeholder="Nhập mã số thuế"
+                               PlaceholderColor="#555"
+                               TextColor="White"
+                               FontSize="14"
+                               BackgroundColor="Transparent"
+                               VerticalOptions="Center"
+                               ReturnType="Done"
+                               ReturnCommand="{Binding SaveFormCommand}"/>
+                    </Border>
+
+                    <!-- Form inline error -->
+                    <Label Text="{Binding FormErrorMessage}"
+                           TextColor="#ff6b6b"
+                           FontSize="12"
+                           IsVisible="{Binding HasFormError}"
+                           Margin="2,0,0,0"/>
+
+                    <!-- Form action buttons -->
+                    <Grid ColumnDefinitions="*,Auto,Auto"
+                          Margin="0,8,0,0">
+                        <Button Grid.Column="1"
+                                Text="H��y"
+                                Command="{Binding CloseFormCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="#888"
+                                CornerRadius="8"
+                                Padding="20,0"
+                                HeightRequest="40"
+                                FontSize="14"
+                                Margin="0,0,8,0"/>
+                        <Button Grid.Column="2"
+                                Text="{Binding IsEditing, Converter={StaticResource BoolToStringConverter},
+                                       ConverterParameter='Lưu thay đổi|Thêm mới'}"
+                                Command="{Binding SaveFormCommand}"
+                                BackgroundColor="#2563eb"
+                                TextColor="White"
+                                CornerRadius="8"
+                                Padding="20,0"
+                                HeightRequest="40"
+                                FontSize="14"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- ═══ Delete Confirmation Popup ═════════════════════════════════════ -->
+        <Grid IsVisible="{Binding IsDeleteConfirmVisible}"
+              BackgroundColor="#99000000"
+              ZIndex="60">
+            <Border Padding="28,24"
+                    BackgroundColor="#1e1e1e"
+                    StrokeThickness="1"
+                    Stroke="#333"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    WidthRequest="320">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Xác nhận xóa"
+                           FontSize="17"
+                           FontAttributes="Bold"
+                           TextColor="White"/>
+                    <Label Text="{Binding SelectedCustomer.Name, StringFormat='Bạn có chắc muốn xóa khách hàng &quot;{0}&quot; không?'}"
+                           FontSize="14"
+                           TextColor="#bbb"
+                           LineBreakMode="WordWrap"/>
+                    <Grid ColumnDefinitions="*,Auto,Auto"
+                          Margin="0,8,0,0">
+                        <Button Grid.Column="1"
+                                Text="Hủy"
+                                Command="{Binding CancelDeleteCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="#888"
+                                CornerRadius="8"
+                                Padding="20,0"
+                                HeightRequest="38"
+                                FontSize="14"
+                                Margin="0,0,8,0"/>
+                        <Button Grid.Column="2"
+                                Text="Xóa"
+                                Command="{Binding ConfirmDeleteCommand}"
+                                BackgroundColor="#7f1d1d"
+                                TextColor="#fca5a5"
+                                CornerRadius="8"
+                                Padding="20,0"
+                                HeightRequest="38"
+                                FontSize="14"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- ═══ Error/Info Popup ═══════════════════════════════════════════════ -->
+        <Grid IsVisible="{Binding IsPopupVisible}"
+              BackgroundColor="#99000000"
+              ZIndex="100">
+            <Border Padding="28,24"
+                    BackgroundColor="#1e1e1e"
+                    StrokeThickness="1"
+                    Stroke="#333"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    WidthRequest="320">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{Binding PopupTitle}"
+                           FontSize="17"
+                           FontAttributes="Bold"
+                           TextColor="White"/>
+                    <Label Text="{Binding PopupMessage}"
+                           FontSize="14"
+                           TextColor="#bbb"
+                           LineBreakMode="WordWrap"/>
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="1"
+                                Text="{Binding PopupButtonText}"
+                                Command="{Binding RetryLoadCommand}"
+                                IsVisible="{Binding IsPopupRetry}"
+                                BackgroundColor="#2563eb"
+                                TextColor="White"
+                                CornerRadius="8"
+                                Padding="20,0"
+                                HeightRequest="38"
+                                FontSize="14"/>
+                        <Button Grid.Column="1"
+                                Text="OK"
+                                Command="{Binding ClosePopupCommand}"
+                                IsVisible="{Binding IsPopupNotRetry}"
+                                BackgroundColor="Transparent"
+                                TextColor="#2563eb"
+                                CornerRadius="8"
+                                Padding="20,0"
+                                HeightRequest="38"
+                                FontSize="14"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- ═══ Loading overlay ════════════════════════════════════════════════ -->
+        <Grid IsVisible="{Binding IsLoading}"
+              BackgroundColor="#99000000"
+              ZIndex="10">
+            <VerticalStackLayout VerticalOptions="Center"
+                                 HorizontalOptions="Center"
+                                 Spacing="14">
+                <ActivityIndicator IsRunning="True"
+                                   Color="White"
+                                   WidthRequest="36"
+                                   HeightRequest="36"
+                                   HorizontalOptions="Center"/>
+                <Label Text="Đang xử lý..."
+                       TextColor="#ccc"
+                       FontSize="13"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </Grid>
+
+    </Grid>
+</ContentPage>

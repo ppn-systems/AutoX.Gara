@@ -8,152 +8,153 @@
              BackgroundColor="#0f0f0f">
 
     <Grid>
+        <Grid HorizontalOptions="Center" WidthRequest="400" HeightRequest="520">
+            <!-- ═══ Main content ═══════════════════════════════════════════════ -->
+            <VerticalStackLayout Spacing="0"
+                                 VerticalOptions="Center"
+                                 Margin="48,0">
 
-        <!-- ═══ Main content ═══════════════════════════════════════════════ -->
-        <VerticalStackLayout Spacing="0"
-                             VerticalOptions="Center"
-                             Margin="48,0">
+                <!-- Logo -->
+                <Image Source="car.png"
+                       HeightRequest="72"
+                       HorizontalOptions="Center"
+                       Margin="0,0,0,20"/>
 
-            <!-- Logo -->
-            <Image Source="car.png"
-                   HeightRequest="72"
-                   HorizontalOptions="Center"
-                   Margin="0,0,0,20"/>
-
-            <!-- Title -->
-            <Label Text="AutoX Gara"
-                   FontAttributes="Bold"
-                   FontSize="26"
-                   HorizontalOptions="Center"
-                   TextColor="White"
-                   Margin="0,0,0,4"/>
-
-            <Label Text="Đăng nhập vào hệ thống"
-                   FontSize="13"
-                   HorizontalOptions="Center"
-                   TextColor="#888"
-                   Margin="0,0,0,36"/>
-
-            <!-- Username -->
-            <Label Text="Tên đăng nhập"
-                   FontSize="12"
-                   TextColor="#aaa"
-                   Margin="0,0,0,6"/>
-            <Border BackgroundColor="#1a1a1a"
-                    StrokeThickness="1"
-                    Stroke="#2d2d2d"
-                    HeightRequest="48"
-                    Margin="0,0,0,16">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="10"/>
-                </Border.StrokeShape>
-                <Entry Placeholder="Nhập tên đăng nhập"
-                       PlaceholderColor="#555"
-                       Text="{Binding Username}"
+                <!-- Title -->
+                <Label Text="AutoX Gara"
+                       FontAttributes="Bold"
+                       FontSize="26"
+                       HorizontalOptions="Center"
                        TextColor="White"
-                       FontSize="15"
-                       BackgroundColor="Transparent"
-                       Margin="0,0,32,0"
-                       VerticalOptions="Center"
-                       ReturnType="Next"/>
-            </Border>
+                       Margin="0,0,0,4"/>
 
-            <!-- Password -->
-            <Label Text="Mật khẩu"
-                   FontSize="12"
-                   TextColor="#aaa"
-                   Margin="0,0,0,6"/>
-            <Border BackgroundColor="#1a1a1a"
-                    StrokeThickness="1"
-                    Stroke="#2d2d2d"
-                    HeightRequest="48"
-                    Margin="0,0,0,16">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="10"/>
-                </Border.StrokeShape>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="32"/>
-                    </Grid.ColumnDefinitions>
-                    <Entry Grid.Column="0"
-                           Placeholder="Nhập mật khẩu"
+                <Label Text="Đăng nhập vào hệ thống"
+                       FontSize="13"
+                       HorizontalOptions="Center"
+                       TextColor="#888"
+                       Margin="0,0,0,36"/>
+
+                <!-- Username -->
+                <Label Text="Tên đăng nhập"
+                       FontSize="12"
+                       TextColor="#aaa"
+                       Margin="0,0,0,6"/>
+                <Border BackgroundColor="#1a1a1a"
+                        StrokeThickness="1"
+                        Stroke="#2d2d2d"
+                        HeightRequest="48"
+                        Margin="0,0,0,16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="10"/>
+                    </Border.StrokeShape>
+                    <Entry Placeholder="Nhập tên đăng nhập"
                            PlaceholderColor="#555"
-                           IsPassword="{Binding IsPasswordHidden}"
-                           Text="{Binding Password}"
+                           Text="{Binding Username}"
                            TextColor="White"
                            FontSize="15"
                            BackgroundColor="Transparent"
-                           Margin="0,0,0,0"
+                           Margin="0,0,32,0"
                            VerticalOptions="Center"
-                           ReturnCommand="{Binding LoginCommand}"/>
-                    <!-- Eye toggle -->
-                    <Image Grid.Column="1"
-                           Source="{Binding PasswordIcon}"
-                           WidthRequest="22"
-                           HeightRequest="22"
-                           VerticalOptions="Center"
-                           HorizontalOptions="Center"
-                           Opacity="0.6">
-                        <Image.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding TogglePasswordVisibilityCommand}"/>
-                        </Image.GestureRecognizers>
-                    </Image>
-                </Grid>
-            </Border>
+                           ReturnType="Next"/>
+                </Border>
 
-            <!-- Inline error message -->
-            <Label Text="{Binding ErrorMessage}"
-                   TextColor="#ff6b6b"
-                   FontSize="12"
-                   IsVisible="{Binding HasError}"
-                   Margin="2,0,0,12"/>
+                <!-- Password -->
+                <Label Text="Mật khẩu"
+                       FontSize="12"
+                       TextColor="#aaa"
+                       Margin="0,0,0,6"/>
+                <Border BackgroundColor="#1a1a1a"
+                        StrokeThickness="1"
+                        Stroke="#2d2d2d"
+                        HeightRequest="48"
+                        Margin="0,0,0,16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="10"/>
+                    </Border.StrokeShape>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="32"/>
+                        </Grid.ColumnDefinitions>
+                        <Entry Grid.Column="0"
+                               Placeholder="Nhập mật khẩu"
+                               PlaceholderColor="#555"
+                               IsPassword="{Binding IsPasswordHidden}"
+                               Text="{Binding Password}"
+                               TextColor="White"
+                               FontSize="15"
+                               BackgroundColor="Transparent"
+                               Margin="0,0,0,0"
+                               VerticalOptions="Center"
+                               ReturnCommand="{Binding LoginCommand}"/>
+                        <!-- Eye toggle -->
+                        <Image Grid.Column="1"
+                               Source="{Binding PasswordIcon}"
+                               WidthRequest="22"
+                               HeightRequest="22"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Center"
+                               Opacity="0.6">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding TogglePasswordVisibilityCommand}"/>
+                            </Image.GestureRecognizers>
+                        </Image>
+                    </Grid>
+                </Border>
 
-            <!-- Login button -->
-            <Button Text="Đăng nhập"
-                    Command="{Binding LoginCommand}"
-                    IsEnabled="{Binding IsNetworkReady}"
-                    HeightRequest="50"
-                    CornerRadius="12"
-                    FontAttributes="Bold"
-                    BackgroundColor="#2563eb"
-                    TextColor="White"
-                    FontSize="15"
-                    Margin="0,8,0,0"/>
+                <!-- Inline error message -->
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="#ff6b6b"
+                       FontSize="12"
+                       IsVisible="{Binding HasError}"
+                       Margin="2,0,0,12"/>
 
-            <!-- Network not ready hint — dùng IsNetworkNotReady thay converter -->
-            <Label Text="⚠ Chưa kết nối được server"
-                   FontSize="12"
-                   TextColor="#f59e0b"
-                   HorizontalOptions="Center"
-                   Margin="0,10,0,0"
-                   IsVisible="{Binding IsNetworkNotReady}"/>
+                <!-- Login button -->
+                <Button Text="Đăng nhập"
+                        Command="{Binding LoginCommand}"
+                        IsEnabled="{Binding IsNetworkReady}"
+                        HeightRequest="50"
+                        CornerRadius="12"
+                        FontAttributes="Bold"
+                        BackgroundColor="#2563eb"
+                        TextColor="White"
+                        FontSize="15"
+                        Margin="0,8,0,0"/>
 
-        </VerticalStackLayout>
+                <!-- Network not ready hint — dùng IsNetworkNotReady thay converter -->
+                <Label Text="⚠ Chưa kết nối được server"
+                       FontSize="12"
+                       TextColor="#f59e0b"
+                       HorizontalOptions="Center"
+                       Margin="0,10,0,0"
+                       IsVisible="{Binding IsNetworkNotReady}"/>
+
+            </VerticalStackLayout>
+        </Grid>
 
         <!-- ═══ Popup overlay ══════════════════════════════════════════════ -->
         <Grid IsVisible="{Binding IsPopupVisible}"
-              BackgroundColor="#99000000"
-              ZIndex="100">
+       BackgroundColor="#99000000"
+       ZIndex="100">
             <Border Padding="28,24"
-                    BackgroundColor="#1e1e1e"
-                    StrokeThickness="1"
-                    Stroke="#333"
-                    HorizontalOptions="Center"
-                    VerticalOptions="Center"
-                    WidthRequest="320">
+             BackgroundColor="#1e1e1e"
+             StrokeThickness="1"
+             Stroke="#333"
+             HorizontalOptions="Center"
+             VerticalOptions="Center"
+             WidthRequest="320">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="16"/>
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="12">
                     <Label Text="{Binding PopupTitle}"
-                           FontSize="17"
-                           FontAttributes="Bold"
-                           TextColor="White"/>
+                    FontSize="17"
+                    FontAttributes="Bold"
+                    TextColor="White"/>
                     <Label Text="{Binding PopupMessage}"
-                           FontSize="14"
-                           TextColor="#bbb"
-                           LineBreakMode="WordWrap"/>
+                    FontSize="14"
+                    TextColor="#bbb"
+                    LineBreakMode="WordWrap"/>
                     <!-- Nút Retry hoặc OK, bind command theo IsPopupRetry -->
                     <Grid Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
@@ -162,25 +163,25 @@
                         </Grid.ColumnDefinitions>
                         <!-- Nút đóng popup luôn hiện -->
                         <Button Grid.Column="1"
-                                Text="{Binding PopupButtonText}"
-                                Command="{Binding RetryConnectionCommand}"
-                                IsVisible="{Binding IsPopupRetry}"
-                                BackgroundColor="#2563eb"
-                                TextColor="White"
-                                CornerRadius="8"
-                                Padding="20,0"
-                                HeightRequest="38"
-                                FontSize="14"/>
+                         Text="{Binding PopupButtonText}"
+                         Command="{Binding RetryConnectionCommand}"
+                         IsVisible="{Binding IsPopupRetry}"
+                         BackgroundColor="#2563eb"
+                         TextColor="White"
+                         CornerRadius="8"
+                         Padding="20,0"
+                         HeightRequest="38"
+                         FontSize="14"/>
                         <Button Grid.Column="1"
-                                Text="OK"
-                                Command="{Binding ClosePopupCommand}"
-                                IsVisible="{Binding IsPopupNotRetry}"
-                                BackgroundColor="Transparent"
-                                TextColor="#2563eb"
-                                CornerRadius="8"
-                                Padding="20,0"
-                                HeightRequest="38"
-                                FontSize="14"/>
+                         Text="OK"
+                         Command="{Binding ClosePopupCommand}"
+                         IsVisible="{Binding IsPopupNotRetry}"
+                         BackgroundColor="Transparent"
+                         TextColor="#2563eb"
+                         CornerRadius="8"
+                         Padding="20,0"
+                         HeightRequest="38"
+                         FontSize="14"/>
                     </Grid>
                 </VerticalStackLayout>
             </Border>
@@ -188,22 +189,21 @@
 
         <!-- ═══ Loading overlay ════════════════════════════════════════════ -->
         <Grid IsVisible="{Binding IsLoading}"
-              BackgroundColor="#99000000"
-              ZIndex="10">
+                  BackgroundColor="#99000000"
+                  ZIndex="10">
             <VerticalStackLayout VerticalOptions="Center"
-                                 HorizontalOptions="Center"
-                                 Spacing="14">
+                                     HorizontalOptions="Center"
+                                     Spacing="14">
                 <ActivityIndicator IsRunning="True"
-                                   Color="White"
-                                   WidthRequest="36"
-                                   HeightRequest="36"
-                                   HorizontalOptions="Center"/>
+                                       Color="White"
+                                       WidthRequest="36"
+                                       HeightRequest="36"
+                                       HorizontalOptions="Center"/>
                 <Label Text="Đang kết nối..."
-                       TextColor="#ccc"
-                       FontSize="13"
-                       HorizontalOptions="Center"/>
+                           TextColor="#ccc"
+                           FontSize="13"
+                           HorizontalOptions="Center"/>
             </VerticalStackLayout>
         </Grid>
-
     </Grid>
 </ContentPage>

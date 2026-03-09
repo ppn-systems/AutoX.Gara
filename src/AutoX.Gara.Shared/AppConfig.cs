@@ -21,8 +21,8 @@ public static class AppConfig
         // REGISTER packets here (single source of truth).
         _ = factory.RegisterPacket<LoginPacket>();
 
-        _ = factory.RegisterPacket<CustomerDataPacket>();
         _ = factory.RegisterPacket<CustomersPacket>();
+        _ = factory.RegisterPacket<CustomerDataPacket>();
         _ = factory.RegisterPacket<CustomersQueryPacket>();
 
         PacketRegistry catalog = factory.CreateCatalog();

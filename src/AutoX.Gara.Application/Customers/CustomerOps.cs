@@ -4,6 +4,7 @@ using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Validation;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Attributes;
@@ -33,38 +34,61 @@ public sealed class CustomerOps(AutoXDbContext context)
     {
         if (p is not CustomersQueryPacket packet)
         {
-            // MALFORMED_PACKET: Packet từ client không đúng định dạng hoặc thiếu field cần thiết.
+            if (p is not IPacketSequenced ps)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.MALFORMED_PACKET,
+                    ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+
+                return;
+            }
+
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, ps.SequenceId).ConfigureAwait(false);
 
             return;
         }
 
-        System.Collections.Generic.List<Customer> customers = await s_customer.GetAllAsync(packet.Page, packet.PageSize);
-
-        System.Collections.Generic.List<CustomerDataPacket> customerPackets = customers.ConvertAll(c => new CustomerDataPacket
+        try
         {
-            Type = c.Type,
-            Name = c.Name,
-            Email = c.Email,
-            CustomerId = c.Id,
-            TaxCode = c.TaxCode,
-            Address = c.Address,
-            CreatedAt = c.CreatedAt,
-            UpdatedAt = c.UpdatedAt,
-            Membership = c.Membership,
-            PhoneNumber = c.PhoneNumber,
-            DateOfBirth = c.DateOfBirth
-        });
+            System.Collections.Generic.List<Customer> customers;
+            System.Collections.Generic.List<CustomerDataPacket> customerPackets;
 
-        // Gửi trả về danh sách khách hàng cho client.
-        await connection.TCP.SendAsync(new CustomersPacket()
+            customers = await s_customer.GetAllAsync(packet.Page, packet.PageSize) ?? [];
+            customerPackets = customers.ConvertAll(c => new CustomerDataPacket
+            {
+                Type = c.Type,
+                Name = c.Name,
+                Email = c.Email,
+                CustomerId = c.Id,
+                TaxCode = c.TaxCode,
+                Address = c.Address,
+                CreatedAt = c.CreatedAt,
+                UpdatedAt = c.UpdatedAt,
+                Membership = c.Membership,
+                PhoneNumber = c.PhoneNumber,
+                DateOfBirth = c.DateOfBirth
+            });
+
+            CustomersPacket customersPacket = new()
+            {
+                Customers = customerPackets,
+                SequenceId = packet.SequenceId
+            };
+
+            await connection.TCP.SendAsync(customersPacket)
+                                .ConfigureAwait(false);
+        }
+        catch (System.Exception)
         {
-            Customers = customerPackets,
-            SequenceId = packet.SequenceId
-        });
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.INTERNAL_ERROR,
+                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -78,8 +102,8 @@ public sealed class CustomerOps(AutoXDbContext context)
         IConnection connection)
     {
         if (p is not CustomerDataPacket packet ||
-            !IS_VALID_EMAIL(packet.Email) ||
-            !IS_VALID_PHONE_NUMBER(packet.PhoneNumber))
+            !AccountValidation.IsValidEmail(packet.Email) ||
+            !AccountValidation.IsValidVietnamPhoneNumber(packet.PhoneNumber))
         {
             // MALFORMED_PACKET: Packet từ client không đúng định dạng hoặc thiếu field cần thiết.
             await connection.SendAsync(
@@ -96,7 +120,7 @@ public sealed class CustomerOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.ALREADY_EXISTS,
-                ProtocolAdvice.FIX_AND_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
             return;
         }
 
@@ -123,7 +147,7 @@ public sealed class CustomerOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
-                ProtocolAdvice.NONE).ConfigureAwait(false);
+                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
@@ -131,7 +155,7 @@ public sealed class CustomerOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
 
@@ -146,8 +170,8 @@ public sealed class CustomerOps(AutoXDbContext context)
         IConnection connection)
     {
         if (p is not CustomerDataPacket packet ||
-            !IS_VALID_EMAIL(packet.Email) ||
-            !IS_VALID_PHONE_NUMBER(packet.PhoneNumber))
+            !AccountValidation.IsValidEmail(packet.Email) ||
+            !AccountValidation.IsValidVietnamPhoneNumber(packet.PhoneNumber))
         {
             // MALFORMED_PACKET: Packet sai format, không parse được dữ liệu khách hàng.
             await connection.SendAsync(
@@ -165,7 +189,7 @@ public sealed class CustomerOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.NOT_FOUND,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             return;
         }
 
@@ -189,7 +213,7 @@ public sealed class CustomerOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
-                ProtocolAdvice.NONE).ConfigureAwait(false);
+                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
@@ -197,7 +221,7 @@ public sealed class CustomerOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
 
@@ -230,7 +254,7 @@ public sealed class CustomerOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
-                ProtocolAdvice.NONE).ConfigureAwait(false);
+                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
@@ -238,115 +262,7 @@ public sealed class CustomerOps(AutoXDbContext context)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
-
-    #region Private Methods
-
-    /// <summary>
-    /// Validates email by simple algorithm (no regex).
-    /// </summary>
-    public static System.Boolean IS_VALID_EMAIL(System.String email)
-    {
-        if (System.String.IsNullOrWhiteSpace(email))
-        {
-            return false;
-        }
-
-        if (email.Contains(' '))
-        {
-            return false;
-        }
-
-        System.Int32 atIndex = email.IndexOf('@');
-        System.Int32 dotIndex = email.LastIndexOf('.');
-
-        // Must contain '@' and '.' after '@'
-        if (atIndex <= 0)
-        {
-            return false; // '@' cannot be first
-        }
-
-        if (dotIndex < atIndex + 2)
-        {
-            return false; // '.' must be after '@' and at least one character
-        }
-
-        if (dotIndex == email.Length - 1)
-        {
-            return false; // '.' cannot be last
-        }
-
-        // Must only have one '@'
-        if (email.IndexOf('@', atIndex + 1) != -1)
-        {
-            return false;
-        }
-
-        // No consecutive dots
-        for (System.Int32 i = 1; i < email.Length; i++)
-        {
-            if (email[i] == '.' && email[i - 1] == '.')
-            {
-                return false;
-            }
-        }
-
-        // All parts must be non-empty
-        System.String local = email[..atIndex];
-        System.String domain = email.Substring(atIndex + 1, dotIndex - atIndex - 1);
-        System.String tld = email[(dotIndex + 1)..];
-
-        return !System.String.IsNullOrWhiteSpace(local) && !System.String.IsNullOrWhiteSpace(domain) && !System.String.IsNullOrWhiteSpace(tld);
-    }
-
-    /// <summary>
-    /// Validates Vietnam phone number by simple algorithm (no regex).
-    /// </summary>
-    public static System.Boolean IS_VALID_PHONE_NUMBER(System.String phone)
-    {
-        if (System.String.IsNullOrWhiteSpace(phone))
-        {
-            return false;
-        }
-
-        if (phone.Contains(' '))
-        {
-            return false;
-        }
-
-        // Only digits
-        foreach (System.Char c in phone)
-        {
-            if (c is < '0' or > '9')
-            {
-                return false;
-            }
-        }
-
-        // Length 10 hoặc 11
-        if (phone.Length is not 10 and not 11)
-        {
-            return false;
-        }
-
-        // Must start with '0'
-        if (phone[0] != '0')
-        {
-            return false;
-        }
-
-        System.Boolean prefixOk = false;
-        System.String[] validPrefixes = ["03", "05", "07", "08", "09"];
-
-        foreach (System.String prefix in validPrefixes)
-        {
-            if (phone.StartsWith(prefix)) { prefixOk = true; break; }
-        }
-
-        return prefixOk;
-    }
-
-    #endregion Private Methods
 }

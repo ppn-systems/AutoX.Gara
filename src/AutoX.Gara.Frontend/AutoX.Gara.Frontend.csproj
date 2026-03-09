@@ -64,10 +64,9 @@
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.41" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.3" />
 		
-		<PackageReference Include="Nalix.SDK" Version="11.0.0" />
-		<PackageReference Include="Nalix.Logging" Version="11.0.0" />
+		<PackageReference Include="Nalix.SDK" Version="11.0.6" />
+		<PackageReference Include="Nalix.Logging" Version="11.0.6" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -75,6 +74,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiXaml Update="CustomersPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="LoginPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

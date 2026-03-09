@@ -2,10 +2,14 @@
 
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
-using AutoX.Gara.Shared.Validator;
+using AutoX.Gara.Shared.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
+using Nalix.Framework.Injection;
+using Nalix.Framework.Tasks;
+using Nalix.SDK.Transport;
+using Nalix.Shared.Frames.Controls;
 
 namespace AutoX.Gara.UI.ViewModels;
 
@@ -102,6 +106,12 @@ public sealed partial class LoginViewModel : ObservableObject
 
             if (result.IsSuccess)
             {
+                ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+                InstanceManager.Instance.GetOrCreateInstance<TaskManager>().ScheduleRecurring(
+                    "KeepAlive", System.TimeSpan.FromSeconds(30),
+                    async (ct) => await client.SendAsync(new Directive(), ct)
+                );
+
                 await _navigation.GoToMainPageAsync();
                 return;
             }
@@ -157,13 +167,13 @@ public sealed partial class LoginViewModel : ObservableObject
             return false;
         }
 
-        if (!CredentialValidator.IsValidUsername(Username))
+        if (!AccountValidation.IsValidUsername(Username))
         {
             SetError("Tên đăng nhập không hợp lệ: chỉ cho phép chữ cái, số, '_' và '-', tối đa 50 ký tự.");
             return false;
         }
 
-        if (!CredentialValidator.IsValidPassword(Password))
+        if (!AccountValidation.IsValidPassword(Password))
         {
             SetError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, thường, số và ký tự đặc biệt.");
             return false;

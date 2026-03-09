@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Packets.Auth;
-using AutoX.Gara.Shared.Validator;
+using AutoX.Gara.Shared.Validation;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
@@ -168,7 +168,7 @@ public sealed class AccountOps(AutoXDbContext context)
             return;
         }
 
-        if (!CredentialValidator.IsValidUsername(packet.Account.Username))
+        if (!AccountValidation.IsValidUsername(packet.Account.Username))
         {
             await connection.SendAsync(
                 ControlType.ERROR,
@@ -178,7 +178,7 @@ public sealed class AccountOps(AutoXDbContext context)
             return;
         }
 
-        if (!CredentialValidator.IsValidPassword(packet.Account.Password))
+        if (!AccountValidation.IsValidPassword(packet.Account.Password))
         {
             await connection.SendAsync(
                 ControlType.ERROR,

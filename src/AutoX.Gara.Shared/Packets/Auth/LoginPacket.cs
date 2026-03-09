@@ -2,123 +2,117 @@
 
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Caching;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
-using Nalix.Common.Shared.Attributes;
-using Nalix.Framework.Injection;
 using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
-using Nalix.Shared.Memory.Pooling;
 using Nalix.Shared.Security;
-using Nalix.Shared.Serialization;
 
 namespace AutoX.Gara.Shared.Packets.Auth;
 
 /// <summary>
-/// Gói tin chứa thông tin đăng nhập từ client (username, mật khẩu băm, metadata),
-/// dùng trong quá trình xác thực sau handshake.
+/// Represents a login packet that carries authentication credentials
+/// (username, hashed password, metadata) from the client to the server.
+/// Uses PacketBase for automatic serialization, pooling and metadata handling.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-[MagicNumber((System.UInt32)PacketMagic.ACCOUNT)]
-public class LoginPacket : FrameBase, IPoolable, IPacketTransformer<LoginPacket>, IPacketSequenced
+public sealed class LoginPacket : PacketBase<LoginPacket>, IPacketTransformer<LoginPacket>, IPacketSequenced
 {
     /// <summary>
-    /// Tổng độ dài gói tin (byte), gồm header và nội dung.
+    /// Gets or sets the sequence identifier used for packet ordering and deduplication.
     /// </summary>
-    [SerializeIgnore]
-    public override System.UInt16 Length => (System.UInt16)(PacketConstants.HeaderSize + Account.Length + sizeof(System.UInt32));
-
     [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
     public System.UInt32 SequenceId { get; set; }
 
     /// <summary>
-    /// Thông tin đăng nhập (username, mật khẩu băm, metadata).
+    /// Gets or sets the login credentials model (username, hashed password, metadata).
     /// </summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public LoginRequestModel Account { get; set; }
 
     /// <summary>
-    /// Khởi tạo mặc định với MagicNumber và CREDENTIALS rỗng.
+    /// Initializes a new instance of <see cref="LoginPacket"/> with default values.
+    /// We explicitly set MagicNumber to the legacy PacketMagic.ACCOUNT value to preserve
+    /// prior wire identity for this packet type.
     /// </summary>
     public LoginPacket()
     {
         Account = new LoginRequestModel();
-        OpCode = OpCommand.NONE.AsUInt16();
-        MagicNumber = PacketMagic.ACCOUNT.AsUInt32();
+        OpCode = OpCommand.LOGIN.AsUInt16();
     }
 
     /// <summary>
-    /// Thiết lập OpCode và CREDENTIALS.
+    /// Initializes the packet with the specified operation code and account credentials.
     /// </summary>
+    /// <param name="opCode">The operation code identifying the request type.</param>
+    /// <param name="account">The login credentials model. Must not be null.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="account"/> is null.</exception>
     public void Initialize(System.UInt16 opCode, LoginRequestModel account)
     {
         OpCode = opCode;
         Account = account ?? throw new System.ArgumentNullException(nameof(account));
     }
 
-    /// <summary>
-    /// Đặt lại trạng thái để tái sử dụng từ pool.
-    /// </summary>
+    /// <inheritdoc/>
     public override void ResetForPool()
     {
+        // Let PacketBase reset header fields and serializable properties according to metadata.
+        base.ResetForPool();
+
+        // Ensure complex/reference properties are set to safe defaults.
+        SequenceId = 0;
         Account = new LoginRequestModel();
-        OpCode = OpCommand.NONE.AsUInt16();
+
+        // OpCode already reset by base.ResetForPool(), but keep explicit reset for clarity.
+        OpCode = OpCommand.LOGIN.AsUInt16();
     }
 
-    /// <inheritdoc/>
-    public static LoginPacket Deserialize(System.ReadOnlySpan<System.Byte> buffer)
-    {
-        LoginPacket packet = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                                       .Get<LoginPacket>();
+    /// <summary>
+    /// Encrypt packet using envelope encryptor.
+    /// </summary>
+    public static LoginPacket Encrypt(LoginPacket packet, System.Byte[] key, CipherSuiteType algorithm) =>
+        EnvelopeEncryptor.Encrypt(packet, key, algorithm);
 
-        _ = LiteSerializer.Deserialize(buffer, ref packet);
-        return packet;
-    }
+    /// <summary>
+    /// Decrypt packet using envelope decryptor.
+    /// </summary>
+    public static LoginPacket Decrypt(LoginPacket packet, System.Byte[] key) =>
+        EnvelopeEncryptor.Decrypt(packet, key);
 
-    /// <inheritdoc/>
-    public override System.Byte[] Serialize() => LiteSerializer.Serialize(this);
-
-    /// <inheritdoc/>
-    public override System.Int32 Serialize(System.Span<System.Byte> buffer) => LiteSerializer.Serialize(this, buffer);
-
-    /// <inheritdoc/>
-    public static LoginPacket Encrypt(LoginPacket packet, System.Byte[] key, CipherSuiteType algorithm) => EnvelopeEncryptor.Encrypt(packet, key, algorithm);
-
-    /// <inheritdoc/>
-    public static LoginPacket Decrypt(LoginPacket packet, System.Byte[] key) => EnvelopeEncryptor.Decrypt(packet, key);
-
-    /// <inheritdoc/>
+    /// <summary>
+    /// Compress username/password fields and mark packet as compressed.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException">Thrown when packet or its Account is null.</exception>
     public static LoginPacket Compress(LoginPacket packet)
     {
-        if (packet?.Account == null)
+        if (packet?.Account is null)
         {
             throw new System.ArgumentNullException(nameof(packet));
         }
 
         packet.Account.Username = packet.Account.Username.CompressToBase64();
         packet.Account.Password = packet.Account.Password.CompressToBase64();
-
         packet.Flags.AddFlag(PacketFlags.COMPRESSED);
 
         return packet;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Decompress username/password fields and remove compressed flag.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException">Thrown when packet or its Account is null.</exception>
     public static LoginPacket Decompress(LoginPacket packet)
     {
-        if (packet?.Account == null)
+        if (packet?.Account is null)
         {
             throw new System.ArgumentNullException(nameof(packet));
         }
 
         packet.Account.Username = packet.Account.Username.DecompressFromBase64();
         packet.Account.Password = packet.Account.Password.DecompressFromBase64();
-
         packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
 
         return packet;

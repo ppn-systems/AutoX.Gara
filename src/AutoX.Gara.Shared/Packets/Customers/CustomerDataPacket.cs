@@ -1,178 +1,180 @@
-﻿using AutoX.Gara.Domain.Enums.Customers;
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Caching;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
-using Nalix.Common.Shared.Attributes;
-using Nalix.Framework.Injection;
 using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
-using Nalix.Shared.Memory.Pooling;
-using Nalix.Shared.Serialization;
 
 namespace AutoX.Gara.Shared.Packets.Customers;
 
 /// <summary>
-/// Packet for customer data, used in create/update/query operations.
+/// Represents a customer data packet used for create, update, and query operations.
+/// Carries customer profile information including identity, contact details, and membership metadata.
+/// Uses PacketBase for automatic serialization, pooling and metadata handling.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-[MagicNumber((System.UInt32)PacketMagic.CUSTOMER)]
-public class CustomerDataPacket : FrameBase, IPoolable, IPacketEncryptor<CustomerDataPacket>
+public sealed class CustomerDataPacket : PacketBase<CustomerDataPacket>, IPacketTransformer<CustomerDataPacket>, IPacketSequenced
 {
-    public override System.UInt16 Length =>
-        (System.UInt16)(sizeof(System.Int32) + (System.UInt16)
-        (System.Text.Encoding.UTF8.GetByteCount(Name) +
-        System.Text.Encoding.UTF8.GetByteCount(PhoneNumber) +
-        System.Text.Encoding.UTF8.GetByteCount(Email) +
-        System.Text.Encoding.UTF8.GetByteCount(Address) +
-        System.Text.Encoding.UTF8.GetByteCount(TaxCode) +
-        (sizeof(System.Int64) * 2) + (sizeof(System.Byte) * 2)));
-
-    // --- Identity ---
     /// <summary>
-    /// Customer unique identifier. Null for creation.
+    /// Gets or sets the sequence identifier used for packet ordering and deduplication.
     /// </summary>
-    [SerializeOrder(0)]
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
+    public System.UInt32 SequenceId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the unique identifier of the customer.
+    /// null when creating a new customer record.
+    /// </summary>
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public System.Int32? CustomerId { get; set; }
 
-    // --- Basic Info ---
     /// <summary>
-    /// Customer full name.
+    /// Gets or sets the full name of the customer.
     /// </summary>
-    [SerializeOrder(1)]
-    public System.String Name { get; set; } = System.String.Empty;
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    public System.String Name { get; set; }
 
     /// <summary>
-    /// Customer primary phone number.
+    /// Gets or sets the email address of the customer.
     /// </summary>
-    [SerializeOrder(2)]
-    public System.String PhoneNumber { get; set; } = System.String.Empty;
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
+    public System.String Email { get; set; }
 
     /// <summary>
-    /// Customer email address.
+    /// Gets or sets the phone number of the customer.
     /// </summary>
-    [SerializeOrder(3)]
-    public System.String Email { get; set; } = System.String.Empty;
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
+    public System.String PhoneNumber { get; set; }
 
     /// <summary>
-    /// Customer physical address.
+    /// Gets or sets the physical address of the customer.
     /// </summary>
-    [SerializeOrder(4)]
-    public System.String Address { get; set; } = System.String.Empty;
-
-    // --- Personal Details ---
-    /// <summary>
-    /// Date of birth (for individual customers).
-    /// </summary>
-    [SerializeOrder(5)]
-    public System.DateTime? DateOfBirth { get; set; }
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
+    public System.String Address { get; set; }
 
     /// <summary>
-    /// Tax registration code (for business customers).
+    /// Gets or sets the tax identification code of the customer.
     /// </summary>
-    [SerializeOrder(6)]
-    public System.String TaxCode { get; set; } = System.String.Empty;
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
+    public System.String TaxCode { get; set; }
 
-    // --- Membership ---
     /// <summary>
-    /// Customer type (Individual, Company etc.).
+    /// Gets or sets the customer classification type (e.g., Individual, Corporate).
     /// </summary>
-    [SerializeOrder(7)]
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
     public CustomerType? Type { get; set; }
 
     /// <summary>
-    /// Membership tier (Standard, Gold etc.).
+    /// Gets or sets the membership level of the customer (e.g., Bronze, Silver, Gold).
     /// </summary>
-    [SerializeOrder(8)]
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 8)]
     public MembershipLevel? Membership { get; set; }
 
-    // --- Audit ---
     /// <summary>
-    /// Record creation timestamp.
+    /// Gets or sets the date of birth of the customer.
     /// </summary>
-    [SerializeOrder(9)]
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 9)]
+    public System.DateTime? DateOfBirth { get; set; }
+
+    /// <summary>
+    /// Gets or sets the UTC timestamp when the customer record was created.
+    /// </summary>
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 10)]
     public System.DateTime? CreatedAt { get; set; }
 
     /// <summary>
-    /// Record last update timestamp.
+    /// Gets or sets the UTC timestamp when the customer record was last updated.
     /// </summary>
-    [SerializeOrder(10)]
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 11)]
     public System.DateTime? UpdatedAt { get; set; }
 
     /// <summary>
-    /// Default constructor: initializes default values.
+    /// Initializes a new instance of <see cref="CustomerDataPacket"/> with default empty values.
     /// </summary>
     public CustomerDataPacket()
     {
-        // Nếu bạn có logic mặc định, thiết lập ở đây
+        // Initialize reference/string properties to safe defaults.
         Name = System.String.Empty;
-        PhoneNumber = System.String.Empty;
         Email = System.String.Empty;
         Address = System.String.Empty;
         TaxCode = System.String.Empty;
+        PhoneNumber = System.String.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
+
+        // MagicNumber is set automatically by PacketBase based on the concrete type.
+        // If you need to preserve a legacy magic number, set it explicitly here.
+        // this.MagicNumber = PacketMagic.YOUR_LEGACY_VALUE.AsUInt32();
     }
-
-    /// <inheritdoc/>
-    public static CustomerDataPacket Deserialize(System.ReadOnlySpan<System.Byte> buffer)
-    {
-        CustomerDataPacket packet = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                                           .Get<CustomerDataPacket>();
-
-        _ = LiteSerializer.Deserialize(buffer, ref packet);
-        return packet;
-    }
-
-    /// <inheritdoc/>
-    public override System.Byte[] Serialize() => LiteSerializer.Serialize(this);
-
-    /// <inheritdoc/>
-    public override System.Int32 Serialize(System.Span<System.Byte> buffer) => LiteSerializer.Serialize(this, buffer);
 
     /// <inheritdoc/>
     public override void ResetForPool()
     {
+        // Let base reset serializable properties and header fields according to cached metadata.
+        base.ResetForPool();
+
+        // Ensure complex/reference properties are set to safe defaults in case metadata defaults differ.
+        SequenceId = 0;
+        CustomerId = null;
         Name = System.String.Empty;
-        PhoneNumber = System.String.Empty;
         Email = System.String.Empty;
         Address = System.String.Empty;
         TaxCode = System.String.Empty;
-        OpCode = OpCommand.NONE.AsUInt16();
-
+        PhoneNumber = System.String.Empty;
         Type = null;
-        CreatedAt = null;
-        UpdatedAt = null;
         Membership = null;
         DateOfBirth = null;
+        CreatedAt = null;
+        UpdatedAt = null;
+
+        // Re-assert OpCode to default for clarity (base.ResetForPool already sets header fields).
+        OpCode = OpCommand.NONE.AsUInt16();
     }
 
+    // Serialize instance methods are inherited from PacketBase:
+    // public override byte[] Serialize() ...
+    // public override int Serialize(Span<byte> buffer) ...
+
+    /// <summary>
+    /// Encrypt sensitive string fields using provided key and algorithm.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException">Thrown when packet or key is null.</exception>
     public static CustomerDataPacket Encrypt(CustomerDataPacket packet, System.Byte[] key, CipherSuiteType algorithm)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
+        System.ArgumentNullException.ThrowIfNull(key);
 
+        packet.Name = packet.Name.EncryptToBase64(key, algorithm);
         packet.Email = packet.Email.EncryptToBase64(key, algorithm);
         packet.Address = packet.Address.EncryptToBase64(key, algorithm);
         packet.TaxCode = packet.TaxCode.EncryptToBase64(key, algorithm);
-        packet.Name = packet.Name.EncryptToBase64(key, algorithm);
         packet.PhoneNumber = packet.PhoneNumber.EncryptToBase64(key, algorithm);
 
         packet.Flags.AddFlag(PacketFlags.ENCRYPTED);
         return packet;
     }
+
+    /// <summary>
+    /// Decrypt sensitive string fields using provided key.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException">Thrown when packet or key is null.</exception>
+    /// <exception cref="System.InvalidOperationException">Thrown when decryption fails.</exception>
     public static CustomerDataPacket Decrypt(CustomerDataPacket packet, System.Byte[] key)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
+        System.ArgumentNullException.ThrowIfNull(key);
 
         try
         {
+            packet.Name = packet.Name.DecryptFromBase64(key);
             packet.Email = packet.Email.DecryptFromBase64(key);
             packet.Address = packet.Address.DecryptFromBase64(key);
             packet.TaxCode = packet.TaxCode.DecryptFromBase64(key);
-            packet.Name = packet.Name.DecryptFromBase64(key);
             packet.PhoneNumber = packet.PhoneNumber.DecryptFromBase64(key);
 
             packet.Flags.RemoveFlag(PacketFlags.ENCRYPTED);
@@ -180,7 +182,43 @@ public class CustomerDataPacket : FrameBase, IPoolable, IPacketEncryptor<Custome
         }
         catch (System.Exception ex)
         {
-            throw new System.InvalidOperationException("Failed to decrypt customer data.", ex);
+            throw new System.InvalidOperationException("Failed to decrypt customer packet data.", ex);
         }
+    }
+
+    /// <summary>
+    /// Compress string fields and mark packet as compressed.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException">Thrown when packet is null.</exception>
+    public static CustomerDataPacket Compress(CustomerDataPacket packet)
+    {
+        System.ArgumentNullException.ThrowIfNull(packet);
+
+        packet.Name = packet.Name.CompressToBase64();
+        packet.Email = packet.Email.CompressToBase64();
+        packet.Address = packet.Address.CompressToBase64();
+        packet.TaxCode = packet.TaxCode.CompressToBase64();
+        packet.PhoneNumber = packet.PhoneNumber.CompressToBase64();
+
+        packet.Flags.AddFlag(PacketFlags.COMPRESSED);
+        return packet;
+    }
+
+    /// <summary>
+    /// Decompress string fields and remove compressed flag.
+    /// </summary>
+    /// <exception cref="System.ArgumentNullException">Thrown when packet is null.</exception>
+    public static CustomerDataPacket Decompress(CustomerDataPacket packet)
+    {
+        System.ArgumentNullException.ThrowIfNull(packet);
+
+        packet.Name = packet.Name.DecompressFromBase64();
+        packet.Email = packet.Email.DecompressFromBase64();
+        packet.Address = packet.Address.DecompressFromBase64();
+        packet.TaxCode = packet.TaxCode.DecompressFromBase64();
+        packet.PhoneNumber = packet.PhoneNumber.DecompressFromBase64();
+
+        packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
+        return packet;
     }
 }
