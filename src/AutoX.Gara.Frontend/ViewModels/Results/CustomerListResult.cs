@@ -22,15 +22,45 @@ public sealed class CustomerListResult
     /// <summary>Gets the list of customer data packets returned from the server.</summary>
     public System.Collections.Generic.List<CustomerDataPacket> Customers { get; private init; } = [];
 
+    /// <summary>
+    /// Total number of customers matching the current filter/search on the server.
+    /// Used to calculate total pages accurately. -1 means unknown (server did not report it).
+    /// </summary>
+    public System.Int32 TotalCount { get; private init; } = -1;
+
+    /// <summary>
+    /// True when the server has more pages beyond this one.
+    /// Lightweight hint used when <see cref="TotalCount"/> is unavailable.
+    /// </summary>
+    public System.Boolean HasMore { get; private init; }
+
+    // ─── Factory Methods ─────────────────────────────────────────────────────
+
     /// <summary>Creates a successful result with the given customer list.</summary>
-    public static CustomerListResult Success(System.Collections.Generic.List<CustomerDataPacket> customers)
-        => new() { IsSuccess = true, Customers = customers };
+    public static CustomerListResult Success(
+        System.Collections.Generic.List<CustomerDataPacket> customers,
+        System.Int32 totalCount = -1,
+        System.Boolean hasMore = false)
+        => new()
+        {
+            IsSuccess = true,
+            Customers = customers,
+            TotalCount = totalCount,
+            HasMore = hasMore
+        };
 
     /// <summary>Creates a failure result with the given error message and advice.</summary>
-    public static CustomerListResult Failure(System.String message, ProtocolAdvice advice = ProtocolAdvice.FIX_AND_RETRY)
+    public static CustomerListResult Failure(
+        System.String message,
+        ProtocolAdvice advice = ProtocolAdvice.FIX_AND_RETRY)
         => new() { IsSuccess = false, ErrorMessage = message, Advice = advice };
 
     /// <summary>Creates a timeout failure result.</summary>
     public static CustomerListResult Timeout()
-        => new() { IsSuccess = false, ErrorMessage = "Yêu cầu hết thời gian chờ. Vui lòng thử lại.", Advice = ProtocolAdvice.BACKOFF_RETRY };
+        => new()
+        {
+            IsSuccess = false,
+            ErrorMessage = "Yêu cầu hết thời gian chờ. Vui lòng thử lại.",
+            Advice = ProtocolAdvice.BACKOFF_RETRY
+        };
 }

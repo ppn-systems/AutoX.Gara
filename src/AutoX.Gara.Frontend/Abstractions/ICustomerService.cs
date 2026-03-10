@@ -1,6 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.ViewModels.Results;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Packets.Customers;
 
 namespace AutoX.Gara.Frontend.Abstractions;
@@ -12,7 +14,14 @@ namespace AutoX.Gara.Frontend.Abstractions;
 public interface ICustomerService
 {
     /// <summary>Fetches a paginated list of customers from the server.</summary>
-    System.Threading.Tasks.Task<CustomerListResult> GetListAsync(System.Int32 page, System.Int32 pageSize, System.Threading.CancellationToken ct = default);
+    System.Threading.Tasks.Task<CustomerListResult> GetListAsync(System.Int32 page,
+        System.Int32 pageSize,
+        System.String? searchTerm = null,
+        CustomerSortField sortBy = CustomerSortField.CreatedAt,
+        System.Boolean sortDescending = true,
+        CustomerType filterType = CustomerType.None,
+        MembershipLevel filterMembership = MembershipLevel.None,
+        System.Threading.CancellationToken ct = default);
 
     /// <summary>Creates a new customer record on the server.</summary>
     System.Threading.Tasks.Task<CustomerWriteResult> CreateAsync(CustomerDataPacket data, System.Threading.CancellationToken ct = default);

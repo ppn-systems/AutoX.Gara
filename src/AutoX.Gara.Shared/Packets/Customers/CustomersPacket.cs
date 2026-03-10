@@ -30,19 +30,25 @@ public sealed class CustomersPacket : PacketBase<CustomersPacket>, IPacketTransf
     /// and the serialized size of all customer entries.
     /// </summary>
     /// <remarks>
-    /// The length is computed by summing the header size, the sequence ID field,
-    /// the 4-byte customer count prefix, and each customer's individual serialized size.
-    /// This avoids allocating a temporary byte array just to measure length.
+    /// The length is computed by summing:
+    ///   - Fixed header  (PacketConstants.HeaderSize)
+    ///   - SequenceId    (UInt32 = 4 bytes)
+    ///   - TotalCount    (Int32  = 4 bytes)   ← fixed, must be counted
+    ///   - List prefix   (Int32  = 4 bytes)   ← item count written by serializer
+    ///   - Each CustomerDataPacket.Length
+    /// TotalCount MUST come before Customers in SerializeOrder so the serializer
+    /// writes it before the dynamic list — otherwise it is silently dropped.
     /// </remarks>
     [SerializeIgnore]
     public override System.UInt16 Length
     {
         get
         {
-            // Start with: header + SequenceId (UInt32) + list count prefix (Int32)
+            // header + SequenceId (UInt32) + TotalCount (Int32) + list-count prefix (Int32)
             System.Int32 total = PacketConstants.HeaderSize
-                + sizeof(System.UInt32)
-                + sizeof(System.Int32);
+                + sizeof(System.UInt32)   // SequenceId
+                + sizeof(System.Int32)    // TotalCount  ← was missing before
+                + sizeof(System.Int32);   // list item-count prefix
 
             // Add each customer's individual serialized length
             for (System.Int32 i = 0; i < Customers.Count; i++)
@@ -61,10 +67,23 @@ public sealed class CustomersPacket : PacketBase<CustomersPacket>, IPacketTransf
     public System.UInt32 SequenceId { get; set; }
 
     /// <summary>
+    /// Tổng số khách hàng khớp với filter trên server (trước khi phân trang).
+    /// Client dùng để tính TotalPages.
+    /// <para>
+    /// PHẢI đứng trước <see cref="Customers"/> vì đây là fixed-size field.
+    /// PacketBase dừng tính Length ngay khi gặp dynamic field đầu tiên —
+    /// bất kỳ fixed field nào đứng sau List sẽ bị bỏ qua khi serialize.
+    /// </para>
+    /// </summary>
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    public System.Int32 TotalCount { get; set; }
+
+    /// <summary>
     /// Gets or sets the list of customer records for the current page.
+    /// Dynamic field — phải đứng CUỐI CÙNG trong SerializeOrder.
     /// </summary>
     [SensitiveData(DataSensitivityLevel.Internal)]
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
     public List<CustomerDataPacket> Customers { get; set; } = [];
 
     /// <summary>
@@ -93,6 +112,7 @@ public sealed class CustomersPacket : PacketBase<CustomersPacket>, IPacketTransf
         // Clear the list and reset header fields via base.
         Customers.Clear();
         SequenceId = 0;
+        TotalCount = 0;
         OpCode = OpCommand.NONE.AsUInt16();
 
         // Let base reset other serializable properties/header if needed.

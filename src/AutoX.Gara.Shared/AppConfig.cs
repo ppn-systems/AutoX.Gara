@@ -28,6 +28,6 @@ public static class AppConfig
         PacketRegistry catalog = factory.CreateCatalog();
 
         // 2) Expose catalog through your current service locator.
-        InstanceManager.Instance.Register<IPacketCatalog>(catalog);
+        InstanceManager.Instance.Register<IPacketRegistry>(catalog);
     }
 }

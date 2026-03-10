@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Enums;
@@ -23,12 +24,17 @@ public sealed class CustomerService : ICustomerService
 {
     private const System.Int32 RequestTimeoutMs = 8_000;
 
-    // ─── GetListAsync ─────────────────���───────────────────────────────────────
+    // ─── GetListAsync ─────────────────────────────────────────────────────────
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerListResult> GetListAsync(
         System.Int32 page,
         System.Int32 pageSize,
+        System.String? searchTerm = null,
+        CustomerSortField sortBy = CustomerSortField.CreatedAt,
+        System.Boolean sortDescending = true,
+        CustomerType filterType = CustomerType.None,
+        MembershipLevel filterMembership = MembershipLevel.None,
         System.Threading.CancellationToken ct = default)
     {
         try
@@ -41,10 +47,16 @@ public sealed class CustomerService : ICustomerService
                 Page = page,
                 SequenceId = sq,
                 PageSize = pageSize,
+                SearchTerm = searchTerm ?? System.String.Empty,
+                SortBy = sortBy,
+                SortDescending = sortDescending,
+                FilterType = filterType,
+                FilterMembership = filterMembership,
                 OpCode = (System.UInt16)OpCommand.CUSTOMER_LIST
             };
 
-            System.Threading.Tasks.TaskCompletionSource<CustomerListResult> tcs = new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+            System.Threading.Tasks.TaskCompletionSource<CustomerListResult> tcs =
+                new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
             System.IDisposable? sub = null;
             System.IDisposable? errSub = null;
@@ -53,40 +65,46 @@ public sealed class CustomerService : ICustomerService
                 predicate: p => p.SequenceId == sq,
                 handler: resp =>
                 {
-                    System.Diagnostics.Debug.WriteLine("[CLIENT DEBUG] Nhận CustomersPacket từ server với seqid=" + sq);
-                    System.Diagnostics.Debug.WriteLine("[CLIENT DEBUG] Số lượng customer: " + resp.Customers.Count);
                     sub?.Dispose();
                     errSub?.Dispose();
-                    tcs.TrySetResult(CustomerListResult.Success(resp.Customers));
+
+                    System.Boolean hasMore = resp.Customers.Count == pageSize;
+                    tcs.TrySetResult(CustomerListResult.Success(
+                        resp.Customers,
+                        totalCount: resp.TotalCount,
+                        hasMore: hasMore));
                 });
 
-            // Also handle error directive
             errSub = client.OnOnce<Directive>(
                 predicate: p => p.SequenceId == sq,
                 handler: resp =>
                 {
-                    System.Diagnostics.Debug.WriteLine($"[CLIENT DEBUG] Nhận Directive ERROR từ server: {resp.Reason} ({resp.Action}), seqid={sq}");
                     sub?.Dispose();
                     errSub?.Dispose();
                     tcs.TrySetResult(CustomerListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
                 });
 
-            await client.SendAsync(packet, ct);
+            await client.SendAsync(packet, ct).ConfigureAwait(false);
 
-            using System.Threading.CancellationTokenSource cts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
+            using System.Threading.CancellationTokenSource cts =
+                System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
 
-            System.Threading.Tasks.Task timeoutTask = System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
+            System.Threading.Tasks.Task timeoutTask =
+                System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
 
-            System.Threading.Tasks.Task winner = await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask);
+            System.Threading.Tasks.Task winner =
+                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
 
-            if (winner != tcs.Task)
+            cts.Cancel(); // Hủy timeout task để tránh fire sau khi done
+
+            if (!ReferenceEquals(winner, tcs.Task))
             {
                 sub?.Dispose();
                 errSub?.Dispose();
                 return CustomerListResult.Timeout();
             }
 
-            return await tcs.Task;
+            return await tcs.Task.ConfigureAwait(false);
         }
         catch (System.OperationCanceledException)
         {
@@ -105,7 +123,7 @@ public sealed class CustomerService : ICustomerService
     public System.Threading.Tasks.Task<CustomerWriteResult> CreateAsync(
         CustomerDataPacket data,
         System.Threading.CancellationToken ct = default)
-        => SendWritePacketAsync((System.UInt16)OpCommand.CUSTOMER_CREATE, data, ct);
+        => SendWritePacketAsync((System.UInt16)OpCommand.CUSTOMER_CREATE, data, expectEcho: true, ct);
 
     // ─── UpdateAsync ──────────────────────────────────────────────────────────
 
@@ -113,7 +131,7 @@ public sealed class CustomerService : ICustomerService
     public System.Threading.Tasks.Task<CustomerWriteResult> UpdateAsync(
         CustomerDataPacket data,
         System.Threading.CancellationToken ct = default)
-        => SendWritePacketAsync((System.UInt16)OpCommand.CUSTOMER_UPDATE, data, ct);
+        => SendWritePacketAsync((System.UInt16)OpCommand.CUSTOMER_UPDATE, data, expectEcho: true, ct);
 
     // ─── DeleteAsync ──────────────────────────────────────────────────────────
 
@@ -121,16 +139,26 @@ public sealed class CustomerService : ICustomerService
     public System.Threading.Tasks.Task<CustomerWriteResult> DeleteAsync(
         CustomerDataPacket data,
         System.Threading.CancellationToken ct = default)
-        => SendWritePacketAsync((System.UInt16)OpCommand.CUSTOMER_DELETE, data, ct);
+        => SendWritePacketAsync((System.UInt16)OpCommand.CUSTOMER_DELETE, data, expectEcho: false, ct);
 
     // ─── Private Helpers ─────────────────────────────────────────────────────
 
     /// <summary>
-    /// Generic send-and-await for create/update/delete operations that return a <see cref="Directive"/>.
+    /// Generic send-and-await cho create/update/delete.
+    /// <para>
+    /// Khi <paramref name="expectEcho"/> = <c>true</c> (create/update), server sẽ
+    /// echo lại <see cref="CustomerDataPacket"/> với Id và timestamps đã được DB xác nhận.
+    /// ViewModel dùng dữ liệu này để update optimistic UI mà không cần reload toàn bộ list.
+    /// </para>
+    /// <para>
+    /// Khi <paramref name="expectEcho"/> = <c>false</c> (delete), server chỉ trả về
+    /// <see cref="Directive"/> NONE để xác nhận thành công.
+    /// </para>
     /// </summary>
     private static async System.Threading.Tasks.Task<CustomerWriteResult> SendWritePacketAsync(
         System.UInt16 opcode,
         CustomerDataPacket data,
+        System.Boolean expectEcho,
         System.Threading.CancellationToken ct)
     {
         try
@@ -141,28 +169,46 @@ public sealed class CustomerService : ICustomerService
             data.OpCode = opcode;
             data.SequenceId = sq;
 
-            InstanceManager.Instance.GetOrCreateInstance<ILogger>().Info($"Sending packet with SeqId={sq} OpCode={opcode}");
+            ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
+            logger.Info($"Sending packet SeqId={sq} OpCode={opcode} expectEcho={expectEcho}");
 
             CustomerDataPacket.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
-            System.Threading.Tasks.TaskCompletionSource<CustomerWriteResult> tcs = new(
-                System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+            System.Threading.Tasks.TaskCompletionSource<CustomerWriteResult> tcs =
+                new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
-            System.IDisposable? sub = null;
-            sub = client.OnOnce<Directive>(
+            System.IDisposable? echoSub = null;
+            System.IDisposable? errSub = null;
+
+            if (expectEcho)
+            {
+                // Server echo lại CustomerDataPacket sau khi lưu thành công
+                echoSub = client.OnOnce<CustomerDataPacket>(
+                    predicate: p => p.SequenceId == sq,
+                    handler: confirmed =>
+                    {
+                        echoSub?.Dispose();
+                        errSub?.Dispose();
+                        tcs.TrySetResult(CustomerWriteResult.Success(confirmed));
+                    });
+            }
+
+            // Luôn lắng nghe Directive để bắt lỗi (và success khi delete)
+            errSub = client.OnOnce<Directive>(
                 predicate: p => p.SequenceId == sq,
                 handler: resp =>
                 {
-                    sub?.Dispose();
+                    echoSub?.Dispose();
+                    errSub?.Dispose();
 
                     CustomerWriteResult result = resp.Type == ControlType.NONE
-                        ? CustomerWriteResult.Success()
+                        ? CustomerWriteResult.Success()          // Delete thành công
                         : CustomerWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
 
                     tcs.TrySetResult(result);
                 });
 
-            await client.SendAsync(data, ct);
+            await client.SendAsync(data, ct).ConfigureAwait(false);
 
             using System.Threading.CancellationTokenSource cts =
                 System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -171,15 +217,18 @@ public sealed class CustomerService : ICustomerService
                 System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
 
             System.Threading.Tasks.Task winner =
-                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask);
+                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
 
-            if (winner != tcs.Task)
+            cts.Cancel(); // Hủy timeout task để tránh fire sau khi done
+
+            if (!ReferenceEquals(winner, tcs.Task))
             {
-                sub?.Dispose();
+                echoSub?.Dispose();
+                errSub?.Dispose();
                 return CustomerWriteResult.Timeout();
             }
 
-            return await tcs.Task;
+            return await tcs.Task.ConfigureAwait(false);
         }
         catch (System.OperationCanceledException)
         {

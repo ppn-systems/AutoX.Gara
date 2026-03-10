@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Caching;
@@ -12,48 +13,88 @@ using Nalix.Shared.Frames;
 namespace AutoX.Gara.Shared.Packets.Customers;
 
 /// <summary>
-/// Represents a paging query request packet sent by the client
-/// to retrieve a paginated list of customers from the server.
-/// Uses PacketBase for automatic serialization, pooling and metadata handling.
+/// Packet gửi từ client lên server để truy vấn danh sách khách hàng
+/// có hỗ trợ phân trang, tìm kiếm, lọc và sắp xếp.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class CustomersQueryPacket : PacketBase<CustomersQueryPacket>, IPoolable, IPacketSequenced
 {
-    /// <summary>
-    /// Gets the sequence identifier used for packet ordering and deduplication.
-    /// </summary>
+    // ─── Fixed-size fields (đặt trước) ───────────────────────────────────────
+    // Tất cả field cố định kích thước phải đứng trước dynamic field (SearchTerm)
+    // để PacketBase tính Length chính xác.
+
+    /// <inheritdoc/>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
     public System.UInt32 SequenceId { get; set; }
 
-    /// <summary>
-    /// Gets or sets the one-based page number to retrieve.
-    /// Defaults to 1.
-    /// </summary>
+    /// <summary>Số trang cần lấy (bắt đầu từ 1).</summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public System.Int32 Page { get; set; } = 1;
 
-    /// <summary>
-    /// Gets or sets the maximum number of customer records per page.
-    /// Defaults to 20.
-    /// </summary>
+    /// <summary>Số bản ghi tối đa trên mỗi trang.</summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
     public System.Int32 PageSize { get; set; } = 20;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="CustomersQueryPacket"/> with default values.
+    /// Cột dùng để sắp xếp kết quả.
+    /// Mặc định: <see cref="CustomerSortField.CreatedAt"/>.
     /// </summary>
-    public CustomersQueryPacket() => OpCode = OpCommand.NONE.AsUInt16();// If you must preserve a legacy magic number, set it explicitly here:// this.MagicNumber = PacketMagic.YOUR_LEGACY_VALUE.AsUInt32();
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
+    public CustomerSortField SortBy { get; set; } = CustomerSortField.CreatedAt;
+
+    /// <summary>
+    /// <c>true</c> = sắp xếp giảm dần (mới nhất lên đầu),
+    /// <c>false</c> = sắp xếp tăng dần.
+    /// </summary>
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
+    public System.Boolean SortDescending { get; set; } = true;
+
+    /// <summary>
+    /// Lọc theo loại khách hàng.
+    /// <c>CustomerType.None</c> (mặc định) = không filter, trả về tất cả.
+    /// </summary>
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
+    public CustomerType FilterType { get; set; } = CustomerType.None;
+
+    /// <summary>
+    /// Lọc theo hạng thành viên.
+    /// <c>MembershipLevel.None</c> (mặc định) = không filter, trả về tất cả.
+    /// </summary>
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
+    public MembershipLevel FilterMembership { get; set; } = MembershipLevel.None;
+
+    // ─── Dynamic-size field (đặt cuối) ───────────────────────────────────────
+
+    /// <summary>
+    /// Từ khóa tìm kiếm theo tên, email, SĐT hoặc ghi chú nội bộ.
+    /// Rỗng = không áp dụng filter.
+    /// <para>
+    /// Dynamic field — phải đứng cuối để <see cref="PacketBase{TSelf}.Length"/>
+    /// tính đúng wire-size (UTF-8 byte count).
+    /// </para>
+    /// </summary>
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
+    public System.String SearchTerm { get; set; } = System.String.Empty;
+
+    // ─── Constructor ─────────────────────────────────────────────────────────
+
+    public CustomersQueryPacket() => OpCode = OpCommand.NONE.AsUInt16();
+
+    // ─── Pool Reset ───────────────────────────────────────────────────────────
 
     /// <inheritdoc/>
     public override void ResetForPool()
     {
-        // Let the base reset serializable properties and header fields according to metadata.
         base.ResetForPool();
 
-        // Re-apply domain-specific defaults that differ from metadata defaults.
         SequenceId = 0;
         Page = 1;
         PageSize = 20;
+        SortBy = CustomerSortField.CreatedAt;
+        SortDescending = true;
+        FilterType = CustomerType.None;
+        FilterMembership = MembershipLevel.None;
+        SearchTerm = System.String.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }

@@ -65,8 +65,8 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.41" />
 		
-		<PackageReference Include="Nalix.SDK" Version="11.1.0" />
-		<PackageReference Include="Nalix.Logging" Version="11.1.0" />
+		<PackageReference Include="Nalix.SDK" Version="11.1.2" />
+		<PackageReference Include="Nalix.Logging" Version="11.1.2" />
 	</ItemGroup>
 
 	<ItemGroup>

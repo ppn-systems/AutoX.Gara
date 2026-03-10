@@ -1,7 +1,10 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Domain.Enums;
+using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Packets.Customers;
 using AutoX.Gara.Shared.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,37 +16,58 @@ namespace AutoX.Gara.Frontend.ViewModels;
 
 /// <summary>
 /// ViewModel for the Customers management screen.
-/// <para>
-/// Single Responsibility:
-///   - Manages UI state (IsLoading, HasError, Popup, Form...)
-///   - Orchestrates: validate → call service → update list → notify UI
-/// </para>
-/// <para>Does NOT contain: network code, navigation code, validation regex.</para>
+/// Responsibilities: UI state, search/sort/filter/pagination, validate → service → optimistic update.
+/// Does NOT contain: network code, navigation code, validation regex.
 /// </summary>
-public sealed partial class CustomersViewModel : ObservableObject
+public sealed partial class CustomersViewModel : ObservableObject, System.IDisposable
 {
-    // ─── Dependencies ─────────────────────────────────────────────────────────
-
     private readonly ICustomerService _customerService;
-
-    // ─── Cancellation ─────────────────────────────────────────────────────────
-
-    /// <summary>Cancellation token for the active network request.</summary>
     private System.Threading.CancellationTokenSource? _cts;
-
-    // ─── Pagination ───────────────────────────────────────────────────────────
+    private System.Threading.Timer? _searchDebounceTimer;
 
     private const System.Int32 DefaultPageSize = 20;
+    private const System.Int32 SearchDebounceMs = 400;
+
+    // ─── Pagination ───────────────────────────────────────────────────────────
 
     [ObservableProperty] public partial System.Int32 CurrentPage { get; set; } = 1;
     [ObservableProperty] public partial System.Boolean HasNextPage { get; set; }
     [ObservableProperty] public partial System.Boolean HasPreviousPage { get; set; }
+    [ObservableProperty] public partial System.Int32 TotalCount { get; set; }
+
+    public System.Int32 TotalPages =>
+        TotalCount > 0 ? (System.Int32)System.Math.Ceiling((System.Double)TotalCount / DefaultPageSize) : 0;
+
+    // ─── Search / Sort ────────────────────────────────────────────────────────
+
+    [ObservableProperty] public partial System.String SearchTerm { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial CustomerSortField SortBy { get; set; } = CustomerSortField.CreatedAt;
+    [ObservableProperty] public partial System.Boolean SortDescending { get; set; } = true;
+
+    // ─── Filter ───────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Lọc theo loại khách hàng. <c>CustomerType.None</c> = hiển thị tất cả.
+    /// </summary>
+    [ObservableProperty] public partial CustomerType FilterType { get; set; } = CustomerType.None;
+
+    /// <summary>
+    /// Lọc theo hạng thành viên. <c>MembershipLevel.None</c> = hiển thị tất cả.
+    /// </summary>
+    [ObservableProperty] public partial MembershipLevel FilterMembership { get; set; } = MembershipLevel.None;
+
+    /// <summary>True khi có ít nhất một filter đang được áp dụng.</summary>
+    public System.Boolean HasActiveFilters =>
+        FilterType != CustomerType.None || FilterMembership != MembershipLevel.None;
 
     // ─── State ────────────────────────────────────────────────────────────────
 
     [ObservableProperty] public partial System.Boolean IsLoading { get; set; }
     [ObservableProperty] public partial System.Boolean HasError { get; set; }
     [ObservableProperty] public partial System.String? ErrorMessage { get; set; }
+
+    /// <summary>True khi không loading và danh sách rỗng — dùng để hiện empty state.</summary>
+    public System.Boolean IsEmpty => !IsLoading && Customers.Count == 0;
 
     // ─── Popup ────────────────────────────────────────────────────────────────
 
@@ -57,13 +81,8 @@ public sealed partial class CustomersViewModel : ObservableObject
 
     // ─── Form (Create / Edit) ─────────────────────────────────────────────────
 
-    /// <summary>Indicates whether the create/edit form panel is visible.</summary>
     [ObservableProperty] public partial System.Boolean IsFormVisible { get; set; }
-
-    /// <summary>True when editing an existing customer, false when creating a new one.</summary>
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
-
-    /// <summary>Currently selected customer for editing or deletion.</summary>
     [ObservableProperty] public partial CustomerDataPacket? SelectedCustomer { get; set; }
 
     // ─── Form Fields ──────────────────────────────────────────────────────────
@@ -73,33 +92,40 @@ public sealed partial class CustomersViewModel : ObservableObject
     [ObservableProperty] public partial System.String FormPhone { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormAddress { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormTaxCode { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String FormNotes { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.DateTime? FormDateOfBirth { get; set; }
+    [ObservableProperty] public partial CustomerType FormType { get; set; }
+    [ObservableProperty] public partial MembershipLevel FormMembership { get; set; }
+    [ObservableProperty] public partial Gender FormGender { get; set; } = Gender.None;
     [ObservableProperty] public partial System.Boolean HasFormError { get; set; }
     [ObservableProperty] public partial System.String? FormErrorMessage { get; set; }
 
-    // ─── Delete Confirmation Popup ────────────────────────────────────────────
+    // ─── Delete Confirmation ──────────────────────────────────────────────────
 
-    /// <summary>Indicates whether the delete confirmation popup is visible.</summary>
     [ObservableProperty] public partial System.Boolean IsDeleteConfirmVisible { get; set; }
 
     // ─── Customer List ────────────────────────────────────────────────────────
 
-    /// <summary>Observable list of customers shown in the UI.</summary>
     public System.Collections.ObjectModel.ObservableCollection<CustomerDataPacket> Customers { get; } = [];
 
     // ─── Constructor ─────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Initializes the ViewModel with a customer service via dependency injection.
-    /// </summary>
     public CustomersViewModel(ICustomerService customerService)
     {
         _customerService = customerService;
+
+        // Notify IsEmpty mỗi khi collection thay đổi
+        Customers.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
+
         _ = LoadAsync();
     }
 
     // ─── Property Change Hooks ────────────────────────────────────────────────
 
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
+    partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(TotalPages));
+
+    partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmpty));
 
     partial void OnCurrentPageChanged(int value)
     {
@@ -107,13 +133,45 @@ public sealed partial class CustomersViewModel : ObservableObject
         _ = LoadAsync();
     }
 
+    /// <summary>Debounce search: chờ 400ms sau lần gõ cuối mới gửi request.</summary>
+    partial void OnSearchTermChanged(string value)
+    {
+        _searchDebounceTimer?.Dispose();
+        _searchDebounceTimer = new System.Threading.Timer(_ =>
+        {
+            Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (CurrentPage != 1)
+                    CurrentPage = 1;
+                else
+                    _ = LoadAsync();
+            });
+        }, null, SearchDebounceMs, System.Threading.Timeout.Infinite);
+    }
+
+    partial void OnSortByChanged(CustomerSortField value) => _ = LoadAsync();
+    partial void OnSortDescendingChanged(bool value) => _ = LoadAsync();
+
+    // Reset về trang 1 khi filter thay đổi
+    partial void OnFilterTypeChanged(CustomerType value)
+    {
+        OnPropertyChanged(nameof(HasActiveFilters));
+        ResetPageAndLoad();
+    }
+
+    partial void OnFilterMembershipChanged(MembershipLevel value)
+    {
+        OnPropertyChanged(nameof(HasActiveFilters));
+        ResetPageAndLoad();
+    }
+
     // ─── Commands ─────────────────────────────────────────────────────────────
 
-    /// <summary>Loads the current page of customers from the server.</summary>
     [RelayCommand]
     private async System.Threading.Tasks.Task LoadAsync()
     {
         _cts?.Cancel();
+        _cts?.Dispose();
         _cts = new System.Threading.CancellationTokenSource();
         var ct = _cts.Token;
 
@@ -122,9 +180,17 @@ public sealed partial class CustomersViewModel : ObservableObject
 
         try
         {
-            CustomerListResult result = await _customerService.GetListAsync(CurrentPage, DefaultPageSize, ct);
+            CustomerListResult result = await _customerService.GetListAsync(
+                page: CurrentPage,
+                pageSize: DefaultPageSize,
+                searchTerm: SearchTerm,
+                sortBy: SortBy,
+                sortDescending: SortDescending,
+                filterType: FilterType,
+                filterMembership: FilterMembership,
+                ct: ct);
 
-            Debug.WriteLine($"[VM DEBUG] LoadAsync result: IsSuccess={result.IsSuccess}, Customers={result.Customers.Count}");
+            Debug.WriteLine($"[VM] Load: IsSuccess={result.IsSuccess}, Count={result.Customers.Count}, Total={result.TotalCount}");
 
             if (result.IsSuccess)
             {
@@ -134,8 +200,15 @@ public sealed partial class CustomersViewModel : ObservableObject
                     Customers.Add(c);
                 }
 
-                // Show next page button only when a full page was returned
-                HasNextPage = result.Customers.Count == DefaultPageSize;
+                if (result.TotalCount >= 0)
+                {
+                    TotalCount = result.TotalCount;
+                    HasNextPage = CurrentPage < TotalPages;
+                }
+                else
+                {
+                    HasNextPage = result.HasMore;
+                }
             }
             else
             {
@@ -148,7 +221,38 @@ public sealed partial class CustomersViewModel : ObservableObject
         }
     }
 
-    /// <summary>Opens the create-customer form with empty fields.</summary>
+    /// <summary>Sort theo cột — toggle direction nếu đang chọn cùng cột.</summary>
+    [RelayCommand]
+    private void SortByColumn(System.String? fieldName)
+    {
+        if (!System.Enum.TryParse<CustomerSortField>(fieldName, out CustomerSortField field))
+        {
+            return;
+        }
+
+        if (SortBy == field)
+        {
+            SortDescending = !SortDescending;
+        }
+        else
+        {
+            SortBy = field;
+            SortDescending = false;
+        }
+    }
+
+    [RelayCommand]
+    private void ClearSearch() => SearchTerm = System.String.Empty;
+
+    /// <summary>Xóa tất cả filter (Type + Membership) và reload.</summary>
+    [RelayCommand]
+    private void ClearFilters()
+    {
+        FilterType = CustomerType.None;
+        FilterMembership = MembershipLevel.None;
+        // OnFilterTypeChanged / OnFilterMembershipChanged sẽ tự trigger load
+    }
+
     [RelayCommand]
     private void OpenCreateForm()
     {
@@ -158,7 +262,6 @@ public sealed partial class CustomersViewModel : ObservableObject
         IsFormVisible = true;
     }
 
-    /// <summary>Opens the edit form pre-filled with the selected customer's data.</summary>
     [RelayCommand]
     private void OpenEditForm(CustomerDataPacket customer)
     {
@@ -169,11 +272,15 @@ public sealed partial class CustomersViewModel : ObservableObject
         FormPhone = customer.PhoneNumber ?? System.String.Empty;
         FormAddress = customer.Address ?? System.String.Empty;
         FormTaxCode = customer.TaxCode ?? System.String.Empty;
+        FormNotes = customer.Notes ?? System.String.Empty;
+        FormDateOfBirth = customer.DateOfBirth == default ? null : customer.DateOfBirth;
+        FormType = customer.Type ?? (System.Int32)CustomerType.None;
+        FormMembership = customer.Membership ?? (System.Int32)MembershipLevel.None;
+        FormGender = customer.Gender ?? Gender.None;
         ClearFormError();
         IsFormVisible = true;
     }
 
-    /// <summary>Closes the create/edit form without saving.</summary>
     [RelayCommand]
     private void CloseForm()
     {
@@ -181,7 +288,10 @@ public sealed partial class CustomersViewModel : ObservableObject
         ClearForm();
     }
 
-    /// <summary>Saves the current form — creates or updates based on <see cref="IsEditing"/>.</summary>
+    /// <summary>
+    /// Save form và thực hiện optimistic UI update từ entity được server echo lại.
+    /// Không reload toàn bộ list — cập nhật trực tiếp phần tử trong ObservableCollection.
+    /// </summary>
     [RelayCommand]
     private async System.Threading.Tasks.Task SaveFormAsync()
     {
@@ -191,6 +301,7 @@ public sealed partial class CustomersViewModel : ObservableObject
         }
 
         _cts?.Cancel();
+        _cts?.Dispose();
         _cts = new System.Threading.CancellationTokenSource();
         var ct = _cts.Token;
 
@@ -199,18 +310,45 @@ public sealed partial class CustomersViewModel : ObservableObject
         try
         {
             CustomerDataPacket data = BuildPacketFromForm();
-            CustomerWriteResult result = IsEditing ? await _customerService.UpdateAsync(data, ct) : await _customerService.CreateAsync(data, ct);
+            CustomerWriteResult result = IsEditing
+                ? await _customerService.UpdateAsync(data, ct)
+                : await _customerService.CreateAsync(data, ct);
 
             if (result.IsSuccess)
             {
                 IsFormVisible = false;
                 ClearForm();
-                // Reload to reflect server-side changes (id, timestamps, etc.)
-                await LoadAsync();
+
+                if (result.UpdatedEntity is not null)
+                {
+                    if (IsEditing)
+                    {
+                        System.Int32 idx = IndexOfCustomer(result.UpdatedEntity.CustomerId);
+                        if (idx >= 0)
+                        {
+                            Customers[idx] = result.UpdatedEntity;
+                        }
+                        else
+                        {
+                            await LoadAsync();
+                        }
+                    }
+                    else
+                    {
+                        Customers.Insert(0, result.UpdatedEntity);
+                        TotalCount++;
+                        OnPropertyChanged(nameof(TotalPages));
+                        HasNextPage = CurrentPage < TotalPages;
+                    }
+                }
+                else
+                {
+                    await LoadAsync();
+                }
             }
             else
             {
-                SetFormError(MapWriteErrorToMessage(result.ErrorMessage!, result.Advice));
+                SetFormError(result.ErrorMessage ?? "Thao tác thất bại.");
             }
         }
         finally
@@ -219,7 +357,6 @@ public sealed partial class CustomersViewModel : ObservableObject
         }
     }
 
-    /// <summary>Opens the delete confirmation popup for the given customer.</summary>
     [RelayCommand]
     private void RequestDelete(CustomerDataPacket customer)
     {
@@ -227,11 +364,9 @@ public sealed partial class CustomersViewModel : ObservableObject
         IsDeleteConfirmVisible = true;
     }
 
-    /// <summary>Cancels the pending delete operation.</summary>
     [RelayCommand]
     private void CancelDelete() => IsDeleteConfirmVisible = false;
 
-    /// <summary>Confirms and executes the delete operation.</summary>
     [RelayCommand]
     private async System.Threading.Tasks.Task ConfirmDeleteAsync()
     {
@@ -241,20 +376,31 @@ public sealed partial class CustomersViewModel : ObservableObject
         }
 
         _cts?.Cancel();
+        _cts?.Dispose();
         _cts = new System.Threading.CancellationTokenSource();
         var ct = _cts.Token;
 
         IsDeleteConfirmVisible = false;
         IsLoading = true;
 
+        CustomerDataPacket toDelete = SelectedCustomer;
+
         try
         {
-            CustomerWriteResult result = await _customerService.DeleteAsync(SelectedCustomer, ct);
+            CustomerWriteResult result = await _customerService.DeleteAsync(toDelete, ct);
 
             if (result.IsSuccess)
             {
-                Customers.Remove(SelectedCustomer);
+                Customers.Remove(toDelete);
+                TotalCount = System.Math.Max(0, TotalCount - 1);
+                OnPropertyChanged(nameof(TotalPages));
+                HasNextPage = CurrentPage < TotalPages;
                 SelectedCustomer = null;
+
+                if (Customers.Count == 0 && CurrentPage > 1)
+                {
+                    CurrentPage--;
+                }
             }
             else
             {
@@ -267,7 +413,6 @@ public sealed partial class CustomersViewModel : ObservableObject
         }
     }
 
-    /// <summary>Navigates to the next page.</summary>
     [RelayCommand]
     private void NextPage()
     {
@@ -277,7 +422,6 @@ public sealed partial class CustomersViewModel : ObservableObject
         }
     }
 
-    /// <summary>Navigates to the previous page.</summary>
     [RelayCommand]
     private void PreviousPage()
     {
@@ -287,11 +431,8 @@ public sealed partial class CustomersViewModel : ObservableObject
         }
     }
 
-    /// <summary>Closes the error/info popup.</summary>
-    [RelayCommand]
-    private void ClosePopup() => IsPopupVisible = false;
+    [RelayCommand] private void ClosePopup() => IsPopupVisible = false;
 
-    /// <summary>Retries the last list load and dismisses the popup.</summary>
     [RelayCommand]
     private void RetryLoad()
     {
@@ -299,7 +440,29 @@ public sealed partial class CustomersViewModel : ObservableObject
         _ = LoadAsync();
     }
 
+    // ─── IDisposable ─────────────────────────────────────────────────────────
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _searchDebounceTimer?.Dispose();
+    }
+
     // ─── Private Helpers ─────────────────────────────────────────────────────
+
+    /// <summary>Reset về trang 1 nếu đang ở trang > 1, ngược lại reload trực tiếp.</summary>
+    private void ResetPageAndLoad()
+    {
+        if (CurrentPage != 1)
+        {
+            CurrentPage = 1; // OnCurrentPageChanged sẽ tự trigger LoadAsync
+        }
+        else
+        {
+            _ = LoadAsync();
+        }
+    }
 
     private void ClearError()
     {
@@ -309,7 +472,11 @@ public sealed partial class CustomersViewModel : ObservableObject
 
     private void ClearForm()
     {
-        FormName = FormEmail = FormPhone = FormAddress = FormTaxCode = System.String.Empty;
+        FormName = FormEmail = FormPhone = FormAddress = FormTaxCode = FormNotes = System.String.Empty;
+        FormDateOfBirth = null;
+        FormType = default;
+        FormMembership = default;
+        FormGender = Gender.None;
         ClearFormError();
     }
 
@@ -325,12 +492,21 @@ public sealed partial class CustomersViewModel : ObservableObject
         HasFormError = true;
     }
 
-    /// <summary>Client-side form validation before sending to the server.</summary>
+    /// <summary>
+    /// Client-side validation đầy đủ:
+    /// tên, email, SĐT, ngày sinh, taxcode theo loại khách hàng.
+    /// </summary>
     private System.Boolean ValidateForm()
     {
         if (System.String.IsNullOrWhiteSpace(FormName))
         {
             SetFormError("Tên khách hàng không được để trống.");
+            return false;
+        }
+
+        if (FormName.Length > 100)
+        {
+            SetFormError("Tên không được vượt quá 100 ký tự.");
             return false;
         }
 
@@ -346,10 +522,36 @@ public sealed partial class CustomersViewModel : ObservableObject
             return false;
         }
 
+        if (FormDateOfBirth.HasValue)
+        {
+            if (FormDateOfBirth.Value > System.DateTime.Today)
+            {
+                SetFormError("Ngày sinh không được là ngày trong tương lai.");
+                return false;
+            }
+
+            if (FormDateOfBirth.Value < System.DateTime.Today.AddYears(-120))
+            {
+                SetFormError("Ngày sinh không hợp lệ.");
+                return false;
+            }
+        }
+
+        if (FormType == CustomerType.Business && System.String.IsNullOrWhiteSpace(FormTaxCode))
+        {
+            SetFormError("Mã số thuế bắt buộc đối với khách hàng doanh nghiệp.");
+            return false;
+        }
+
+        if (FormNotes.Length > 500)
+        {
+            SetFormError("Ghi chú không được vượt quá 500 ký tự.");
+            return false;
+        }
+
         return true;
     }
 
-    /// <summary>Builds a <see cref="CustomerDataPacket"/> from the current form field values.</summary>
     private CustomerDataPacket BuildPacketFromForm()
     {
         CustomerDataPacket data = new()
@@ -359,17 +561,18 @@ public sealed partial class CustomersViewModel : ObservableObject
             PhoneNumber = FormPhone,
             Address = FormAddress,
             TaxCode = FormTaxCode,
+            Notes = FormNotes,
+            Type = FormType,
+            Membership = FormMembership,
+            Gender = FormGender,
+            DateOfBirth = FormDateOfBirth ?? default,
             UpdatedAt = System.DateTime.UtcNow
         };
 
         if (IsEditing && SelectedCustomer is not null)
         {
-            // Preserve original ID, type, membership, DOB when editing
-            data.Type = SelectedCustomer.Type;
-            data.CreatedAt = SelectedCustomer.CreatedAt;
             data.CustomerId = SelectedCustomer.CustomerId;
-            data.Membership = SelectedCustomer.Membership;
-            data.DateOfBirth = SelectedCustomer.DateOfBirth;
+            data.CreatedAt = SelectedCustomer.CreatedAt;
         }
         else
         {
@@ -377,6 +580,24 @@ public sealed partial class CustomersViewModel : ObservableObject
         }
 
         return data;
+    }
+
+    private System.Int32 IndexOfCustomer(System.Object? customerId)
+    {
+        if (customerId is null)
+        {
+            return -1;
+        }
+
+        for (System.Int32 i = 0; i < Customers.Count; i++)
+        {
+            if (Customers[i].CustomerId is System.Object id && id.Equals(customerId))
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private void HandleWriteError(System.String title, System.String message, ProtocolAdvice advice)
@@ -392,22 +613,18 @@ public sealed partial class CustomersViewModel : ObservableObject
                 break;
 
             default:
-                // Inline error for fixable issues
                 HasError = true;
                 ErrorMessage = message;
                 break;
         }
     }
 
-    private static System.String MapWriteErrorToMessage(System.String serverMessage, ProtocolAdvice advice)
-        => advice == ProtocolAdvice.FIX_AND_RETRY ? serverMessage : serverMessage;
-
     private void ShowPopup(System.String title, System.String message, System.Boolean isRetry)
     {
         PopupTitle = title;
         PopupMessage = message;
         IsPopupRetry = isRetry;
-        PopupButtonText = isRetry ? "Retry" : "OK";
+        PopupButtonText = isRetry ? "Thử lại" : "OK";
         IsPopupVisible = true;
     }
 }

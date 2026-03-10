@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Repairs;
+using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Customers;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -84,6 +85,16 @@ public class Customer
         set => _address = value.Trim() ?? System.String.Empty;
     }
 
+    /// <summary>
+    /// Giới tính.
+    /// </summary>
+    public Gender Gender { get; set; } = Gender.None;
+
+    /// <summary>
+    /// Thông tin bổ sung về khách hàng (nếu có).
+    /// </summary>
+    public System.String Notes { get; set; }
+
     #endregion
 
     #region Personal Details Properties
@@ -149,6 +160,11 @@ public class Customer
     /// Người gần nhất chỉnh sửa thông tin khách hàng.
     /// </summary>
     public System.DateTime UpdatedAt { get; set; } = System.DateTime.UtcNow;
+
+    /// <summary>
+    /// Dấu hiệu xóa mềm: nếu có giá trị, khách hàng đã bị xóa và không nên hiển thị trong các danh sách khách hàng đang hoạt động.
+    /// </summary>
+    public System.DateTime? DeletedAt { get; set; }
 
     #endregion
 

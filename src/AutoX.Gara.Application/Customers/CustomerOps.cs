@@ -1,6 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Customers;
+using AutoX.Gara.Domain.Enums;
+using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Packets.Customers;
@@ -12,7 +14,7 @@ using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security.Enums;
 using Nalix.Network.Connections;
 using Nalix.Shared.Serialization;
-using System;
+using System.Linq;
 
 namespace AutoX.Gara.Application.Customers;
 
@@ -22,10 +24,13 @@ namespace AutoX.Gara.Application.Customers;
 [PacketController]
 public sealed class CustomerOps(AutoXDbContext context)
 {
-    private readonly DataRepository<Customer> s_customer = new(context);
+    private readonly DataRepository<Customer> _customers = new(context);
+
+    // ─── GET LIST ─────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Lấy danh sách khách hàng (phân trang), chỉ cho nhân viên.
+    /// Lấy danh sách khách hàng với phân trang, tìm kiếm, lọc và sắp xếp.
+    /// Chỉ trả về khách hàng chưa bị xóa mềm (DeletedAt == null).
     /// </summary>
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -36,66 +41,107 @@ public sealed class CustomerOps(AutoXDbContext context)
     {
         if (p is not CustomersQueryPacket packet)
         {
-            if (p is not IPacketSequenced ps)
-            {
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.MALFORMED_PACKET,
-                    ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
-
-                return;
-            }
-
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, ps.SequenceId).ConfigureAwait(false);
-
+            System.UInt32 seqId = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.DO_NOT_RETRY, seqId)
+                .ConfigureAwait(false);
             return;
         }
 
         try
         {
-            System.Collections.Generic.List<Customer> customers;
-            System.Collections.Generic.List<CustomerDataPacket> customerPackets;
+            // ── Soft delete: chỉ lấy bản ghi chưa bị xóa ─────────────────
+            System.Linq.IQueryable<Customer> query = _customers.AsQueryable()
+                .Where(c => c.DeletedAt == null);
 
-            customers = await s_customer.GetAllAsync(packet.Page, packet.PageSize) ?? [];
-
-            customerPackets = customers.ConvertAll(c => new CustomerDataPacket
+            // ── Search ────────────────────────────────────────────────────
+            if (!System.String.IsNullOrWhiteSpace(packet.SearchTerm))
             {
-                Type = c.Type,
-                Name = c.Name,
-                Email = c.Email,
-                CustomerId = c.Id,
-                TaxCode = c.TaxCode,
-                Address = c.Address,
-                CreatedAt = c.CreatedAt,
-                UpdatedAt = c.UpdatedAt,
-                Membership = c.Membership,
-                PhoneNumber = c.PhoneNumber,
-                DateOfBirth = c.DateOfBirth
-            });
+                System.String term = packet.SearchTerm.Trim().ToLowerInvariant();
+                query = query.Where(c =>
+                    (c.Name != null && c.Name.ToLower().Contains(term)) ||
+                    (c.Email != null && c.Email.ToLower().Contains(term)) ||
+                    (c.PhoneNumber != null && c.PhoneNumber.Contains(term)) ||
+                    (c.Notes != null && c.Notes.ToLower().Contains(term)));
+            }
 
-            CustomersPacket customersPacket = new()
+            // ── Filter theo CustomerType ───────────────────────────────────
+            if (packet.FilterType != CustomerType.None)
             {
+                query = query.Where(c => c.Type == packet.FilterType);
+            }
+
+            // ── Filter theo MembershipLevel ───────────────────────────────
+            if (packet.FilterMembership != MembershipLevel.None)
+            {
+                query = query.Where(c => c.Membership == packet.FilterMembership);
+            }
+
+            // ── Sort ───────────────────────────────────────────────────────
+            query = (packet.SortBy, packet.SortDescending) switch
+            {
+                (CustomerSortField.Name, false) => query.OrderBy(c => c.Name),
+                (CustomerSortField.Name, true) => query.OrderByDescending(c => c.Name),
+                (CustomerSortField.Email, false) => query.OrderBy(c => c.Email),
+                (CustomerSortField.Email, true) => query.OrderByDescending(c => c.Email),
+                (CustomerSortField.CreatedAt, false) => query.OrderBy(c => c.CreatedAt),
+                (CustomerSortField.CreatedAt, true) => query.OrderByDescending(c => c.CreatedAt),
+                (CustomerSortField.UpdatedAt, false) => query.OrderBy(c => c.UpdatedAt),
+                (CustomerSortField.UpdatedAt, true) => query.OrderByDescending(c => c.UpdatedAt),
+                _ => query.OrderByDescending(c => c.CreatedAt)
+            };
+
+            System.Int32 totalCount = await _customers.CountAsync(query).ConfigureAwait(false);
+
+            System.Collections.Generic.List<Customer> customers =
+                await _customers.GetPagedAsync(query, packet.Page, packet.PageSize)
+                                .ConfigureAwait(false) ?? [];
+
+            System.Collections.Generic.List<CustomerDataPacket> customerPackets =
+                customers.ConvertAll(c => MapToPacket(c, sequenceId: 0));
+
+            CustomersPacket response = new()
+            {
+                TotalCount = totalCount,
                 Customers = customerPackets,
                 SequenceId = packet.SequenceId
             };
 
-            Boolean ok = await connection.TCP.SendAsync(LiteSerializer.Serialize(customersPacket))
-                                             .ConfigureAwait(false);
+            System.Byte[] buffer = LiteSerializer.Serialize(response);
+
+            System.Console.WriteLine(
+                $"[SERVER] Sending CustomersPacket: SeqId={response.SequenceId}, " +
+                $"Count={response.Customers.Count}, TotalCount={response.TotalCount}, " +
+                $"BufferLen={buffer.Length}");
+
+            System.Boolean sent = await connection.TCP.SendAsync(buffer).ConfigureAwait(false);
+            System.Console.WriteLine($"[SERVER] SendAsync result: {sent}");
+
+            if (!sent)
+            {
+                await SendErrorAsync(
+                    connection, ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
+                .ConfigureAwait(false);
+            }
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+            System.Console.WriteLine($"[SERVER] EXCEPTION: {ex.GetType().Name}: {ex.Message}");
+            System.Console.WriteLine($"[SERVER] StackTrace: {ex.StackTrace}");
+            if (ex.InnerException is not null)
+            {
+                System.Console.WriteLine($"[SERVER] Inner: {ex.InnerException.Message}");
+            }
+
+            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR, ProtocolAdvice.RETRY, packet.SequenceId)
+                .ConfigureAwait(false);
         }
     }
 
+    // ─── CREATE ───────────────────────────────────────────────────────────────
+
     /// <summary>
-    /// Tạo mới khách hàng, chỉ cho nhân viên.
+    /// Tạo mới khách hàng và trả về entity đã được lưu (bao gồm Id, timestamps từ DB).
     /// </summary>
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -104,44 +150,35 @@ public sealed class CustomerOps(AutoXDbContext context)
         IPacket p,
         IConnection connection)
     {
-        if (p is not CustomerDataPacket packet ||
-            !AccountValidation.IsValidEmail(packet.Email) ||
-            !AccountValidation.IsValidVietnamPhoneNumber(packet.PhoneNumber))
+        if (!TryParseCustomerPacket(p, out CustomerDataPacket packet, out System.UInt32 fallbackSeq))
         {
-            if (p is not IPacketSequenced ps)
-            {
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.MALFORMED_PACKET,
-                    ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
-
-                return;
-            }
-
-            // MALFORMED_PACKET: Packet từ client không đúng định dạng hoặc thiếu field cần thiết.
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, ps.SequenceId).ConfigureAwait(false);
-
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.DO_NOT_RETRY, fallbackSeq)
+                .ConfigureAwait(false);
             return;
         }
 
-        // Kiểm tra email/số điện thoại đã tồn tại
-        Boolean existed = await s_customer.AnyAsync(c => c.Email == packet.Email || c.PhoneNumber == packet.PhoneNumber);
+        if (packet!.DateOfBirth != default && packet.DateOfBirth > System.DateTime.UtcNow)
+        {
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId)
+                .ConfigureAwait(false);
+            return;
+        }
+
+        // Kiểm tra trùng lặp — chỉ xét bản ghi chưa bị soft delete
+        System.Boolean existed = await _customers.AnyAsync(
+            c => c.DeletedAt == null && (c.Email == packet.Email || c.PhoneNumber == packet.PhoneNumber))
+            .ConfigureAwait(false);
 
         if (existed)
         {
-            // ALREADY_EXISTS: Email hoặc số điện thoại đã tồn tại trong database, không cho phép trùng.
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.ALREADY_EXISTS,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.ALREADY_EXISTS, ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId)
+                .ConfigureAwait(false);
             return;
         }
 
         try
         {
+            System.DateTime now = System.DateTime.UtcNow;
             Customer newCustomer = new()
             {
                 Name = packet.Name,
@@ -152,31 +189,31 @@ public sealed class CustomerOps(AutoXDbContext context)
                 TaxCode = packet.TaxCode,
                 Type = packet.Type,
                 Membership = packet.Membership,
-                CreatedAt = System.DateTime.UtcNow,
-                UpdatedAt = System.DateTime.UtcNow
+                Gender = packet.Gender ?? Gender.None,
+                Notes = packet.Notes ?? System.String.Empty,
+                DeletedAt = null,
+                CreatedAt = now,
+                UpdatedAt = now
             };
 
-            await s_customer.AddAsync(newCustomer);
-            await s_customer.SaveChangesAsync();
+            await _customers.AddAsync(newCustomer).ConfigureAwait(false);
+            await _customers.SaveChangesAsync().ConfigureAwait(false);
 
-            // NONE: Thành công, không có lỗi.
-            await connection.SendAsync(
-                ControlType.NONE,
-                ProtocolReason.NONE,
-                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
+            CustomerDataPacket confirmed = MapToPacket(newCustomer, packet.SequenceId);
+            await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
-            // INTERNAL_ERROR: Lỗi hệ thống (ví dụ không ghi DB được, lỗi nền tảng).
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR, ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
+                .ConfigureAwait(false);
         }
     }
 
+    // ─── UPDATE ───────────────────────────────────────────────────────────────
+
     /// <summary>
-    /// Sửa thông tin khách hàng, chỉ cho nhân viên.
+    /// Cập nhật thông tin khách hàng và trả về entity đã được lưu.
+    /// Không cho phép update khách hàng đã bị xóa mềm.
     /// </summary>
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -185,31 +222,30 @@ public sealed class CustomerOps(AutoXDbContext context)
         IPacket p,
         IConnection connection)
     {
-        if (p is not CustomerDataPacket packet ||
-            !AccountValidation.IsValidEmail(packet.Email) ||
-            !AccountValidation.IsValidVietnamPhoneNumber(packet.PhoneNumber))
+        if (!TryParseCustomerPacket(p, out CustomerDataPacket packet, out System.UInt32 fallbackSeq))
         {
-            // MALFORMED_PACKET: Packet sai format, không parse được dữ liệu khách hàng.
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.DO_NOT_RETRY, fallbackSeq)
+                .ConfigureAwait(false);
             return;
         }
 
-        // Kiểm tra tồn tại
-        Customer existing = await s_customer.GetByIdAsync(packet.CustomerId);
-        if (existing == null)
+        if (packet!.DateOfBirth != default && packet.DateOfBirth > System.DateTime.UtcNow)
         {
-            // NOT_FOUND: Không tìm thấy khách hàng cần sửa trong DB.
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.NOT_FOUND,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId)
+                .ConfigureAwait(false);
             return;
         }
 
-        // Update all business fields
+        Customer existing = await _customers.GetByIdAsync(packet.CustomerId).ConfigureAwait(false);
+
+        // Không cho phép update nếu đã bị xóa mềm
+        if (existing is null || existing.DeletedAt != null)
+        {
+            await SendErrorAsync(connection, ProtocolReason.NOT_FOUND, ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
+                .ConfigureAwait(false);
+            return;
+        }
+
         existing.Name = packet.Name;
         existing.Type = packet.Type;
         existing.Email = packet.Email;
@@ -218,31 +254,31 @@ public sealed class CustomerOps(AutoXDbContext context)
         existing.Membership = packet.Membership;
         existing.PhoneNumber = packet.PhoneNumber;
         existing.DateOfBirth = packet.DateOfBirth;
+        existing.Gender = packet.Gender ?? Gender.None;
+        existing.Notes = packet.Notes ?? System.String.Empty;
         existing.UpdatedAt = System.DateTime.UtcNow;
 
         try
         {
-            s_customer.Update(existing);
-            await s_customer.SaveChangesAsync();
+            _customers.Update(existing);
+            await _customers.SaveChangesAsync().ConfigureAwait(false);
 
-            // NONE: Update thành công.
-            await connection.SendAsync(
-                ControlType.NONE,
-                ProtocolReason.NONE,
-                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
+            CustomerDataPacket confirmed = MapToPacket(existing, packet.SequenceId);
+            await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
-            // INTERNAL_ERROR: Lỗi ghi database hoặc nền tảng.
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR, ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
+                .ConfigureAwait(false);
         }
     }
 
+    // ─── DELETE (Soft) ────────────────────────────────────────────────────────
+
     /// <summary>
-    /// Xóa khách hàng, chỉ cho nhân viên.
+    /// Xóa mềm khách hàng: ghi lại <c>DeletedAt = UtcNow</c>.
+    /// Dữ liệu vẫn còn trong DB để bảo toàn lịch sử giao dịch liên quan.
+    /// Yêu cầu quyền SUPERVISOR.
     /// </summary>
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
@@ -253,32 +289,90 @@ public sealed class CustomerOps(AutoXDbContext context)
     {
         if (p is not CustomerDataPacket packet || packet.CustomerId == null)
         {
-            // MALFORMED_PACKET: Packet xóa nhưng không đúng định dạng hoặc thiếu id.
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY).ConfigureAwait(false);
+            System.UInt32 seqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.DO_NOT_RETRY, seqId)
+                .ConfigureAwait(false);
             return;
         }
 
         try
         {
-            await s_customer.DeleteAsync(packet.CustomerId);
-            await s_customer.SaveChangesAsync();
+            Customer existing = await _customers.GetByIdAsync(packet.CustomerId).ConfigureAwait(false);
 
-            // NONE: Xóa thành công.
+            if (existing is null || existing.DeletedAt != null)
+            {
+                await SendErrorAsync(connection, ProtocolReason.NOT_FOUND, ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
+                    .ConfigureAwait(false);
+                return;
+            }
+
+            // Soft delete — không xóa cứng khỏi DB
+            System.DateTime now = System.DateTime.UtcNow;
+            existing.DeletedAt = now;
+            existing.UpdatedAt = now;
+
+            _customers.Update(existing);
+            await _customers.SaveChangesAsync().ConfigureAwait(false);
+
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
-                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.NONE,
+                packet.SequenceId).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
-            // INTERNAL_ERROR: Lỗi nền tảng hoặc database khi xóa.
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR, ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
+                .ConfigureAwait(false);
         }
     }
+
+    // ─── Private Helpers ─────────────────────────────────────────────────────
+
+    private static System.Boolean TryParseCustomerPacket(
+        IPacket p,
+        out CustomerDataPacket packet,
+        out System.UInt32 fallbackSeqId)
+    {
+        fallbackSeqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
+
+        if (p is not CustomerDataPacket cp ||
+            !AccountValidation.IsValidEmail(cp.Email) ||
+            !AccountValidation.IsValidVietnamPhoneNumber(cp.PhoneNumber))
+        {
+            packet = null;
+            return false;
+        }
+
+        packet = cp;
+        return true;
+    }
+
+    /// <summary>Maps a <see cref="Customer"/> entity to a <see cref="CustomerDataPacket"/>.</summary>
+    private static CustomerDataPacket MapToPacket(Customer c, System.UInt32 sequenceId) => new()
+    {
+        SequenceId = sequenceId,
+        CustomerId = c.Id,
+        Type = c.Type,
+        Name = c.Name,
+        Email = c.Email,
+        TaxCode = c.TaxCode,
+        Address = c.Address,
+        Membership = c.Membership,
+        PhoneNumber = c.PhoneNumber,
+        DateOfBirth = c.DateOfBirth,
+        Gender = c.Gender,
+        Notes = c.Notes ?? System.String.Empty,
+        CreatedAt = c.CreatedAt,
+        UpdatedAt = c.UpdatedAt
+    };
+
+    private static System.Threading.Tasks.Task SendErrorAsync(
+        IConnection connection,
+        ProtocolReason reason,
+        ProtocolAdvice advice,
+        System.UInt32 sequenceId)
+        => sequenceId == 0
+            ? connection.SendAsync(ControlType.ERROR, reason, advice)
+            : connection.SendAsync(ControlType.ERROR, reason, advice, sequenceId);
 }
