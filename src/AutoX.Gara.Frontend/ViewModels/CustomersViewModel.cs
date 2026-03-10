@@ -19,7 +19,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     private System.Threading.CancellationTokenSource? _cts;
     private System.Threading.CancellationTokenSource? _searchCts; // FIX: dùng CTS thay Timer
 
-    private const System.Int32 DefaultPageSize = 10; // FIX: typo 2 → 10
+    private const System.Int32 DefaultPageSize = 5;
     private const System.Int32 SearchDebounceMs = 400;
 
     // ─── Pagination ───────────────────────────────────────────────────────────
@@ -29,10 +29,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean HasPreviousPage { get; set; }
     [ObservableProperty] public partial System.Int32 TotalCount { get; set; }
 
-    public System.Int32 TotalPages =>
-        TotalCount > 0
-            ? (System.Int32)System.Math.Ceiling((System.Double)TotalCount / DefaultPageSize)
-            : 0;
+    public System.Int32 TotalPages => TotalCount > 0 ? (System.Int32)System.Math.Ceiling((System.Double)TotalCount / DefaultPageSize) : 0;
 
     // ─── Search / Sort ────────────────────────────────────────────────────────
 
@@ -52,8 +49,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     // 0=Tất cả, 1=Bronze, 2=Silver, 3=Gold, 4=Platinum
     [ObservableProperty] public partial System.Int32 PickerMembershipIndex { get; set; } = 0;
 
-    public System.Boolean HasActiveFilters =>
-        FilterType != CustomerType.None || FilterMembership != MembershipLevel.None;
+    public System.Boolean HasActiveFilters => FilterType != CustomerType.None || FilterMembership != MembershipLevel.None;
 
     // ─── State ────────────────────────────────────────────────────────────────
 
