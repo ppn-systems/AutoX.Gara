@@ -3,7 +3,7 @@
 using Microsoft.Maui.Accessibility;
 using Microsoft.Maui.Controls;
 
-namespace AutoX.Gara.Frontend;
+namespace AutoX.Gara.Frontend.Views;
 
 public partial class MainPage : ContentPage
 {

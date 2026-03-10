@@ -3,21 +3,21 @@
     x:Class="AutoX.Gara.Frontend.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:AutoX.Gara.Frontend"
-    Title="AutoX.Gara.Frontend">
+    xmlns:views="clr-namespace:AutoX.Gara.Frontend.Views"
+    Title="AutoX.Gara">
 
     <ShellContent
         Title="Login"
-        ContentTemplate="{DataTemplate local:LoginPage}"
+        ContentTemplate="{DataTemplate views:LoginPage}"
         Route="LoginPage" />
     
     <ShellContent
         Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
+        ContentTemplate="{DataTemplate views:MainPage}"
         Route="MainPage" />
 
     <ShellContent 
         Title="Customers"
-        ContentTemplate="{DataTemplate local:CustomersPage}"
+        ContentTemplate="{DataTemplate views:CustomersPage}"
         Route="CustomersPage" />
 </Shell>

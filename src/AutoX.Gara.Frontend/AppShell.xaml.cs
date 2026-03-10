@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Frontend.Views;
 using AutoX.Gara.Shared;
 using Microsoft.Maui.Controls;
 using Nalix.Common.Diagnostics.Abstractions;
@@ -28,6 +29,7 @@ public partial class AppShell : Shell
 
         Routing.RegisterRoute("MainPage", typeof(MainPage));
         Routing.RegisterRoute("LoginPage", typeof(LoginPage));
+        Routing.RegisterRoute("CustomersPage", typeof(CustomersPage));
 
         base.GoToAsync("///LoginPage");
     }

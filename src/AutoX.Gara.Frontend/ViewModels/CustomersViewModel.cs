@@ -4,7 +4,6 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
-using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Packets.Customers;
 using AutoX.Gara.Shared.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,18 +13,13 @@ using System.Diagnostics;
 
 namespace AutoX.Gara.Frontend.ViewModels;
 
-/// <summary>
-/// ViewModel for the Customers management screen.
-/// Responsibilities: UI state, search/sort/filter/pagination, validate → service → optimistic update.
-/// Does NOT contain: network code, navigation code, validation regex.
-/// </summary>
 public sealed partial class CustomersViewModel : ObservableObject, System.IDisposable
 {
     private readonly ICustomerService _customerService;
     private System.Threading.CancellationTokenSource? _cts;
-    private System.Threading.Timer? _searchDebounceTimer;
+    private System.Threading.CancellationTokenSource? _searchCts; // FIX: dùng CTS thay Timer
 
-    private const System.Int32 DefaultPageSize = 20;
+    private const System.Int32 DefaultPageSize = 10; // FIX: typo 2 → 10
     private const System.Int32 SearchDebounceMs = 400;
 
     // ─── Pagination ───────────────────────────────────────────────────────────
@@ -36,7 +30,9 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Int32 TotalCount { get; set; }
 
     public System.Int32 TotalPages =>
-        TotalCount > 0 ? (System.Int32)System.Math.Ceiling((System.Double)TotalCount / DefaultPageSize) : 0;
+        TotalCount > 0
+            ? (System.Int32)System.Math.Ceiling((System.Double)TotalCount / DefaultPageSize)
+            : 0;
 
     // ─── Search / Sort ────────────────────────────────────────────────────────
 
@@ -46,17 +42,16 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
     // ─── Filter ───────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Lọc theo loại khách hàng. <c>CustomerType.None</c> = hiển thị tất cả.
-    /// </summary>
+    // Giữ nguyên FilterType/FilterMembership để logic không đổi
     [ObservableProperty] public partial CustomerType FilterType { get; set; } = CustomerType.None;
-
-    /// <summary>
-    /// Lọc theo hạng thành viên. <c>MembershipLevel.None</c> = hiển thị tất cả.
-    /// </summary>
     [ObservableProperty] public partial MembershipLevel FilterMembership { get; set; } = MembershipLevel.None;
 
-    /// <summary>True khi có ít nhất một filter đang được áp dụng.</summary>
+    // FIX PICKER: Picker.SelectedIndex (int) thay vì SelectedItem (string→enum không match)
+    // 0=Tất cả, 1=Cá nhân, 2=Doanh nghiệp
+    [ObservableProperty] public partial System.Int32 PickerFilterTypeIndex { get; set; } = 0;
+    // 0=Tất cả, 1=Bronze, 2=Silver, 3=Gold, 4=Platinum
+    [ObservableProperty] public partial System.Int32 PickerMembershipIndex { get; set; } = 0;
+
     public System.Boolean HasActiveFilters =>
         FilterType != CustomerType.None || FilterMembership != MembershipLevel.None;
 
@@ -66,10 +61,9 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean HasError { get; set; }
     [ObservableProperty] public partial System.String? ErrorMessage { get; set; }
 
-    /// <summary>True khi không loading và danh sách rỗng — dùng để hiện empty state.</summary>
     public System.Boolean IsEmpty => !IsLoading && Customers.Count == 0;
 
-    // ─── Popup ────────────────────────────────────────────────────────────────
+    // ─── Popup lỗi ───────────────────────────────────────────────────────────
 
     [ObservableProperty] public partial System.Boolean IsPopupVisible { get; set; }
     [ObservableProperty] public partial System.Boolean IsPopupRetry { get; set; }
@@ -79,13 +73,15 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
     public System.Boolean IsPopupNotRetry => !IsPopupRetry;
 
-    // ─── Form (Create / Edit) ─────────────────────────────────────────────────
+    // ─── Form Add/Edit ────────────────────────────────────────────────────────
 
     [ObservableProperty] public partial System.Boolean IsFormVisible { get; set; }
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
     [ObservableProperty] public partial CustomerDataPacket? SelectedCustomer { get; set; }
 
-    // ─── Form Fields ──────────────────────────────────────────────────────────
+    // FIX: thay StringFormat bool không hoạt động — dùng computed property
+    public System.String FormTitle => IsEditing ? "Sửa khách hàng" : "Thêm khách hàng";
+    public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm khách hàng";
 
     [ObservableProperty] public partial System.String FormName { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormEmail { get; set; } = System.String.Empty;
@@ -100,11 +96,17 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean HasFormError { get; set; }
     [ObservableProperty] public partial System.String? FormErrorMessage { get; set; }
 
-    // ─── Delete Confirmation ──────────────────────────────────────────────────
+    // Picker index cho form
+    [ObservableProperty] public partial System.Int32 FormPickerTypeIndex { get; set; } = 0;
+    [ObservableProperty] public partial System.Int32 FormPickerMembershipIndex { get; set; } = 0;
+    [ObservableProperty] public partial System.Int32 FormPickerGenderIndex { get; set; } = 0;
+
+    // ─── Delete Confirm ───────────────────────────────────────────────────────
 
     [ObservableProperty] public partial System.Boolean IsDeleteConfirmVisible { get; set; }
+    public System.String DeleteConfirmName => SelectedCustomer?.Name ?? System.String.Empty;
 
-    // ─── Customer List ────────────────────────────────────────────────────────
+    // ─── Collection ───────────────────────────────────────────────────────────
 
     public System.Collections.ObjectModel.ObservableCollection<CustomerDataPacket> Customers { get; } = [];
 
@@ -113,10 +115,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     public CustomersViewModel(ICustomerService customerService)
     {
         _customerService = customerService;
-
-        // Notify IsEmpty mỗi khi collection thay đổi
         Customers.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
-
         _ = LoadAsync();
     }
 
@@ -124,8 +123,15 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(TotalPages));
-
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmpty));
+    partial void OnSelectedCustomerChanged(CustomerDataPacket? value)
+        => OnPropertyChanged(nameof(DeleteConfirmName));
+
+    partial void OnIsEditingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(FormTitle));
+        OnPropertyChanged(nameof(FormSaveText));
+    }
 
     partial void OnCurrentPageChanged(int value)
     {
@@ -133,26 +139,32 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         _ = LoadAsync();
     }
 
-    /// <summary>Debounce search: chờ 400ms sau lần gõ cuối mới gửi request.</summary>
+    // FIX: CancellationTokenSource debounce — không leak, cancel ngay lập tức
     partial void OnSearchTermChanged(string value)
     {
-        _searchDebounceTimer?.Dispose();
-        _searchDebounceTimer = new System.Threading.Timer(_ =>
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = new System.Threading.CancellationTokenSource();
+        var token = _searchCts.Token;
+
+        _ = System.Threading.Tasks.Task.Run(async () =>
         {
-            Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+            try
             {
-                if (CurrentPage != 1)
-                    CurrentPage = 1;
-                else
-                    _ = LoadAsync();
-            });
-        }, null, SearchDebounceMs, System.Threading.Timeout.Infinite);
+                await System.Threading.Tasks.Task.Delay(SearchDebounceMs, token);
+                Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    if (CurrentPage != 1) CurrentPage = 1;
+                    else _ = LoadAsync();
+                });
+            }
+            catch (System.OperationCanceledException) { }
+        }, token);
     }
 
     partial void OnSortByChanged(CustomerSortField value) => _ = LoadAsync();
     partial void OnSortDescendingChanged(bool value) => _ = LoadAsync();
 
-    // Reset về trang 1 khi filter thay đổi
     partial void OnFilterTypeChanged(CustomerType value)
     {
         OnPropertyChanged(nameof(HasActiveFilters));
@@ -163,6 +175,86 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     {
         OnPropertyChanged(nameof(HasActiveFilters));
         ResetPageAndLoad();
+    }
+
+    // Picker index → enum (filter)
+    // CustomerType: 0=None,1=Individual,2=Business,3=Government,4=Fleet,5=Insurance,6=VIP,7=Potential,8=Supplier,9=NonProfit,10=Dealer,11=Other
+    partial void OnPickerFilterTypeIndexChanged(int value)
+    {
+        FilterType = value switch
+        {
+            1 => CustomerType.Individual,
+            2 => CustomerType.Business,
+            3 => CustomerType.Government,
+            4 => CustomerType.Fleet,
+            5 => CustomerType.InsuranceCompany,
+            6 => CustomerType.VIP,
+            7 => CustomerType.Potential,
+            8 => CustomerType.Supplier,
+            9 => CustomerType.NonProfit,
+            10 => CustomerType.Dealer,
+            11 => CustomerType.Other,
+            _ => CustomerType.None
+        };
+    }
+
+    // MembershipLevel: 0=None,1=Trial,2=Standard,3=Silver,4=Gold,5=Platinum,6=Diamond
+    partial void OnPickerMembershipIndexChanged(int value)
+    {
+        FilterMembership = value switch
+        {
+            1 => MembershipLevel.Trial,
+            2 => MembershipLevel.Standard,
+            3 => MembershipLevel.Silver,
+            4 => MembershipLevel.Gold,
+            5 => MembershipLevel.Platinum,
+            6 => MembershipLevel.Diamond,
+            _ => MembershipLevel.None
+        };
+    }
+
+    // Picker index → enum (form)
+    partial void OnFormPickerTypeIndexChanged(int value)
+    {
+        FormType = value switch
+        {
+            1 => CustomerType.Individual,
+            2 => CustomerType.Business,
+            3 => CustomerType.Government,
+            4 => CustomerType.Fleet,
+            5 => CustomerType.InsuranceCompany,
+            6 => CustomerType.VIP,
+            7 => CustomerType.Potential,
+            8 => CustomerType.Supplier,
+            9 => CustomerType.NonProfit,
+            10 => CustomerType.Dealer,
+            11 => CustomerType.Other,
+            _ => CustomerType.None
+        };
+    }
+
+    partial void OnFormPickerMembershipIndexChanged(int value)
+    {
+        FormMembership = value switch
+        {
+            1 => MembershipLevel.Trial,
+            2 => MembershipLevel.Standard,
+            3 => MembershipLevel.Silver,
+            4 => MembershipLevel.Gold,
+            5 => MembershipLevel.Platinum,
+            6 => MembershipLevel.Diamond,
+            _ => MembershipLevel.None
+        };
+    }
+
+    partial void OnFormPickerGenderIndexChanged(int value)
+    {
+        FormGender = value switch
+        {
+            1 => Gender.Male,
+            2 => Gender.Female,
+            _ => Gender.None
+        };
     }
 
     // ─── Commands ─────────────────────────────────────────────────────────────
@@ -190,7 +282,13 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
                 filterMembership: FilterMembership,
                 ct: ct);
 
-            Debug.WriteLine($"[VM] Load: IsSuccess={result.IsSuccess}, Count={result.Customers.Count}, Total={result.TotalCount}");
+            Debug.WriteLine(
+                $"[VM] Load ok={result.IsSuccess} count={result.Customers.Count} total={result.TotalCount}");
+
+            if (ct.IsCancellationRequested)
+            {
+                return;
+            }
 
             if (result.IsSuccess)
             {
@@ -200,15 +298,10 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
                     Customers.Add(c);
                 }
 
-                if (result.TotalCount >= 0)
-                {
-                    TotalCount = result.TotalCount;
-                    HasNextPage = CurrentPage < TotalPages;
-                }
-                else
-                {
-                    HasNextPage = result.HasMore;
-                }
+                TotalCount = result.TotalCount >= 0 ? result.TotalCount : TotalCount;
+                HasNextPage = result.TotalCount >= 0
+                    ? CurrentPage < TotalPages
+                    : result.HasMore;
             }
             else
             {
@@ -221,7 +314,6 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         }
     }
 
-    /// <summary>Sort theo cột — toggle direction nếu đang chọn cùng cột.</summary>
     [RelayCommand]
     private void SortByColumn(System.String? fieldName)
     {
@@ -234,23 +326,18 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         {
             SortDescending = !SortDescending;
         }
-        else
-        {
-            SortBy = field;
-            SortDescending = false;
-        }
+        else { SortBy = field; SortDescending = false; }
     }
 
     [RelayCommand]
     private void ClearSearch() => SearchTerm = System.String.Empty;
 
-    /// <summary>Xóa tất cả filter (Type + Membership) và reload.</summary>
     [RelayCommand]
     private void ClearFilters()
     {
-        FilterType = CustomerType.None;
-        FilterMembership = MembershipLevel.None;
-        // OnFilterTypeChanged / OnFilterMembershipChanged sẽ tự trigger load
+        PickerFilterTypeIndex = 0;
+        PickerMembershipIndex = 0;
+        // OnPickerXxxChanged tự cập nhật FilterType / FilterMembership
     }
 
     [RelayCommand]
@@ -267,6 +354,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     {
         IsEditing = true;
         SelectedCustomer = customer;
+
         FormName = customer.Name ?? System.String.Empty;
         FormEmail = customer.Email ?? System.String.Empty;
         FormPhone = customer.PhoneNumber ?? System.String.Empty;
@@ -274,9 +362,41 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         FormTaxCode = customer.TaxCode ?? System.String.Empty;
         FormNotes = customer.Notes ?? System.String.Empty;
         FormDateOfBirth = customer.DateOfBirth == default ? null : customer.DateOfBirth;
-        FormType = customer.Type ?? (System.Int32)CustomerType.None;
-        FormMembership = customer.Membership ?? (System.Int32)MembershipLevel.None;
-        FormGender = customer.Gender ?? Gender.None;
+
+        FormPickerTypeIndex = (customer.Type ?? CustomerType.None) switch
+        {
+            CustomerType.Individual => 1,
+            CustomerType.Business => 2,
+            CustomerType.Government => 3,
+            CustomerType.Fleet => 4,
+            CustomerType.InsuranceCompany => 5,
+            CustomerType.VIP => 6,
+            CustomerType.Potential => 7,
+            CustomerType.Supplier => 8,
+            CustomerType.NonProfit => 9,
+            CustomerType.Dealer => 10,
+            CustomerType.Other => 11,
+            _ => 0
+        };
+
+        FormPickerMembershipIndex = (customer.Membership ?? MembershipLevel.None) switch
+        {
+            MembershipLevel.Trial => 1,
+            MembershipLevel.Standard => 2,
+            MembershipLevel.Silver => 3,
+            MembershipLevel.Gold => 4,
+            MembershipLevel.Platinum => 5,
+            MembershipLevel.Diamond => 6,
+            _ => 0
+        };
+
+        FormPickerGenderIndex = (customer.Gender ?? Gender.None) switch
+        {
+            Gender.Male => 1,
+            Gender.Female => 2,
+            _ => 0
+        };
+
         ClearFormError();
         IsFormVisible = true;
     }
@@ -288,10 +408,6 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         ClearForm();
     }
 
-    /// <summary>
-    /// Save form và thực hiện optimistic UI update từ entity được server echo lại.
-    /// Không reload toàn bộ list — cập nhật trực tiếp phần tử trong ObservableCollection.
-    /// </summary>
     [RelayCommand]
     private async System.Threading.Tasks.Task SaveFormAsync()
     {
@@ -393,9 +509,9 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
             {
                 Customers.Remove(toDelete);
                 TotalCount = System.Math.Max(0, TotalCount - 1);
+                SelectedCustomer = null;
                 OnPropertyChanged(nameof(TotalPages));
                 HasNextPage = CurrentPage < TotalPages;
-                SelectedCustomer = null;
 
                 if (Customers.Count == 0 && CurrentPage > 1)
                 {
@@ -421,7 +537,6 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
             CurrentPage++;
         }
     }
-
     [RelayCommand]
     private void PreviousPage()
     {
@@ -430,7 +545,6 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
             CurrentPage--;
         }
     }
-
     [RelayCommand] private void ClosePopup() => IsPopupVisible = false;
 
     [RelayCommand]
@@ -446,17 +560,17 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     {
         _cts?.Cancel();
         _cts?.Dispose();
-        _searchDebounceTimer?.Dispose();
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
     }
 
     // ─── Private Helpers ─────────────────────────────────────────────────────
 
-    /// <summary>Reset về trang 1 nếu đang ở trang > 1, ngược lại reload trực tiếp.</summary>
     private void ResetPageAndLoad()
     {
         if (CurrentPage != 1)
         {
-            CurrentPage = 1; // OnCurrentPageChanged sẽ tự trigger LoadAsync
+            CurrentPage = 1;
         }
         else
         {
@@ -474,9 +588,9 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     {
         FormName = FormEmail = FormPhone = FormAddress = FormTaxCode = FormNotes = System.String.Empty;
         FormDateOfBirth = null;
-        FormType = default;
-        FormMembership = default;
-        FormGender = Gender.None;
+        FormPickerTypeIndex = 0;
+        FormPickerMembershipIndex = 0;
+        FormPickerGenderIndex = 0;
         ClearFormError();
     }
 
@@ -492,95 +606,55 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         HasFormError = true;
     }
 
-    /// <summary>
-    /// Client-side validation đầy đủ:
-    /// tên, email, SĐT, ngày sinh, taxcode theo loại khách hàng.
-    /// </summary>
     private System.Boolean ValidateForm()
     {
         if (System.String.IsNullOrWhiteSpace(FormName))
-        {
-            SetFormError("Tên khách hàng không được để trống.");
-            return false;
-        }
+        { SetFormError("Tên khách hàng không được để trống."); return false; }
 
         if (FormName.Length > 100)
-        {
-            SetFormError("Tên không được vượt quá 100 ký tự.");
-            return false;
-        }
+        { SetFormError("Tên không được vượt quá 100 ký tự."); return false; }
 
         if (!AccountValidation.IsValidEmail(FormEmail))
-        {
-            SetFormError("Email không hợp lệ.");
-            return false;
-        }
+        { SetFormError("Email không hợp lệ."); return false; }
 
         if (!AccountValidation.IsValidVietnamPhoneNumber(FormPhone))
-        {
-            SetFormError("Số điện thoại không hợp lệ (VD: 0901234567).");
-            return false;
-        }
+        { SetFormError("Số điện thoại không hợp lệ (VD: 0901234567)."); return false; }
 
         if (FormDateOfBirth.HasValue)
         {
             if (FormDateOfBirth.Value > System.DateTime.Today)
-            {
-                SetFormError("Ngày sinh không được là ngày trong tương lai.");
-                return false;
-            }
+            { SetFormError("Ngày sinh không được là ngày trong tương lai."); return false; }
 
             if (FormDateOfBirth.Value < System.DateTime.Today.AddYears(-120))
-            {
-                SetFormError("Ngày sinh không hợp lệ.");
-                return false;
-            }
+            { SetFormError("Ngày sinh không hợp lệ."); return false; }
         }
 
         if (FormType == CustomerType.Business && System.String.IsNullOrWhiteSpace(FormTaxCode))
-        {
-            SetFormError("Mã số thuế bắt buộc đối với khách hàng doanh nghiệp.");
-            return false;
-        }
+        { SetFormError("Mã số thuế bắt buộc đối với khách hàng doanh nghiệp."); return false; }
 
         if (FormNotes.Length > 500)
-        {
-            SetFormError("Ghi chú không được vượt quá 500 ký tự.");
-            return false;
-        }
+        { SetFormError("Ghi chú không được vượt quá 500 ký tự."); return false; }
 
         return true;
     }
 
-    private CustomerDataPacket BuildPacketFromForm()
+    private CustomerDataPacket BuildPacketFromForm() => new()
     {
-        CustomerDataPacket data = new()
-        {
-            Name = FormName,
-            Email = FormEmail,
-            PhoneNumber = FormPhone,
-            Address = FormAddress,
-            TaxCode = FormTaxCode,
-            Notes = FormNotes,
-            Type = FormType,
-            Membership = FormMembership,
-            Gender = FormGender,
-            DateOfBirth = FormDateOfBirth ?? default,
-            UpdatedAt = System.DateTime.UtcNow
-        };
-
-        if (IsEditing && SelectedCustomer is not null)
-        {
-            data.CustomerId = SelectedCustomer.CustomerId;
-            data.CreatedAt = SelectedCustomer.CreatedAt;
-        }
-        else
-        {
-            data.CreatedAt = System.DateTime.UtcNow;
-        }
-
-        return data;
-    }
+        Name = FormName,
+        Email = FormEmail,
+        PhoneNumber = FormPhone,
+        Address = FormAddress,
+        TaxCode = FormTaxCode,
+        Notes = FormNotes,
+        Type = FormType,
+        Membership = FormMembership,
+        Gender = FormGender,
+        DateOfBirth = FormDateOfBirth ?? default,
+        UpdatedAt = System.DateTime.UtcNow,
+        CustomerId = IsEditing ? SelectedCustomer?.CustomerId : null,
+        CreatedAt = IsEditing ? SelectedCustomer?.CreatedAt ?? System.DateTime.UtcNow
+                                : System.DateTime.UtcNow
+    };
 
     private System.Int32 IndexOfCustomer(System.Object? customerId)
     {
@@ -605,17 +679,12 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         switch (advice)
         {
             case ProtocolAdvice.DO_NOT_RETRY:
-                ShowPopup(title, message, isRetry: false);
-                break;
-
+                ShowPopup(title, message, isRetry: false); break;
             case ProtocolAdvice.BACKOFF_RETRY:
-                ShowPopup(title, message, isRetry: true);
-                break;
-
+                ShowPopup(title, message, isRetry: true); break;
             default:
                 HasError = true;
-                ErrorMessage = message;
-                break;
+                ErrorMessage = message; break;
         }
     }
 

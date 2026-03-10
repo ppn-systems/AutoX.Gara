@@ -38,11 +38,19 @@ Mục tiêu chính:
 | Localization| VN / EN – resource files / resx / JSON                  |
 | Realtime    | Server push events – pub/sub, notifications             |
 
-## Preview — Login
+## Preview
+
+### Login
 
 Below is a short GIF demonstrating the login flow.
 
 ![Login preview](docs/media/login-preview.gif)
+
+### Customer
+
+Below is a short GIF demonstrating the customer manager flow.
+
+![Login preview](docs/media/customer-preview.gif)
 
 ---
 

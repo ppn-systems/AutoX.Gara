@@ -1,9 +1,9 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
-using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Packets.Customers;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
@@ -14,15 +14,26 @@ using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
 using Nalix.Shared.Frames.Controls;
 
-namespace AutoX.Gara.Frontend.Services;
+namespace AutoX.Gara.Frontend.Services.Customers;
 
 /// <summary>
-/// Real implementation of <see cref="ICustomerService"/>.
-/// All network I/O is encapsulated here; the ViewModel has no knowledge of ReliableClient.
+/// Real implementation của <see cref="ICustomerService"/>.
+/// <para>
+/// Thay đổi so với version cũ:
+/// <list type="bullet">
+///   <item>Inject <see cref="ICustomerQueryCache"/> → cache 30 giây tránh duplicate request.</item>
+///   <item>Write operations tự động gọi <see cref="ICustomerQueryCache.Invalidate"/> sau khi thành công.</item>
+///   <item>Cache hit hoàn toàn bypass network — trả về ngay từ memory.</item>
+/// </list>
+/// </para>
 /// </summary>
 public sealed class CustomerService : ICustomerService
 {
-    private const System.Int32 RequestTimeoutMs = 8_000;
+    private const System.Int32 RequestTimeoutMs = 10_000;
+
+    private readonly ICustomerQueryCache _cache;
+
+    public CustomerService(ICustomerQueryCache cache) => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
     // ─── GetListAsync ─────────────────────────────────────────────────────────
 
@@ -37,6 +48,23 @@ public sealed class CustomerService : ICustomerService
         MembershipLevel filterMembership = MembershipLevel.None,
         System.Threading.CancellationToken ct = default)
     {
+        // ── Cache hit: trả về ngay, không tốn băng thông ─────────────────
+        CustomerCacheKey key = new(
+            page, pageSize,
+            searchTerm ?? System.String.Empty,
+            sortBy, sortDescending,
+            filterType, filterMembership);
+
+        if (_cache.TryGet(key, out CustomerCacheEntry? cached))
+        {
+            System.Boolean hasMore = page * pageSize < cached!.TotalCount;
+            return CustomerListResult.Success(
+                cached.Customers,
+                totalCount: cached.TotalCount,
+                hasMore: hasMore);
+        }
+
+        // ── Cache miss: gửi request lên server ────────────────────────────
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
@@ -68,7 +96,10 @@ public sealed class CustomerService : ICustomerService
                     sub?.Dispose();
                     errSub?.Dispose();
 
-                    System.Boolean hasMore = resp.Customers.Count == pageSize;
+                    // Lưu kết quả vào cache 30s
+                    _cache.Set(key, resp.Customers, resp.TotalCount);
+
+                    System.Boolean hasMore = page * pageSize < resp.TotalCount;
                     tcs.TrySetResult(CustomerListResult.Success(
                         resp.Customers,
                         totalCount: resp.TotalCount,
@@ -81,7 +112,8 @@ public sealed class CustomerService : ICustomerService
                 {
                     sub?.Dispose();
                     errSub?.Dispose();
-                    tcs.TrySetResult(CustomerListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
+                    tcs.TrySetResult(
+                        CustomerListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
                 });
 
             await client.SendAsync(packet, ct).ConfigureAwait(false);
@@ -93,9 +125,10 @@ public sealed class CustomerService : ICustomerService
                 System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
 
             System.Threading.Tasks.Task winner =
-                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
+                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask)
+                    .ConfigureAwait(false);
 
-            cts.Cancel(); // Hủy timeout task để tránh fire sau khi done
+            cts.Cancel();
 
             if (!ReferenceEquals(winner, tcs.Task))
             {
@@ -113,48 +146,71 @@ public sealed class CustomerService : ICustomerService
         catch (System.Exception ex)
         {
             LogException(ex);
-            return CustomerListResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return CustomerListResult.Failure(
+                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     // ─── CreateAsync ──────────────────────────────────────────────────────────
 
     /// <inheritdoc/>
-    public System.Threading.Tasks.Task<CustomerWriteResult> CreateAsync(
+    public async System.Threading.Tasks.Task<CustomerWriteResult> CreateAsync(
         CustomerDataPacket data,
         System.Threading.CancellationToken ct = default)
-        => SendWritePacketAsync((System.UInt16)OpCommand.CUSTOMER_CREATE, data, expectEcho: true, ct);
+    {
+        CustomerWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.CUSTOMER_CREATE, data, expectEcho: true, ct)
+            .ConfigureAwait(false);
+
+        // Dữ liệu mới → cache cũ không còn chính xác
+        if (result.IsSuccess)
+        {
+            _cache.Invalidate();
+        }
+
+        return result;
+    }
 
     // ─── UpdateAsync ──────────────────────────────────────────────────────────
 
     /// <inheritdoc/>
-    public System.Threading.Tasks.Task<CustomerWriteResult> UpdateAsync(
+    public async System.Threading.Tasks.Task<CustomerWriteResult> UpdateAsync(
         CustomerDataPacket data,
         System.Threading.CancellationToken ct = default)
-        => SendWritePacketAsync((System.UInt16)OpCommand.CUSTOMER_UPDATE, data, expectEcho: true, ct);
+    {
+        CustomerWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.CUSTOMER_UPDATE, data, expectEcho: true, ct)
+            .ConfigureAwait(false);
+
+        if (result.IsSuccess)
+        {
+            _cache.Invalidate();
+        }
+
+        return result;
+    }
 
     // ─── DeleteAsync ──────────────────────────────────────────────────────────
 
     /// <inheritdoc/>
-    public System.Threading.Tasks.Task<CustomerWriteResult> DeleteAsync(
+    public async System.Threading.Tasks.Task<CustomerWriteResult> DeleteAsync(
         CustomerDataPacket data,
         System.Threading.CancellationToken ct = default)
-        => SendWritePacketAsync((System.UInt16)OpCommand.CUSTOMER_DELETE, data, expectEcho: false, ct);
+    {
+        CustomerWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.CUSTOMER_DELETE, data, expectEcho: false, ct)
+            .ConfigureAwait(false);
+
+        if (result.IsSuccess)
+        {
+            _cache.Invalidate();
+        }
+
+        return result;
+    }
 
     // ─── Private Helpers ─────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Generic send-and-await cho create/update/delete.
-    /// <para>
-    /// Khi <paramref name="expectEcho"/> = <c>true</c> (create/update), server sẽ
-    /// echo lại <see cref="CustomerDataPacket"/> với Id và timestamps đã được DB xác nhận.
-    /// ViewModel dùng dữ liệu này để update optimistic UI mà không cần reload toàn bộ list.
-    /// </para>
-    /// <para>
-    /// Khi <paramref name="expectEcho"/> = <c>false</c> (delete), server chỉ trả về
-    /// <see cref="Directive"/> NONE để xác nhận thành công.
-    /// </para>
-    /// </summary>
     private static async System.Threading.Tasks.Task<CustomerWriteResult> SendWritePacketAsync(
         System.UInt16 opcode,
         CustomerDataPacket data,
@@ -182,7 +238,6 @@ public sealed class CustomerService : ICustomerService
 
             if (expectEcho)
             {
-                // Server echo lại CustomerDataPacket sau khi lưu thành công
                 echoSub = client.OnOnce<CustomerDataPacket>(
                     predicate: p => p.SequenceId == sq,
                     handler: confirmed =>
@@ -193,7 +248,6 @@ public sealed class CustomerService : ICustomerService
                     });
             }
 
-            // Luôn lắng nghe Directive để bắt lỗi (và success khi delete)
             errSub = client.OnOnce<Directive>(
                 predicate: p => p.SequenceId == sq,
                 handler: resp =>
@@ -202,7 +256,7 @@ public sealed class CustomerService : ICustomerService
                     errSub?.Dispose();
 
                     CustomerWriteResult result = resp.Type == ControlType.NONE
-                        ? CustomerWriteResult.Success()          // Delete thành công
+                        ? CustomerWriteResult.Success()
                         : CustomerWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
 
                     tcs.TrySetResult(result);
@@ -217,9 +271,10 @@ public sealed class CustomerService : ICustomerService
                 System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
 
             System.Threading.Tasks.Task winner =
-                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
+                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask)
+                    .ConfigureAwait(false);
 
-            cts.Cancel(); // Hủy timeout task để tránh fire sau khi done
+            cts.Cancel();
 
             if (!ReferenceEquals(winner, tcs.Task))
             {
@@ -237,7 +292,8 @@ public sealed class CustomerService : ICustomerService
         catch (System.Exception ex)
         {
             LogException(ex);
-            return CustomerWriteResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return CustomerWriteResult.Failure(
+                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 

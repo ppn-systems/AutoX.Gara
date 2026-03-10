@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Enums;
+using AutoX.Gara.Domain.Enums;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;

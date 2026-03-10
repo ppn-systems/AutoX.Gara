@@ -2,9 +2,8 @@
 
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Domain.Enums.Customers;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Shared.Enums;
+using AutoX.Gara.Domain.Models;
+using AutoX.Gara.Infrastructure.Abstractions;
 using AutoX.Gara.Shared.Packets.Customers;
 using AutoX.Gara.Shared.Validation;
 using Nalix.Common.Networking.Abstractions;
@@ -14,24 +13,29 @@ using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security.Enums;
 using Nalix.Network.Connections;
 using Nalix.Shared.Serialization;
-using System.Linq;
+using System.Collections.Generic;
 
 namespace AutoX.Gara.Application.Customers;
 
 /// <summary>
-/// Service quản lý khách hàng, chỉ nhân viên có quyền thao tác các nghiệp vụ CRUD.
+/// Packet controller xử lý tất cả nghiệp vụ CRUD cho Customer.
+/// <para>
+/// Thay đổi so với version cũ:
+/// <list type="bullet">
+///   <item>Inject <see cref="ICustomerRepository"/> thay vì <c>DataRepository&lt;Customer&gt;</c> trực tiếp
+///         → tách Infrastructure khỏi Application layer (DDD).</item>
+///   <item>Dùng <see cref="CustomerListQuery"/> value object thay vì truyền packet thẳng vào query.</item>
+///   <item>Mapping tách thành private static helpers, không lặp code.</item>
+/// </list>
+/// </para>
 /// </summary>
 [PacketController]
-public sealed class CustomerOps(AutoXDbContext context)
+public sealed class CustomerOps(ICustomerRepository customers)
 {
-    private readonly DataRepository<Customer> _customers = new(context);
+    private readonly ICustomerRepository _customers = customers ?? throw new System.ArgumentNullException(nameof(customers));
 
     // ─── GET LIST ─────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Lấy danh sách khách hàng với phân trang, tìm kiếm, lọc và sắp xếp.
-    /// Chỉ trả về khách hàng chưa bị xóa mềm (DeletedAt == null).
-    /// </summary>
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_LIST)]
@@ -41,69 +45,33 @@ public sealed class CustomerOps(AutoXDbContext context)
     {
         if (p is not CustomersQueryPacket packet)
         {
-            System.UInt32 seqId = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.DO_NOT_RETRY, seqId)
-                .ConfigureAwait(false);
+            System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
+                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
             return;
         }
 
         try
         {
-            // ── Soft delete: chỉ lấy bản ghi chưa bị xóa ─────────────────
-            System.Linq.IQueryable<Customer> query = _customers.AsQueryable()
-                .Where(c => c.DeletedAt == null);
+            // Translate packet → domain value object
+            // CustomerOps không còn biết về IQueryable hay EF Core
+            CustomerListQuery query = new(
+                Page: packet.Page,
+                PageSize: packet.PageSize,
+                SearchTerm: packet.SearchTerm,
+                SortBy: packet.SortBy,
+                SortDescending: packet.SortDescending,
+                FilterType: packet.FilterType,
+                FilterMembership: packet.FilterMembership);
 
-            // ── Search ────────────────────────────────────────────────────
-            if (!System.String.IsNullOrWhiteSpace(packet.SearchTerm))
-            {
-                System.String term = packet.SearchTerm.Trim().ToLowerInvariant();
-                query = query.Where(c =>
-                    (c.Name != null && c.Name.ToLower().Contains(term)) ||
-                    (c.Email != null && c.Email.ToLower().Contains(term)) ||
-                    (c.PhoneNumber != null && c.PhoneNumber.Contains(term)) ||
-                    (c.Notes != null && c.Notes.ToLower().Contains(term)));
-            }
-
-            // ── Filter theo CustomerType ───────────────────────────────────
-            if (packet.FilterType != CustomerType.None)
-            {
-                query = query.Where(c => c.Type == packet.FilterType);
-            }
-
-            // ── Filter theo MembershipLevel ───────────────────────────────
-            if (packet.FilterMembership != MembershipLevel.None)
-            {
-                query = query.Where(c => c.Membership == packet.FilterMembership);
-            }
-
-            // ── Sort ───────────────────────────────────────────────────────
-            query = (packet.SortBy, packet.SortDescending) switch
-            {
-                (CustomerSortField.Name, false) => query.OrderBy(c => c.Name),
-                (CustomerSortField.Name, true) => query.OrderByDescending(c => c.Name),
-                (CustomerSortField.Email, false) => query.OrderBy(c => c.Email),
-                (CustomerSortField.Email, true) => query.OrderByDescending(c => c.Email),
-                (CustomerSortField.CreatedAt, false) => query.OrderBy(c => c.CreatedAt),
-                (CustomerSortField.CreatedAt, true) => query.OrderByDescending(c => c.CreatedAt),
-                (CustomerSortField.UpdatedAt, false) => query.OrderBy(c => c.UpdatedAt),
-                (CustomerSortField.UpdatedAt, true) => query.OrderByDescending(c => c.UpdatedAt),
-                _ => query.OrderByDescending(c => c.CreatedAt)
-            };
-
-            System.Int32 totalCount = await _customers.CountAsync(query).ConfigureAwait(false);
-
-            System.Collections.Generic.List<Customer> customers =
-                await _customers.GetPagedAsync(query, packet.Page, packet.PageSize)
-                                .ConfigureAwait(false) ?? [];
-
-            System.Collections.Generic.List<CustomerDataPacket> customerPackets =
-                customers.ConvertAll(c => MapToPacket(c, sequenceId: 0));
+            (List<Customer> items, System.Int32 totalCount) =
+                await _customers.GetPageAsync(query).ConfigureAwait(false);
 
             CustomersPacket response = new()
             {
+                SequenceId = packet.SequenceId,
                 TotalCount = totalCount,
-                Customers = customerPackets,
-                SequenceId = packet.SequenceId
+                Customers = items.ConvertAll(c => MapToPacket(c, sequenceId: 0))
             };
 
             System.Byte[] buffer = LiteSerializer.Serialize(response);
@@ -114,35 +82,29 @@ public sealed class CustomerOps(AutoXDbContext context)
                 $"BufferLen={buffer.Length}");
 
             System.Boolean sent = await connection.TCP.SendAsync(buffer).ConfigureAwait(false);
-            System.Console.WriteLine($"[SERVER] SendAsync result: {sent}");
 
             if (!sent)
             {
-                await SendErrorAsync(
-                    connection, ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
-                .ConfigureAwait(false);
+                await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
         }
         catch (System.Exception ex)
         {
-            System.Console.WriteLine($"[SERVER] EXCEPTION: {ex.GetType().Name}: {ex.Message}");
+            System.Console.WriteLine($"[SERVER] GetList EXCEPTION: {ex.GetType().Name}: {ex.Message}");
             System.Console.WriteLine($"[SERVER] StackTrace: {ex.StackTrace}");
             if (ex.InnerException is not null)
             {
                 System.Console.WriteLine($"[SERVER] Inner: {ex.InnerException.Message}");
             }
 
-            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR, ProtocolAdvice.RETRY, packet.SequenceId)
-                .ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR,
+                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
 
     // ─── CREATE ───────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Tạo mới khách hàng và trả về entity đã được lưu (bao gồm Id, timestamps từ DB).
-    /// </summary>
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_CREATE)]
@@ -152,27 +114,26 @@ public sealed class CustomerOps(AutoXDbContext context)
     {
         if (!TryParseCustomerPacket(p, out CustomerDataPacket packet, out System.UInt32 fallbackSeq))
         {
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.DO_NOT_RETRY, fallbackSeq)
-                .ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
+                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
             return;
         }
 
         if (packet!.DateOfBirth != default && packet.DateOfBirth > System.DateTime.UtcNow)
         {
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId)
-                .ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
             return;
         }
 
-        // Kiểm tra trùng lặp — chỉ xét bản ghi chưa bị soft delete
-        System.Boolean existed = await _customers.AnyAsync(
-            c => c.DeletedAt == null && (c.Email == packet.Email || c.PhoneNumber == packet.PhoneNumber))
+        System.Boolean existed = await _customers
+            .ExistsByContactAsync(packet.Email, packet.PhoneNumber)
             .ConfigureAwait(false);
 
         if (existed)
         {
-            await SendErrorAsync(connection, ProtocolReason.ALREADY_EXISTS, ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId)
-                .ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.ALREADY_EXISTS,
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
             return;
         }
 
@@ -204,17 +165,13 @@ public sealed class CustomerOps(AutoXDbContext context)
         }
         catch (System.Exception)
         {
-            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR, ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
-                .ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR,
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
 
     // ─── UPDATE ───────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Cập nhật thông tin khách hàng và trả về entity đã được lưu.
-    /// Không cho phép update khách hàng đã bị xóa mềm.
-    /// </summary>
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_UPDATE)]
@@ -224,25 +181,26 @@ public sealed class CustomerOps(AutoXDbContext context)
     {
         if (!TryParseCustomerPacket(p, out CustomerDataPacket packet, out System.UInt32 fallbackSeq))
         {
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.DO_NOT_RETRY, fallbackSeq)
-                .ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
+                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
             return;
         }
 
         if (packet!.DateOfBirth != default && packet.DateOfBirth > System.DateTime.UtcNow)
         {
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId)
-                .ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
             return;
         }
 
-        Customer existing = await _customers.GetByIdAsync(packet.CustomerId).ConfigureAwait(false);
+        Customer existing = await _customers
+            .GetByIdAsync(packet.CustomerId!.Value)
+            .ConfigureAwait(false);
 
-        // Không cho phép update nếu đã bị xóa mềm
-        if (existing is null || existing.DeletedAt != null)
+        if (existing is null)
         {
-            await SendErrorAsync(connection, ProtocolReason.NOT_FOUND, ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
-                .ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.NOT_FOUND,
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             return;
         }
 
@@ -268,18 +226,13 @@ public sealed class CustomerOps(AutoXDbContext context)
         }
         catch (System.Exception)
         {
-            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR, ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
-                .ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR,
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
 
     // ─── DELETE (Soft) ────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Xóa mềm khách hàng: ghi lại <c>DeletedAt = UtcNow</c>.
-    /// Dữ liệu vẫn còn trong DB để bảo toàn lịch sử giao dịch liên quan.
-    /// Yêu cầu quyền SUPERVISOR.
-    /// </summary>
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
     [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_DELETE)]
@@ -290,23 +243,24 @@ public sealed class CustomerOps(AutoXDbContext context)
         if (p is not CustomerDataPacket packet || packet.CustomerId == null)
         {
             System.UInt32 seqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET, ProtocolAdvice.DO_NOT_RETRY, seqId)
-                .ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
+                ProtocolAdvice.DO_NOT_RETRY, seqId).ConfigureAwait(false);
             return;
         }
 
         try
         {
-            Customer existing = await _customers.GetByIdAsync(packet.CustomerId).ConfigureAwait(false);
+            Customer existing = await _customers
+                .GetByIdAsync(packet.CustomerId.Value)
+                .ConfigureAwait(false);
 
-            if (existing is null || existing.DeletedAt != null)
+            if (existing is null)
             {
-                await SendErrorAsync(connection, ProtocolReason.NOT_FOUND, ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
-                    .ConfigureAwait(false);
+                await SendErrorAsync(connection, ProtocolReason.NOT_FOUND,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
                 return;
             }
 
-            // Soft delete — không xóa cứng khỏi DB
             System.DateTime now = System.DateTime.UtcNow;
             existing.DeletedAt = now;
             existing.UpdatedAt = now;
@@ -315,15 +269,13 @@ public sealed class CustomerOps(AutoXDbContext context)
             await _customers.SaveChangesAsync().ConfigureAwait(false);
 
             await connection.SendAsync(
-                ControlType.NONE,
-                ProtocolReason.NONE,
-                ProtocolAdvice.NONE,
-                packet.SequenceId).ConfigureAwait(false);
+                ControlType.NONE, ProtocolReason.NONE,
+                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
-            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR, ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId)
-                .ConfigureAwait(false);
+            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR,
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
 
@@ -348,7 +300,6 @@ public sealed class CustomerOps(AutoXDbContext context)
         return true;
     }
 
-    /// <summary>Maps a <see cref="Customer"/> entity to a <see cref="CustomerDataPacket"/>.</summary>
     private static CustomerDataPacket MapToPacket(Customer c, System.UInt32 sequenceId) => new()
     {
         SequenceId = sequenceId,

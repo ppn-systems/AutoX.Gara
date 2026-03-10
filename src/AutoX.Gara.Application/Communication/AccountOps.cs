@@ -1,8 +1,9 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Identity;
+using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Shared.Enums;
+using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Packets.Auth;
 using AutoX.Gara.Shared.Validation;
 using Nalix.Common.Diagnostics.Abstractions;

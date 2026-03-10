@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-namespace AutoX.Gara.Shared.Enums;
+namespace AutoX.Gara.Domain.Enums;
 
 public enum OpCommand : System.UInt16
 {

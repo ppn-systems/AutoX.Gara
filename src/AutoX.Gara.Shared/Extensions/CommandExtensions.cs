@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Enums;
+using AutoX.Gara.Domain.Enums;
 
 namespace AutoX.Gara.Shared.Extensions;
 

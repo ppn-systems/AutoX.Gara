@@ -1,0 +1,669 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Name="PageRoot"
+    x:Class="AutoX.Gara.Frontend.Views.CustomersPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Packets.Customers;assembly=AutoX.Gara.Shared"
+    xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
+    x:DataType="vm:CustomersViewModel"
+    Title="Quản lý khách hàng"
+    BackgroundColor="{AppThemeBinding Light=#F0F2F5, Dark=#111827}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:CustomerTypeToColorConverter   x:Key="TypeToColor"   />
+            <conv:CustomerTypeToLabelConverter   x:Key="TypeToLabel"   />
+            <conv:MembershipToColorConverter     x:Key="MemberToColor" />
+            <conv:MembershipToLabelConverter     x:Key="MemberToLabel" />
+            <conv:InitialsConverter              x:Key="ToInitials"    />
+            <conv:InitialsBackgroundConverter    x:Key="InitialsBg"    />
+            <conv:DateTimeToShortStringConverter x:Key="ToShortDate"   />
+            <conv:StringNotEmptyConverter        x:Key="NotEmpty"      />
+            <conv:InverseBoolConverter           x:Key="InverseBool"   />
+
+            <Style x:Key="CardStyle" TargetType="Border">
+                <Setter Property="BackgroundColor"  Value="{AppThemeBinding Light=White, Dark=#1F2937}" />
+                <Setter Property="StrokeShape"      Value="RoundRectangle 12" />
+                <Setter Property="Stroke"           Value="{AppThemeBinding Light=#E5E7EB, Dark=#374151}" />
+                <Setter Property="StrokeThickness"  Value="1" />
+                <Setter Property="Shadow">
+                    <Setter.Value>
+                        <Shadow Brush="#20000000" Offset="0,2" Radius="8" Opacity="0.12" />
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="BadgeStyle" TargetType="Border">
+                <Setter Property="StrokeShape"      Value="RoundRectangle 5" />
+                <Setter Property="StrokeThickness"  Value="0"   />
+                <Setter Property="Padding"          Value="7,3" />
+                <Setter Property="VerticalOptions"  Value="Center" />
+                <Setter Property="InputTransparent" Value="True" />
+            </Style>
+
+            <Style x:Key="SubLabel" TargetType="Label">
+                <Setter Property="FontSize"   Value="12" />
+                <Setter Property="TextColor"  Value="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+                <Setter Property="VerticalOptions" Value="Center" />
+            </Style>
+
+            <Style x:Key="FormLabel" TargetType="Label">
+                <Setter Property="FontSize"       Value="13" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="TextColor"      Value="{AppThemeBinding Light=#374151, Dark=#D1D5DB}" />
+                <Setter Property="Margin"         Value="0,8,0,4" />
+            </Style>
+
+            <Style x:Key="FormEntry" TargetType="Entry">
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#F9FAFB, Dark=#111827}" />
+                <Setter Property="TextColor"       Value="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                <Setter Property="PlaceholderColor" Value="#9CA3AF" />
+                <Setter Property="HeightRequest"   Value="44" />
+            </Style>
+
+            <Style x:Key="FormPickerBorder" TargetType="Border">
+                <Setter Property="StrokeShape"    Value="RoundRectangle 8" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="Stroke"         Value="{AppThemeBinding Light=#D1D5DB, Dark=#374151}" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#F9FAFB, Dark=#111827}" />
+                <Setter Property="HeightRequest"  Value="44" />
+            </Style>
+
+            <Style x:Key="ActionBtnEdit" TargetType="Button">
+                <Setter Property="WidthRequest"   Value="38" />
+                <Setter Property="HeightRequest"  Value="38" />
+                <Setter Property="CornerRadius"   Value="8"  />
+                <Setter Property="FontSize"       Value="16" />
+                <Setter Property="Padding"        Value="0"  />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#EFF6FF, Dark=#1E3A5F}" />
+                <Setter Property="TextColor"      Value="{AppThemeBinding Light=#2563EB, Dark=#93C5FD}" />
+            </Style>
+
+            <Style x:Key="ActionBtnDelete" TargetType="Button">
+                <Setter Property="WidthRequest"   Value="38" />
+                <Setter Property="HeightRequest"  Value="38" />
+                <Setter Property="CornerRadius"   Value="8"  />
+                <Setter Property="FontSize"       Value="16" />
+                <Setter Property="Padding"        Value="0"  />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FEF2F2, Dark=#4C1D1D}" />
+                <Setter Property="TextColor"      Value="{AppThemeBinding Light=#DC2626, Dark=#FCA5A5}" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <!-- Toàn bộ trang nằm trong Grid để overlay form/dialog chồng lên được -->
+    <Grid>
+
+        <!-- ════════════════════════════════════════════════════
+             MAIN CONTENT
+             ════════════════════════════════════════════════════ -->
+        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="0">
+
+            <!-- ROW 0 — Search + Thêm -->
+            <Border Grid.Row="0" Style="{StaticResource CardStyle}"
+                    Margin="12,12,12,6" Padding="12,10">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <Border Grid.Column="0"
+                            BackgroundColor="{AppThemeBinding Light=#F9FAFB, Dark=#111827}"
+                            StrokeShape="RoundRectangle 8" StrokeThickness="1"
+                            Stroke="{AppThemeBinding Light=#D1D5DB, Dark=#374151}"
+                            Padding="10,0">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                            <Label Grid.Column="0" Text="🔍" FontSize="14"
+                                   VerticalOptions="Center" InputTransparent="True" />
+                            <Entry Grid.Column="1"
+                                   Text="{Binding SearchTerm}"
+                                   Placeholder="Tìm theo tên, email, SĐT..."
+                                   PlaceholderColor="#9CA3AF"
+                                   BackgroundColor="Transparent"
+                                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                   HeightRequest="40" VerticalOptions="Center"
+                                   ReturnType="Search"
+                                   ClearButtonVisibility="WhileEditing" />
+                        </Grid>
+                    </Border>
+
+                    <Button Grid.Column="1" Text="＋ Thêm"
+                            Command="{Binding OpenCreateFormCommand}"
+                            BackgroundColor="#2563EB" TextColor="White"
+                            FontAttributes="Bold" FontSize="14"
+                            CornerRadius="8" HeightRequest="40" Padding="14,0" />
+                </Grid>
+            </Border>
+
+            <!-- ROW 1 — Filter -->
+            <Border Grid.Row="1" Style="{StaticResource CardStyle}"
+                    Margin="12,0,12,10" Padding="12,10" MinimumHeightRequest="72">
+                <ScrollView Orientation="Horizontal"
+                            HorizontalScrollBarVisibility="Never"
+                            VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+
+                        <Label Text="Lọc:" Style="{StaticResource SubLabel}"
+                               FontAttributes="Bold" VerticalOptions="Center" />
+
+                        <!-- Picker Loại KH — SelectedIndex bind int, OnPickerFilterTypeIndexChanged → FilterType enum -->
+                        <Border Style="{StaticResource FormPickerBorder}"
+                                WidthRequest="160">
+                            <Picker SelectedIndex="{Binding PickerFilterTypeIndex}"
+                                    TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                    BackgroundColor="Transparent"
+                                    VerticalOptions="Center" HeightRequest="44" Margin="8,0">
+                                <Picker.Items>
+                                    <x:String>Tất cả loại</x:String>
+                                    <x:String>Cá nhân</x:String>
+                                    <x:String>Doanh nghiệp</x:String>
+                                    <x:String>Chính phủ</x:String>
+                                    <x:String>Đội xe</x:String>
+                                    <x:String>Bảo hiểm</x:String>
+                                    <x:String>VIP</x:String>
+                                    <x:String>Tiềm năng</x:String>
+                                    <x:String>Nhà cung cấp</x:String>
+                                    <x:String>Phi lợi nhuận</x:String>
+                                    <x:String>Đại lý</x:String>
+                                    <x:String>Khác</x:String>
+                                </Picker.Items>
+                            </Picker>
+                        </Border>
+
+                        <!-- Picker Hạng thành viên -->
+                        <Border Style="{StaticResource FormPickerBorder}"
+                                WidthRequest="175">
+                            <Picker SelectedIndex="{Binding PickerMembershipIndex}"
+                                    TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                    BackgroundColor="Transparent"
+                                    VerticalOptions="Center" HeightRequest="44" Margin="8,0">
+                                <Picker.Items>
+                                    <x:String>Tất cả hạng</x:String>
+                                    <x:String>Trial</x:String>
+                                    <x:String>Standard</x:String>
+                                    <x:String>Silver</x:String>
+                                    <x:String>Gold</x:String>
+                                    <x:String>Platinum</x:String>
+                                    <x:String>Diamond</x:String>
+                                </Picker.Items>
+                            </Picker>
+                        </Border>
+
+                        <Button Text="✕  Bỏ lọc"
+                                Command="{Binding ClearFiltersCommand}"
+                                IsVisible="{Binding HasActiveFilters}"
+                                BackgroundColor="#FEE2E2" TextColor="#DC2626"
+                                FontSize="13" FontAttributes="Bold"
+                                CornerRadius="8" HeightRequest="36" Padding="12,0" />
+
+                        <Label VerticalOptions="Center" Margin="6,0,0,0"
+                               InputTransparent="True">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="{Binding TotalCount}" FontAttributes="Bold"
+                                          TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                          FontSize="13" />
+                                    <Span Text=" kết quả"
+                                          TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+                                          FontSize="13" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                    </HorizontalStackLayout>
+                </ScrollView>
+            </Border>
+
+            <!-- ROW 2 — Danh sách -->
+            <Grid Grid.Row="2">
+
+                <!-- CollectionView -->
+                <CollectionView ItemsSource="{Binding Customers}"
+                                IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}"
+                                Margin="12,0" VerticalOptions="Fill">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="pkt:CustomerDataPacket">
+                            <Border Style="{StaticResource CardStyle}"
+                                    Margin="0,0,0,10" Padding="14,12">
+                                <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="12">
+
+                                    <!-- Avatar -->
+                                    <Border Grid.Column="0"
+                                            BackgroundColor="{Binding Name, Converter={StaticResource InitialsBg}}"
+                                            StrokeShape="RoundRectangle 22" StrokeThickness="0"
+                                            WidthRequest="44" HeightRequest="44"
+                                            VerticalOptions="Start" InputTransparent="True">
+                                        <Label Text="{Binding Name, Converter={StaticResource ToInitials}}"
+                                               TextColor="White" FontSize="17" FontAttributes="Bold"
+                                               HorizontalOptions="Center" VerticalOptions="Center" />
+                                    </Border>
+
+                                    <!-- Info -->
+                                    <VerticalStackLayout Grid.Column="1" Spacing="4"
+                                                         InputTransparent="True">
+                                        <HorizontalStackLayout Spacing="7">
+                                            <Label Text="{Binding Name}"
+                                                   FontSize="15" FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                                   VerticalOptions="Center"
+                                                   LineBreakMode="TailTruncation" MaxLines="1" />
+                                            <Border Style="{StaticResource BadgeStyle}"
+                                                    BackgroundColor="{Binding Type, Converter={StaticResource TypeToColor}}">
+                                                <Label Text="{Binding Type, Converter={StaticResource TypeToLabel}}"
+                                                       FontSize="11" FontAttributes="Bold" TextColor="White" />
+                                            </Border>
+                                            <Border Style="{StaticResource BadgeStyle}"
+                                                    BackgroundColor="{Binding Membership, Converter={StaticResource MemberToColor}}">
+                                                <Label Text="{Binding Membership, Converter={StaticResource MemberToLabel}}"
+                                                       FontSize="11" FontAttributes="Bold" TextColor="White" />
+                                            </Border>
+                                        </HorizontalStackLayout>
+                                        <HorizontalStackLayout Spacing="5">
+                                            <Label Text="📞" FontSize="12" VerticalOptions="Center" />
+                                            <Label Text="{Binding PhoneNumber}" Style="{StaticResource SubLabel}" />
+                                        </HorizontalStackLayout>
+                                        <HorizontalStackLayout Spacing="5">
+                                            <Label Text="✉" FontSize="12" VerticalOptions="Center" />
+                                            <Label Text="{Binding Email}" Style="{StaticResource SubLabel}"
+                                                   LineBreakMode="TailTruncation" MaxLines="1" />
+                                        </HorizontalStackLayout>
+                                        <HorizontalStackLayout Spacing="5"
+                                            IsVisible="{Binding Address, Converter={StaticResource NotEmpty}}">
+                                            <Label Text="📍" FontSize="12" VerticalOptions="Center" />
+                                            <Label Text="{Binding Address}" Style="{StaticResource SubLabel}"
+                                                   LineBreakMode="TailTruncation" MaxLines="1" />
+                                        </HorizontalStackLayout>
+                                        <HorizontalStackLayout Spacing="5">
+                                            <Label Text="🗓" FontSize="12" VerticalOptions="Center" />
+                                            <Label Text="{Binding CreatedAt,
+                                                       Converter={StaticResource ToShortDate},
+                                                       StringFormat='Tham gia {0}'}"
+                                                   Style="{StaticResource SubLabel}" />
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+
+                                    <!--
+                                        FIX COMMAND: x:Reference PageRoot
+                                        RelativeSource AncestorType KHÔNG hoạt động
+                                        trong CollectionView DataTemplate trên MAUI Windows.
+                                    -->
+                                    <VerticalStackLayout Grid.Column="2"
+                                                         Spacing="6" VerticalOptions="Center">
+                                        <Button Text="✏"
+                                                Style="{StaticResource ActionBtnEdit}"
+                                                Command="{Binding Source={x:Reference PageRoot},
+                                                                  Path=BindingContext.OpenEditFormCommand}"
+                                                CommandParameter="{Binding .}" />
+                                        <Button Text="🗑"
+                                                Style="{StaticResource ActionBtnDelete}"
+                                                Command="{Binding Source={x:Reference PageRoot},
+                                                                  Path=BindingContext.RequestDeleteCommand}"
+                                                CommandParameter="{Binding .}" />
+                                    </VerticalStackLayout>
+
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Loading -->
+                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                                   InputTransparent="True" Color="#2563EB"
+                                   HeightRequest="48" WidthRequest="48"
+                                   VerticalOptions="Center" HorizontalOptions="Center" />
+
+                <!-- Empty -->
+                <VerticalStackLayout IsVisible="{Binding IsEmpty}" InputTransparent="True"
+                                     VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+                    <Label Text="👤" FontSize="52" HorizontalOptions="Center" />
+                    <Label Text="Không có khách hàng nào"
+                           FontSize="17" FontAttributes="Bold" HorizontalOptions="Center"
+                           TextColor="{AppThemeBinding Light=#374151, Dark=#D1D5DB}" />
+                    <Label Text="Nhấn ＋ Thêm để tạo khách hàng đầu tiên"
+                           FontSize="13" HorizontalOptions="Center" TextColor="#9CA3AF" />
+                </VerticalStackLayout>
+
+                <!-- Error banner -->
+                <Border IsVisible="{Binding HasError}" InputTransparent="True"
+                        BackgroundColor="#FEF2F2" StrokeShape="RoundRectangle 8"
+                        StrokeThickness="1" Stroke="#FECACA"
+                        Margin="12,8" Padding="14,10" VerticalOptions="Start">
+                    <Label Text="{Binding ErrorMessage}" TextColor="#B91C1C" FontSize="13" />
+                </Border>
+            </Grid>
+
+            <!-- ROW 3 — Pagination -->
+            <Border Grid.Row="3" Style="{StaticResource CardStyle}"
+                    Margin="12,6,12,12" Padding="10,8">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <Button Grid.Column="0" Text="‹  Trước"
+                            Command="{Binding PreviousPageCommand}"
+                            IsEnabled="{Binding HasPreviousPage}"
+                            BackgroundColor="{AppThemeBinding Light=#EFF6FF, Dark=#1E3A5F}"
+                            TextColor="{AppThemeBinding Light=#2563EB, Dark=#93C5FD}"
+                            FontSize="13" CornerRadius="8" HeightRequest="36" Padding="12,0" />
+
+                    <HorizontalStackLayout Grid.Column="1"
+                                           HorizontalOptions="Center" VerticalOptions="Center"
+                                           Spacing="3" InputTransparent="True">
+                        <Label Text="Trang" Style="{StaticResource SubLabel}" VerticalOptions="Center" />
+                        <Label Text="{Binding CurrentPage}" FontSize="14" FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                               VerticalOptions="Center" />
+                        <Label Text="/" Style="{StaticResource SubLabel}" VerticalOptions="Center" />
+                        <Label Text="{Binding TotalPages}"
+                               Style="{StaticResource SubLabel}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                    <Button Grid.Column="2" Text="Tiếp  ›"
+                            Command="{Binding NextPageCommand}"
+                            IsEnabled="{Binding HasNextPage}"
+                            BackgroundColor="{AppThemeBinding Light=#EFF6FF, Dark=#1E3A5F}"
+                            TextColor="{AppThemeBinding Light=#2563EB, Dark=#93C5FD}"
+                            FontSize="13" CornerRadius="8" HeightRequest="36" Padding="12,0" />
+                </Grid>
+            </Border>
+
+        </Grid>
+        <!-- /main content -->
+
+        <!-- ════════════════════════════════════════════════════
+             OVERLAY: FORM THÊM / SỬA
+             IsVisible bind vào IsFormVisible — chồng lên toàn trang
+             ════════════════════════════════════════════════════ -->
+        <Grid IsVisible="{Binding IsFormVisible}" ZIndex="20">
+            <!-- Backdrop mờ -->
+            <BoxView BackgroundColor="#80000000"
+                     InputTransparent="False">
+                <BoxView.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding CloseFormCommand}" />
+                </BoxView.GestureRecognizers>
+            </BoxView>
+
+            <!-- Dialog -->
+            <Border Style="{StaticResource CardStyle}"
+                    Margin="20,0"
+                    MaximumWidthRequest="520"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center"
+                    Padding="24,20">
+                <ScrollView>
+                    <VerticalStackLayout Spacing="0">
+
+                        <!-- Header -->
+                        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+                            <Label Grid.Column="0"
+                                   Text="{Binding FormTitle}"
+                                   FontSize="18" FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                   VerticalOptions="Center" />
+                            <Button Grid.Column="1" Text="✕"
+                                    Command="{Binding CloseFormCommand}"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+                                    FontSize="18" Padding="4" WidthRequest="36" HeightRequest="36" />
+                        </Grid>
+
+                        <!-- Error form -->
+                        <Border IsVisible="{Binding HasFormError}"
+                                BackgroundColor="#FEF2F2" StrokeShape="RoundRectangle 8"
+                                StrokeThickness="1" Stroke="#FECACA"
+                                Padding="12,8" Margin="0,0,0,12">
+                            <Label Text="{Binding FormErrorMessage}"
+                                   TextColor="#B91C1C" FontSize="13" />
+                        </Border>
+
+                        <!-- Tên -->
+                        <Label Text="Họ và tên *" Style="{StaticResource FormLabel}" />
+                        <Border StrokeShape="RoundRectangle 8" StrokeThickness="1"
+                                Stroke="{AppThemeBinding Light=#D1D5DB, Dark=#374151}"
+                                Padding="12,0">
+                            <Entry Text="{Binding FormName}" Placeholder="Nhập họ và tên"
+                                   Style="{StaticResource FormEntry}" />
+                        </Border>
+
+                        <!-- SĐT + Email -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="Số điện thoại *" Style="{StaticResource FormLabel}" />
+                                <Border StrokeShape="RoundRectangle 8" StrokeThickness="1"
+                                        Stroke="{AppThemeBinding Light=#D1D5DB, Dark=#374151}"
+                                        Padding="12,0">
+                                    <Entry Text="{Binding FormPhone}" Placeholder="0901234567"
+                                           Keyboard="Telephone" Style="{StaticResource FormEntry}" />
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Email *" Style="{StaticResource FormLabel}" />
+                                <Border StrokeShape="RoundRectangle 8" StrokeThickness="1"
+                                        Stroke="{AppThemeBinding Light=#D1D5DB, Dark=#374151}"
+                                        Padding="12,0">
+                                    <Entry Text="{Binding FormEmail}" Placeholder="email@example.com"
+                                           Keyboard="Email" Style="{StaticResource FormEntry}" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Loại KH + Hạng -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="Loại khách hàng" Style="{StaticResource FormLabel}" />
+                                <Border Style="{StaticResource FormPickerBorder}">
+                                    <Picker SelectedIndex="{Binding FormPickerTypeIndex}"
+                                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                            BackgroundColor="Transparent"
+                                            VerticalOptions="Center" HeightRequest="44" Margin="8,0">
+                                        <Picker.Items>
+                                            <x:String>-- Chọn loại --</x:String>
+                                            <x:String>Cá nhân</x:String>
+                                            <x:String>Doanh nghiệp</x:String>
+                                            <x:String>Cơ quan chính phủ</x:String>
+                                            <x:String>Đội xe (Fleet)</x:String>
+                                            <x:String>Công ty bảo hiểm</x:String>
+                                            <x:String>Khách VIP</x:String>
+                                            <x:String>Tiềm năng</x:String>
+                                            <x:String>Nhà cung cấp</x:String>
+                                            <x:String>Phi lợi nhuận</x:String>
+                                            <x:String>Đại lý</x:String>
+                                            <x:String>Khác</x:String>
+                                        </Picker.Items>
+                                    </Picker>
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Hạng thành viên" Style="{StaticResource FormLabel}" />
+                                <Border Style="{StaticResource FormPickerBorder}">
+                                    <Picker SelectedIndex="{Binding FormPickerMembershipIndex}"
+                                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                            BackgroundColor="Transparent"
+                                            VerticalOptions="Center" HeightRequest="44" Margin="8,0">
+                                        <Picker.Items>
+                                            <x:String>-- Chọn hạng --</x:String>
+                                            <x:String>Trial (Dùng thử)</x:String>
+                                            <x:String>Standard (Thường)</x:String>
+                                            <x:String>Silver (Bạc)</x:String>
+                                            <x:String>Gold (Vàng)</x:String>
+                                            <x:String>Platinum (Bạch kim)</x:String>
+                                            <x:String>Diamond (Kim cương)</x:String>
+                                        </Picker.Items>
+                                    </Picker>
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Địa chỉ -->
+                        <Label Text="Địa chỉ" Style="{StaticResource FormLabel}" />
+                        <Border StrokeShape="RoundRectangle 8" StrokeThickness="1"
+                                Stroke="{AppThemeBinding Light=#D1D5DB, Dark=#374151}"
+                                Padding="12,0">
+                            <Entry Text="{Binding FormAddress}" Placeholder="Nhập địa chỉ"
+                                   Style="{StaticResource FormEntry}" />
+                        </Border>
+
+                        <!-- Mã số thuế (chỉ cho doanh nghiệp) -->
+                        <Label Text="Mã số thuế" Style="{StaticResource FormLabel}" />
+                        <Border StrokeShape="RoundRectangle 8" StrokeThickness="1"
+                                Stroke="{AppThemeBinding Light=#D1D5DB, Dark=#374151}"
+                                Padding="12,0">
+                            <Entry Text="{Binding FormTaxCode}" Placeholder="Nhập MST (nếu có)"
+                                   Style="{StaticResource FormEntry}" />
+                        </Border>
+
+                        <!-- Giới tính + Ngày sinh -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="Giới tính" Style="{StaticResource FormLabel}" />
+                                <Border Style="{StaticResource FormPickerBorder}">
+                                    <Picker SelectedIndex="{Binding FormPickerGenderIndex}"
+                                            TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                            BackgroundColor="Transparent"
+                                            VerticalOptions="Center" HeightRequest="44" Margin="8,0">
+                                        <Picker.Items>
+                                            <x:String>-- Chọn --</x:String>
+                                            <x:String>Nam</x:String>
+                                            <x:String>Nữ</x:String>
+                                            <x:String>Khác</x:String>
+                                        </Picker.Items>
+                                    </Picker>
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Ngày sinh" Style="{StaticResource FormLabel}" />
+                                <Border StrokeShape="RoundRectangle 8" StrokeThickness="1"
+                                        Stroke="{AppThemeBinding Light=#D1D5DB, Dark=#374151}"
+                                        Padding="12,4"
+                                        HeightRequest="44">
+                                    <DatePicker Date="{Binding FormDateOfBirth, TargetNullValue={x:Static sys:DateTime.Today}}"
+                                                Format="dd/MM/yyyy"
+                                                TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                                BackgroundColor="Transparent"
+                                                VerticalOptions="Center"
+                                                xmlns:sys="clr-namespace:System;assembly=netstandard" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Ghi chú -->
+                        <Label Text="Ghi chú" Style="{StaticResource FormLabel}" />
+                        <Border StrokeShape="RoundRectangle 8" StrokeThickness="1"
+                                Stroke="{AppThemeBinding Light=#D1D5DB, Dark=#374151}"
+                                Padding="12,8">
+                            <Editor Text="{Binding FormNotes}"
+                                    Placeholder="Nhập ghi chú..."
+                                    PlaceholderColor="#9CA3AF"
+                                    TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                    BackgroundColor="Transparent"
+                                    HeightRequest="80"
+                                    AutoSize="Disabled" />
+                        </Border>
+
+                        <!-- Buttons -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,20,0,4">
+                            <Button Grid.Column="0" Text="Hủy"
+                                    Command="{Binding CloseFormCommand}"
+                                    BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#374151}"
+                                    TextColor="{AppThemeBinding Light=#374151, Dark=#D1D5DB}"
+                                    FontAttributes="Bold" FontSize="15"
+                                    CornerRadius="10" HeightRequest="46" />
+                            <Button Grid.Column="1"
+                                    Text="{Binding FormSaveText}"
+                                    Command="{Binding SaveFormCommand}"
+                                    BackgroundColor="#2563EB" TextColor="White"
+                                    FontAttributes="Bold" FontSize="15"
+                                    CornerRadius="10" HeightRequest="46" />
+                        </Grid>
+
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Border>
+        </Grid>
+        <!-- /form overlay -->
+
+        <!-- ════════════════════════════════════════════════════
+             OVERLAY: XÁC NHẬN XÓA
+             ════════════════════════════════════════════════════ -->
+        <Grid IsVisible="{Binding IsDeleteConfirmVisible}" ZIndex="30">
+            <BoxView BackgroundColor="#80000000" />
+
+            <Border Style="{StaticResource CardStyle}"
+                    Margin="40,0" MaximumWidthRequest="400"
+                    VerticalOptions="Center" HorizontalOptions="Center"
+                    Padding="28,24">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="🗑  Xác nhận xóa"
+                           FontSize="17" FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           HorizontalOptions="Center" />
+
+                    <Label HorizontalOptions="Center" HorizontalTextAlignment="Center"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+                           FontSize="14">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Bạn có chắc muốn xóa " />
+                                <Span Text="{Binding DeleteConfirmName}"
+                                      FontAttributes="Bold"
+                                      TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}" />
+                                <Span Text="?&#10;Hành động này không thể hoàn tác." />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Button Grid.Column="0" Text="Hủy"
+                                Command="{Binding CancelDeleteCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#374151}"
+                                TextColor="{AppThemeBinding Light=#374151, Dark=#D1D5DB}"
+                                FontAttributes="Bold" CornerRadius="10" HeightRequest="44" />
+                        <Button Grid.Column="1" Text="Xóa"
+                                Command="{Binding ConfirmDeleteCommand}"
+                                BackgroundColor="#DC2626" TextColor="White"
+                                FontAttributes="Bold" CornerRadius="10" HeightRequest="44" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+        <!-- /delete confirm -->
+
+        <!-- ════════════════════════════════════════════════════
+             OVERLAY: POPUP LỖI
+             ════════════════════════════════════════════════════ -->
+        <Grid IsVisible="{Binding IsPopupVisible}" ZIndex="40">
+            <BoxView BackgroundColor="#80000000" />
+
+            <Border Style="{StaticResource CardStyle}"
+                    Margin="40,0" MaximumWidthRequest="380"
+                    VerticalOptions="Center" HorizontalOptions="Center"
+                    Padding="28,24">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="{Binding PopupTitle}"
+                           FontSize="17" FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                           HorizontalOptions="Center" />
+                    <Label Text="{Binding PopupMessage}"
+                           FontSize="14" HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}" />
+
+                    <!-- Nút Retry -->
+                    <Button Text="{Binding PopupButtonText}"
+                            IsVisible="{Binding IsPopupRetry}"
+                            Command="{Binding RetryLoadCommand}"
+                            BackgroundColor="#2563EB" TextColor="White"
+                            FontAttributes="Bold" CornerRadius="10" HeightRequest="44" />
+
+                    <!-- Nút OK -->
+                    <Button Text="OK"
+                            IsVisible="{Binding IsPopupNotRetry}"
+                            Command="{Binding ClosePopupCommand}"
+                            BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#374151}"
+                            TextColor="{AppThemeBinding Light=#374151, Dark=#D1D5DB}"
+                            FontAttributes="Bold" CornerRadius="10" HeightRequest="44" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+        <!-- /popup -->
+
+    </Grid>
+    <!-- /root grid -->
+
+</ContentPage>

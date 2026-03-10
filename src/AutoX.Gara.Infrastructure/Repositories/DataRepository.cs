@@ -1,9 +1,10 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
-namespace AutoX.Gara.Infrastructure.Database;
+namespace AutoX.Gara.Infrastructure.Repositories;
 
 /// <summary>
 /// Repository chung cho tất cả entity.

@@ -2,7 +2,6 @@
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Customers;
-using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;

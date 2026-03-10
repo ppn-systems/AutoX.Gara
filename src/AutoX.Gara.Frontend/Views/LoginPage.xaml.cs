@@ -5,7 +5,7 @@ using AutoX.Gara.Frontend.Services;
 using AutoX.Gara.UI.ViewModels;
 using Microsoft.Maui.Controls;
 
-namespace AutoX.Gara.Frontend;
+namespace AutoX.Gara.Frontend.Views;
 
 public partial class LoginPage : ContentPage
 {

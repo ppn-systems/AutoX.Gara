@@ -4,6 +4,7 @@ using AutoX.Gara.Application.Communication;
 using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Networking;
+using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared;
 using Nalix.Common.Concurrency;
 using Nalix.Common.Diagnostics.Abstractions;
@@ -181,8 +182,10 @@ public static class Program
             );
             dispatchOptions.WithHandler(() =>
                 new CustomerOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                                            .CreateDbContext(System.Array.Empty<System.String>())
+                    new CustomerRepository(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                                                .CreateDbContext(System.Array.Empty<System.String>())
+                    )
                 )
             );
         });
