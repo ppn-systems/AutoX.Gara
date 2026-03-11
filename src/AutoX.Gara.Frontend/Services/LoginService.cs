@@ -3,7 +3,7 @@
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
-using AutoX.Gara.Shared.Packets.Auth;
+using AutoX.Gara.Shared.Protocol.Auth;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security.Enums;

@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Packets.Vehicles;
+using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Protocols;
 
 namespace AutoX.Gara.Frontend.ViewModels.Results;
@@ -20,7 +20,7 @@ public sealed class VehicleListResult
     public ProtocolAdvice Advice { get; private init; }
 
     /// <summary>Gets the list of vehicle data packets returned from the server.</summary>
-    public System.Collections.Generic.List<VehicleDataPacket> Vehicles { get; private init; } = [];
+    public System.Collections.Generic.List<VehicleDto> Vehicles { get; private init; } = [];
 
     /// <summary>
     /// Tổng số xe của customer trên server (dùng để tính tổng trang).
@@ -34,7 +34,7 @@ public sealed class VehicleListResult
     // ─── Factory Methods ─────────────────────────────────────────────────────
 
     public static VehicleListResult Success(
-        System.Collections.Generic.List<VehicleDataPacket> vehicles,
+        System.Collections.Generic.List<VehicleDto> vehicles,
         System.Int32 totalCount = -1,
         System.Boolean hasMore = false)
         => new()

@@ -2,7 +2,7 @@
 
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.ViewModels.Results;
-using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Protocol.Customers;
 
 namespace AutoX.Gara.Frontend.Abstractions;
 
@@ -28,16 +28,16 @@ public interface ICustomerService
 
     /// <summary>Tạo mới khách hàng. Server echo lại entity đã lưu trong <c>UpdatedEntity</c>.</summary>
     System.Threading.Tasks.Task<CustomerWriteResult> CreateAsync(
-        CustomerDataPacket data,
+        CustomerDto data,
         System.Threading.CancellationToken ct = default);
 
     /// <summary>Cập nhật khách hàng. Server echo lại entity đã lưu trong <c>UpdatedEntity</c>.</summary>
     System.Threading.Tasks.Task<CustomerWriteResult> UpdateAsync(
-        CustomerDataPacket data,
+        CustomerDto data,
         System.Threading.CancellationToken ct = default);
 
     /// <summary>Xóa mềm khách hàng. Server trả về Directive NONE khi thành công.</summary>
     System.Threading.Tasks.Task<CustomerWriteResult> DeleteAsync(
-        CustomerDataPacket data,
+        CustomerDto data,
         System.Threading.CancellationToken ct = default);
 }

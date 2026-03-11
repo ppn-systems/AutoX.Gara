@@ -2,7 +2,7 @@
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Shared.Extensions;
-using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Protocol.Customers;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
@@ -16,7 +16,7 @@ using Nalix.Shared.Frames;
 using Nalix.Shared.Memory.Pooling;
 using System.Collections.Generic;
 
-namespace AutoX.Gara.Shared.Packets.Vehicles;
+namespace AutoX.Gara.Shared.Protocol.Vehicles;
 
 /// <summary>
 /// Represents a packet that carries a collection of customer records,
@@ -24,7 +24,7 @@ namespace AutoX.Gara.Shared.Packets.Vehicles;
 /// Uses PacketBase for automatic serialization, pooling and metadata handling.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class VehiclesPacket : PacketBase<VehiclesPacket>, IPacketTransformer<VehiclesPacket>, IPacketSequenced
+public sealed class VehiclesQueryResponse : PacketBase<VehiclesQueryResponse>, IPacketTransformer<VehiclesQueryResponse>, IPacketSequenced
 {
     /// <summary>
     /// Gets the total byte length of this packet, including the fixed header
@@ -85,12 +85,12 @@ public sealed class VehiclesPacket : PacketBase<VehiclesPacket>, IPacketTransfor
     /// </summary>
     [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
-    public List<VehicleDataPacket> Vehicles { get; set; } = [];
+    public List<VehicleDto> Vehicles { get; set; } = [];
 
     /// <summary>
-    /// Initializes a new instance of <see cref="CustomersPacket"/> with default values.
+    /// Initializes a new instance of <see cref="CustomerQueryResponse"/> with default values.
     /// </summary>
-    public VehiclesPacket() => OpCode = OpCommand.NONE.AsUInt16();
+    public VehiclesQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();
 
     /// <inheritdoc/>
     public override void ResetForPool()
@@ -124,13 +124,13 @@ public sealed class VehiclesPacket : PacketBase<VehiclesPacket>, IPacketTransfor
     /// <exception cref="System.ArgumentNullException">
     /// Thrown when <paramref name="packet"/> is <see langword="null"/>.
     /// </exception>
-    public static VehiclesPacket Compress(VehiclesPacket packet)
+    public static VehiclesQueryResponse Compress(VehiclesQueryResponse packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
 
         for (System.Int32 i = 0; i < packet.Vehicles.Count; i++)
         {
-            packet.Vehicles[i] = VehicleDataPacket.Compress(packet.Vehicles[i]);
+            packet.Vehicles[i] = VehicleDto.Compress(packet.Vehicles[i]);
         }
 
         packet.Flags.AddFlag(PacketFlags.COMPRESSED);
@@ -141,13 +141,13 @@ public sealed class VehiclesPacket : PacketBase<VehiclesPacket>, IPacketTransfor
     /// <exception cref="System.ArgumentNullException">
     /// Thrown when <paramref name="packet"/> is <see langword="null"/>.
     /// </exception>
-    public static VehiclesPacket Decompress(VehiclesPacket packet)
+    public static VehiclesQueryResponse Decompress(VehiclesQueryResponse packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
 
         for (System.Int32 i = 0; i < packet.Vehicles.Count; i++)
         {
-            packet.Vehicles[i] = VehicleDataPacket.Decompress(packet.Vehicles[i]);
+            packet.Vehicles[i] = VehicleDto.Decompress(packet.Vehicles[i]);
         }
 
         packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);

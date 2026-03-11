@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Protocol.Customers;
 using Nalix.Common.Networking.Protocols;
 
 namespace AutoX.Gara.Frontend.ViewModels.Results;
@@ -24,12 +24,12 @@ public sealed class CustomerWriteResult
     /// Enables optimistic UI updates without a full list reload.
     /// <c>null</c> on delete or when the server does not echo back the entity.
     /// </summary>
-    public CustomerDataPacket? UpdatedEntity { get; private init; }
+    public CustomerDto? UpdatedEntity { get; private init; }
 
     // ─── Factory Methods ─────────────────────────────────────────────────────
 
     /// <summary>Creates a successful write result, optionally carrying the server-confirmed entity.</summary>
-    public static CustomerWriteResult Success(CustomerDataPacket? updatedEntity = null)
+    public static CustomerWriteResult Success(CustomerDto? updatedEntity = null)
         => new() { IsSuccess = true, UpdatedEntity = updatedEntity };
 
     /// <summary>Creates a failure write result with the given error message and advice.</summary>

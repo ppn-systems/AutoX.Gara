@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Packets.Vehicles;
+using AutoX.Gara.Shared.Protocol.Vehicles;
 using System.Collections.Generic;
 
 namespace AutoX.Gara.Frontend.Services.Vehicles;
@@ -12,7 +12,7 @@ namespace AutoX.Gara.Frontend.Services.Vehicles;
 /// </summary>
 public sealed class VehicleCacheEntry
 {
-    public required List<VehicleDataPacket> Vehicles { get; init; }
+    public required List<VehicleDto> Vehicles { get; init; }
     public required System.Int32 TotalCount { get; init; }
     public required System.DateTime ExpiresAt { get; init; }
 
@@ -59,7 +59,7 @@ public sealed class VehicleQueryCache
         return false;
     }
 
-    public void Set(VehicleCacheKey key, List<VehicleDataPacket> vehicles, System.Int32 totalCount)
+    public void Set(VehicleCacheKey key, List<VehicleDto> vehicles, System.Int32 totalCount)
     {
         _store[key] = new VehicleCacheEntry
         {

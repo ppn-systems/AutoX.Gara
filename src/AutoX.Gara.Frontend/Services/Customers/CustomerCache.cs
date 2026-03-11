@@ -2,7 +2,7 @@
 
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
-using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Protocol.Customers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
@@ -27,7 +27,7 @@ public sealed record CustomerCacheKey(
 /// </summary>
 public sealed class CustomerCacheEntry
 {
-    public required List<CustomerDataPacket> Customers { get; init; }
+    public required List<CustomerDto> Customers { get; init; }
     public required System.Int32 TotalCount { get; init; }
     public required System.DateTime ExpiresAt { get; init; }
 
@@ -70,7 +70,7 @@ public sealed class CustomerQueryCache : ICustomerQueryCache
     }
 
     /// <inheritdoc/>
-    public void Set(CustomerCacheKey key, List<CustomerDataPacket> customers, System.Int32 totalCount)
+    public void Set(CustomerCacheKey key, List<CustomerDto> customers, System.Int32 totalCount)
     {
         _store[key] = new CustomerCacheEntry
         {

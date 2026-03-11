@@ -15,7 +15,7 @@ using Nalix.Shared.Frames;
 using Nalix.Shared.Memory.Pooling;
 using System.Collections.Generic;
 
-namespace AutoX.Gara.Shared.Packets.Customers;
+namespace AutoX.Gara.Shared.Protocol.Customers;
 
 /// <summary>
 /// Represents a packet that carries a collection of customer records,
@@ -23,7 +23,7 @@ namespace AutoX.Gara.Shared.Packets.Customers;
 /// Uses PacketBase for automatic serialization, pooling and metadata handling.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class CustomersPacket : PacketBase<CustomersPacket>, IPacketTransformer<CustomersPacket>, IPacketSequenced
+public sealed class CustomerQueryResponse : PacketBase<CustomerQueryResponse>, IPacketTransformer<CustomerQueryResponse>, IPacketSequenced
 {
     /// <summary>
     /// Gets the total byte length of this packet, including the fixed header
@@ -84,12 +84,12 @@ public sealed class CustomersPacket : PacketBase<CustomersPacket>, IPacketTransf
     /// </summary>
     [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
-    public List<CustomerDataPacket> Customers { get; set; } = [];
+    public List<CustomerDto> Customers { get; set; } = [];
 
     /// <summary>
-    /// Initializes a new instance of <see cref="CustomersPacket"/> with default values.
+    /// Initializes a new instance of <see cref="CustomerQueryResponse"/> with default values.
     /// </summary>
-    public CustomersPacket() => OpCode = OpCommand.NONE.AsUInt16();
+    public CustomerQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();
 
     /// <inheritdoc/>
     public override void ResetForPool()
@@ -123,13 +123,13 @@ public sealed class CustomersPacket : PacketBase<CustomersPacket>, IPacketTransf
     /// <exception cref="System.ArgumentNullException">
     /// Thrown when <paramref name="packet"/> is <see langword="null"/>.
     /// </exception>
-    public static CustomersPacket Compress(CustomersPacket packet)
+    public static CustomerQueryResponse Compress(CustomerQueryResponse packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
 
         for (System.Int32 i = 0; i < packet.Customers.Count; i++)
         {
-            packet.Customers[i] = CustomerDataPacket.Compress(packet.Customers[i]);
+            packet.Customers[i] = CustomerDto.Compress(packet.Customers[i]);
         }
 
         packet.Flags.AddFlag(PacketFlags.COMPRESSED);
@@ -140,13 +140,13 @@ public sealed class CustomersPacket : PacketBase<CustomersPacket>, IPacketTransf
     /// <exception cref="System.ArgumentNullException">
     /// Thrown when <paramref name="packet"/> is <see langword="null"/>.
     /// </exception>
-    public static CustomersPacket Decompress(CustomersPacket packet)
+    public static CustomerQueryResponse Decompress(CustomerQueryResponse packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
 
         for (System.Int32 i = 0; i < packet.Customers.Count; i++)
         {
-            packet.Customers[i] = CustomerDataPacket.Decompress(packet.Customers[i]);
+            packet.Customers[i] = CustomerDto.Decompress(packet.Customers[i]);
         }
 
         packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);

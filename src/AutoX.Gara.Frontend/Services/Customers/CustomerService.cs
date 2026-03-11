@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
-using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Protocol.Customers;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security.Enums;
@@ -70,7 +70,7 @@ public sealed class CustomerService : ICustomerService
             System.UInt32 sq = Csprng.NextUInt32();
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
-            CustomersQueryPacket packet = new()
+            CustomerQueryRequest packet = new()
             {
                 Page = page,
                 SequenceId = sq,
@@ -89,7 +89,7 @@ public sealed class CustomerService : ICustomerService
             System.IDisposable? sub = null;
             System.IDisposable? errSub = null;
 
-            sub = client.OnOnce<CustomersPacket>(
+            sub = client.OnOnce<CustomerQueryResponse>(
                 predicate: p => p.SequenceId == sq,
                 handler: resp =>
                 {
@@ -155,7 +155,7 @@ public sealed class CustomerService : ICustomerService
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerWriteResult> CreateAsync(
-        CustomerDataPacket data,
+        CustomerDto data,
         System.Threading.CancellationToken ct = default)
     {
         CustomerWriteResult result = await SendWritePacketAsync(
@@ -175,7 +175,7 @@ public sealed class CustomerService : ICustomerService
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerWriteResult> UpdateAsync(
-        CustomerDataPacket data,
+        CustomerDto data,
         System.Threading.CancellationToken ct = default)
     {
         CustomerWriteResult result = await SendWritePacketAsync(
@@ -194,7 +194,7 @@ public sealed class CustomerService : ICustomerService
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerWriteResult> DeleteAsync(
-        CustomerDataPacket data,
+        CustomerDto data,
         System.Threading.CancellationToken ct = default)
     {
         CustomerWriteResult result = await SendWritePacketAsync(
@@ -213,7 +213,7 @@ public sealed class CustomerService : ICustomerService
 
     private static async System.Threading.Tasks.Task<CustomerWriteResult> SendWritePacketAsync(
         System.UInt16 opcode,
-        CustomerDataPacket data,
+        CustomerDto data,
         System.Boolean expectEcho,
         System.Threading.CancellationToken ct)
     {
@@ -228,7 +228,7 @@ public sealed class CustomerService : ICustomerService
             ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
             logger.Info($"Sending packet SeqId={sq} OpCode={opcode} expectEcho={expectEcho}");
 
-            CustomerDataPacket.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
+            CustomerDto.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
             System.Threading.Tasks.TaskCompletionSource<CustomerWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
@@ -238,7 +238,7 @@ public sealed class CustomerService : ICustomerService
 
             if (expectEcho)
             {
-                echoSub = client.OnOnce<CustomerDataPacket>(
+                echoSub = client.OnOnce<CustomerDto>(
                     predicate: p => p.SequenceId == sq,
                     handler: confirmed =>
                     {

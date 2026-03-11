@@ -12,7 +12,7 @@ using Nalix.Common.Serialization.Attributes;
 using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 
-namespace AutoX.Gara.Shared.Packets.Customers;
+namespace AutoX.Gara.Shared.Protocol.Customers;
 
 /// <summary>
 /// Represents a customer data packet used for create, update, and query operations.
@@ -20,7 +20,7 @@ namespace AutoX.Gara.Shared.Packets.Customers;
 /// Uses PacketBase for automatic serialization, pooling and metadata handling.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class CustomerDataPacket : PacketBase<CustomerDataPacket>, IPacketTransformer<CustomerDataPacket>, IPacketSequenced
+public sealed class CustomerDto : PacketBase<CustomerDto>, IPacketTransformer<CustomerDto>, IPacketSequenced
 {
     // ─── Fixed-size fields (đặt trước dynamic strings) ───────────────────────
 
@@ -98,8 +98,8 @@ public sealed class CustomerDataPacket : PacketBase<CustomerDataPacket>, IPacket
 
     // ─── Constructor ─────────────────────────────────────────────────────────
 
-    /// <summary>Initializes a new instance of <see cref="CustomerDataPacket"/> with default empty values.</summary>
-    public CustomerDataPacket()
+    /// <summary>Initializes a new instance of <see cref="CustomerDto"/> with default empty values.</summary>
+    public CustomerDto()
     {
         Name = System.String.Empty;
         Email = System.String.Empty;
@@ -138,7 +138,7 @@ public sealed class CustomerDataPacket : PacketBase<CustomerDataPacket>, IPacket
 
     /// <summary>Compress string fields and mark packet as compressed.</summary>
     /// <exception cref="System.ArgumentNullException">Thrown when packet is null.</exception>
-    public static CustomerDataPacket Compress(CustomerDataPacket packet)
+    public static CustomerDto Compress(CustomerDto packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
 
@@ -155,7 +155,7 @@ public sealed class CustomerDataPacket : PacketBase<CustomerDataPacket>, IPacket
 
     /// <summary>Decompress string fields and remove compressed flag.</summary>
     /// <exception cref="System.ArgumentNullException">Thrown when packet is null.</exception>
-    public static CustomerDataPacket Decompress(CustomerDataPacket packet)
+    public static CustomerDto Decompress(CustomerDto packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
 

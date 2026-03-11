@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Packets.Auth;
-using AutoX.Gara.Shared.Packets.Customers;
-using AutoX.Gara.Shared.Packets.Vehicles;
+using AutoX.Gara.Shared.Protocol.Auth;
+using AutoX.Gara.Shared.Protocol.Customers;
+using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Framework.Injection;
 using Nalix.Shared.Registry;
@@ -22,12 +22,12 @@ public static class AppConfig
         // REGISTER packets here (single source of truth).
         _ = factory.RegisterPacket<LoginPacket>();
 
-        _ = factory.RegisterPacket<CustomerDataPacket>();
-        _ = factory.RegisterPacket<CustomersPacket>();
-        _ = factory.RegisterPacket<CustomersQueryPacket>();
+        _ = factory.RegisterPacket<CustomerDto>();
+        _ = factory.RegisterPacket<CustomerQueryResponse>();
+        _ = factory.RegisterPacket<CustomerQueryRequest>();
 
-        _ = factory.RegisterPacket<VehicleDataPacket>();
-        _ = factory.RegisterPacket<VehiclesPacket>();
+        _ = factory.RegisterPacket<VehicleDto>();
+        _ = factory.RegisterPacket<VehiclesQueryResponse>();
 
         PacketRegistry catalog = factory.CreateCatalog();
 

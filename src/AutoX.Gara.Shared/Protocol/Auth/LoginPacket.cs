@@ -11,7 +11,7 @@ using Nalix.Common.Serialization.Attributes;
 using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 
-namespace AutoX.Gara.Shared.Packets.Auth;
+namespace AutoX.Gara.Shared.Protocol.Auth;
 
 /// <summary>
 /// Represents a login packet that carries authentication credentials

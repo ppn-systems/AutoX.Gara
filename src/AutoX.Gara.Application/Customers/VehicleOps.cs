@@ -3,7 +3,7 @@
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Infrastructure.Abstractions;
-using AutoX.Gara.Shared.Packets.Vehicles;
+using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Attributes;
@@ -40,7 +40,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
         IPacket p,
         IConnection connection)
     {
-        if (p is not VehicleDataPacket packet)
+        if (p is not VehicleDto packet)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             await connection.SendAsync(
@@ -79,13 +79,14 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
         IPacket p,
         IConnection connection)
     {
-        if (p is not VehicleDataPacket packet)
+        if (p is not VehicleDto packet)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+
             return;
         }
 
@@ -95,6 +96,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+
             return;
         }
 
@@ -109,6 +111,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
                 ControlType.ERROR,
                 ProtocolReason.ALREADY_EXISTS,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+
             return;
         }
 
@@ -165,7 +168,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
         IPacket p,
         IConnection connection)
     {
-        if (p is not VehicleDataPacket packet || packet.VehicleId is null)
+        if (p is not VehicleDto packet || packet.VehicleId is null)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             await connection.SendAsync(
@@ -235,7 +238,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
         IPacket p,
         IConnection connection)
     {
-        if (p is not VehicleDataPacket packet || packet.VehicleId is null)
+        if (p is not VehicleDto packet || packet.VehicleId is null)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
             await connection.SendAsync(
@@ -280,7 +283,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
     // ─── Private: Get single ──────────────────────────────────────────────────
 
     private async System.Threading.Tasks.Task GetSingleAsync(
-        VehicleDataPacket packet,
+        VehicleDto packet,
         IConnection connection)
     {
         try
@@ -321,7 +324,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
     // ─── Private: Get list by CustomerId ─────────────────────────────────────
 
     private async System.Threading.Tasks.Task GetListByCustomerAsync(
-        VehicleDataPacket packet,
+        VehicleDto packet,
         IConnection connection)
     {
         try
@@ -336,7 +339,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
                     page,
                     DefaultPageSize).ConfigureAwait(false);
 
-            var response = new VehiclesPacket
+            var response = new VehiclesQueryResponse
             {
                 SequenceId = packet.SequenceId,
                 TotalCount = total,
@@ -370,7 +373,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
 
     // ─── Private Helpers ─────────────────────────────────────────────────────
 
-    private static VehicleDataPacket MapToPacket(Vehicle v, System.UInt32 sequenceId) => new()
+    private static VehicleDto MapToPacket(Vehicle v, System.UInt32 sequenceId) => new()
     {
         SequenceId = sequenceId,
         VehicleId = v.Id,

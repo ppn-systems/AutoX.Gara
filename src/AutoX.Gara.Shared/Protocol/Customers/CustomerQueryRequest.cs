@@ -10,14 +10,14 @@ using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
 using Nalix.Shared.Frames;
 
-namespace AutoX.Gara.Shared.Packets.Customers;
+namespace AutoX.Gara.Shared.Protocol.Customers;
 
 /// <summary>
 /// Packet gửi từ client lên server để truy vấn danh sách khách hàng
 /// có hỗ trợ phân trang, tìm kiếm, lọc và sắp xếp.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class CustomersQueryPacket : PacketBase<CustomersQueryPacket>, IPoolable, IPacketSequenced
+public sealed class CustomerQueryRequest : PacketBase<CustomerQueryRequest>, IPoolable, IPacketSequenced
 {
     // ─── Fixed-size fields (đặt trước) ───────────────────────────────────────
     // Tất cả field cố định kích thước phải đứng trước dynamic field (SearchTerm)
@@ -78,7 +78,7 @@ public sealed class CustomersQueryPacket : PacketBase<CustomersQueryPacket>, IPo
 
     // ─── Constructor ─────────────────────────────────────────────────────────
 
-    public CustomersQueryPacket() => OpCode = OpCommand.NONE.AsUInt16();
+    public CustomerQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
 
     // ─── Pool Reset ───────────────────────────────────────────────────────────
 

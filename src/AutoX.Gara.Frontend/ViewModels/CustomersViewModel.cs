@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
-using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Protocol.Customers;
 using AutoX.Gara.Shared.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -74,7 +74,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
     [ObservableProperty] public partial System.Boolean IsFormVisible { get; set; }
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
-    [ObservableProperty] public partial CustomerDataPacket? SelectedCustomer { get; set; }
+    [ObservableProperty] public partial CustomerDto? SelectedCustomer { get; set; }
 
     // FIX: thay StringFormat bool không hoạt động — dùng computed property
     public System.String FormTitle => IsEditing ? "Sửa khách hàng" : "Thêm khách hàng";
@@ -105,7 +105,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
     // ─── Collection ───────────────────────────────────────────────────────────
 
-    public System.Collections.ObjectModel.ObservableCollection<CustomerDataPacket> Customers { get; } = [];
+    public System.Collections.ObjectModel.ObservableCollection<CustomerDto> Customers { get; } = [];
 
     // ─── Constructor ─────────────────────────────────────────────────────────
 
@@ -121,7 +121,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(TotalPages));
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmpty));
-    partial void OnSelectedCustomerChanged(CustomerDataPacket? value)
+    partial void OnSelectedCustomerChanged(CustomerDto? value)
         => OnPropertyChanged(nameof(DeleteConfirmName));
 
     partial void OnIsEditingChanged(bool value)
@@ -290,7 +290,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
             if (result.IsSuccess)
             {
                 Customers.Clear();
-                foreach (CustomerDataPacket c in result.Customers)
+                foreach (CustomerDto c in result.Customers)
                 {
                     Customers.Add(c);
                 }
@@ -347,7 +347,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     }
 
     [RelayCommand]
-    private void OpenEditForm(CustomerDataPacket customer)
+    private void OpenEditForm(CustomerDto customer)
     {
         IsEditing = true;
         SelectedCustomer = customer;
@@ -422,7 +422,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
         try
         {
-            CustomerDataPacket data = BuildPacketFromForm();
+            CustomerDto data = BuildPacketFromForm();
             CustomerWriteResult result = IsEditing
                 ? await _customerService.UpdateAsync(data, ct)
                 : await _customerService.CreateAsync(data, ct);
@@ -471,7 +471,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     }
 
     [RelayCommand]
-    private static async System.Threading.Tasks.Task OpenVehiclesAsync(CustomerDataPacket customer)
+    private static async System.Threading.Tasks.Task OpenVehiclesAsync(CustomerDto customer)
     {
         // Tạo page mới, truyền customer context vào trước khi navigate
         var page = new Views.VehiclesPage();
@@ -482,7 +482,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     }
 
     [RelayCommand]
-    private void RequestDelete(CustomerDataPacket customer)
+    private void RequestDelete(CustomerDto customer)
     {
         SelectedCustomer = customer;
         IsDeleteConfirmVisible = true;
@@ -507,7 +507,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         IsDeleteConfirmVisible = false;
         IsLoading = true;
 
-        CustomerDataPacket toDelete = SelectedCustomer;
+        CustomerDto toDelete = SelectedCustomer;
 
         try
         {
@@ -646,7 +646,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         return true;
     }
 
-    private CustomerDataPacket BuildPacketFromForm() => new()
+    private CustomerDto BuildPacketFromForm() => new()
     {
         Name = FormName,
         Email = FormEmail,

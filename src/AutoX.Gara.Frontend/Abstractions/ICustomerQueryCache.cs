@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Services.Customers;
-using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Protocol.Customers;
 
 namespace AutoX.Gara.Frontend.Abstractions;
 
@@ -20,7 +20,7 @@ public interface ICustomerQueryCache
     /// <summary>
     /// Lưu kết quả mới vào cache.
     /// </summary>
-    void Set(CustomerCacheKey key, System.Collections.Generic.List<CustomerDataPacket> customers, System.Int32 totalCount);
+    void Set(CustomerCacheKey key, System.Collections.Generic.List<CustomerDto> customers, System.Int32 totalCount);
 
     /// <summary>
     /// Xóa toàn bộ cache.

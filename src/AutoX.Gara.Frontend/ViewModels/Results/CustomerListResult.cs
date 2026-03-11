@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Protocol.Customers;
 using Nalix.Common.Networking.Protocols;
 
 namespace AutoX.Gara.Frontend.ViewModels.Results;
@@ -20,7 +20,7 @@ public sealed class CustomerListResult
     public ProtocolAdvice Advice { get; private init; }
 
     /// <summary>Gets the list of customer data packets returned from the server.</summary>
-    public System.Collections.Generic.List<CustomerDataPacket> Customers { get; private init; } = [];
+    public System.Collections.Generic.List<CustomerDto> Customers { get; private init; } = [];
 
     /// <summary>
     /// Total number of customers matching the current filter/search on the server.
@@ -38,7 +38,7 @@ public sealed class CustomerListResult
 
     /// <summary>Creates a successful result with the given customer list.</summary>
     public static CustomerListResult Success(
-        System.Collections.Generic.List<CustomerDataPacket> customers,
+        System.Collections.Generic.List<CustomerDto> customers,
         System.Int32 totalCount = -1,
         System.Boolean hasMore = false)
         => new()

@@ -10,14 +10,14 @@ using Nalix.Common.Serialization.Attributes;
 using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 
-namespace AutoX.Gara.Shared.Packets.Vehicles;
+namespace AutoX.Gara.Shared.Protocol.Vehicles;
 
 /// <summary>
 /// Packet truyền dữ liệu xe cho các thao tác tạo, cập nhật, truy vấn.
 /// Sử dụng PacketBase để auto serialize/pooling.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class VehicleDataPacket : PacketBase<VehicleDataPacket>, IPacketTransformer<VehicleDataPacket>, IPacketSequenced
+public sealed class VehicleDto : PacketBase<VehicleDto>, IPacketTransformer<VehicleDto>, IPacketSequenced
 {
     // ─── Fixed-size fields ───────────────────────────────────────────────
 
@@ -73,7 +73,7 @@ public sealed class VehicleDataPacket : PacketBase<VehicleDataPacket>, IPacketTr
 
     // ─── Constructor ──────────��─────────────────────────────────────────
 
-    public VehicleDataPacket()
+    public VehicleDto()
     {
         Model = System.String.Empty;
         FrameNumber = System.String.Empty;
@@ -112,7 +112,7 @@ public sealed class VehicleDataPacket : PacketBase<VehicleDataPacket>, IPacketTr
 
     /// <summary>Compress string fields and mark packet as compressed.</summary>
     /// <exception cref="System.ArgumentNullException">Thrown when packet is null.</exception>
-    public static VehicleDataPacket Compress(VehicleDataPacket packet)
+    public static VehicleDto Compress(VehicleDto packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
 
@@ -127,7 +127,7 @@ public sealed class VehicleDataPacket : PacketBase<VehicleDataPacket>, IPacketTr
 
     /// <summary>Decompress string fields and remove compressed flag.</summary>
     /// <exception cref="System.ArgumentNullException">Thrown when packet is null.</exception>
-    public static VehicleDataPacket Decompress(VehicleDataPacket packet)
+    public static VehicleDto Decompress(VehicleDto packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
 

@@ -226,7 +226,7 @@
                                 IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}"
                                 Margin="16,0" VerticalOptions="Fill">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="pkt:VehicleDataPacket">
+                        <DataTemplate x:DataType="pkt:VehicleDto">
                             <Border Style="{StaticResource CardStyle}"
                                     Margin="0,0,0,8" Padding="14,12">
                                 <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="12">

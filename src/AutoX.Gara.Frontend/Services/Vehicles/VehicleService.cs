@@ -2,7 +2,7 @@
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Frontend.ViewModels.Results;
-using AutoX.Gara.Shared.Packets.Vehicles;
+using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security.Enums;
@@ -58,7 +58,7 @@ public sealed class VehicleService
 
             // VehicleId == null → server xử lý như list request theo CustomerId
             // Page được encode vào Year field (xem VehicleOps.GetListByCustomerAsync)
-            VehicleDataPacket packet = new()
+            VehicleDto packet = new()
             {
                 SequenceId = sq,
                 CustomerId = customerId,
@@ -67,7 +67,7 @@ public sealed class VehicleService
                 OpCode = (System.UInt16)OpCommand.VEHICLE_GET
             };
 
-            logger.Info($"[VehicleService.GetListAsync] Sending VehicleDataPacket SeqId={sq} OpCode=0x{packet.OpCode:X3} CustomerId={customerId} Year(page)={page}");
+            logger.Info($"[VehicleService.GetListAsync] Sending VehicleDto SeqId={sq} OpCode=0x{packet.OpCode:X3} CustomerId={customerId} Year(page)={page}");
 
             System.Threading.Tasks.TaskCompletionSource<VehicleListResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
@@ -75,16 +75,16 @@ public sealed class VehicleService
             System.IDisposable? sub = null;
             System.IDisposable? errSub = null;
 
-            sub = client.OnOnce<VehiclesPacket>(
+            sub = client.OnOnce<VehiclesQueryResponse>(
                 predicate: p =>
                 {
                     System.Boolean match = p.SequenceId == sq;
-                    logger.Info($"[VehicleService.GetListAsync] OnOnce<VehiclesPacket> received SeqId={p.SequenceId} expected={sq} match={match} count={p.Vehicles?.Count} total={p.TotalCount}");
+                    logger.Info($"[VehicleService.GetListAsync] OnOnce<VehiclesQueryResponse> received SeqId={p.SequenceId} expected={sq} match={match} count={p.Vehicles?.Count} total={p.TotalCount}");
                     return match;
                 },
                 handler: resp =>
                 {
-                    logger.Info($"[VehicleService.GetListAsync] VehiclesPacket MATCHED — vehicles={resp.Vehicles.Count} total={resp.TotalCount}");
+                    logger.Info($"[VehicleService.GetListAsync] VehiclesQueryResponse MATCHED — vehicles={resp.Vehicles.Count} total={resp.TotalCount}");
                     sub?.Dispose();
                     errSub?.Dispose();
                     _cache.Set(key, resp.Vehicles, resp.TotalCount);
@@ -148,7 +148,7 @@ public sealed class VehicleService
     // ─── CreateAsync ──────────────────────────────────────────────────────────
 
     public async System.Threading.Tasks.Task<VehicleWriteResult> CreateAsync(
-        VehicleDataPacket data,
+        VehicleDto data,
         System.Threading.CancellationToken ct = default)
     {
         VehicleWriteResult result = await SendWritePacketAsync(
@@ -165,7 +165,7 @@ public sealed class VehicleService
     // ─── UpdateAsync ──────────────────────────────────────────────────────────
 
     public async System.Threading.Tasks.Task<VehicleWriteResult> UpdateAsync(
-        VehicleDataPacket data,
+        VehicleDto data,
         System.Threading.CancellationToken ct = default)
     {
         VehicleWriteResult result = await SendWritePacketAsync(
@@ -182,7 +182,7 @@ public sealed class VehicleService
     // ─── DeleteAsync ──────────────────────────────────────────────────────────
 
     public async System.Threading.Tasks.Task<VehicleWriteResult> DeleteAsync(
-        VehicleDataPacket data,
+        VehicleDto data,
         System.Threading.CancellationToken ct = default)
     {
         VehicleWriteResult result = await SendWritePacketAsync(
@@ -200,7 +200,7 @@ public sealed class VehicleService
 
     private static async System.Threading.Tasks.Task<VehicleWriteResult> SendWritePacketAsync(
         System.UInt16 opcode,
-        VehicleDataPacket data,
+        VehicleDto data,
         System.Boolean expectEcho,
         System.Threading.CancellationToken ct)
     {
@@ -215,7 +215,7 @@ public sealed class VehicleService
             ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
             logger.Info($"[VehicleService] SeqId={sq} OpCode={opcode} expectEcho={expectEcho}");
 
-            VehicleDataPacket.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
+            VehicleDto.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
             System.Threading.Tasks.TaskCompletionSource<VehicleWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
@@ -225,7 +225,7 @@ public sealed class VehicleService
 
             if (expectEcho)
             {
-                echoSub = client.OnOnce<VehicleDataPacket>(
+                echoSub = client.OnOnce<VehicleDto>(
                     predicate: p => p.SequenceId == sq,
                     handler: confirmed =>
                     {

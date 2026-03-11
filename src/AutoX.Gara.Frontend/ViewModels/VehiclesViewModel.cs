@@ -3,8 +3,8 @@
 using AutoX.Gara.Domain.Enums.Cars;
 using AutoX.Gara.Frontend.Services.Vehicles;
 using AutoX.Gara.Frontend.ViewModels.Results;
-using AutoX.Gara.Shared.Packets.Customers;
-using AutoX.Gara.Shared.Packets.Vehicles;
+using AutoX.Gara.Shared.Protocol.Customers;
+using AutoX.Gara.Shared.Protocol.Vehicles;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
@@ -14,7 +14,7 @@ namespace AutoX.Gara.Frontend.ViewModels;
 
 /// <summary>
 /// ViewModel cho VehiclesPage — hiển thị danh sách xe + form thêm/sửa/xóa
-/// của một customer cụ thể. Nhận <see cref="CustomerDataPacket"/> từ CustomersViewModel
+/// của một customer cụ thể. Nhận <see cref="CustomerDto"/> từ CustomersViewModel
 /// thông qua Shell query parameter.
 /// </summary>
 public sealed partial class VehiclesViewModel : ObservableObject, System.IDisposable
@@ -27,7 +27,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     // ─── Customer context ─────────────────────────────────────────────────────
 
     /// <summary>Customer đang được xem xe — set từ Shell navigation parameter.</summary>
-    [ObservableProperty] public partial CustomerDataPacket? Owner { get; set; }
+    [ObservableProperty] public partial CustomerDto? Owner { get; set; }
 
     public System.String PageTitle => Owner is not null
         ? $"Xe của {Owner.Name}"
@@ -66,7 +66,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
 
     [ObservableProperty] public partial System.Boolean IsFormVisible { get; set; }
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
-    [ObservableProperty] public partial VehicleDataPacket? SelectedVehicle { get; set; }
+    [ObservableProperty] public partial VehicleDto? SelectedVehicle { get; set; }
 
     public System.String FormTitle => IsEditing ? "Sửa xe" : "Thêm xe mới";
     public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm xe";
@@ -102,7 +102,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
 
     // ─── Collection ───────────────────────────────────────────────────────────
 
-    public System.Collections.ObjectModel.ObservableCollection<VehicleDataPacket> Vehicles { get; } = [];
+    public System.Collections.ObjectModel.ObservableCollection<VehicleDto> Vehicles { get; } = [];
 
     // ─── Constructor ─────────────────────────────────────────────────────────
 
@@ -115,7 +115,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     /// <summary>
     /// Được gọi từ VehiclesPage.OnNavigatedTo sau khi Owner được set.
     /// </summary>
-    public void Initialize(CustomerDataPacket owner)
+    public void Initialize(CustomerDto owner)
     {
         Owner = owner;
         OnPropertyChanged(nameof(PageTitle));
@@ -127,7 +127,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(TotalPages));
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmpty));
-    partial void OnSelectedVehicleChanged(VehicleDataPacket? value)
+    partial void OnSelectedVehicleChanged(VehicleDto? value)
         => OnPropertyChanged(nameof(DeleteConfirmPlate));
 
     partial void OnIsEditingChanged(bool value)
@@ -261,7 +261,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
             if (result.IsSuccess)
             {
                 Vehicles.Clear();
-                foreach (VehicleDataPacket v in result.Vehicles)
+                foreach (VehicleDto v in result.Vehicles)
                 {
                     Vehicles.Add(v);
                 }
@@ -292,7 +292,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     }
 
     [RelayCommand]
-    private void OpenEditForm(VehicleDataPacket vehicle)
+    private void OpenEditForm(VehicleDto vehicle)
     {
         IsEditing = true;
         SelectedVehicle = vehicle;
@@ -405,7 +405,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
 
         try
         {
-            VehicleDataPacket data = BuildPacketFromForm();
+            VehicleDto data = BuildPacketFromForm();
             VehicleWriteResult result = IsEditing
                 ? await _vehicleService.UpdateAsync(data, ct)
                 : await _vehicleService.CreateAsync(data, ct);
@@ -454,7 +454,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     }
 
     [RelayCommand]
-    private void RequestDelete(VehicleDataPacket vehicle)
+    private void RequestDelete(VehicleDto vehicle)
     {
         SelectedVehicle = vehicle;
         IsDeleteConfirmVisible = true;
@@ -479,7 +479,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
         IsDeleteConfirmVisible = false;
         IsLoading = true;
 
-        VehicleDataPacket toDelete = SelectedVehicle;
+        VehicleDto toDelete = SelectedVehicle;
 
         try
         {
@@ -580,7 +580,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
         return true;
     }
 
-    private VehicleDataPacket BuildPacketFromForm() => new()
+    private VehicleDto BuildPacketFromForm() => new()
     {
         CustomerId = Owner!.CustomerId!.Value,
         VehicleId = IsEditing ? SelectedVehicle?.VehicleId : null,

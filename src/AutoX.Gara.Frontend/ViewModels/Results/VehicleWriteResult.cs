@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Packets.Vehicles;
+using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Protocols;
 
 namespace AutoX.Gara.Frontend.ViewModels.Results;
@@ -23,11 +23,11 @@ public sealed class VehicleWriteResult
     /// Entity được server echo lại sau khi create/update thành công.
     /// null khi delete hoặc server không echo.
     /// </summary>
-    public VehicleDataPacket? UpdatedEntity { get; private init; }
+    public VehicleDto? UpdatedEntity { get; private init; }
 
     // ─── Factory Methods ─────────────────────────────────────────────────────
 
-    public static VehicleWriteResult Success(VehicleDataPacket? updatedEntity = null)
+    public static VehicleWriteResult Success(VehicleDto? updatedEntity = null)
         => new() { IsSuccess = true, UpdatedEntity = updatedEntity };
 
     public static VehicleWriteResult Failure(

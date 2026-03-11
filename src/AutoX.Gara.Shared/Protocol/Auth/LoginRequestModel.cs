@@ -3,7 +3,7 @@
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
 
-namespace AutoX.Gara.Shared.Packets.Auth;
+namespace AutoX.Gara.Shared.Protocol.Auth;
 
 /// <summary>
 /// ViewModel dành cho đăng nhập của người dùng hệ thống.

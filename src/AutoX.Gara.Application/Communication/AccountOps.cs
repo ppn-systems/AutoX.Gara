@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Repositories;
-using AutoX.Gara.Shared.Packets.Auth;
+using AutoX.Gara.Shared.Protocol.Auth;
 using AutoX.Gara.Shared.Validation;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Abstractions;

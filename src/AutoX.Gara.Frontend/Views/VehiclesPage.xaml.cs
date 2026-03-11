@@ -2,7 +2,7 @@
 
 using AutoX.Gara.Frontend.Services.Vehicles;
 using AutoX.Gara.Frontend.ViewModels;
-using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Protocol.Customers;
 using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
 
@@ -31,7 +31,7 @@ public partial class VehiclesPage : ContentPage
     /// <summary>
     /// Gọi từ CustomersPage trước khi navigate, truyền customer context.
     /// </summary>
-    public void Initialize(CustomerDataPacket owner) => _vm.Initialize(owner);
+    public void Initialize(CustomerDto owner) => _vm.Initialize(owner);
 
     /// <summary>Back button — navigate về CustomersPage.</summary>
     private async void OnBackClicked(System.Object sender, System.EventArgs e)

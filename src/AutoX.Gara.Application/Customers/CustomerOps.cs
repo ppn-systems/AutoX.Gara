@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Models;
 using AutoX.Gara.Infrastructure.Abstractions;
-using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Protocol.Customers;
 using AutoX.Gara.Shared.Validation;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
@@ -44,7 +44,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
         IPacket p,
         IConnection connection)
     {
-        if (p is not CustomersQueryPacket packet)
+        if (p is not CustomerQueryRequest packet)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
             await connection.SendAsync(
@@ -55,7 +55,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
-        CustomersPacket response = null;
+        CustomerQueryResponse response = null;
 
         try
         {
@@ -100,7 +100,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
         }
         finally
         {
-            foreach (CustomerDataPacket cdp in response.Customers)
+            foreach (CustomerDto cdp in response.Customers)
             {
                 InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(cdp);
             }
@@ -116,7 +116,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
         IPacket p,
         IConnection connection)
     {
-        if (!TryParseCustomerPacket(p, out CustomerDataPacket packet, out System.UInt32 fallbackSeq))
+        if (!TryParseCustomerPacket(p, out CustomerDto packet, out System.UInt32 fallbackSeq))
         {
             await connection.SendAsync(
                 ControlType.ERROR,
@@ -148,7 +148,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
-        CustomerDataPacket confirmed = null;
+        CustomerDto confirmed = null;
 
         try
         {
@@ -212,7 +212,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
         IPacket p,
         IConnection connection)
     {
-        if (!TryParseCustomerPacket(p, out CustomerDataPacket packet, out System.UInt32 fallbackSeq))
+        if (!TryParseCustomerPacket(p, out CustomerDto packet, out System.UInt32 fallbackSeq))
         {
             await connection.SendAsync(
                 ControlType.ERROR,
@@ -256,7 +256,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
         existing.Notes = packet.Notes ?? System.String.Empty;
         existing.UpdatedAt = System.DateTime.UtcNow;
 
-        CustomerDataPacket confirmed = null;
+        CustomerDto confirmed = null;
 
         try
         {
@@ -302,7 +302,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
         IPacket p,
         IConnection connection)
     {
-        if (p is not CustomerDataPacket packet || packet.CustomerId == null)
+        if (p is not CustomerDto packet || packet.CustomerId == null)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
             await connection.SendAsync(
@@ -352,12 +352,12 @@ public sealed class CustomerOps(ICustomerRepository customers)
 
     private static System.Boolean TryParseCustomerPacket(
         IPacket p,
-        out CustomerDataPacket packet,
+        out CustomerDto packet,
         out System.UInt32 fallbackSeqId)
     {
         fallbackSeqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
 
-        if (p is not CustomerDataPacket cp ||
+        if (p is not CustomerDto cp ||
             !AccountValidation.IsValidEmail(cp.Email) ||
             !AccountValidation.IsValidVietnamPhoneNumber(cp.PhoneNumber))
         {
@@ -369,10 +369,10 @@ public sealed class CustomerOps(ICustomerRepository customers)
         return true;
     }
 
-    private static CustomerDataPacket MapToPacket(Customer c, System.UInt32 sequenceId)
+    private static CustomerDto MapToPacket(Customer c, System.UInt32 sequenceId)
     {
-        CustomerDataPacket data = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                                          .Get<CustomerDataPacket>();
+        CustomerDto data = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
+                                                          .Get<CustomerDto>();
 
         data.Type = c.Type;
         data.Name = c.Name;
