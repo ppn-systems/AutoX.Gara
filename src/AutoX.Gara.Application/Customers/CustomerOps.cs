@@ -13,7 +13,6 @@ using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security.Enums;
 using Nalix.Network.Connections;
 using Nalix.Shared.Serialization;
-using System.Collections.Generic;
 
 namespace AutoX.Gara.Application.Customers;
 
@@ -38,8 +37,8 @@ public sealed class CustomerOps(ICustomerRepository customers)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_LIST)]
-    public async System.Threading.Tasks.Task GetListAsync(
+    [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_GET)]
+    public async System.Threading.Tasks.Task GetAsync(
         IPacket p,
         IConnection connection)
     {
@@ -67,12 +66,12 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 FilterType: packet.FilterType,
                 FilterMembership: packet.FilterMembership);
 
-            (List<Customer> items, System.Int32 totalCount) = await _customers.GetPageAsync(query).ConfigureAwait(false);
+            (System.Collections.Generic.List<Customer> items, System.Int32 totalCount) = await _customers.GetPageAsync(query).ConfigureAwait(false);
 
             CustomersPacket response = new()
             {
-                SequenceId = packet.SequenceId,
                 TotalCount = totalCount,
+                SequenceId = packet.SequenceId,
                 Customers = items.ConvertAll(c => MapToPacket(c, sequenceId: 0))
             };
 
@@ -88,15 +87,8 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 return;
             }
         }
-        catch (System.Exception ex)
+        catch (System.Exception)
         {
-            System.Console.WriteLine($"[SERVER] GetList EXCEPTION: {ex.GetType().Name}: {ex.Message}");
-            System.Console.WriteLine($"[SERVER] StackTrace: {ex.StackTrace}");
-            if (ex.InnerException is not null)
-            {
-                System.Console.WriteLine($"[SERVER] Inner: {ex.InnerException.Message}");
-            }
-
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -133,9 +125,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
-        System.Boolean existed = await _customers
-            .ExistsByContactAsync(packet.Email, packet.PhoneNumber)
-            .ConfigureAwait(false);
+        System.Boolean existed = await _customers.ExistsByContactAsync(packet.Email, packet.PhoneNumber).ConfigureAwait(false);
 
         if (existed)
         {
@@ -171,7 +161,17 @@ public sealed class CustomerOps(ICustomerRepository customers)
             await _customers.SaveChangesAsync().ConfigureAwait(false);
 
             CustomerDataPacket confirmed = MapToPacket(newCustomer, packet.SequenceId);
-            await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+
+            if (!sent)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                return;
+            }
         }
         catch (System.Exception)
         {
@@ -207,12 +207,11 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+
             return;
         }
 
-        Customer existing = await _customers
-            .GetByIdAsync(packet.CustomerId!.Value)
-            .ConfigureAwait(false);
+        Customer existing = await _customers.GetByIdAsync(packet.CustomerId!.Value).ConfigureAwait(false);
 
         if (existing is null)
         {
@@ -242,7 +241,17 @@ public sealed class CustomerOps(ICustomerRepository customers)
             await _customers.SaveChangesAsync().ConfigureAwait(false);
 
             CustomerDataPacket confirmed = MapToPacket(existing, packet.SequenceId);
-            await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+
+            if (!sent)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                return;
+            }
         }
         catch (System.Exception)
         {
@@ -336,14 +345,14 @@ public sealed class CustomerOps(ICustomerRepository customers)
         Type = c.Type,
         Name = c.Name,
         Email = c.Email,
+        Gender = c.Gender,
         TaxCode = c.TaxCode,
         Address = c.Address,
+        CreatedAt = c.CreatedAt,
+        UpdatedAt = c.UpdatedAt,
         Membership = c.Membership,
         PhoneNumber = c.PhoneNumber,
         DateOfBirth = c.DateOfBirth,
-        Gender = c.Gender,
-        Notes = c.Notes ?? System.String.Empty,
-        CreatedAt = c.CreatedAt,
-        UpdatedAt = c.UpdatedAt
+        Notes = c.Notes ?? System.String.Empty
     };
 }

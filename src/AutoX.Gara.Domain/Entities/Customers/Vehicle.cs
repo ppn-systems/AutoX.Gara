@@ -78,6 +78,11 @@ public class Vehicle
         set => _carModel = value.Trim();
     }
 
+    /// <summary>
+    /// Dấu hiệu xóa mềm: nếu có giá trị, khách hàng đã bị xóa và không nên hiển thị trong các danh sách khách hàng đang hoạt động.
+    /// </summary>
+    public System.DateTime? DeletedAt { get; set; }
+
     #endregion
 
     #region Registration Properties

@@ -80,7 +80,7 @@ public sealed class CustomerService : ICustomerService
                 SortDescending = sortDescending,
                 FilterType = filterType,
                 FilterMembership = filterMembership,
-                OpCode = (System.UInt16)OpCommand.CUSTOMER_LIST
+                OpCode = (System.UInt16)OpCommand.CUSTOMER_GET
             };
 
             System.Threading.Tasks.TaskCompletionSource<CustomerListResult> tcs =

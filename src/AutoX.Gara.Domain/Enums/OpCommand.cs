@@ -16,11 +16,19 @@ public enum OpCommand : System.UInt16
 
     CHANGE_PASSWORD = 0x53,
 
-    CUSTOMER_LIST = 0x100,
+    CUSTOMER_GET = 0x100,
 
     CUSTOMER_CREATE = 0x101,
 
     CUSTOMER_UPDATE = 0x102,
 
     CUSTOMER_DELETE = 0x103,
+
+    VEHICLE_GET = 0x150,
+
+    VEHICLE_CREATE = 0x151,
+
+    VEHICLE_UPDATE = 0x152,
+
+    VEHICLE_DELETE = 0x153,
 }
