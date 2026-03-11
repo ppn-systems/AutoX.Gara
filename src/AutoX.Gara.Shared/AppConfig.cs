@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Shared.Packets.Auth;
 using AutoX.Gara.Shared.Packets.Customers;
+using AutoX.Gara.Shared.Packets.Vehicles;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Framework.Injection;
 using Nalix.Shared.Registry;
@@ -21,9 +22,12 @@ public static class AppConfig
         // REGISTER packets here (single source of truth).
         _ = factory.RegisterPacket<LoginPacket>();
 
-        _ = factory.RegisterPacket<CustomersPacket>();
         _ = factory.RegisterPacket<CustomerDataPacket>();
+        _ = factory.RegisterPacket<CustomersPacket>();
         _ = factory.RegisterPacket<CustomersQueryPacket>();
+
+        _ = factory.RegisterPacket<VehicleDataPacket>();
+        _ = factory.RegisterPacket<VehiclesPacket>();
 
         PacketRegistry catalog = factory.CreateCatalog();
 

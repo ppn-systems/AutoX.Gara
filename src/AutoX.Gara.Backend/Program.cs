@@ -188,6 +188,14 @@ public static class Program
                     )
                 )
             );
+            dispatchOptions.WithHandler(() =>
+                new VehicleOps(
+                    new VehicleRepository(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                                                .CreateDbContext(System.Array.Empty<System.String>())
+                    )
+                )
+            );
         });
 
         AutoXProtocol xProtocol = new(channel);

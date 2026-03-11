@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoX.Gara.Infrastructure.Migrations
 {
     [DbContext(typeof(AutoXDbContext))]
-    [Migration("20260227133537_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260311034743_AddSoftDeleteToVehicles")]
+    partial class AddSoftDeleteToVehicles
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -180,7 +180,7 @@ namespace AutoX.Gara.Infrastructure.Migrations
                     b.ToTable("Transaction");
                 });
 
-            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Vehicles.Customer", b =>
+            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Customers.Customer", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -199,9 +199,15 @@ namespace AutoX.Gara.Infrastructure.Migrations
                     b.Property<decimal>("Debt")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Email")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
+
+                    b.Property<byte>("Gender")
+                        .HasColumnType("INTEGER");
 
                     b.Property<byte?>("Membership")
                         .HasColumnType("INTEGER");
@@ -209,6 +215,9 @@ namespace AutoX.Gara.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PhoneNumber")
@@ -241,7 +250,7 @@ namespace AutoX.Gara.Infrastructure.Migrations
                     b.ToTable("Customer");
                 });
 
-            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Vehicles.Vehicle", b =>
+            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Customers.Vehicle", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -255,6 +264,9 @@ namespace AutoX.Gara.Infrastructure.Migrations
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("EngineNumber")
                         .HasMaxLength(17)
@@ -705,7 +717,7 @@ namespace AutoX.Gara.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AutoX.Gara.Domain.Entities.Vehicles.Customer", "Customer")
+                    b.HasOne("AutoX.Gara.Domain.Entities.Customers.Customer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -737,9 +749,9 @@ namespace AutoX.Gara.Infrastructure.Migrations
                     b.Navigation("Invoice");
                 });
 
-            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Vehicles.Vehicle", b =>
+            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Customers.Vehicle", b =>
                 {
-                    b.HasOne("AutoX.Gara.Domain.Entities.Vehicles.Customer", "Customer")
+                    b.HasOne("AutoX.Gara.Domain.Entities.Customers.Customer", "Customer")
                         .WithMany("Vehicles")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -772,13 +784,13 @@ namespace AutoX.Gara.Infrastructure.Migrations
 
             modelBuilder.Entity("AutoX.Gara.Domain.Entities.Repairs.RepairOrder", b =>
                 {
-                    b.HasOne("AutoX.Gara.Domain.Entities.Vehicles.Customer", "Customer")
+                    b.HasOne("AutoX.Gara.Domain.Entities.Customers.Customer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("AutoX.Gara.Domain.Entities.Vehicles.Customer", null)
+                    b.HasOne("AutoX.Gara.Domain.Entities.Customers.Customer", null)
                         .WithMany("RepairOrders")
                         .HasForeignKey("CustomerId1");
 
@@ -792,12 +804,12 @@ namespace AutoX.Gara.Infrastructure.Migrations
                         .WithMany("RepairOrders")
                         .HasForeignKey("InvoiceId1");
 
-                    b.HasOne("AutoX.Gara.Domain.Entities.Vehicles.Vehicle", "Vehicle")
+                    b.HasOne("AutoX.Gara.Domain.Entities.Customers.Vehicle", "Vehicle")
                         .WithMany()
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("AutoX.Gara.Domain.Entities.Vehicles.Vehicle", null)
+                    b.HasOne("AutoX.Gara.Domain.Entities.Customers.Vehicle", null)
                         .WithMany("RepairOrder")
                         .HasForeignKey("VehicleId1");
 
@@ -861,14 +873,14 @@ namespace AutoX.Gara.Infrastructure.Migrations
                     b.Navigation("Transactions");
                 });
 
-            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Vehicles.Customer", b =>
+            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Customers.Customer", b =>
                 {
                     b.Navigation("RepairOrders");
 
                     b.Navigation("Vehicles");
                 });
 
-            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Vehicles.Vehicle", b =>
+            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Customers.Vehicle", b =>
                 {
                     b.Navigation("RepairOrder");
                 });

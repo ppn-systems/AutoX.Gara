@@ -262,6 +262,9 @@ namespace AutoX.Gara.Infrastructure.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("EngineNumber")
                         .HasMaxLength(17)
                         .HasColumnType("TEXT");

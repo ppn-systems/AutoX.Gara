@@ -8,6 +8,7 @@ using AutoX.Gara.Shared.Packets.Customers;
 using AutoX.Gara.Shared.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Maui.Controls;
 using Nalix.Common.Networking.Protocols;
 using System.Diagnostics;
 
@@ -467,6 +468,17 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         {
             IsLoading = false;
         }
+    }
+
+    [RelayCommand]
+    private static async System.Threading.Tasks.Task OpenVehiclesAsync(CustomerDataPacket customer)
+    {
+        // Tạo page mới, truyền customer context vào trước khi navigate
+        var page = new Views.VehiclesPage();
+        page.Initialize(customer);
+
+        // Push page lên navigation stack của Shell
+        await Shell.Current.Navigation.PushAsync(page).ConfigureAwait(false);
     }
 
     [RelayCommand]

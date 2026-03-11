@@ -16,14 +16,22 @@ namespace AutoX.Gara.Application.Customers;
 
 /// <summary>
 /// Packet controller xử lý các nghiệp vụ liên quan đến Vehicle.
-/// GET (lấy detail), UPDATE, DELETE (xóa mềm).
+/// <list type="bullet">
+///   <item>VEHICLE_GET  — VehicleId != null → lấy 1 xe; VehicleId == null → lấy danh sách theo CustomerId</item>
+///   <item>VEHICLE_CREATE — tạo mới xe</item>
+///   <item>VEHICLE_UPDATE — cập nhật xe (opcode 0x152)</item>
+///   <item>VEHICLE_DELETE — xóa mềm (chỉ SUPERVISOR)</item>
+/// </list>
 /// </summary>
 [PacketController]
 public sealed class VehicleOps(IVehicleRepository vehicles)
 {
-    private readonly IVehicleRepository _vehicles = vehicles ?? throw new System.ArgumentNullException(nameof(vehicles));
+    private readonly IVehicleRepository _vehicles = vehicles
+        ?? throw new System.ArgumentNullException(nameof(vehicles));
 
-    // ─── GET BY ID ───────────────────────────────────────────────────────────
+    private const System.Int32 DefaultPageSize = 10;
+
+    // ─── GET (single hoặc list theo CustomerId) ───────────────────────────────
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -32,7 +40,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
         IPacket p,
         IConnection connection)
     {
-        if (p is not VehicleDataPacket packet || packet.VehicleId is null)
+        if (p is not VehicleDataPacket packet)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             await connection.SendAsync(
@@ -42,38 +50,27 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
             return;
         }
 
-        try
+        // ── Nếu có VehicleId → lấy 1 xe (dùng cho detail) ───────────────────
+        if (packet.VehicleId is not null)
         {
-            Vehicle vehicle = await _vehicles.GetByIdAsync(packet.VehicleId.Value).ConfigureAwait(false);
-            if (vehicle is null || vehicle.DeletedAt != null)
-            {
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.NOT_FOUND,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-                return;
-            }
-
-            var response = MapToPacket(vehicle, packet.SequenceId);
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
-
-            if (!sent)
-            {
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-                return;
-            }
+            await GetSingleAsync(packet, connection).ConfigureAwait(false);
+            return;
         }
-        catch (System.Exception)
+
+        // ── Không có VehicleId → lấy danh sách theo CustomerId ───────────────
+        if (packet.CustomerId <= 0)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
-                ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolReason.MALFORMED_PACKET,
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+            return;
         }
+
+        await GetListByCustomerAsync(packet, connection).ConfigureAwait(false);
     }
+
+    // ─── CREATE ───────────────────────────────────────────────────────────────
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -92,7 +89,6 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
             return;
         }
 
-        // Simple check: Biển số không được rỗng
         if (System.String.IsNullOrWhiteSpace(packet.LicensePlate))
         {
             await connection.SendAsync(
@@ -102,12 +98,11 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
             return;
         }
 
-        // Kiểm tra trùng biển số hoặc số khung/máy nếu cần
         System.Boolean existed = await _vehicles.ExistsAsync(
             packet.LicensePlate,
             packet.EngineNumber,
-            packet.FrameNumber
-        ).ConfigureAwait(false);
+            packet.FrameNumber).ConfigureAwait(false);
+
         if (existed)
         {
             await connection.SendAsync(
@@ -136,11 +131,13 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
                 InsuranceExpiryDate = packet.InsuranceExpiryDate,
                 DeletedAt = null,
             };
+
             await _vehicles.AddAsync(vehicle).ConfigureAwait(false);
             await _vehicles.SaveChangesAsync().ConfigureAwait(false);
 
             var confirmed = MapToPacket(vehicle, packet.SequenceId);
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+            System.Boolean sent = await connection.TCP.SendAsync(
+                LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
             if (!sent)
             {
@@ -148,7 +145,6 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-                return;
             }
         }
         catch (System.Exception)
@@ -160,11 +156,11 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
         }
     }
 
-    // ─── UPDATE ──────────────────────────────────────────────────────────────
+    // ─── UPDATE ───────────────────────────────────────────────────────────────
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode(0x4302)] // Cập nhật lại theo hệ thống
+    [PacketOpcode((System.UInt16)OpCommand.VEHICLE_UPDATE)] // 0x152 — đã có trong OpCommand
     public async System.Threading.Tasks.Task UpdateAsync(
         IPacket p,
         IConnection connection)
@@ -181,7 +177,9 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
 
         try
         {
-            Vehicle existing = await _vehicles.GetByIdAsync(packet.VehicleId.Value).ConfigureAwait(false);
+            Vehicle existing = await _vehicles.GetByIdAsync(
+                packet.VehicleId.Value).ConfigureAwait(false);
+
             if (existing is null || existing.DeletedAt != null)
             {
                 await connection.SendAsync(
@@ -191,7 +189,6 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
                 return;
             }
 
-            // Update fields
             existing.CustomerId = packet.CustomerId;
             existing.Type = packet.Type;
             existing.Color = packet.Color;
@@ -209,14 +206,15 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
             await _vehicles.SaveChangesAsync().ConfigureAwait(false);
 
             var confirmed = MapToPacket(existing, packet.SequenceId);
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+            System.Boolean sent = await connection.TCP.SendAsync(
+                LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+
             if (!sent)
             {
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-                return;
             }
         }
         catch (System.Exception)
@@ -228,7 +226,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
         }
     }
 
-    // ─── DELETE (SOFT) ───────────────────────────────────────────────────────
+    // ─── DELETE (SOFT) ────────────────────────────────────────────────────────
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
@@ -249,7 +247,8 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
 
         try
         {
-            Vehicle existing = await _vehicles.GetByIdAsync(packet.VehicleId.Value).ConfigureAwait(false);
+            Vehicle existing = await _vehicles.GetByIdAsync(
+                packet.VehicleId.Value).ConfigureAwait(false);
 
             if (existing is null || existing.DeletedAt != null)
             {
@@ -260,9 +259,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
                 return;
             }
 
-            var now = System.DateTime.UtcNow;
-            existing.DeletedAt = now;
-
+            existing.DeletedAt = System.DateTime.UtcNow;
             _vehicles.Update(existing);
             await _vehicles.SaveChangesAsync().ConfigureAwait(false);
 
@@ -277,6 +274,97 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
                 ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+        }
+    }
+
+    // ─── Private: Get single ──────────────────────────────────────────────────
+
+    private async System.Threading.Tasks.Task GetSingleAsync(
+        VehicleDataPacket packet,
+        IConnection connection)
+    {
+        try
+        {
+            Vehicle vehicle = await _vehicles.GetByIdAsync(
+                packet.VehicleId!.Value).ConfigureAwait(false);
+
+            if (vehicle is null || vehicle.DeletedAt != null)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.NOT_FOUND,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                return;
+            }
+
+            var response = MapToPacket(vehicle, packet.SequenceId);
+            System.Boolean sent = await connection.TCP.SendAsync(
+                LiteSerializer.Serialize(response)).ConfigureAwait(false);
+
+            if (!sent)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+            }
+        }
+        catch (System.Exception)
+        {
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.INTERNAL_ERROR,
+                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+        }
+    }
+
+    // ─── Private: Get list by CustomerId ─────────────────────────────────────
+
+    private async System.Threading.Tasks.Task GetListByCustomerAsync(
+        VehicleDataPacket packet,
+        IConnection connection)
+    {
+        try
+        {
+            // Page được encode vào Year field để tái dùng VehicleDataPacket mà không cần packet mới.
+            // Nếu Year <= 0 hoặc bất thường → mặc định trang 1.
+            System.Int32 page = packet.Year > 0 ? packet.Year : 1;
+
+            (System.Collections.Generic.List<Vehicle> items, System.Int32 total) =
+                await _vehicles.GetByCustomerIdAsync(
+                    packet.CustomerId,
+                    page,
+                    DefaultPageSize).ConfigureAwait(false);
+
+            var response = new VehiclesPacket
+            {
+                SequenceId = packet.SequenceId,
+                TotalCount = total,
+                Vehicles = []
+            };
+
+            foreach (Vehicle v in items)
+            {
+                response.Vehicles.Add(MapToPacket(v, 0));
+            }
+
+            System.Boolean sent = await connection.TCP.SendAsync(
+                LiteSerializer.Serialize(response)).ConfigureAwait(false);
+
+            if (!sent)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+            }
+        }
+        catch (System.Exception)
+        {
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.INTERNAL_ERROR,
+                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
 

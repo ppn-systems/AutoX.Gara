@@ -137,6 +137,18 @@
                 <Setter Property="BorderWidth"      Value="1" />
             </Style>
 
+            <Style x:Key="RowVehicle" TargetType="Button">
+                <Setter Property="WidthRequest"     Value="34" />
+                <Setter Property="HeightRequest"    Value="34" />
+                <Setter Property="CornerRadius"     Value="7" />
+                <Setter Property="FontSize"         Value="15" />
+                <Setter Property="Padding"          Value="0" />
+                <Setter Property="BackgroundColor"  Value="#0E1E14" />
+                <Setter Property="TextColor"        Value="#22C55E" />
+                <Setter Property="BorderColor"      Value="#1A3A24" />
+                <Setter Property="BorderWidth"      Value="1" />
+            </Style>
+
             <!-- Picker container -->
             <Style x:Key="PickerBorder" TargetType="Border">
                 <Setter Property="BackgroundColor"  Value="#1A1A24" />
@@ -380,8 +392,12 @@
 
                                     <!-- Actions -->
                                     <VerticalStackLayout Grid.Column="2"
-                                                         Spacing="6"
+                                                         Spacing="12"
                                                          VerticalOptions="Center">
+                                        <Button Text="🚗"
+                                                Style="{StaticResource RowVehicle}"
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenVehiclesCommand}"
+                                                CommandParameter="{Binding .}" />
                                         <Button Text="✏"
                                                 Style="{StaticResource RowEdit}"
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}"
