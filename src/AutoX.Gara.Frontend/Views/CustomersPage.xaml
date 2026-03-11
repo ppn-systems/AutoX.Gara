@@ -111,42 +111,41 @@
                 <Setter Property="BorderWidth"      Value="1" />
             </Style>
 
-            <!-- Row action edit -->
-            <Style x:Key="RowEdit" TargetType="Button">
-                <Setter Property="WidthRequest"     Value="34" />
-                <Setter Property="HeightRequest"    Value="34" />
-                <Setter Property="CornerRadius"     Value="7" />
-                <Setter Property="FontSize"         Value="15" />
-                <Setter Property="Padding"          Value="0" />
-                <Setter Property="BackgroundColor"  Value="#1E1E2E" />
-                <Setter Property="TextColor"        Value="#818CF8" />
-                <Setter Property="BorderColor"      Value="#2A2A38" />
-                <Setter Property="BorderWidth"      Value="1" />
-            </Style>
-
-            <!-- Row action delete -->
-            <Style x:Key="RowDelete" TargetType="Button">
-                <Setter Property="WidthRequest"     Value="34" />
-                <Setter Property="HeightRequest"    Value="34" />
-                <Setter Property="CornerRadius"     Value="7" />
-                <Setter Property="FontSize"         Value="15" />
-                <Setter Property="Padding"          Value="0" />
-                <Setter Property="BackgroundColor"  Value="#1E1014" />
-                <Setter Property="TextColor"        Value="#EF4444" />
-                <Setter Property="BorderColor"      Value="#3A1A1A" />
-                <Setter Property="BorderWidth"      Value="1" />
-            </Style>
-
+            <!-- Row actions — pill buttons có text label -->
             <Style x:Key="RowVehicle" TargetType="Button">
-                <Setter Property="WidthRequest"     Value="34" />
-                <Setter Property="HeightRequest"    Value="34" />
-                <Setter Property="CornerRadius"     Value="7" />
-                <Setter Property="FontSize"         Value="15" />
-                <Setter Property="Padding"          Value="0" />
-                <Setter Property="BackgroundColor"  Value="#0E1E14" />
-                <Setter Property="TextColor"        Value="#22C55E" />
-                <Setter Property="BorderColor"      Value="#1A3A24" />
-                <Setter Property="BorderWidth"      Value="1" />
+                <Setter Property="HeightRequest"   Value="32" />
+                <Setter Property="CornerRadius"    Value="8" />
+                <Setter Property="FontSize"        Value="12" />
+                <Setter Property="FontAttributes"  Value="Bold" />
+                <Setter Property="Padding"         Value="10,0" />
+                <Setter Property="BackgroundColor" Value="#0D1F14" />
+                <Setter Property="TextColor"       Value="#22C55E" />
+                <Setter Property="BorderColor"     Value="#1A3A24" />
+                <Setter Property="BorderWidth"     Value="1" />
+            </Style>
+
+            <Style x:Key="RowEdit" TargetType="Button">
+                <Setter Property="HeightRequest"   Value="32" />
+                <Setter Property="CornerRadius"    Value="8" />
+                <Setter Property="FontSize"        Value="12" />
+                <Setter Property="FontAttributes"  Value="Bold" />
+                <Setter Property="Padding"         Value="10,0" />
+                <Setter Property="BackgroundColor" Value="#1E1E2E" />
+                <Setter Property="TextColor"       Value="#818CF8" />
+                <Setter Property="BorderColor"     Value="#2A2A38" />
+                <Setter Property="BorderWidth"     Value="1" />
+            </Style>
+
+            <Style x:Key="RowDelete" TargetType="Button">
+                <Setter Property="HeightRequest"   Value="32" />
+                <Setter Property="CornerRadius"    Value="8" />
+                <Setter Property="FontSize"        Value="12" />
+                <Setter Property="FontAttributes"  Value="Bold" />
+                <Setter Property="Padding"         Value="10,0" />
+                <Setter Property="BackgroundColor" Value="#1E1014" />
+                <Setter Property="TextColor"       Value="#EF4444" />
+                <Setter Property="BorderColor"     Value="#3A1A1A" />
+                <Setter Property="BorderWidth"     Value="1" />
             </Style>
 
             <!-- Picker container -->
@@ -391,22 +390,22 @@
                                     </VerticalStackLayout>
 
                                     <!-- Actions -->
-                                    <VerticalStackLayout Grid.Column="2"
-                                                         Spacing="12"
-                                                         VerticalOptions="Center">
-                                        <Button Text="🚗"
+                                    <HorizontalStackLayout Grid.Column="2"
+                                                           Spacing="6"
+                                                           VerticalOptions="Center">
+                                        <Button Text="🚗 Xe"
                                                 Style="{StaticResource RowVehicle}"
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenVehiclesCommand}"
                                                 CommandParameter="{Binding .}" />
-                                        <Button Text="✏"
+                                        <Button Text="✏ Sửa"
                                                 Style="{StaticResource RowEdit}"
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}"
                                                 CommandParameter="{Binding .}" />
-                                        <Button Text="🗑"
+                                        <Button Text="🗑 Xóa"
                                                 Style="{StaticResource RowDelete}"
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RequestDeleteCommand}"
                                                 CommandParameter="{Binding .}" />
-                                    </VerticalStackLayout>
+                                    </HorizontalStackLayout>
 
                                 </Grid>
                             </Border>
