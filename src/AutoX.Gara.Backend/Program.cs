@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Application.Communication;
 using AutoX.Gara.Application.Customers;
+using AutoX.Gara.Application.Vehicles;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Networking;
 using AutoX.Gara.Infrastructure.Repositories;

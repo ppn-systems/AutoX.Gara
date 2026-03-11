@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Enums.Customers;
+using AutoX.Gara.Domain.Enums;
+using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Caching;
@@ -10,18 +11,16 @@ using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
 using Nalix.Shared.Frames;
 
-namespace AutoX.Gara.Shared.Protocol.Customers;
+namespace AutoX.Gara.Shared.Protocol.Suppliers;
 
 /// <summary>
-/// Packet gửi từ client lên server để truy vấn danh sách khách hàng
-/// có hỗ trợ phân trang, tìm kiếm, lọc và sắp xếp.
+/// Packet gửi từ client lên server để truy vấn danh sách nhà cung cấp
+/// có hỗ trợ phân trang, tìm kiếm, lọc theo trạng thái/điều khoản và sắp xếp.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class CustomerQueryRequest : PacketBase<CustomerQueryRequest>, IPoolable, IPacketSequenced
+public sealed class SupplierQueryRequest : PacketBase<SupplierQueryRequest>, IPoolable, IPacketSequenced
 {
     // ─── Fixed-size fields (đặt trước) ───────────────────────────────────────
-    // Tất cả field cố định kích thước phải đứng trước dynamic field (SearchTerm)
-    // để PacketBase tính Length chính xác.
 
     /// <inheritdoc/>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
@@ -37,36 +36,36 @@ public sealed class CustomerQueryRequest : PacketBase<CustomerQueryRequest>, IPo
 
     /// <summary>
     /// Cột dùng để sắp xếp kết quả.
-    /// Mặc định: <see cref="CustomerSortField.CreatedAt"/>.
+    /// Mặc định: <see cref="SupplierSortField.Name"/>.
     /// </summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
-    public CustomerSortField SortBy { get; set; } = CustomerSortField.CreatedAt;
+    public SupplierSortField SortBy { get; set; } = SupplierSortField.Name;
 
     /// <summary>
-    /// <c>true</c> = sắp xếp giảm dần (mới nhất lên đầu),
+    /// <c>true</c> = sắp xếp giảm dần,
     /// <c>false</c> = sắp xếp tăng dần.
     /// </summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
-    public System.Boolean SortDescending { get; set; } = true;
+    public System.Boolean SortDescending { get; set; } = false;
 
     /// <summary>
-    /// Lọc theo loại khách hàng.
-    /// <c>CustomerType.None</c> (mặc định) = không filter, trả về tất cả.
+    /// Lọc theo trạng thái nhà cung cấp.
+    /// <c>SupplierStatus.None</c> (mặc định) = không filter, trả về tất cả.
     /// </summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
-    public CustomerType FilterType { get; set; } = CustomerType.None;
+    public SupplierStatus FilterStatus { get; set; } = SupplierStatus.None;
 
     /// <summary>
-    /// Lọc theo hạng thành viên.
-    /// <c>MembershipLevel.None</c> (mặc định) = không filter, trả về tất cả.
+    /// Lọc theo điều khoản thanh toán.
+    /// <c>PaymentTerms.None</c> (mặc định) = không filter, trả về tất cả.
     /// </summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
-    public MembershipLevel FilterMembership { get; set; } = MembershipLevel.None;
+    public PaymentTerms FilterPaymentTerms { get; set; } = PaymentTerms.None;
 
     // ─── Dynamic-size field (đặt cuối) ───────────────────────────────────────
 
     /// <summary>
-    /// Từ khóa tìm kiếm theo tên, email, SĐT hoặc ghi chú nội bộ.
+    /// Từ khóa tìm kiếm theo tên, email, mã số thuế hoặc ghi chú.
     /// Rỗng = không áp dụng filter.
     /// <para>
     /// Dynamic field — phải đứng cuối để <see cref="PacketBase{TSelf}.Length"/>
@@ -76,9 +75,9 @@ public sealed class CustomerQueryRequest : PacketBase<CustomerQueryRequest>, IPo
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
     public System.String SearchTerm { get; set; } = System.String.Empty;
 
-    // ─── Constructor ─────────────────────────────────────────────────────────
+    // ─── Constructor ──────────────────────────────────────────────────────────
 
-    public CustomerQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
+    public SupplierQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
 
     // ─── Pool Reset ───────────────────────────────────────────────────────────
 
@@ -90,10 +89,10 @@ public sealed class CustomerQueryRequest : PacketBase<CustomerQueryRequest>, IPo
         SequenceId = 0;
         Page = 1;
         PageSize = 20;
-        SortBy = CustomerSortField.CreatedAt;
-        SortDescending = true;
-        FilterType = CustomerType.None;
-        FilterMembership = MembershipLevel.None;
+        SortBy = SupplierSortField.Name;
+        SortDescending = false;
+        FilterStatus = SupplierStatus.None;
+        FilterPaymentTerms = PaymentTerms.None;
         SearchTerm = System.String.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
     }

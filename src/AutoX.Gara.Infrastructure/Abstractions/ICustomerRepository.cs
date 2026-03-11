@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Customers;
-using AutoX.Gara.Domain.Models;
+using AutoX.Gara.Shared.Models;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;

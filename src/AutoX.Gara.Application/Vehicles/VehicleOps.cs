@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Customers;
-using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Infrastructure.Abstractions;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
@@ -12,7 +12,7 @@ using Nalix.Common.Security.Enums;
 using Nalix.Network.Connections;
 using Nalix.Shared.Serialization;
 
-namespace AutoX.Gara.Application.Customers;
+namespace AutoX.Gara.Application.Vehicles;
 
 /// <summary>
 /// Packet controller xử lý các nghiệp vụ liên quan đến Vehicle.

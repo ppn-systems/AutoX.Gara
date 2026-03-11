@@ -1,8 +1,9 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Customers;
+using AutoX.Gara.Shared.Enums;
 
-namespace AutoX.Gara.Domain.Models;
+namespace AutoX.Gara.Shared.Models;
 
 /// <summary>
 /// Value object chứa tất cả tham số truy vấn danh sách khách hàng.

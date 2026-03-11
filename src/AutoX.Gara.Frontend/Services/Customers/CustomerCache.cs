@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Customers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

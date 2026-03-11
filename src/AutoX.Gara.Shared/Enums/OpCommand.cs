@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-namespace AutoX.Gara.Domain.Enums;
+namespace AutoX.Gara.Shared.Enums;
 
 public enum OpCommand : System.UInt16
 {
@@ -31,4 +31,14 @@ public enum OpCommand : System.UInt16
     VEHICLE_UPDATE = 0x152,
 
     VEHICLE_DELETE = 0x153,
+
+    SUPPLIER_GET = 0x160,
+
+    SUPPLIER_CREATE = 0x161,
+
+    SUPPLIER_UPDATE = 0x162,
+
+    SUPPLIER_DELETE = 0x163,
+
+    SUPPLIER_CHANGE_STATUS = 0x164,
 }

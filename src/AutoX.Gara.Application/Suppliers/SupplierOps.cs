@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Entities.Customers;
+using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Infrastructure.Abstractions;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Protocol.Customers;
+using AutoX.Gara.Shared.Protocol.Suppliers;
 using AutoX.Gara.Shared.Validation;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
@@ -17,35 +17,32 @@ using Nalix.Network.Connections;
 using Nalix.Shared.Memory.Pooling;
 using Nalix.Shared.Serialization;
 
-namespace AutoX.Gara.Application.Customers;
+namespace AutoX.Gara.Application.Suppliers;
 
 /// <summary>
-/// Packet controller xử lý tất cả nghiệp vụ CRUD cho Customer.
-/// <para>
-/// Thay đổi so với version cũ:
+/// Packet controller xử lý tất cả nghiệp vụ CRUD cho Supplier.
 /// <list type="bullet">
-///   <item>Inject <see cref="ICustomerRepository"/> thay vì <c>DataRepository&lt;Customer&gt;</c> trực tiếp
-///         → tách Infrastructure khỏi Application layer (DDD).</item>
-///   <item>Dùng <see cref="CustomerListQuery"/> value object thay vì truyền packet thẳng vào query.</item>
-///   <item>Mapping tách thành private static helpers, không lặp code.</item>
+///   <item><see cref="GetAsync"/> — Lấy danh sách có phân trang, filter, sort.</item>
+///   <item><see cref="CreateAsync"/> — Tạo mới nhà cung cấp.</item>
+///   <item><see cref="UpdateAsync"/> — Cập nhật thông tin nhà cung cấp.</item>
+///   <item><see cref="ChangeStatusAsync"/> — Thay đổi trạng thái (Active/Inactive/Suspended/...).</item>
 /// </list>
-/// </para>
 /// </summary>
 [PacketController]
-public sealed class CustomerOps(ICustomerRepository customers)
+public sealed class SupplierOps(ISupplierRepository suppliers)
 {
-    private readonly ICustomerRepository _customers = customers ?? throw new System.ArgumentNullException(nameof(customers));
+    private readonly ISupplierRepository _suppliers = suppliers ?? throw new System.ArgumentNullException(nameof(suppliers));
 
     // ─── GET LIST ─────────────────────────────────────────────────────────────
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_GET)]
+    [PacketOpcode((System.UInt16)OpCommand.SUPPLIER_GET)]
     public async System.Threading.Tasks.Task GetAsync(
         IPacket p,
         IConnection connection)
     {
-        if (p is not CustomerQueryRequest packet)
+        if (p is not SupplierQueryRequest packet)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
             await connection.SendAsync(
@@ -56,31 +53,31 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
-        CustomerQueryResponse response = null;
+        SupplierQueryResponse response = null;
 
         try
         {
-            // Translate packet → domain value object
-            // CustomerOps không còn biết về IQueryable hay EF Core
-            CustomerListQuery query = new(
+            SupplierListQuery query = new(
                 Page: packet.Page,
                 PageSize: packet.PageSize,
                 SearchTerm: packet.SearchTerm,
                 SortBy: packet.SortBy,
                 SortDescending: packet.SortDescending,
-                FilterType: packet.FilterType,
-                FilterMembership: packet.FilterMembership);
+                FilterStatus: packet.FilterStatus,
+                FilterPaymentTerms: packet.FilterPaymentTerms);
 
-            (System.Collections.Generic.List<Customer> items, System.Int32 totalCount) = await _customers.GetPageAsync(query).ConfigureAwait(false);
+            (System.Collections.Generic.List<Supplier> items, System.Int32 totalCount)
+                = await _suppliers.GetPageAsync(query).ConfigureAwait(false);
 
             response = new()
             {
                 TotalCount = totalCount,
                 SequenceId = packet.SequenceId,
-                Customers = items.ConvertAll(c => MapToPacket(c, sequenceId: 0))
+                Suppliers = items.ConvertAll(s => MapToPacket(s, sequenceId: 0))
             };
 
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
+            System.Boolean sent = await connection.TCP
+                .SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
 
             if (!sent)
             {
@@ -88,8 +85,6 @@ public sealed class CustomerOps(ICustomerRepository customers)
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-                return;
             }
         }
         catch (System.Exception)
@@ -101,9 +96,12 @@ public sealed class CustomerOps(ICustomerRepository customers)
         }
         finally
         {
-            foreach (CustomerDto cdp in response.Customers)
+            if (response is not null)
             {
-                InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(cdp);
+                foreach (SupplierDto dto in response.Suppliers)
+                {
+                    InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(dto);
+                }
             }
         }
     }
@@ -112,12 +110,12 @@ public sealed class CustomerOps(ICustomerRepository customers)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_CREATE)]
+    [PacketOpcode((System.UInt16)OpCommand.SUPPLIER_CREATE)]
     public async System.Threading.Tasks.Task CreateAsync(
         IPacket p,
         IConnection connection)
     {
-        if (!TryParseCustomerPacket(p, out CustomerDto packet, out System.UInt32 fallbackSeq))
+        if (!TryParseSupplierPacket(p, out SupplierDto packet, out System.UInt32 fallbackSeq))
         {
             await connection.SendAsync(
                 ControlType.ERROR,
@@ -127,7 +125,10 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
-        if (packet!.DateOfBirth != default && packet.DateOfBirth > System.DateTime.UtcNow)
+        // ContractEndDate nếu có phải sau ContractStartDate
+        if (packet!.ContractEndDate.HasValue
+            && packet.ContractStartDate.HasValue
+            && packet.ContractEndDate <= packet.ContractStartDate)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
@@ -137,7 +138,8 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
-        System.Boolean existed = await _customers.ExistsByContactAsync(packet.Email, packet.PhoneNumber).ConfigureAwait(false);
+        System.Boolean existed = await _suppliers
+            .ExistsByContactAsync(packet.Email, packet.TaxCode).ConfigureAwait(false);
 
         if (existed)
         {
@@ -149,33 +151,49 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
-        CustomerDto confirmed = null;
+        SupplierDto confirmed = null;
 
         try
         {
-            System.DateTime now = System.DateTime.UtcNow;
-            Customer newCustomer = new()
+            Supplier newSupplier = new()
             {
                 Name = packet.Name,
                 Email = packet.Email,
-                PhoneNumber = packet.PhoneNumber,
                 Address = packet.Address,
-                DateOfBirth = packet.DateOfBirth,
                 TaxCode = packet.TaxCode,
-                Type = packet.Type,
-                Membership = packet.Membership,
-                Gender = packet.Gender ?? Gender.None,
+                BankAccount = packet.BankAccount,
                 Notes = packet.Notes ?? System.String.Empty,
-                DeletedAt = null,
-                CreatedAt = now,
-                UpdatedAt = now
+                PaymentTerms = packet.PaymentTerms ?? Domain.Enums.Payments.PaymentTerms.None,
+                Status = packet.Status ?? SupplierStatus.Active,
+                ContractStartDate = packet.ContractStartDate ?? System.DateTime.UtcNow,
+                ContractEndDate = packet.ContractEndDate,
+                // PhoneNumbers được tạo riêng hoặc qua endpoint khác
+                PhoneNumbers = []
             };
 
-            await _customers.AddAsync(newCustomer).ConfigureAwait(false);
-            await _customers.SaveChangesAsync().ConfigureAwait(false);
+            // Parse PhoneNumbers từ string CSV → SupplierContactPhone entities
+            if (!System.String.IsNullOrWhiteSpace(packet.PhoneNumbers))
+            {
+                foreach (System.String phone in packet.PhoneNumbers
+                    .Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+                {
+                    System.String trimmed = phone.Trim();
+                    if (AccountValidation.IsValidVietnamPhoneNumber(trimmed))
+                    {
+                        newSupplier.PhoneNumbers.Add(new SupplierContactPhone
+                        {
+                            PhoneNumber = trimmed
+                        });
+                    }
+                }
+            }
 
-            confirmed = MapToPacket(newCustomer, packet.SequenceId);
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+            await _suppliers.AddAsync(newSupplier).ConfigureAwait(false);
+            await _suppliers.SaveChangesAsync().ConfigureAwait(false);
+
+            confirmed = MapToPacket(newSupplier, packet.SequenceId);
+            System.Boolean sent = await connection.TCP
+                .SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
             if (!sent)
             {
@@ -183,8 +201,6 @@ public sealed class CustomerOps(ICustomerRepository customers)
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-                return;
             }
         }
         catch (System.Exception)
@@ -196,10 +212,10 @@ public sealed class CustomerOps(ICustomerRepository customers)
         }
         finally
         {
-            if (confirmed != null)
+            if (confirmed is not null)
             {
                 InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                        .Return(confirmed);
+                    .Return(confirmed);
             }
         }
     }
@@ -208,12 +224,12 @@ public sealed class CustomerOps(ICustomerRepository customers)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_UPDATE)]
+    [PacketOpcode((System.UInt16)OpCommand.SUPPLIER_UPDATE)]
     public async System.Threading.Tasks.Task UpdateAsync(
         IPacket p,
         IConnection connection)
     {
-        if (!TryParseCustomerPacket(p, out CustomerDto packet, out System.UInt32 fallbackSeq))
+        if (!TryParseSupplierPacket(p, out SupplierDto packet, out System.UInt32 fallbackSeq))
         {
             await connection.SendAsync(
                 ControlType.ERROR,
@@ -223,17 +239,30 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
-        if (packet!.DateOfBirth != default && packet.DateOfBirth > System.DateTime.UtcNow)
+        if (packet!.SupplierId is null)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
-                ProtocolReason.INTERNAL_ERROR,
+                ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
 
             return;
         }
 
-        Customer existing = await _customers.GetByIdAsync(packet.CustomerId!.Value).ConfigureAwait(false);
+        if (packet.ContractEndDate.HasValue
+            && packet.ContractStartDate.HasValue
+            && packet.ContractEndDate <= packet.ContractStartDate)
+        {
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.MALFORMED_PACKET,
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+            return;
+        }
+
+        Supplier existing = await _suppliers
+            .GetByIdAsync(packet.SupplierId.Value).ConfigureAwait(false);
 
         if (existing is null)
         {
@@ -246,26 +275,33 @@ public sealed class CustomerOps(ICustomerRepository customers)
         }
 
         existing.Name = packet.Name;
-        existing.Type = packet.Type;
         existing.Email = packet.Email;
-        existing.TaxCode = packet.TaxCode;
         existing.Address = packet.Address;
-        existing.Membership = packet.Membership;
-        existing.PhoneNumber = packet.PhoneNumber;
-        existing.DateOfBirth = packet.DateOfBirth;
-        existing.Gender = packet.Gender ?? Gender.None;
+        existing.TaxCode = packet.TaxCode;
+        existing.BankAccount = packet.BankAccount;
         existing.Notes = packet.Notes ?? System.String.Empty;
-        existing.UpdatedAt = System.DateTime.UtcNow;
+        existing.ContractEndDate = packet.ContractEndDate;
 
-        CustomerDto confirmed = null;
+        if (packet.PaymentTerms.HasValue)
+        {
+            existing.PaymentTerms = packet.PaymentTerms.Value;
+        }
+
+        if (packet.ContractStartDate.HasValue)
+        {
+            existing.ContractStartDate = packet.ContractStartDate.Value;
+        }
+
+        SupplierDto confirmed = null;
 
         try
         {
-            _customers.Update(existing);
-            await _customers.SaveChangesAsync().ConfigureAwait(false);
+            _suppliers.Update(existing);
+            await _suppliers.SaveChangesAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(existing, packet.SequenceId);
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+            System.Boolean sent = await connection.TCP
+                .SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
             if (!sent)
             {
@@ -273,8 +309,6 @@ public sealed class CustomerOps(ICustomerRepository customers)
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-                return;
             }
         }
         catch (System.Exception)
@@ -286,24 +320,30 @@ public sealed class CustomerOps(ICustomerRepository customers)
         }
         finally
         {
-            if (confirmed != null)
+            if (confirmed is not null)
             {
                 InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                        .Return(confirmed);
+                    .Return(confirmed);
             }
         }
     }
 
-    // ─── DELETE (Soft) ────────────────────────────────────────────────────────
+    // ─── CHANGE STATUS ────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Thay đổi trạng thái nhà cung cấp (Active → Suspended, Inactive, Blacklisted, v.v.).
+    /// Yêu cầu quyền SUPERVISOR.
+    /// </summary>
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
-    [PacketOpcode((System.UInt16)OpCommand.CUSTOMER_DELETE)]
-    public async System.Threading.Tasks.Task DeleteAsync(
+    [PacketOpcode((System.UInt16)OpCommand.SUPPLIER_CHANGE_STATUS)]
+    public async System.Threading.Tasks.Task ChangeStatusAsync(
         IPacket p,
         IConnection connection)
     {
-        if (p is not CustomerDto packet || packet.CustomerId == null)
+        if (p is not SupplierDto packet
+            || packet.SupplierId is null
+            || packet.Status is null)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
             await connection.SendAsync(
@@ -316,7 +356,8 @@ public sealed class CustomerOps(ICustomerRepository customers)
 
         try
         {
-            Customer existing = await _customers.GetByIdAsync(packet.CustomerId.Value).ConfigureAwait(false);
+            Supplier existing = await _suppliers
+                .GetByIdAsync(packet.SupplierId.Value).ConfigureAwait(false);
 
             if (existing is null)
             {
@@ -328,12 +369,10 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 return;
             }
 
-            System.DateTime now = System.DateTime.UtcNow;
-            existing.DeletedAt = now;
-            existing.UpdatedAt = now;
+            existing.Status = packet.Status.Value;
 
-            _customers.Update(existing);
-            await _customers.SaveChangesAsync().ConfigureAwait(false);
+            _suppliers.Update(existing);
+            await _suppliers.SaveChangesAsync().ConfigureAwait(false);
 
             await connection.SendAsync(
                 ControlType.NONE,
@@ -349,46 +388,57 @@ public sealed class CustomerOps(ICustomerRepository customers)
         }
     }
 
-    // ─── Private Helpers ─────────────────────────────────────────────────────
+    // ─── Private Helpers ──────────────────────────────────────────────────────
 
-    private static System.Boolean TryParseCustomerPacket(
+    /// <summary>
+    /// Parse và validate <see cref="SupplierDto"/> từ IPacket.
+    /// Trả về <c>false</c> nếu sai kiểu hoặc email không hợp lệ.
+    /// </summary>
+    private static System.Boolean TryParseSupplierPacket(
         IPacket p,
-        out CustomerDto packet,
+        out SupplierDto packet,
         out System.UInt32 fallbackSeqId)
     {
         fallbackSeqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
 
-        if (p is not CustomerDto cp ||
-            !AccountValidation.IsValidEmail(cp.Email) ||
-            !AccountValidation.IsValidVietnamPhoneNumber(cp.PhoneNumber))
+        if (p is not SupplierDto sp ||
+            !AccountValidation.IsValidEmail(sp.Email))
         {
             packet = null;
             return false;
         }
 
-        packet = cp;
+        packet = sp;
         return true;
     }
 
-    private static CustomerDto MapToPacket(Customer c, System.UInt32 sequenceId)
+    /// <summary>
+    /// Map <see cref="Supplier"/> entity → <see cref="SupplierDto"/> packet (từ object pool).
+    /// PhoneNumbers được join thành CSV string để truyền qua network.
+    /// </summary>
+    private static SupplierDto MapToPacket(Supplier s, System.UInt32 sequenceId)
     {
-        CustomerDto data = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                                          .Get<CustomerDto>();
+        SupplierDto data = InstanceManager.Instance
+            .GetOrCreateInstance<ObjectPoolManager>()
+            .Get<SupplierDto>();
 
-        data.Type = c.Type;
-        data.Name = c.Name;
-        data.Email = c.Email;
-        data.Gender = c.Gender;
-        data.CustomerId = c.Id;
-        data.TaxCode = c.TaxCode;
-        data.Address = c.Address;
-        data.CreatedAt = c.CreatedAt;
-        data.UpdatedAt = c.UpdatedAt;
         data.SequenceId = sequenceId;
-        data.Membership = c.Membership;
-        data.PhoneNumber = c.PhoneNumber;
-        data.DateOfBirth = c.DateOfBirth;
-        data.Notes = c.Notes ?? System.String.Empty;
+        data.SupplierId = s.Id;
+        data.Name = s.Name;
+        data.Email = s.Email;
+        data.Address = s.Address;
+        data.TaxCode = s.TaxCode;
+        data.BankAccount = s.BankAccount;
+        data.Notes = s.Notes ?? System.String.Empty;
+        data.Status = s.Status;
+        data.PaymentTerms = s.PaymentTerms;
+        data.ContractStartDate = s.ContractStartDate;
+        data.ContractEndDate = s.ContractEndDate;
+
+        // Join tất cả SĐT thành CSV để serializer truyền qua 1 string field
+        data.PhoneNumbers = s.PhoneNumbers?.Count > 0
+            ? System.String.Join(',', System.Linq.Enumerable.Select(s.PhoneNumbers, ph => ph.PhoneNumber))
+            : System.String.Empty;
 
         return data;
     }

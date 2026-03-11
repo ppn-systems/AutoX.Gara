@@ -2,9 +2,10 @@
 
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Enums.Customers;
-using AutoX.Gara.Domain.Models;
 using AutoX.Gara.Infrastructure.Abstractions;
 using AutoX.Gara.Infrastructure.Database;
+using AutoX.Gara.Shared.Enums;
+using AutoX.Gara.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 

@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-namespace AutoX.Gara.Domain.Enums.Customers;
+namespace AutoX.Gara.Shared.Enums;
 
 /// <summary>
 /// Các cột được phép sắp xếp trong truy vấn danh sách khách hàng.

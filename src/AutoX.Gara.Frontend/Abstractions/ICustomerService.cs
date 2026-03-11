@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.ViewModels.Results;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Customers;
 
 namespace AutoX.Gara.Frontend.Abstractions;
