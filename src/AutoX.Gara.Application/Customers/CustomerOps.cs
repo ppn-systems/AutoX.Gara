@@ -11,7 +11,9 @@ using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Attributes;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security.Enums;
+using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
+using Nalix.Shared.Memory.Pooling;
 using Nalix.Shared.Serialization;
 
 namespace AutoX.Gara.Application.Customers;
@@ -53,6 +55,8 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
+        CustomersPacket response = null;
+
         try
         {
             // Translate packet → domain value object
@@ -68,7 +72,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
 
             (System.Collections.Generic.List<Customer> items, System.Int32 totalCount) = await _customers.GetPageAsync(query).ConfigureAwait(false);
 
-            CustomersPacket response = new()
+            response = new()
             {
                 TotalCount = totalCount,
                 SequenceId = packet.SequenceId,
@@ -93,6 +97,13 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
                 ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+        }
+        finally
+        {
+            foreach (CustomerDataPacket cdp in response.Customers)
+            {
+                InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(cdp);
+            }
         }
     }
 
@@ -137,6 +148,8 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
+        CustomerDataPacket confirmed = null;
+
         try
         {
             System.DateTime now = System.DateTime.UtcNow;
@@ -160,7 +173,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
             await _customers.AddAsync(newCustomer).ConfigureAwait(false);
             await _customers.SaveChangesAsync().ConfigureAwait(false);
 
-            CustomerDataPacket confirmed = MapToPacket(newCustomer, packet.SequenceId);
+            confirmed = MapToPacket(newCustomer, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
             if (!sent)
@@ -179,6 +192,14 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
                 ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+        }
+        finally
+        {
+            if (confirmed != null)
+            {
+                InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
+                                        .Return(confirmed);
+            }
         }
     }
 
@@ -235,12 +256,14 @@ public sealed class CustomerOps(ICustomerRepository customers)
         existing.Notes = packet.Notes ?? System.String.Empty;
         existing.UpdatedAt = System.DateTime.UtcNow;
 
+        CustomerDataPacket confirmed = null;
+
         try
         {
             _customers.Update(existing);
             await _customers.SaveChangesAsync().ConfigureAwait(false);
 
-            CustomerDataPacket confirmed = MapToPacket(existing, packet.SequenceId);
+            confirmed = MapToPacket(existing, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
             if (!sent)
@@ -259,6 +282,14 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
                 ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+        }
+        finally
+        {
+            if (confirmed != null)
+            {
+                InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
+                                        .Return(confirmed);
+            }
         }
     }
 
@@ -338,21 +369,26 @@ public sealed class CustomerOps(ICustomerRepository customers)
         return true;
     }
 
-    private static CustomerDataPacket MapToPacket(Customer c, System.UInt32 sequenceId) => new()
+    private static CustomerDataPacket MapToPacket(Customer c, System.UInt32 sequenceId)
     {
-        SequenceId = sequenceId,
-        CustomerId = c.Id,
-        Type = c.Type,
-        Name = c.Name,
-        Email = c.Email,
-        Gender = c.Gender,
-        TaxCode = c.TaxCode,
-        Address = c.Address,
-        CreatedAt = c.CreatedAt,
-        UpdatedAt = c.UpdatedAt,
-        Membership = c.Membership,
-        PhoneNumber = c.PhoneNumber,
-        DateOfBirth = c.DateOfBirth,
-        Notes = c.Notes ?? System.String.Empty
-    };
+        CustomerDataPacket data = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
+                                                          .Get<CustomerDataPacket>();
+
+        data.Type = c.Type;
+        data.Name = c.Name;
+        data.Email = c.Email;
+        data.Gender = c.Gender;
+        data.CustomerId = c.Id;
+        data.TaxCode = c.TaxCode;
+        data.Address = c.Address;
+        data.CreatedAt = c.CreatedAt;
+        data.UpdatedAt = c.UpdatedAt;
+        data.SequenceId = sequenceId;
+        data.Membership = c.Membership;
+        data.PhoneNumber = c.PhoneNumber;
+        data.DateOfBirth = c.DateOfBirth;
+        data.Notes = c.Notes ?? System.String.Empty;
+
+        return data;
+    }
 }

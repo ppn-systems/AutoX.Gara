@@ -173,6 +173,7 @@ public static class Program
                                            .Error($"Error handling command: {command}", exception));
 
             // OPS
+            dispatchOptions.WithHandler(() => new PingOps());
             dispatchOptions.WithHandler(() => new HandshakeOps());
             dispatchOptions.WithHandler(() =>
                 new AccountOps(
@@ -226,7 +227,7 @@ public static class Program
                 {
                     System.TimeSpan runningTime = now - startTime;
                     System.String runningTimeString = System.String.Format("{0:D2}:{1:D2}:{2:D2}", runningTime.Hours, runningTime.Minutes, runningTime.Seconds);
-                    System.Console.Title = $"AutoX  |  Level: {ConfigurationManager.Instance.Get<NLogixOptions>().MinLevel}  |  {Task.Title}  |  {runningTimeString}";
+                    System.Console.Title = $"AutoX | Level: {ConfigurationManager.Instance.Get<NLogixOptions>().MinLevel} | {Task.Title} | {runningTimeString}";
                 }
 
                 if (System.Console.KeyAvailable)

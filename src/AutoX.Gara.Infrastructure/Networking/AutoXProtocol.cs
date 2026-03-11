@@ -6,7 +6,6 @@ using Nalix.Framework.Injection;
 using Nalix.Network.Abstractions;
 using Nalix.Network.Connections;
 using Nalix.Network.Protocols;
-using System.Threading;
 
 namespace AutoX.Gara.Infrastructure.Networking;
 
@@ -26,7 +25,7 @@ public sealed class AutoXProtocol : Protocol
         KeepConnectionOpen = true;
     }
 
-    public override void OnAccept(IConnection connection, CancellationToken cancellationToken = default)
+    public override void OnAccept(IConnection connection, System.Threading.CancellationToken cancellationToken = default)
     {
         base.OnAccept(connection, cancellationToken);
 
@@ -46,9 +45,6 @@ public sealed class AutoXProtocol : Protocol
         System.ArgumentNullException.ThrowIfNull(args);
 
         // TODO: Parse message and implement business logic here
-
-        InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[AutoX.{nameof(AutoXProtocol)}:{nameof(ProcessMessage)}] Received message on connection id={args.Connection.ID}");
 
         s_Dispatch.HandlePacket(args.Connection.IncomingPacket, args.Connection);
     }
@@ -75,9 +71,6 @@ public sealed class AutoXProtocol : Protocol
     /// <param name="args">Event arguments containing connection and processing results.</param>
     protected override void OnPostProcess(IConnectEventArgs args)
     {
-        InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[AutoX.{nameof(AutoXProtocol)}:{nameof(OnPostProcess)}] Post-processing connection id={args.Connection.ID}");
-
         // TODO: Add post-processing logic if needed (audit, cleanup, stats)
     }
 
@@ -90,6 +83,7 @@ public sealed class AutoXProtocol : Protocol
     protected override void OnConnectionError(IConnection connection, System.Exception exception)
     {
         base.OnConnectionError(connection, exception);
+
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
                                 .Error($"[AutoX.{nameof(AutoXProtocol)}:{nameof(OnConnectionError)}] Protocol error id={connection.ID}: {exception.Message}");
     }

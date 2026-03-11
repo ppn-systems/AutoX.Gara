@@ -1,25 +1,41 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- Build & Lang -->
-		<Nullable>disable</Nullable>
+		<!-- Target -->
 		<OutputType>Exe</OutputType>
-		<IsPackable>true</IsPackable>
-		<IsTrimmable>false</IsTrimmable>
-		<Deterministic>true</Deterministic>
 		<TargetFramework>net10.0</TargetFramework>
+
+		<!-- Language -->
+		<Nullable>disable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-		<!-- build luôn runtime -->
+		<!-- Build -->
+		<Optimize>true</Optimize>
+		<Deterministic>true</Deterministic>
+
+		<!-- Icon -->
+		<ApplicationIcon>app.ico</ApplicationIcon>
+
+		<!-- Runtime -->
 		<SelfContained>true</SelfContained>
-		<!-- nhỏ hóa file, nếu app thuần .NET managed -->
-		<PublishTrimmed>true</PublishTrimmed>
-		<!-- build cho Windows x64 -->
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 
-		<!-- Versions -->
-		<Version>10.0.0</Version>
-		<FileVersion>10.0.0.0</FileVersion>
+		<!-- Deploy -->
+		<PublishSingleFile>true</PublishSingleFile>
+
+		<!-- Startup faster -->
+		<PublishReadyToRun>true</PublishReadyToRun>
+
+		<!-- KHÔNG nên bật cho server có reflection -->
+		<PublishTrimmed>false</PublishTrimmed>
+
+		<!-- Reduce runtime size -->
+		<InvariantGlobalization>true</InvariantGlobalization>
+
+		<!-- Version -->
+		<Version>1.0.0</Version>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
 
 		<!-- Package metadata -->
 		<Product>AutoX.Gara</Product>
