@@ -46,8 +46,11 @@ public sealed class CustomerOps(ICustomerRepository customers)
         if (p is not CustomersQueryPacket packet)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+
             return;
         }
 
@@ -64,8 +67,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 FilterType: packet.FilterType,
                 FilterMembership: packet.FilterMembership);
 
-            (List<Customer> items, System.Int32 totalCount) =
-                await _customers.GetPageAsync(query).ConfigureAwait(false);
+            (List<Customer> items, System.Int32 totalCount) = await _customers.GetPageAsync(query).ConfigureAwait(false);
 
             CustomersPacket response = new()
             {
@@ -74,19 +76,16 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 Customers = items.ConvertAll(c => MapToPacket(c, sequenceId: 0))
             };
 
-            System.Byte[] buffer = LiteSerializer.Serialize(response);
-
-            System.Console.WriteLine(
-                $"[SERVER] Sending CustomersPacket: SeqId={response.SequenceId}, " +
-                $"Count={response.Customers.Count}, TotalCount={response.TotalCount}, " +
-                $"BufferLen={buffer.Length}");
-
-            System.Boolean sent = await connection.TCP.SendAsync(buffer).ConfigureAwait(false);
+            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
 
             if (!sent)
             {
-                await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR,
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                return;
             }
         }
         catch (System.Exception ex)
@@ -98,7 +97,9 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 System.Console.WriteLine($"[SERVER] Inner: {ex.InnerException.Message}");
             }
 
-            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR,
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.INTERNAL_ERROR,
                 ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
@@ -114,15 +115,21 @@ public sealed class CustomerOps(ICustomerRepository customers)
     {
         if (!TryParseCustomerPacket(p, out CustomerDataPacket packet, out System.UInt32 fallbackSeq))
         {
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+
             return;
         }
 
         if (packet!.DateOfBirth != default && packet.DateOfBirth > System.DateTime.UtcNow)
         {
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+
             return;
         }
 
@@ -132,8 +139,11 @@ public sealed class CustomerOps(ICustomerRepository customers)
 
         if (existed)
         {
-            await SendErrorAsync(connection, ProtocolReason.ALREADY_EXISTS,
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.ALREADY_EXISTS,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+
             return;
         }
 
@@ -165,7 +175,9 @@ public sealed class CustomerOps(ICustomerRepository customers)
         }
         catch (System.Exception)
         {
-            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR,
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.INTERNAL_ERROR,
                 ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
@@ -181,14 +193,19 @@ public sealed class CustomerOps(ICustomerRepository customers)
     {
         if (!TryParseCustomerPacket(p, out CustomerDataPacket packet, out System.UInt32 fallbackSeq))
         {
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+
             return;
         }
 
         if (packet!.DateOfBirth != default && packet.DateOfBirth > System.DateTime.UtcNow)
         {
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.INTERNAL_ERROR,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
             return;
         }
@@ -199,8 +216,11 @@ public sealed class CustomerOps(ICustomerRepository customers)
 
         if (existing is null)
         {
-            await SendErrorAsync(connection, ProtocolReason.NOT_FOUND,
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.NOT_FOUND,
                 ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
             return;
         }
 
@@ -226,7 +246,9 @@ public sealed class CustomerOps(ICustomerRepository customers)
         }
         catch (System.Exception)
         {
-            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR,
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.INTERNAL_ERROR,
                 ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
@@ -242,22 +264,26 @@ public sealed class CustomerOps(ICustomerRepository customers)
     {
         if (p is not CustomerDataPacket packet || packet.CustomerId == null)
         {
-            System.UInt32 seqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
-            await SendErrorAsync(connection, ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, seqId).ConfigureAwait(false);
+            System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.MALFORMED_PACKET,
+                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+
             return;
         }
 
         try
         {
-            Customer existing = await _customers
-                .GetByIdAsync(packet.CustomerId.Value)
-                .ConfigureAwait(false);
+            Customer existing = await _customers.GetByIdAsync(packet.CustomerId.Value).ConfigureAwait(false);
 
             if (existing is null)
             {
-                await SendErrorAsync(connection, ProtocolReason.NOT_FOUND,
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.NOT_FOUND,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
                 return;
             }
 
@@ -269,12 +295,15 @@ public sealed class CustomerOps(ICustomerRepository customers)
             await _customers.SaveChangesAsync().ConfigureAwait(false);
 
             await connection.SendAsync(
-                ControlType.NONE, ProtocolReason.NONE,
+                ControlType.NONE,
+                ProtocolReason.NONE,
                 ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
-            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR,
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.INTERNAL_ERROR,
                 ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
     }
@@ -317,13 +346,4 @@ public sealed class CustomerOps(ICustomerRepository customers)
         CreatedAt = c.CreatedAt,
         UpdatedAt = c.UpdatedAt
     };
-
-    private static System.Threading.Tasks.Task SendErrorAsync(
-        IConnection connection,
-        ProtocolReason reason,
-        ProtocolAdvice advice,
-        System.UInt32 sequenceId)
-        => sequenceId == 0
-            ? connection.SendAsync(ControlType.ERROR, reason, advice)
-            : connection.SendAsync(ControlType.ERROR, reason, advice, sequenceId);
 }

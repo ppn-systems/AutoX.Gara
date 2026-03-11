@@ -305,6 +305,13 @@ public sealed class CustomerService : ICustomerService
             ProtocolReason.MALFORMED_PACKET => "Dữ liệu không hợp lệ.",
             ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống. Vui lòng thử lại sau.",
             ProtocolReason.FORBIDDEN => "Bạn không có quyền thực hiện thao tác này.",
+            ProtocolReason.UNAUTHENTICATED => "Bạn không có quyền thực hiện thao tác này.",
+            ProtocolReason.RATE_LIMITED => "Bạn đang thao tác quá nhanh. Vui lòng chờ một chút rồi thử lại.",
+            ProtocolReason.UNSUPPORTED_PACKET => "Yêu cầu không được hỗ trợ. Vui lòng cập nhật phần mềm nếu có thể.",
+            ProtocolReason.CRYPTO_UNSUPPORTED => "Lỗi mã hóa. Vui lòng cập nhật phần mềm nếu có thể.",
+            ProtocolReason.COMPRESSION_FAILED => "Lỗi nén dữ liệu. Vui lòng cập nhật phần mềm nếu có thể.",
+            ProtocolReason.TRANSFORM_FAILED => "Lỗi xử lý dữ liệu. Vui lòng cập nhật phần mềm nếu có thể.",
+            ProtocolReason.TIMEOUT => "Máy chủ phản hồi hết hạn. Vui lòng thử lại.",
             _ => "Thao tác thất bại. Vui lòng thử lại."
         };
 

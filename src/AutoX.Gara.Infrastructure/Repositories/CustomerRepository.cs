@@ -7,8 +7,6 @@ using AutoX.Gara.Infrastructure.Abstractions;
 using AutoX.Gara.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AutoX.Gara.Infrastructure.Repositories;
 
@@ -28,13 +26,10 @@ public sealed class CustomerRepository(AutoXDbContext context) : ICustomerReposi
 
     /// <inheritdoc/>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1862:Use the 'StringComparison' method overloads to perform case-insensitive string comparisons", Justification = "<Pending>")]
-    public async Task<(System.Collections.Generic.List<Customer> Items, System.Int32 TotalCount)> GetPageAsync(
-        CustomerListQuery query,
-        CancellationToken ct = default)
+    public async System.Threading.Tasks.Task<(System.Collections.Generic.List<Customer> Items, System.Int32 TotalCount)> GetPageAsync(
+        CustomerListQuery query, System.Threading.CancellationToken ct = default)
     {
-        IQueryable<Customer> q = _context.Customers
-            .AsNoTracking()
-            .Where(c => c.DeletedAt == null);
+        IQueryable<Customer> q = _context.Customers.AsNoTracking().Where(c => c.DeletedAt == null);
 
         // ── Search ─────────────────────────────────────────────────────────
         if (!System.String.IsNullOrWhiteSpace(query.SearchTerm))
@@ -85,32 +80,21 @@ public sealed class CustomerRepository(AutoXDbContext context) : ICustomerReposi
     }
 
     /// <inheritdoc/>
-    public Task<Customer> GetByIdAsync(System.Int32 id, CancellationToken ct = default)
-        => _context.Customers
-                   .AsNoTracking()
-                   .FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt == null, ct);
+    public System.Threading.Tasks.Task<Customer> GetByIdAsync(System.Int32 id, System.Threading.CancellationToken ct = default)
+        => _context.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt == null, ct);
 
     /// <inheritdoc/>
-    public Task<System.Boolean> ExistsByContactAsync(
-        System.String email,
-        System.String phoneNumber,
-        CancellationToken ct = default)
-        => _context.Customers.AnyAsync(
-            c => c.DeletedAt == null &&
-                 (c.Email == email || c.PhoneNumber == phoneNumber),
-            ct);
+    public System.Threading.Tasks.Task<System.Boolean> ExistsByContactAsync(System.String email, System.String phoneNumber, System.Threading.CancellationToken ct = default)
+        => _context.Customers.AnyAsync(c => c.DeletedAt == null && (c.Email == email || c.PhoneNumber == phoneNumber), ct);
 
     // ─── Write ────────────────────────────────────────────────────────────────
 
     /// <inheritdoc/>
-    public Task AddAsync(Customer customer, CancellationToken ct = default)
-        => _context.Customers.AddAsync(customer, ct).AsTask();
+    public System.Threading.Tasks.Task AddAsync(Customer customer, System.Threading.CancellationToken ct = default) => _context.Customers.AddAsync(customer, ct).AsTask();
 
     /// <inheritdoc/>
-    public void Update(Customer customer)
-        => _context.Customers.Update(customer);
+    public void Update(Customer customer) => _context.Customers.Update(customer);
 
     /// <inheritdoc/>
-    public Task SaveChangesAsync(CancellationToken ct = default)
-        => _context.SaveChangesAsync(ct);
+    public System.Threading.Tasks.Task SaveChangesAsync(System.Threading.CancellationToken ct = default) => _context.SaveChangesAsync(ct);
 }
