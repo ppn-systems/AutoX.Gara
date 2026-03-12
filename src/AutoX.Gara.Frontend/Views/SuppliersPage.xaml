@@ -232,8 +232,9 @@
 
                             <!-- Filter pickers row -->
                             <Grid Grid.Row="1"
-                              ColumnDefinitions="*,*,Auto"
-                              ColumnSpacing="10">
+                                  HeightRequest="100"
+                                  ColumnDefinitions="*,*,Auto"
+                                  ColumnSpacing="10">
 
                                 <!-- Filter Status -->
                                 <Border Grid.Column="0"
@@ -242,6 +243,7 @@
                                     Stroke="#2A2A38"
                                     StrokeShape="RoundRectangle 8">
                                     <Picker Title="Trạng thái"
+                                            HeightRequest="80"
                                             Style="{StaticResource PickerStyle}"
                                             SelectedIndex="{Binding PickerFilterStatusIndex}"
                                             BackgroundColor="Transparent">
@@ -265,6 +267,7 @@
                                     Stroke="#2A2A38"
                                     StrokeShape="RoundRectangle 8">
                                     <Picker Title="Điều khoản TT"
+                                            HeightRequest="80"
                                             Style="{StaticResource PickerStyle}"
                                             SelectedIndex="{Binding PickerPaymentTermsIndex}"
                                             BackgroundColor="Transparent">
