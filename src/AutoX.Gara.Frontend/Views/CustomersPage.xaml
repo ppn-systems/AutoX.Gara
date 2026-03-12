@@ -305,7 +305,7 @@
                     IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}"
                     Margin="16,0" VerticalOptions="Fill">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="pkt:CustomerDataPacket">
+                        <DataTemplate x:DataType="pkt:CustomerDto">
 
                             <!-- Row card — viền trái accent subtle -->
                             <Border Style="{StaticResource CardStyle}"

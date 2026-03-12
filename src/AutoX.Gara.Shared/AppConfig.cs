@@ -32,8 +32,8 @@ public static class AppConfig
         _ = factory.RegisterPacket<VehiclesQueryResponse>();
 
         _ = factory.RegisterPacket<SupplierDto>();
-        _ = factory.RegisterPacket<SparePartQueryRequest>();
-        _ = factory.RegisterPacket<SparePartQueryResponse>();
+        _ = factory.RegisterPacket<SupplierQueryRequest>();
+        _ = factory.RegisterPacket<SupplierQueryResponse>();
 
         _ = factory.RegisterPacket<SparePartDto>();
         _ = factory.RegisterPacket<SparePartQueryRequest>();

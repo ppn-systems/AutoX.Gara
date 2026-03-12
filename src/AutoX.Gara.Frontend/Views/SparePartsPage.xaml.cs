@@ -16,4 +16,16 @@ public partial class SparePartsPage : ContentPage
             new SparePartService(
                 InstanceManager.Instance.GetOrCreateInstance<SparePartQueryCache>()));
     }
+
+    // OPT: Load data khi page thực sự hiện ra thay vì trong constructor.
+    // Tránh race condition và popup lỗi xuất hiện trước khi UI render xong.
+    // Parts.Count == 0 để không reload mỗi lần quay lại tab nếu đã có data.
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        if (BindingContext is SparePartsViewModel vm && vm.Parts.Count == 0)
+        {
+            _ = vm.LoadCommand.ExecuteAsync(null);
+        }
+    }
 }

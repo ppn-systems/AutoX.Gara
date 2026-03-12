@@ -22,6 +22,16 @@
         Route="CustomersPage" />
 
     <ShellContent 
+        Title="Suppliers"
+        ContentTemplate="{DataTemplate views:SuppliersPage}"
+        Route="SuppliersPage" />
+
+    <ShellContent 
+        Title="Replacement parts"
+        ContentTemplate="{DataTemplate views:ReplacementPartsPage}"
+        Route="ReplacementPartsPage" />
+
+    <ShellContent 
         Title="Spare parts"
         ContentTemplate="{DataTemplate views:SparePartsPage}"
         Route="SparePartsPage" />

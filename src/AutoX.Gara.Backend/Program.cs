@@ -3,6 +3,7 @@
 using AutoX.Gara.Application.Communication;
 using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Application.Inventory;
+using AutoX.Gara.Application.Suppliers;
 using AutoX.Gara.Application.Vehicles;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Networking;
@@ -18,6 +19,7 @@ using Nalix.Framework.Tasks;
 using Nalix.Framework.Time;
 using Nalix.Logging;
 using Nalix.Logging.Configuration;
+using Nalix.Logging.Sinks;
 using Nalix.Network.Abstractions;
 using Nalix.Network.Connections;
 using Nalix.Network.Middleware.Inbound;
@@ -48,49 +50,70 @@ public static class Program
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "<Pending>")]
     public static void Main(System.String[] args)
     {
-        InitializeComponent();
-
-        InstanceManager.Instance.GetExistingInstance<IListener>()?
-                                .Activate();
-
-        InstanceManager.Instance.GetExistingInstance<PacketDispatchChannel>()
-                                .Activate();
-
-        System.Console.CursorVisible = false;
-        System.Console.CancelKeyPress += (sender, e) =>
+        try
         {
-            e.Cancel = true; // Ngăn dừng đột ngột
-            QuitEvent.Set();
-        };
+            InitializeComponent();
 
+            InstanceManager.Instance.GetExistingInstance<IListener>()?
+                                    .Activate();
 
-        // We can use a worker to listen to keyboard input without blocking the main thread
-        InstanceManager.Instance.GetOrCreateInstance<TaskManager>().ScheduleWorker(
-            "console.keyboard", "console",
-            async (ctx, ct) => await LISTEN_TO_KEYBOARD(ctx, ct),
-            new WorkerOptions
+            InstanceManager.Instance.GetExistingInstance<PacketDispatchChannel>()
+                                    .Activate();
+
+            System.Console.CursorVisible = false;
+            System.Console.CancelKeyPress += (sender, e) =>
             {
-                RetainFor = System.TimeSpan.FromMinutes(10)
-            }
-        );
+                e.Cancel = true; // Ngăn dừng đột ngột
+                QuitEvent.Set();
+            };
 
-        // Schedule periodic report generation every 5 minutes
-        InstanceManager.Instance.GetOrCreateInstance<TaskManager>().ScheduleWorker(
-            "report.generator", "report",
-            async (ctx, ct) => await GENERATE_PERIODIC_REPORTS(ctx, ct),
-            new WorkerOptions
+
+            // We can use a worker to listen to keyboard input without blocking the main thread
+            InstanceManager.Instance.GetOrCreateInstance<TaskManager>().ScheduleWorker(
+                "console.keyboard", "console",
+                async (ctx, ct) => await LISTEN_TO_KEYBOARD(ctx, ct),
+                new WorkerOptions
+                {
+                    RetainFor = System.TimeSpan.FromMinutes(10)
+                }
+            );
+
+            // Schedule periodic report generation every 5 minutes
+            InstanceManager.Instance.GetOrCreateInstance<TaskManager>().ScheduleWorker(
+                "report.generator", "report",
+                async (ctx, ct) => await GENERATE_PERIODIC_REPORTS(ctx, ct),
+                new WorkerOptions
+                {
+                    RetainFor = System.TimeSpan.FromMinutes(IntervalInMinutes)
+                }
+            );
+
+            InstanceManager.Instance.GetExistingInstance<ILogger>()
+                                    .Info("Press 'Ctrl+R' to print reports.");
+
+            InstanceManager.Instance.GetExistingInstance<ILogger>()
+                                    .Info("Server is running. Press Ctrl+C to exit.");
+
+            QuitEvent.WaitOne();
+        }
+        catch (System.Exception ex)
+        {
+            if (InstanceManager.Instance.GetExistingInstance<ILogger>() is null)
             {
-                RetainFor = System.TimeSpan.FromMinutes(IntervalInMinutes)
+                System.Console.Error.WriteLine("Fatal error in Main: " + ex);
             }
-        );
+            else
+            {
+                InstanceManager.Instance.GetExistingInstance<ILogger>()?
+                                        .Error("Unhandled exception in Main", ex);
+            }
 
-        InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                .Info("Press 'Ctrl+R' to print reports.");
-
-        InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                .Info("Server is running. Press Ctrl+C to exit.");
-
-        QuitEvent.WaitOne();
+            System.Environment.Exit(-1);
+        }
+        finally
+        {
+            System.Console.CursorVisible = false;
+        }
     }
 
     public static void GenerateReport()
@@ -143,12 +166,19 @@ public static class Program
 #if DEBUG
         ConfigurationManager.Instance.Get<NLogixOptions>()
                             .MinLevel = LogLevel.Meta;
-#else 
-        ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Meta;
-#endif
 
-        InstanceManager.Instance.Register<ILogger>(NLogix.Host.Instance);
+        ILogger logger = new NLogix(cfg => cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = true)));
+#else
+        ConfigurationManager.Instance.Get<NLogixOptions>()
+                            .MinLevel = LogLevel.Info;
+
+        ILogger logger = new NLogix(cfg =>
+        {
+            cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = false))
+               .RegisterTarget(new BatchFileLogTarget());
+        });
+#endif
+        InstanceManager.Instance.Register<ILogger>(logger);
 
         // Register application configuration
         AppConfig.Register();
@@ -210,6 +240,14 @@ public static class Program
             dispatchOptions.WithHandler(() =>
                 new SparePartOps(
                     new SparePartRepository(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                                                .CreateDbContext(System.Array.Empty<System.String>())
+                    )
+                )
+            );
+            dispatchOptions.WithHandler(() =>
+                new SupplierOps(
+                    new SupplierRepository(
                         InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                                                 .CreateDbContext(System.Array.Empty<System.String>())
                     )

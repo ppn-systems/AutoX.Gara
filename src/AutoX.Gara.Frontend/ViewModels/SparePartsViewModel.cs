@@ -43,6 +43,9 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
     [ObservableProperty] public partial PartCategory? FilterCategory { get; set; } = null;
     [ObservableProperty] public partial System.Boolean? FilterDiscontinued { get; set; } = null;
 
+    // FIX: Thêm PickerCategoryIndex cho filter bar (XAML bind PickerCategoryIndex)
+    [ObservableProperty] public partial System.Int32 PickerCategoryIndex { get; set; } = 0;
+
     // Picker index cho filter Discontinued: 0=Tất cả, 1=Đang bán, 2=Ngừng bán
     [ObservableProperty] public partial System.Int32 PickerDiscontinuedIndex { get; set; } = 0;
 
@@ -83,12 +86,19 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
     [ObservableProperty] public partial System.Int32 FormSupplierId { get; set; }
     [ObservableProperty] public partial PartCategory FormCategory { get; set; } = PartCategory.Other;
     [ObservableProperty] public partial System.Int32 FormPickerCategoryIndex { get; set; } = 0;
+
+    // FIX: Thêm FormIsDiscontinued để Switch trong form edit hoạt động
+    [ObservableProperty] public partial System.Boolean FormIsDiscontinued { get; set; } = false;
+
     [ObservableProperty] public partial System.Boolean HasFormError { get; set; }
     [ObservableProperty] public partial System.String? FormErrorMessage { get; set; }
 
     // ─── Discontinue Confirm ─────────────────────────────────────────────────
 
+    // FIX: Đổi tên thành IsDiscontinueConfirmVisible (XAML trước đó dùng IsDeleteConfirmVisible - SAI)
     [ObservableProperty] public partial System.Boolean IsDiscontinueConfirmVisible { get; set; }
+
+    // FIX: Đổi tên thành DiscontinueConfirmName (XAML trước đó dùng DeleteConfirmName - SAI)
     public System.String DiscontinueConfirmName => SelectedPart?.PartName ?? System.String.Empty;
 
     // ─── Collection ───────────────────────────────────────────────────────────
@@ -97,11 +107,13 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
 
     // ─── Constructor ─────────────────────────────────────────────────────────
 
+    // OPT: Bỏ _ = LoadAsync() khỏi constructor.
+    // Load sẽ được trigger từ OnAppearing() trong code-behind để tránh
+    // race condition và popup lỗi xuất hiện ngay khi page chưa render xong.
     public SparePartsViewModel(SparePartService service)
     {
-        _service = service;
+        _service = service ?? throw new System.ArgumentNullException(nameof(service));
         Parts.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
-        _ = LoadAsync();
     }
 
     // ─── Property Change Hooks ────────────────────────────────────────────────
@@ -109,6 +121,7 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(TotalPages));
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmpty));
+
     partial void OnSelectedPartChanged(SparePartDto? value)
         => OnPropertyChanged(nameof(DiscontinueConfirmName));
 
@@ -149,6 +162,25 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
     partial void OnSortByChanged(SparePartSortField value) => _ = LoadAsync();
     partial void OnSortDescendingChanged(bool value) => _ = LoadAsync();
 
+    // FIX: Thêm hook cho PickerCategoryIndex để map sang FilterCategory
+    // Thứ tự items trong XAML: Tất cả, Động cơ, Phanh, Hệ thống treo, Điện, Thân xe, Hộp số, Làm mát, Xả, Khác
+    partial void OnPickerCategoryIndexChanged(int value)
+    {
+        FilterCategory = value switch
+        {
+            1 => PartCategory.Engine,
+            2 => PartCategory.Brake,
+            3 => PartCategory.Suspension,
+            4 => PartCategory.Electrical,
+            5 => PartCategory.Body,
+            6 => PartCategory.Transmission,
+            7 => PartCategory.Cooling,
+            8 => PartCategory.Exhaust,
+            9 => PartCategory.Other,
+            _ => null  // 0 = Tất cả
+        };
+    }
+
     partial void OnFilterCategoryChanged(PartCategory? value)
     {
         OnPropertyChanged(nameof(HasActiveFilters));
@@ -177,21 +209,20 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
         };
     }
 
+    // Form category picker: Khác, Động cơ, Phanh, Hệ thống treo, Điện, Thân xe, Hộp số, Làm mát, Xả
     partial void OnFormPickerCategoryIndexChanged(int value)
     {
         FormCategory = value switch
         {
             1 => PartCategory.Engine,
-            2 => PartCategory.Transmission,
-            3 => PartCategory.Brake,
-            4 => PartCategory.Suspension,
-            5 => PartCategory.Electrical,
-            6 => PartCategory.Body,
-            7 => PartCategory.Interior,
+            2 => PartCategory.Brake,
+            3 => PartCategory.Suspension,
+            4 => PartCategory.Electrical,
+            5 => PartCategory.Body,
+            6 => PartCategory.Transmission,
+            7 => PartCategory.Cooling,
             8 => PartCategory.Exhaust,
-            9 => PartCategory.Cooling,
-            10 => PartCategory.Fuel,
-            _ => PartCategory.Other
+            _ => PartCategory.Other  // 0 = Khác
         };
     }
 
@@ -224,18 +255,13 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
             Debug.WriteLine(
                 $"[SparePartVM] Load ok={result.IsSuccess} count={result.Parts.Count} total={result.TotalCount}");
 
-            if (ct.IsCancellationRequested)
-            {
-                return;
-            }
+            if (ct.IsCancellationRequested) return;
 
             if (result.IsSuccess)
             {
                 Parts.Clear();
                 foreach (SparePartDto p in result.Parts)
-                {
                     Parts.Add(p);
-                }
 
                 TotalCount = result.TotalCount >= 0 ? result.TotalCount : TotalCount;
                 HasNextPage = result.TotalCount >= 0
@@ -256,9 +282,11 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
     [RelayCommand]
     private void ClearFilters()
     {
-        FilterSupplierId = 0;
-        FilterCategory = null;
+        // OPT: Reset cả 2 picker index về 0 để UI đồng bộ với FilterCategory/FilterDiscontinued
+        PickerCategoryIndex = 0;
         PickerDiscontinuedIndex = 0;
+        FilterSupplierId = 0;
+        // FilterCategory và FilterDiscontinued sẽ tự update qua OnPickerXxxChanged hooks
     }
 
     [RelayCommand]
@@ -282,19 +310,21 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
         FormInventoryQuantity = part.InventoryQuantity.ToString();
         FormSupplierId = part.SupplierId;
 
+        // FIX: Gán FormIsDiscontinued từ entity đang edit
+        FormIsDiscontinued = part.IsDiscontinued;
+
+        // Form category picker: Khác=0, Engine=1, Brake=2, ...
         FormPickerCategoryIndex = (part.PartCategory ?? PartCategory.Other) switch
         {
-            PartCategory.Engine => 1,
-            PartCategory.Transmission => 2,
-            PartCategory.Brake => 3,
-            PartCategory.Suspension => 4,
-            PartCategory.Electrical => 5,
-            PartCategory.Body => 6,
-            PartCategory.Interior => 7,
-            PartCategory.Exhaust => 8,
-            PartCategory.Cooling => 9,
-            PartCategory.Fuel => 10,
-            _ => 0
+            PartCategory.Engine      => 1,
+            PartCategory.Brake       => 2,
+            PartCategory.Suspension  => 3,
+            PartCategory.Electrical  => 4,
+            PartCategory.Body        => 5,
+            PartCategory.Transmission => 6,
+            PartCategory.Cooling     => 7,
+            PartCategory.Exhaust     => 8,
+            _                        => 0  // Other
         };
 
         ClearFormError();
@@ -311,10 +341,7 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
     [RelayCommand]
     private async System.Threading.Tasks.Task SaveFormAsync()
     {
-        if (!ValidateForm())
-        {
-            return;
-        }
+        if (!ValidateForm()) return;
 
         _cts?.Cancel();
         _cts?.Dispose();
@@ -341,13 +368,9 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
                     {
                         System.Int32 idx = IndexOfPart(result.UpdatedEntity.SparePartId);
                         if (idx >= 0)
-                        {
                             Parts[idx] = result.UpdatedEntity;
-                        }
                         else
-                        {
                             await LoadAsync();
-                        }
                     }
                     else
                     {
@@ -373,6 +396,7 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
         }
     }
 
+    // FIX: Đổi tên thành RequestDiscontinueCommand (XAML trước đó bind RequestDeleteCommand - SAI)
     [RelayCommand]
     private void RequestDiscontinue(SparePartDto part)
     {
@@ -380,16 +404,14 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
         IsDiscontinueConfirmVisible = true;
     }
 
+    // FIX: Đổi tên thành CancelDiscontinueCommand (XAML trước đó bind CancelDeleteCommand - SAI)
     [RelayCommand]
     private void CancelDiscontinue() => IsDiscontinueConfirmVisible = false;
 
     [RelayCommand]
     private async System.Threading.Tasks.Task ConfirmDiscontinueAsync()
     {
-        if (SelectedPart is null)
-        {
-            return;
-        }
+        if (SelectedPart is null) return;
 
         _cts?.Cancel();
         _cts?.Dispose();
@@ -407,7 +429,6 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
 
             if (result.IsSuccess)
             {
-                // Cập nhật trực tiếp trong list thay vì reload
                 System.Int32 idx = IndexOfPart(toUpdate.SparePartId);
                 if (idx >= 0)
                 {
@@ -431,19 +452,13 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
     [RelayCommand]
     private void NextPage()
     {
-        if (HasNextPage)
-        {
-            CurrentPage++;
-        }
+        if (HasNextPage) CurrentPage++;
     }
 
     [RelayCommand]
     private void PreviousPage()
     {
-        if (HasPreviousPage)
-        {
-            CurrentPage--;
-        }
+        if (HasPreviousPage) CurrentPage--;
     }
 
     [RelayCommand]
@@ -470,14 +485,8 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
 
     private void ResetPageAndLoad()
     {
-        if (CurrentPage != 1)
-        {
-            CurrentPage = 1;
-        }
-        else
-        {
-            _ = LoadAsync();
-        }
+        if (CurrentPage != 1) CurrentPage = 1;
+        else _ = LoadAsync();
     }
 
     private void ClearError()
@@ -494,6 +503,7 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
         FormInventoryQuantity = "0";
         FormSupplierId = 0;
         FormPickerCategoryIndex = 0;
+        FormIsDiscontinued = false;
         ClearFormError();
     }
 
@@ -541,7 +551,7 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
         _ = System.Decimal.TryParse(FormSellingPrice, out System.Decimal selling);
         _ = System.Int32.TryParse(FormInventoryQuantity, out System.Int32 qty);
 
-        return new SparePartDto()
+        return new SparePartDto
         {
             PartName = FormPartName,
             PurchasePrice = purchase,
@@ -549,24 +559,20 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
             InventoryQuantity = qty,
             SupplierId = FormSupplierId,
             PartCategory = FormCategory,
-            IsDiscontinued = IsEditing && (SelectedPart?.IsDiscontinued ?? false),
+            // FIX: Dùng FormIsDiscontinued thay vì đọc từ SelectedPart
+            IsDiscontinued = FormIsDiscontinued,
             SparePartId = IsEditing ? SelectedPart?.SparePartId : null
         };
     }
 
     private System.Int32 IndexOfPart(System.Object? partId)
     {
-        if (partId is null)
-        {
-            return -1;
-        }
+        if (partId is null) return -1;
 
         for (System.Int32 i = 0; i < Parts.Count; i++)
         {
             if (Parts[i].SparePartId is System.Object id && id.Equals(partId))
-            {
                 return i;
-            }
         }
 
         return -1;
@@ -577,12 +583,17 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
         switch (advice)
         {
             case ProtocolAdvice.DO_NOT_RETRY:
-                ShowPopup(title, message, isRetry: false); break;
+                ShowPopup(title, message, isRetry: false);
+                break;
             case ProtocolAdvice.BACKOFF_RETRY:
-                ShowPopup(title, message, isRetry: true); break;
+                ShowPopup(title, message, isRetry: true);
+                break;
             default:
+                // OPT: NONE / Timeout → chỉ hiện inline error, không popup
+                // Tránh popup xuất hiện khi lần đầu vào tab mà server chưa sẵn sàng
                 HasError = true;
-                ErrorMessage = message; break;
+                ErrorMessage = message;
+                break;
         }
     }
 
