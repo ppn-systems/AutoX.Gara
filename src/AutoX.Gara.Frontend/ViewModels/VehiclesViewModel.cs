@@ -22,7 +22,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     private readonly VehicleService _vehicleService;
     private System.Threading.CancellationTokenSource? _cts;
 
-    private const System.Int32 DefaultPageSize = 10;
+    private const System.Int32 DefaultPageSize = 2;
 
     // ─── Customer context ─────────────────────────────────────────────────────
 

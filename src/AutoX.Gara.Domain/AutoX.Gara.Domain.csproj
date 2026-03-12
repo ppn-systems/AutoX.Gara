@@ -25,7 +25,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Nalix.Common" Version="11.1.2" />
-		<PackageReference Include="Nalix.Shared" Version="11.1.2" />
+		<PackageReference Include="Nalix.Shared" Version="11.1.4" />
 		<PackageReference Include="Nalix.Framework" Version="11.1.2" />
 	</ItemGroup>
 

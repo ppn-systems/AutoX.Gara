@@ -20,4 +20,14 @@
         Title="Customers"
         ContentTemplate="{DataTemplate views:CustomersPage}"
         Route="CustomersPage" />
+
+    <ShellContent 
+        Title="Spare parts"
+        ContentTemplate="{DataTemplate views:SparePartsPage}"
+        Route="SparePartsPage" />
+
+    <ShellContent 
+        Title="Replacement parts"
+        ContentTemplate="{DataTemplate views:ReplacementPartsPage}"
+        Route="ReplacementPartsPage" />
 </Shell>

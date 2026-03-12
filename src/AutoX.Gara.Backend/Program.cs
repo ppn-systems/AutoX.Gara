@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Application.Communication;
 using AutoX.Gara.Application.Customers;
+using AutoX.Gara.Application.Inventory;
 using AutoX.Gara.Application.Vehicles;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Networking;
@@ -193,6 +194,22 @@ public static class Program
             dispatchOptions.WithHandler(() =>
                 new VehicleOps(
                     new VehicleRepository(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                                                .CreateDbContext(System.Array.Empty<System.String>())
+                    )
+                )
+            );
+            dispatchOptions.WithHandler(() =>
+                new ReplacementPartOps(
+                    new ReplacementPartRepository(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                                                .CreateDbContext(System.Array.Empty<System.String>())
+                    )
+                )
+            );
+            dispatchOptions.WithHandler(() =>
+                new SparePartOps(
+                    new SparePartRepository(
                         InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                                                 .CreateDbContext(System.Array.Empty<System.String>())
                     )

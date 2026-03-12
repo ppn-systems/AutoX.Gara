@@ -2,6 +2,8 @@
 
 using AutoX.Gara.Shared.Protocol.Auth;
 using AutoX.Gara.Shared.Protocol.Customers;
+using AutoX.Gara.Shared.Protocol.Inventory;
+using AutoX.Gara.Shared.Protocol.Suppliers;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Framework.Injection;
@@ -28,6 +30,18 @@ public static class AppConfig
 
         _ = factory.RegisterPacket<VehicleDto>();
         _ = factory.RegisterPacket<VehiclesQueryResponse>();
+
+        _ = factory.RegisterPacket<SupplierDto>();
+        _ = factory.RegisterPacket<SparePartQueryRequest>();
+        _ = factory.RegisterPacket<SparePartQueryResponse>();
+
+        _ = factory.RegisterPacket<SparePartDto>();
+        _ = factory.RegisterPacket<SparePartQueryRequest>();
+        _ = factory.RegisterPacket<SparePartQueryResponse>();
+
+        _ = factory.RegisterPacket<ReplacementPartDto>();
+        _ = factory.RegisterPacket<ReplacementPartQueryRequest>();
+        _ = factory.RegisterPacket<ReplacementPartQueryResponse>();
 
         PacketRegistry catalog = factory.CreateCatalog();
 

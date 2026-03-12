@@ -13,7 +13,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
-    xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Packets.Vehicles;assembly=AutoX.Gara.Shared"
+    xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Vehicles;assembly=AutoX.Gara.Shared"
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
     x:DataType="vm:VehiclesViewModel"
