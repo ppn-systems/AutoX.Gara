@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Services;
+using AutoX.Gara.Frontend.Services.Accounts;
 using AutoX.Gara.UI.ViewModels;
 using Microsoft.Maui.Controls;
 
@@ -13,7 +14,7 @@ public partial class LoginPage : ContentPage
     {
         InitializeComponent();
 
-        ILoginService loginService = new LoginService();
+        IAccountService loginService = new AccountService();
         INavigationService navigationService = new ShellNavigationService();
         BindingContext = new LoginViewModel(loginService, navigationService);
     }

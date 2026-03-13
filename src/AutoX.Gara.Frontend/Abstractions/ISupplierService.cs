@@ -2,8 +2,8 @@
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
+using AutoX.Gara.Frontend.Results.Suppliers;
 using AutoX.Gara.Frontend.Services.Suppliers;
-using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Suppliers;
 using System.Collections.Generic;

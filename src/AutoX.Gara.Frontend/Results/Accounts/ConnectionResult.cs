@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-namespace AutoX.Gara.Frontend.ViewModels.Results;
+namespace AutoX.Gara.Frontend.Results.Accounts;
 
 /// <summary>
 /// Kết quả kết nối + handshake.

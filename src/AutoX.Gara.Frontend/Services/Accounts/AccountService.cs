@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
-using AutoX.Gara.Frontend.ViewModels.Results;
+using AutoX.Gara.Frontend.Results.Accounts;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Auth;
 using Nalix.Common.Diagnostics.Abstractions;
@@ -13,13 +13,13 @@ using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
 using Nalix.Shared.Frames.Controls;
 
-namespace AutoX.Gara.Frontend.Services;
+namespace AutoX.Gara.Frontend.Services.Accounts;
 
 /// <summary>
 /// Implementation thực tế: kết nối → handshake → gửi LOGIN packet → đợi phản hồi.
 /// Toàn bộ network I/O nằm ở đây, ViewModel không biết gì về ReliableClient.
 /// </summary>
-public sealed class LoginService : ILoginService
+public sealed class AccountService : IAccountService
 {
     // ─── Cấu hình ────────────────────────────────────────────────────────────
 

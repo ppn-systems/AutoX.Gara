@@ -3,7 +3,7 @@
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Protocols;
 
-namespace AutoX.Gara.Frontend.ViewModels.Results;
+namespace AutoX.Gara.Frontend.Results.Vehicles;
 
 /// <summary>
 /// Represents the result of a vehicle list query operation (lấy danh sách xe theo customer).

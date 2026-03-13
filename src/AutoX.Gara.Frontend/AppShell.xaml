@@ -17,6 +17,11 @@
         Route="MainPage" />
 
     <ShellContent 
+        Title="Nhân viên"
+        ContentTemplate="{DataTemplate views:EmployeesPage}"
+        Route="EmployeesPage" />
+
+    <ShellContent 
         Title="Khách hàng"
         ContentTemplate="{DataTemplate views:CustomersPage}"
         Route="CustomersPage" />

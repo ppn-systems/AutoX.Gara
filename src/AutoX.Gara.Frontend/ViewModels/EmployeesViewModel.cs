@@ -1,11 +1,11 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Domain.Enums.Payments;
-using AutoX.Gara.Frontend.Results.Suppliers;
-using AutoX.Gara.Frontend.Services.Suppliers;
+using AutoX.Gara.Domain.Enums.Employees;
+using AutoX.Gara.Frontend.Results.Employees;
+using AutoX.Gara.Frontend.Services.Employees;
 using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Suppliers;
+using AutoX.Gara.Shared.Protocol.Employees;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
@@ -15,11 +15,11 @@ using System.Diagnostics;
 namespace AutoX.Gara.Frontend.ViewModels;
 
 /// <summary>
-/// ViewModel for supplier management.
+/// ViewModel for employee management.
 /// </summary>
-public sealed partial class SuppliersViewModel : ObservableObject, System.IDisposable
+public sealed partial class EmployeesViewModel : ObservableObject, System.IDisposable
 {
-    private readonly SupplierService _service;
+    private readonly EmployeeService _service;
     private System.Threading.CancellationTokenSource? _loadCts;
     private System.Threading.CancellationTokenSource? _writeCts;
     private System.Threading.CancellationTokenSource? _searchCts;
@@ -41,19 +41,21 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     // ─── Search / Sort ────────────────────────────────────────────────────────
 
     [ObservableProperty] public partial System.String SearchTerm { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial SupplierSortField SortBy { get; set; } = SupplierSortField.Name;
+    [ObservableProperty] public partial EmployeeSortField SortBy { get; set; } = EmployeeSortField.Name;
     [ObservableProperty] public partial System.Boolean SortDescending { get; set; } = false;
 
     // ─── Filter ───────────────────────────────────────────────────────────────
 
-    [ObservableProperty] public partial SupplierStatus FilterStatus { get; set; } = SupplierStatus.None;
-    [ObservableProperty] public partial PaymentTerms FilterPaymentTerms { get; set; } = PaymentTerms.None;
+    [ObservableProperty] public partial Position FilterPosition { get; set; } = Position.None;
+    [ObservableProperty] public partial EmploymentStatus FilterStatus { get; set; } = EmploymentStatus.None;
+    [ObservableProperty] public partial Gender FilterGender { get; set; } = Gender.None;
 
+    [ObservableProperty] public partial System.Int32 PickerPositionIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 PickerStatusIndex { get; set; } = 0;
-    [ObservableProperty] public partial System.Int32 PickerPaymentTermsIndex { get; set; } = 0;
+    [ObservableProperty] public partial System.Int32 PickerGenderIndex { get; set; } = 0;
 
     public System.Boolean HasActiveFilters
-        => FilterStatus != SupplierStatus.None || FilterPaymentTerms != PaymentTerms.None;
+        => FilterPosition != Position.None || FilterStatus != EmploymentStatus.None || FilterGender != Gender.None;
 
     // ─── State ────────────────────────────────────────────────────────────────
 
@@ -61,7 +63,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean HasError { get; set; }
     [ObservableProperty] public partial System.String? ErrorMessage { get; set; }
 
-    public System.Boolean IsEmpty => !IsLoading && Suppliers.Count == 0;
+    public System.Boolean IsEmpty => !IsLoading && Employees.Count == 0;
 
     // ─── Popup ────────────────────────────────────────────────────────────────
 
@@ -77,22 +79,21 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
     [ObservableProperty] public partial System.Boolean IsFormVisible { get; set; }
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
-    [ObservableProperty] public partial SupplierDto? SelectedSupplier { get; set; }
+    [ObservableProperty] public partial EmployeeDto? SelectedEmployee { get; set; }
 
-    public System.String FormTitle => IsEditing ? "Sửa nhà cung cấp" : "Thêm nhà cung cấp";
-    public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm nhà cung cấp";
+    public System.String FormTitle => IsEditing ? "Sửa nhân viên" : "Thêm nhân viên";
+    public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm nhân viên";
 
     [ObservableProperty] public partial System.String FormName { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormEmail { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormAddress { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial System.String FormTaxCode { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial System.String FormBankAccount { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial System.String FormPhoneNumbers { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial System.String FormNotes { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String FormPhoneNumber { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.Int32 FormGenderIndex { get; set; } = 0;
+    [ObservableProperty] public partial System.Int32 FormPositionIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 FormStatusIndex { get; set; } = 1;
-    [ObservableProperty] public partial System.Int32 FormPaymentTermsIndex { get; set; } = 0;
-    [ObservableProperty] public partial System.DateTime FormContractStartDate { get; set; } = System.DateTime.Today;
-    [ObservableProperty] public partial System.DateTime? FormContractEndDate { get; set; } = null;
+    [ObservableProperty] public partial System.DateTime FormDateOfBirth { get; set; } = System.DateTime.Today.AddYears(-20);
+    [ObservableProperty] public partial System.DateTime FormStartDate { get; set; } = System.DateTime.Today;
+    [ObservableProperty] public partial System.DateTime? FormEndDate { get; set; } = null;
     [ObservableProperty] public partial System.Boolean HasFormError { get; set; }
     [ObservableProperty] public partial System.String? FormErrorMessage { get; set; }
 
@@ -100,18 +101,18 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
     [ObservableProperty] public partial System.Boolean IsStatusConfirmVisible { get; set; }
     [ObservableProperty] public partial System.Int32 NewStatusIndex { get; set; } = 1;
-    public System.String StatusConfirmName => SelectedSupplier?.Name ?? System.String.Empty;
+    public System.String StatusConfirmName => SelectedEmployee?.Name ?? System.String.Empty;
 
     // ─── Collection ───────────────────────────────────────────────────────────
 
-    public System.Collections.ObjectModel.ObservableCollection<SupplierDto> Suppliers { get; } = [];
+    public System.Collections.ObjectModel.ObservableCollection<EmployeeDto> Employees { get; } = [];
 
     // ─── Constructor ───────────────────────────────────────────────────────────
 
-    public SuppliersViewModel(SupplierService service)
+    public EmployeesViewModel(EmployeeService service)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
-        Suppliers.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
+        Employees.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
     }
 
     // ─── Property Hooks ───────────────────────────────────────────────────────
@@ -119,7 +120,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(TotalPages));
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmpty));
-    partial void OnSelectedSupplierChanged(SupplierDto? value) => OnPropertyChanged(nameof(StatusConfirmName));
+    partial void OnSelectedEmployeeChanged(EmployeeDto? value) => OnPropertyChanged(nameof(StatusConfirmName));
     partial void OnIsEditingChanged(bool value)
     {
         OnPropertyChanged(nameof(FormTitle));
@@ -157,25 +158,34 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
         }
         catch (System.OperationCanceledException) { }
     }
-    partial void OnSortByChanged(SupplierSortField value) => _ = LoadAsync();
+    partial void OnSortByChanged(EmployeeSortField value) => _ = LoadAsync();
     partial void OnSortDescendingChanged(bool value) => _ = LoadAsync();
-    partial void OnFilterStatusChanged(SupplierStatus value)
+    partial void OnFilterPositionChanged(Position value)
     {
         OnPropertyChanged(nameof(HasActiveFilters));
         ResetPageAndLoad();
     }
-    partial void OnFilterPaymentTermsChanged(PaymentTerms value)
+    partial void OnFilterStatusChanged(EmploymentStatus value)
     {
         OnPropertyChanged(nameof(HasActiveFilters));
         ResetPageAndLoad();
+    }
+    partial void OnFilterGenderChanged(Gender value)
+    {
+        OnPropertyChanged(nameof(HasActiveFilters));
+        ResetPageAndLoad();
+    }
+    partial void OnPickerPositionIndexChanged(int value)
+    {
+        FilterPosition = (Position)value;
     }
     partial void OnPickerStatusIndexChanged(int value)
     {
-        FilterStatus = (SupplierStatus)value;
+        FilterStatus = (EmploymentStatus)value;
     }
-    partial void OnPickerPaymentTermsIndexChanged(int value)
+    partial void OnPickerGenderIndexChanged(int value)
     {
-        FilterPaymentTerms = (PaymentTerms)value;
+        FilterGender = (Gender)value;
     }
 
     // ─── Commands ──────────────────────────────────────────────────────────────
@@ -193,17 +203,18 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
         try
         {
-            SupplierListResult result = await _service.GetListAsync(
+            EmployeeListResult result = await _service.GetListAsync(
                 page: CurrentPage,
                 pageSize: DefaultPageSize,
                 searchTerm: SearchTerm,
                 sortBy: SortBy,
                 sortDescending: SortDescending,
+                filterPosition: FilterPosition,
                 filterStatus: FilterStatus,
-                filterPaymentTerms: FilterPaymentTerms,
+                filterGender: FilterGender,
                 ct: ct);
 
-            Debug.WriteLine($"[SuppliersVM] Load ok={result.IsSuccess} count={result.Suppliers.Count} total={result.TotalCount}");
+            Debug.WriteLine($"[EmployeesVM] Load ok={result.IsSuccess} count={result.Employees.Count} total={result.TotalCount}");
 
             if (ct.IsCancellationRequested)
             {
@@ -212,10 +223,10 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
             if (result.IsSuccess)
             {
-                Suppliers.Clear();
-                foreach (SupplierDto s in result.Suppliers)
+                Employees.Clear();
+                foreach (EmployeeDto e in result.Employees)
                 {
-                    Suppliers.Add(s);
+                    Employees.Add(e);
                 }
 
                 TotalCount = result.TotalCount >= 0 ? result.TotalCount : TotalCount;
@@ -237,36 +248,36 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     [RelayCommand]
     private void ClearFilters()
     {
+        PickerPositionIndex = 0;
         PickerStatusIndex = 0;
-        PickerPaymentTermsIndex = 0;
+        PickerGenderIndex = 0;
     }
 
     [RelayCommand]
     private void OpenCreateForm()
     {
         IsEditing = false;
-        SelectedSupplier = null;
+        SelectedEmployee = null;
         ClearForm();
         IsFormVisible = true;
     }
 
     [RelayCommand]
-    private void OpenEditForm(SupplierDto supplier)
+    private void OpenEditForm(EmployeeDto employee)
     {
         IsEditing = true;
-        SelectedSupplier = supplier;
+        SelectedEmployee = employee;
 
-        FormName = supplier.Name ?? System.String.Empty;
-        FormEmail = supplier.Email ?? System.String.Empty;
-        FormAddress = supplier.Address ?? System.String.Empty;
-        FormTaxCode = supplier.TaxCode ?? System.String.Empty;
-        FormBankAccount = supplier.BankAccount ?? System.String.Empty;
-        FormPhoneNumbers = supplier.PhoneNumbers ?? System.String.Empty;
-        FormNotes = supplier.Notes ?? System.String.Empty;
-        FormStatusIndex = (System.Int32)(supplier.Status ?? SupplierStatus.None);
-        FormPaymentTermsIndex = (System.Int32)(supplier.PaymentTerms ?? PaymentTerms.None);
-        FormContractStartDate = supplier.ContractStartDate ?? System.DateTime.Today;
-        FormContractEndDate = supplier.ContractEndDate;
+        FormName = employee.Name ?? System.String.Empty;
+        FormEmail = employee.Email ?? System.String.Empty;
+        FormAddress = employee.Address ?? System.String.Empty;
+        FormPhoneNumber = employee.PhoneNumber ?? System.String.Empty;
+        FormGenderIndex = (System.Int32)(employee.Gender ?? Gender.None);
+        FormPositionIndex = (System.Int32)(employee.Position ?? Position.None);
+        FormStatusIndex = (System.Int32)(employee.Status ?? EmploymentStatus.None);
+        FormDateOfBirth = employee.DateOfBirth ?? System.DateTime.Today.AddYears(-20);
+        FormStartDate = employee.StartDate ?? System.DateTime.Today;
+        FormEndDate = employee.EndDate;
 
         ClearFormError();
         IsFormVisible = true;
@@ -296,8 +307,8 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
         try
         {
-            SupplierDto data = BuildPacketFromForm();
-            SupplierWriteResult result = IsEditing
+            EmployeeDto data = BuildPacketFromForm();
+            EmployeeWriteResult result = IsEditing
                 ? await _service.UpdateAsync(data, ct)
                 : await _service.CreateAsync(data, ct);
 
@@ -310,10 +321,10 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
                 {
                     if (IsEditing)
                     {
-                        System.Int32 idx = IndexOfSupplier(result.UpdatedEntity.SupplierId);
+                        System.Int32 idx = IndexOfEmployee(result.UpdatedEntity.EmployeeId);
                         if (idx >= 0)
                         {
-                            Suppliers[idx] = result.UpdatedEntity;
+                            Employees[idx] = result.UpdatedEntity;
                         }
                         else
                         {
@@ -322,7 +333,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
                     }
                     else
                     {
-                        Suppliers.Insert(0, result.UpdatedEntity);
+                        Employees.Insert(0, result.UpdatedEntity);
                         TotalCount++;
                         OnPropertyChanged(nameof(TotalPages));
                         HasNextPage = CurrentPage < TotalPages;
@@ -345,10 +356,10 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     }
 
     [RelayCommand]
-    private void RequestChangeStatus(SupplierDto supplier)
+    private void RequestChangeStatus(EmployeeDto employee)
     {
-        SelectedSupplier = supplier;
-        NewStatusIndex = (System.Int32)(supplier.Status ?? SupplierStatus.None);
+        SelectedEmployee = employee;
+        NewStatusIndex = (System.Int32)(employee.Status ?? EmploymentStatus.None);
         IsStatusConfirmVisible = true;
     }
 
@@ -358,7 +369,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     [RelayCommand]
     private async System.Threading.Tasks.Task ConfirmChangeStatusAsync()
     {
-        if (SelectedSupplier is null)
+        if (SelectedEmployee is null)
         {
             return;
         }
@@ -373,25 +384,25 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
         try
         {
-            SupplierDto data = new()
+            EmployeeDto data = new()
             {
-                SupplierId = SelectedSupplier.SupplierId,
-                Status = (SupplierStatus)NewStatusIndex,
+                EmployeeId = SelectedEmployee.EmployeeId,
+                Status = (EmploymentStatus)NewStatusIndex,
                 SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
             };
 
-            SupplierWriteResult result = await _service.ChangeStatusAsync(data, ct);
+            EmployeeWriteResult result = await _service.ChangeStatusAsync(data, ct);
 
             if (result.IsSuccess)
             {
-                System.Int32 idx = IndexOfSupplier(SelectedSupplier.SupplierId);
+                System.Int32 idx = IndexOfEmployee(SelectedEmployee.EmployeeId);
                 if (idx >= 0)
                 {
-                    SupplierDto updated = Suppliers[idx];
-                    updated.Status = (SupplierStatus)NewStatusIndex;
-                    Suppliers[idx] = updated;
+                    EmployeeDto updated = Employees[idx];
+                    updated.Status = (EmploymentStatus)NewStatusIndex;
+                    Employees[idx] = updated;
                 }
-                SelectedSupplier = null;
+                SelectedEmployee = null;
             }
             else
             {
@@ -467,14 +478,13 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
         FormName = System.String.Empty;
         FormEmail = System.String.Empty;
         FormAddress = System.String.Empty;
-        FormTaxCode = System.String.Empty;
-        FormBankAccount = System.String.Empty;
-        FormPhoneNumbers = System.String.Empty;
-        FormNotes = System.String.Empty;
+        FormPhoneNumber = System.String.Empty;
+        FormGenderIndex = 0;
+        FormPositionIndex = 0;
         FormStatusIndex = 1;
-        FormPaymentTermsIndex = 0;
-        FormContractStartDate = System.DateTime.Today;
-        FormContractEndDate = null;
+        FormDateOfBirth = System.DateTime.Today.AddYears(-20);
+        FormStartDate = System.DateTime.Today;
+        FormEndDate = null;
         ClearFormError();
     }
 
@@ -493,62 +503,58 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     private System.Boolean ValidateForm()
     {
         if (System.String.IsNullOrWhiteSpace(FormName))
-        { SetFormError("Tên nhà cung cấp không được để trống."); return false; }
+        { SetFormError("Tên nhân viên không được để trống."); return false; }
 
-        if (FormName.Length > 150)
-        { SetFormError("Tên không được vượt quá 150 ký tự."); return false; }
+        if (FormName.Length > 50)
+        { SetFormError("Tên không được vượt quá 50 ký tự."); return false; }
 
         if (!IsValidEmail(FormEmail))
         { SetFormError("Email không hợp lệ."); return false; }
 
-        if (System.String.IsNullOrWhiteSpace(FormTaxCode))
-        { SetFormError("Mã số thuế không được để trống."); return false; }
-
-        if (FormPhoneNumbers.Length > 0)
+        if (!System.String.IsNullOrWhiteSpace(FormPhoneNumber))
         {
-            foreach (var phone in FormPhoneNumbers.Split(','))
-            {
-                if (!IsValidPhoneNumber(phone.Trim()))
-                { SetFormError("Số điện thoại không hợp lệ."); return false; }
-            }
+            if (!IsValidPhone(FormPhoneNumber))
+            { SetFormError("Số điện thoại không hợp lệ (10-14 chữ số)."); return false; }
         }
 
-        if (FormContractEndDate.HasValue && FormContractEndDate <= FormContractStartDate)
+        if (FormDateOfBirth >= System.DateTime.Today)
+        { SetFormError("Ngày sinh phải trong quá khứ."); return false; }
+
+        if (FormEndDate.HasValue && FormEndDate <= FormStartDate)
         { SetFormError("Ngày kết thúc phải sau ngày bắt đầu."); return false; }
 
         return true;
     }
 
-    private SupplierDto BuildPacketFromForm()
+    private EmployeeDto BuildPacketFromForm()
     {
-        return new SupplierDto
+        return new EmployeeDto
         {
-            SupplierId = IsEditing ? SelectedSupplier?.SupplierId : null,
+            EmployeeId = IsEditing ? SelectedEmployee?.EmployeeId : null,
             Name = FormName,
             Email = FormEmail,
             Address = FormAddress,
-            TaxCode = FormTaxCode,
-            BankAccount = FormBankAccount,
-            PhoneNumbers = FormPhoneNumbers,
-            Notes = FormNotes,
-            Status = (SupplierStatus)FormStatusIndex,
-            PaymentTerms = (PaymentTerms)FormPaymentTermsIndex,
-            ContractStartDate = FormContractStartDate,
-            ContractEndDate = FormContractEndDate,
+            PhoneNumber = FormPhoneNumber,
+            Gender = (Gender)FormGenderIndex,
+            Position = (Position)FormPositionIndex,
+            Status = (EmploymentStatus)FormStatusIndex,
+            DateOfBirth = FormDateOfBirth,
+            StartDate = FormStartDate,
+            EndDate = FormEndDate,
             SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
         };
     }
 
-    private System.Int32 IndexOfSupplier(System.Object? id)
+    private System.Int32 IndexOfEmployee(System.Object? id)
     {
         if (id is null)
         {
             return -1;
         }
 
-        for (System.Int32 i = 0; i < Suppliers.Count; i++)
+        for (System.Int32 i = 0; i < Employees.Count; i++)
         {
-            if (Suppliers[i].SupplierId is System.Object supplierId && supplierId.Equals(id))
+            if (Employees[i].EmployeeId is System.Object employeeId && employeeId.Equals(id))
             {
                 return i;
             }
@@ -596,5 +602,5 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
         }
     }
 
-    private static System.Boolean IsValidPhoneNumber(System.String phone) => System.Text.RegularExpressions.Regex.IsMatch(phone, @"^(\+?\d{1,3}[-.\s]?)?\d{10,15}$");
+    private static System.Boolean IsValidPhone(System.String phone) => System.Text.RegularExpressions.Regex.IsMatch(phone, @"^\d{10,14}$");
 }

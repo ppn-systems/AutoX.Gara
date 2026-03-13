@@ -1,10 +1,10 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Domain.Enums.Payments;
-using AutoX.Gara.Frontend.Results.Suppliers;
+using AutoX.Gara.Domain.Enums.Employees;
+using AutoX.Gara.Frontend.Results.Employees;
 using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Suppliers;
+using AutoX.Gara.Shared.Protocol.Employees;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
@@ -13,42 +13,40 @@ using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
 using Nalix.Shared.Frames.Controls;
 
-namespace AutoX.Gara.Frontend.Services.Suppliers;
+namespace AutoX.Gara.Frontend.Services.Employees;
 
 /// <summary>
-/// Frontend service for supplier operations.
-/// Handles GET/POST/PUT for supplier management.
+/// Frontend service for employee operations.
 /// </summary>
-public sealed class SupplierService : ISupplierService
+public sealed class EmployeeService : IEmployeeService
 {
     private const System.Int32 RequestTimeoutMs = 10_000;
-    private readonly ISupplierQueryCache _cache;
+    private readonly IEmployeeQueryCache _cache;
 
-    public SupplierService(ISupplierQueryCache cache)
+    public EmployeeService(IEmployeeQueryCache cache)
         => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
-    // ─── GetListAsync ─────────────────────────────────────────────────────────
-
-    public async System.Threading.Tasks.Task<SupplierListResult> GetListAsync(
+    public async System.Threading.Tasks.Task<EmployeeListResult> GetListAsync(
         System.Int32 page,
         System.Int32 pageSize,
         System.String? searchTerm = null,
-        SupplierSortField sortBy = SupplierSortField.Name,
+        EmployeeSortField sortBy = EmployeeSortField.Name,
         System.Boolean sortDescending = false,
-        SupplierStatus filterStatus = SupplierStatus.None,
-        PaymentTerms filterPaymentTerms = PaymentTerms.None,
+        Position filterPosition = Position.None,
+        EmploymentStatus filterStatus = EmploymentStatus.None,
+        Gender filterGender = Gender.None,
         System.Threading.CancellationToken ct = default)
     {
-        SupplierCacheKey key = new(
+        EmployeeCacheKey key = new(
             page, pageSize,
             searchTerm ?? System.String.Empty,
             sortBy, sortDescending,
-            filterStatus, filterPaymentTerms);
+            filterPosition, filterStatus, filterGender);
 
-        if (_cache.TryGet(key, out SupplierCacheEntry? cached))
+        if (_cache.TryGet(key, out EmployeeCacheEntry? cached))
         {
             System.Boolean hasMore = page * pageSize < cached!.TotalCount;
-            return SupplierListResult.Success(cached.Suppliers, cached.TotalCount, hasMore);
+            return EmployeeListResult.Success(cached.Employees, cached.TotalCount, hasMore);
         }
 
         try
@@ -56,7 +54,7 @@ public sealed class SupplierService : ISupplierService
             System.UInt32 sq = Csprng.NextUInt32();
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
-            SupplierQueryRequest packet = new()
+            EmployeeQueryRequest packet = new()
             {
                 Page = page,
                 PageSize = pageSize,
@@ -64,26 +62,27 @@ public sealed class SupplierService : ISupplierService
                 SearchTerm = searchTerm ?? System.String.Empty,
                 SortBy = sortBy,
                 SortDescending = sortDescending,
+                FilterPosition = filterPosition,
                 FilterStatus = filterStatus,
-                FilterPaymentTerms = filterPaymentTerms,
-                OpCode = (System.UInt16)OpCommand.SUPPLIER_GET
+                FilterGender = filterGender,
+                OpCode = (System.UInt16)OpCommand.EMPLOYEE_GET
             };
 
-            System.Threading.Tasks.TaskCompletionSource<SupplierListResult> tcs =
+            System.Threading.Tasks.TaskCompletionSource<EmployeeListResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
             System.IDisposable? sub = null;
             System.IDisposable? errSub = null;
 
-            sub = client.OnOnce<SupplierQueryResponse>(
+            sub = client.OnOnce<EmployeeQueryResponse>(
                 predicate: p => p.SequenceId == sq,
                 handler: resp =>
                 {
                     sub?.Dispose();
                     errSub?.Dispose();
-                    _cache.Set(key, resp.Suppliers, resp.TotalCount);
+                    _cache.Set(key, resp.Employees, resp.TotalCount);
                     System.Boolean hasMore = page * pageSize < resp.TotalCount;
-                    tcs.TrySetResult(SupplierListResult.Success(resp.Suppliers, resp.TotalCount, hasMore));
+                    tcs.TrySetResult(EmployeeListResult.Success(resp.Employees, resp.TotalCount, hasMore));
                 });
 
             errSub = client.OnOnce<Directive>(
@@ -92,7 +91,7 @@ public sealed class SupplierService : ISupplierService
                 {
                     sub?.Dispose();
                     errSub?.Dispose();
-                    tcs.TrySetResult(SupplierListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
+                    tcs.TrySetResult(EmployeeListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
                 });
 
             await client.SendAsync(packet, ct).ConfigureAwait(false);
@@ -109,30 +108,28 @@ public sealed class SupplierService : ISupplierService
             {
                 sub?.Dispose();
                 errSub?.Dispose();
-                return SupplierListResult.Timeout();
+                return EmployeeListResult.Timeout();
             }
 
             return await tcs.Task.ConfigureAwait(false);
         }
         catch (System.OperationCanceledException)
         {
-            return SupplierListResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return EmployeeListResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return SupplierListResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return EmployeeListResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
-    // ─── CreateAsync ──────────────────────────────────────────────────────────
-
-    public async System.Threading.Tasks.Task<SupplierWriteResult> CreateAsync(
-        SupplierDto data,
+    public async System.Threading.Tasks.Task<EmployeeWriteResult> CreateAsync(
+        EmployeeDto data,
         System.Threading.CancellationToken ct = default)
     {
-        SupplierWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.SUPPLIER_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
+        EmployeeWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.EMPLOYEE_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
 
         if (result.IsSuccess)
         {
@@ -142,14 +139,12 @@ public sealed class SupplierService : ISupplierService
         return result;
     }
 
-    // ─── UpdateAsync ──────────────────────────────────────────────────────────
-
-    public async System.Threading.Tasks.Task<SupplierWriteResult> UpdateAsync(
-        SupplierDto data,
+    public async System.Threading.Tasks.Task<EmployeeWriteResult> UpdateAsync(
+        EmployeeDto data,
         System.Threading.CancellationToken ct = default)
     {
-        SupplierWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.SUPPLIER_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
+        EmployeeWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.EMPLOYEE_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
 
         if (result.IsSuccess)
         {
@@ -159,14 +154,12 @@ public sealed class SupplierService : ISupplierService
         return result;
     }
 
-    // ─── ChangeStatusAsync ───────────────────────────────────────────��────────
-
-    public async System.Threading.Tasks.Task<SupplierWriteResult> ChangeStatusAsync(
-        SupplierDto data,
+    public async System.Threading.Tasks.Task<EmployeeWriteResult> ChangeStatusAsync(
+        EmployeeDto data,
         System.Threading.CancellationToken ct = default)
     {
-        SupplierWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.SUPPLIER_CHANGE_STATUS, data, expectEcho: false, ct).ConfigureAwait(false);
+        EmployeeWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.EMPLOYEE_CHANGE_STATUS, data, expectEcho: false, ct).ConfigureAwait(false);
 
         if (result.IsSuccess)
         {
@@ -176,11 +169,9 @@ public sealed class SupplierService : ISupplierService
         return result;
     }
 
-    // ─── Private Helpers ──────────────────────────────────────────────────────
-
-    private static async System.Threading.Tasks.Task<SupplierWriteResult> SendWritePacketAsync(
+    private static async System.Threading.Tasks.Task<EmployeeWriteResult> SendWritePacketAsync(
         System.UInt16 opcode,
-        SupplierDto data,
+        EmployeeDto data,
         System.Boolean expectEcho,
         System.Threading.CancellationToken ct)
     {
@@ -192,7 +183,7 @@ public sealed class SupplierService : ISupplierService
             data.OpCode = opcode;
             data.SequenceId = sq;
 
-            System.Threading.Tasks.TaskCompletionSource<SupplierWriteResult> tcs =
+            System.Threading.Tasks.TaskCompletionSource<EmployeeWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
             System.IDisposable? echoSub = null;
@@ -200,13 +191,13 @@ public sealed class SupplierService : ISupplierService
 
             if (expectEcho)
             {
-                echoSub = client.OnOnce<SupplierDto>(
+                echoSub = client.OnOnce<EmployeeDto>(
                     predicate: p => p.SequenceId == sq,
                     handler: confirmed =>
                     {
                         echoSub?.Dispose();
                         errSub?.Dispose();
-                        tcs.TrySetResult(SupplierWriteResult.Success(confirmed));
+                        tcs.TrySetResult(EmployeeWriteResult.Success(confirmed));
                     });
             }
 
@@ -216,9 +207,9 @@ public sealed class SupplierService : ISupplierService
                 {
                     echoSub?.Dispose();
                     errSub?.Dispose();
-                    SupplierWriteResult result = resp.Type == ControlType.NONE
-                        ? SupplierWriteResult.Success()
-                        : SupplierWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
+                    EmployeeWriteResult result = resp.Type == ControlType.NONE
+                        ? EmployeeWriteResult.Success()
+                        : EmployeeWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
                     tcs.TrySetResult(result);
                 });
 
@@ -236,27 +227,27 @@ public sealed class SupplierService : ISupplierService
             {
                 echoSub?.Dispose();
                 errSub?.Dispose();
-                return SupplierWriteResult.Timeout();
+                return EmployeeWriteResult.Timeout();
             }
 
             return await tcs.Task.ConfigureAwait(false);
         }
         catch (System.OperationCanceledException)
         {
-            return SupplierWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return EmployeeWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return SupplierWriteResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return EmployeeWriteResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "Không tìm thấy nhà cung cấp.",
-            ProtocolReason.ALREADY_EXISTS => "Email hoặc mã số thuế đã tồn tại.",
+            ProtocolReason.NOT_FOUND => "Không tìm thấy nhân viên.",
+            ProtocolReason.ALREADY_EXISTS => "Email hoặc số điện thoại đã tồn tại.",
             ProtocolReason.MALFORMED_PACKET => "Dữ liệu không hợp lệ.",
             ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống. Vui lòng thử lại sau.",
             ProtocolReason.FORBIDDEN => "Bạn không có quyền thực hiện thao tác này.",
@@ -278,21 +269,22 @@ public sealed class SupplierService : ISupplierService
 }
 
 /// <summary>
-/// Abstraction for supplier service.
+/// Abstraction for employee service.
 /// </summary>
-public interface ISupplierService
+public interface IEmployeeService
 {
-    System.Threading.Tasks.Task<SupplierListResult> GetListAsync(
+    System.Threading.Tasks.Task<EmployeeListResult> GetListAsync(
         System.Int32 page,
         System.Int32 pageSize,
         System.String? searchTerm = null,
-        SupplierSortField sortBy = SupplierSortField.Name,
+        EmployeeSortField sortBy = EmployeeSortField.Name,
         System.Boolean sortDescending = false,
-        SupplierStatus filterStatus = SupplierStatus.None,
-        PaymentTerms filterPaymentTerms = PaymentTerms.None,
+        Position filterPosition = Position.None,
+        EmploymentStatus filterStatus = EmploymentStatus.None,
+        Gender filterGender = Gender.None,
         System.Threading.CancellationToken ct = default);
 
-    System.Threading.Tasks.Task<SupplierWriteResult> CreateAsync(SupplierDto data, System.Threading.CancellationToken ct = default);
-    System.Threading.Tasks.Task<SupplierWriteResult> UpdateAsync(SupplierDto data, System.Threading.CancellationToken ct = default);
-    System.Threading.Tasks.Task<SupplierWriteResult> ChangeStatusAsync(SupplierDto data, System.Threading.CancellationToken ct = default);
+    System.Threading.Tasks.Task<EmployeeWriteResult> CreateAsync(EmployeeDto data, System.Threading.CancellationToken ct = default);
+    System.Threading.Tasks.Task<EmployeeWriteResult> UpdateAsync(EmployeeDto data, System.Threading.CancellationToken ct = default);
+    System.Threading.Tasks.Task<EmployeeWriteResult> ChangeStatusAsync(EmployeeDto data, System.Threading.CancellationToken ct = default);
 }

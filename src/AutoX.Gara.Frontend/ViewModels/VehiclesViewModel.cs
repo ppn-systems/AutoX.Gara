@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Cars;
+using AutoX.Gara.Frontend.Results.Vehicles;
 using AutoX.Gara.Frontend.Services.Vehicles;
-using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Protocol.Customers;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using CommunityToolkit.Mvvm.ComponentModel;

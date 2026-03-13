@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
-using AutoX.Gara.Frontend.ViewModels.Results;
+using AutoX.Gara.Frontend.Results.Accounts;
 using AutoX.Gara.Shared.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -26,7 +26,7 @@ public sealed partial class LoginViewModel : ObservableObject
 {
     // ─── Dependencies (DI) ───────────────────────────────────────────────────
 
-    private readonly ILoginService _loginService;
+    private readonly IAccountService _loginService;
     private readonly INavigationService _navigation;
 
     // ─── Cancellation ────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ public sealed partial class LoginViewModel : ObservableObject
     /// Constructor nhận dependencies qua DI — dễ unit test hơn <c>InstanceManager</c>.
     /// Nếu chưa dùng DI container, bạn có thể dùng constructor mặc định bên dưới.
     /// </summary>
-    public LoginViewModel(ILoginService loginService, INavigationService navigation)
+    public LoginViewModel(IAccountService loginService, INavigationService navigation)
     {
         _loginService = loginService;
         _navigation = navigation;

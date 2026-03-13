@@ -3,7 +3,7 @@
 using AutoX.Gara.Shared.Protocol.Suppliers;
 using Nalix.Common.Networking.Protocols;
 
-namespace AutoX.Gara.Frontend.ViewModels.Results;
+namespace AutoX.Gara.Frontend.Results.Suppliers;
 
 /// <summary>
 /// Result of a supplier list query operation.
@@ -29,33 +29,6 @@ public sealed class SupplierListResult
         => new() { IsSuccess = false, ErrorMessage = message, Advice = advice };
 
     public static SupplierListResult Timeout()
-        => new()
-        {
-            IsSuccess = false,
-            ErrorMessage = "Yêu cầu hết thời gian chờ. Vui lòng thử lại.",
-            Advice = ProtocolAdvice.BACKOFF_RETRY
-        };
-}
-
-/// <summary>
-/// Result of a supplier write (create/update/change status) operation.
-/// </summary>
-public sealed class SupplierWriteResult
-{
-    public System.Boolean IsSuccess { get; private init; }
-    public System.String? ErrorMessage { get; private init; }
-    public ProtocolAdvice Advice { get; private init; }
-    public SupplierDto? UpdatedEntity { get; private init; }
-
-    public static SupplierWriteResult Success(SupplierDto? updatedEntity = null)
-        => new() { IsSuccess = true, UpdatedEntity = updatedEntity };
-
-    public static SupplierWriteResult Failure(
-        System.String message,
-        ProtocolAdvice advice = ProtocolAdvice.FIX_AND_RETRY)
-        => new() { IsSuccess = false, ErrorMessage = message, Advice = advice };
-
-    public static SupplierWriteResult Timeout()
         => new()
         {
             IsSuccess = false,

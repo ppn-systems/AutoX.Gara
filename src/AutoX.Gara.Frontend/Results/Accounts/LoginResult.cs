@@ -2,7 +2,7 @@
 
 using Nalix.Common.Networking.Protocols;
 
-namespace AutoX.Gara.Frontend.ViewModels.Results;
+namespace AutoX.Gara.Frontend.Results.Accounts;
 
 /// <summary>
 /// Kết quả đăng nhập, gồm thành công hoặc lỗi kèm reason + advice từ server.
