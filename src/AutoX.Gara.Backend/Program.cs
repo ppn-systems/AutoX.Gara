@@ -263,6 +263,21 @@ public static class Program
                     InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                 )
             );
+            dispatchOptions.WithHandler(() =>
+                new ServiceItemOps(
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                )
+            );
+            dispatchOptions.WithHandler(() =>
+                new RepairTaskOps(
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                )
+            );
+            dispatchOptions.WithHandler(() =>
+                new RepairOrderItemOps(
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                )
+            );
         });
 
         AutoXProtocol xProtocol = new(channel);
