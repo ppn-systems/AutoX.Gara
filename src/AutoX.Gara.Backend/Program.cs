@@ -189,11 +189,20 @@ public static class Program
         // Seed initial data if necessary
         using (AutoXDbContext context = factory.CreateDbContext())
         {
-            // EnsureCreated sẽ tự kiểm tra database chưa có mới tạo, nếu đã có thì không làm gì cả.
-            if (context.Database.EnsureCreated())
+            try
             {
-                // Sau khi TẠO MỚI database thành công, seed data.
-                DataSeeder.SeedAsync(context).Wait();
+                // EnsureCreated sẽ tự kiểm tra database chưa có mới tạo, nếu đã có thì không làm gì cả.
+                if (context.Database.EnsureCreated())
+                {
+                    // Sau khi TẠO MỚI database thành công, seed data.
+                    DataSeeder.SeedAsync(context).Wait();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                InstanceManager.Instance.GetExistingInstance<ILogger>()
+                                        .Error("Error during database initialization", ex);
+                throw; // Rethrow để Main có thể bắt và xử lý
             }
         }
 

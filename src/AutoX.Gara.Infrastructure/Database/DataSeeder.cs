@@ -1,21 +1,26 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Entities.Inventory;
+using AutoX.Gara.Domain.Entities.Invoices;
+using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Cars;
 using AutoX.Gara.Domain.Enums.Customers;
+using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Domain.Enums.Parts;
 using AutoX.Gara.Domain.Enums.Payments;
+using AutoX.Gara.Domain.Enums.Repairs;
+using AutoX.Gara.Domain.Enums.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Nalix.Common.Security.Enums;
 using Nalix.Shared.Security.Credentials;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace AutoX.Gara.Infrastructure.Database;
 
@@ -40,9 +45,15 @@ public static class DataSeeder
     {
         await SeedAccountsAsync(context);
         await SeedCustomersAsync(context);
+        await SeedEmployeesAsync(context);
         await SeedVehiclesAsync(context);
         await SeedSuppliersAsync(context);
         await SeedPartsAsync(context);
+        await SeedServiceItemsAsync(context);
+        await SeedRepairTasksAsync(context);
+        await SeedRepairOrdersAsync(context);
+        await SeedInvoicesAsync(context);
+        await SeedTransactionsAsync(context);
     }
 
     // =========================================================================
@@ -237,6 +248,189 @@ public static class DataSeeder
         };
 
         context.Customers.AddRange(customers);
+        await context.SaveChangesAsync();
+    }
+
+    // =========================================================================
+    // EMPLOYEE — 10 nhân viên với các vị trí khác nhau
+    // =========================================================================
+
+    private static async System.Threading.Tasks.Task SeedEmployeesAsync(AutoXDbContext context)
+    {
+        if (await context.Employees.AnyAsync())
+        {
+            return;
+        }
+
+        var employees = new List<Employee>
+    {
+        // --- Kỹ thuật viên cơ khí cơ bản ---
+        new()
+        {
+            Name = "Trần Minh Hùng",
+            Gender = Gender.Male,
+            DateOfBirth = new DateTime(1990, 3, 15, 0, 0, 0, DateTimeKind.Utc),
+            Address = "234 Nguyễn Huệ, Q.1, TP.HCM",
+            PhoneNumber = "0901234567",
+            Email = "hung.tran@autox-gara.vn",
+            Position = Position.Technician,
+            Status = EmploymentStatus.Active,
+            StartDate = new DateTime(2020, 1, 15, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = null,
+        },
+
+        // --- Thợ máy gầm ---
+        new()
+        {
+            Name = "Lê Văn Phát",
+            Gender = Gender.Male,
+            DateOfBirth = new DateTime(1992, 7, 22, 0, 0, 0, DateTimeKind.Utc),
+            Address = "567 Tô Ký, Q.12, TP.HCM",
+            PhoneNumber = "0912345678",
+            Email = "phat.le@autox-gara.vn",
+            Position = Position.UnderCarMechanic,
+            Status = EmploymentStatus.Active,
+            StartDate = new DateTime(2019, 6, 1, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = null,
+        },
+
+        // --- Chuyên viên chẩn đoán ---
+        new()
+        {
+            Name = "Nguyễn Quốc Vinh",
+            Gender = Gender.Male,
+            DateOfBirth = new DateTime(1995, 11, 8, 0, 0, 0, DateTimeKind.Utc),
+            Address = "890 Cách Mạng Tháng 8, Q.3, TP.HCM",
+            PhoneNumber = "0933456789",
+            Email = "vinh.nguyen@autox-gara.vn",
+            Position = Position.DiagnosticSpecialist,
+            Status = EmploymentStatus.Active,
+            StartDate = new DateTime(2021, 3, 20, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = null,
+        },
+
+        // --- Thợ điện ô tô ---
+        new()
+        {
+            Name = "Hoàng Văn Đoàn",
+            Gender = Gender.Male,
+            DateOfBirth = new DateTime(1988, 5, 10, 0, 0, 0, DateTimeKind.Utc),
+            Address = "123 Lý Thường Kiệt, Q.10, TP.HCM",
+            PhoneNumber = "0944567890",
+            Email = "doan.hoang@autox-gara.vn",
+            Position = Position.AutoElectrician,
+            Status = EmploymentStatus.Active,
+            StartDate = new DateTime(2018, 9, 1, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = null,
+        },
+
+        // --- Nhân viên tư vấn dịch vụ ---
+        new()
+        {
+            Name = "Trương Thị Ngà",
+            Gender = Gender.Female,
+            DateOfBirth = new DateTime(1991, 2, 28, 0, 0, 0, DateTimeKind.Utc),
+            Address = "456 Nguyễn Trãi, Q.5, TP.HCM",
+            PhoneNumber = "0955678901",
+            Email = "nga.truong@autox-gara.vn",
+            Position = Position.Advisor,
+            Status = EmploymentStatus.Active,
+            StartDate = new DateTime(2020, 7, 15, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = null,
+        },
+
+        // --- Quản lý ca / Trưởng ca ---
+        new()
+        {
+            Name = "Phan Minh Nhật",
+            Gender = Gender.Male,
+            DateOfBirth = new DateTime(1985, 9, 3, 0, 0, 0, DateTimeKind.Utc),
+            Address = "789 Điện Biên Phủ, Q.Bình Thạnh, TP.HCM",
+            PhoneNumber = "0966789012",
+            Email = "nhat.phan@autox-gara.vn",
+            Position = Position.ShiftSupervisor,
+            Status = EmploymentStatus.Active,
+            StartDate = new DateTime(2017, 1, 10, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = null,
+        },
+
+        // --- Chuyên viên sơn xe ---
+        new()
+        {
+            Name = "Đỗ Tiến Dũng",
+            Gender = Gender.Male,
+            DateOfBirth = new DateTime(1996, 4, 20, 0, 0, 0, DateTimeKind.Utc),
+            Address = "321 Võ Văn Tần, Q.3, TP.HCM",
+            PhoneNumber = "0977890123",
+            Email = "dung.do@autox-gara.vn",
+            Position = Position.Painter,
+            Status = EmploymentStatus.Active,
+            StartDate = new DateTime(2022, 2, 1, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = null,
+        },
+
+        // --- Chuyên viên sửa chữa động cơ ---
+        new()
+        {
+            Name = "Võ Thanh Sơn",
+            Gender = Gender.Male,
+            DateOfBirth = new DateTime(1994, 8, 15, 0, 0, 0, DateTimeKind.Utc),
+            Address = "654 Phan Xích Long, Q.Phú Nhuận, TP.HCM",
+            PhoneNumber = "0988901234",
+            Email = "son.vo@autox-gara.vn",
+            Position = Position.EngineSpecialist,
+            Status = EmploymentStatus.Inactive,
+            StartDate = new DateTime(2021, 5, 1, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc),
+        },
+
+        // --- Nhân viên tư vấn phụ tùng ---
+        new()
+        {
+            Name = "Bùi Thị Hương",
+            Gender = Gender.Female,
+            DateOfBirth = new DateTime(1993, 6, 12, 0, 0, 0, DateTimeKind.Utc),
+            Address = "147 Tân Kỳ Tân Quý, Q.6, TP.HCM",
+            PhoneNumber = "0999012345",
+            Email = "huong.bui@autox-gara.vn",
+            Position = Position.PartsConsultant,
+            Status = EmploymentStatus.Active,
+            StartDate = new DateTime(2021, 9, 1, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = null,
+        },
+
+        // --- Nhân viên tiếp nhận xe (Chờ bắt đầu) ---
+        new()
+        {
+            Name = "Vũ Minh Khoa",
+            Gender = Gender.Male,
+            DateOfBirth = new DateTime(1998, 10, 25, 0, 0, 0, DateTimeKind.Utc),
+            Address = "963 Ngô Văn Năm, Q.Gò Vấp, TP.HCM",
+            PhoneNumber = "0910111213",
+            Email = "khoa.vu@autox-gara.vn",
+            Position = Position.Receptionist,
+            Status = EmploymentStatus.Pending,
+            StartDate = new DateTime(2026, 4, 1, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = null,
+        },
+
+        // --- Nhân viên rửa xe ---
+        new()
+        {
+            Name = "Trần Công Sơn",
+            Gender = Gender.Male,
+            DateOfBirth = new DateTime(2000, 1, 30, 0, 0, 0, DateTimeKind.Utc),
+            Address = "258 Nguyễn Oanh, Q.Gò Vấp, TP.HCM",
+            PhoneNumber = "0911121314",
+            Email = "son.tran.cs@autox-gara.vn",
+            Position = Position.CarWasher,
+            Status = EmploymentStatus.Active,
+            StartDate = new DateTime(2023, 8, 15, 0, 0, 0, DateTimeKind.Utc),
+            EndDate = null,
+        },
+    };
+
+        context.Employees.AddRange(employees);
         await context.SaveChangesAsync();
     }
 
@@ -565,7 +759,7 @@ public static class DataSeeder
     /// Seeds the database with part data.
     /// Includes both spare parts (for sale) and replacement parts (for inventory).
     /// </summary>
-    public static async Task SeedPartsAsync(AutoXDbContext context)
+    public static async System.Threading.Tasks.Task SeedPartsAsync(AutoXDbContext context)
     {
         if (await context.Parts.AnyAsync())
         {
@@ -1368,6 +1562,901 @@ public static class DataSeeder
         #endregion
 
         context.Parts.AddRange(parts);
+        await context.SaveChangesAsync();
+    }
+
+    // =========================================================================
+    // SERVICE ITEM — 15+ dịch vụ
+    // =========================================================================
+
+    private static async System.Threading.Tasks.Task SeedServiceItemsAsync(AutoXDbContext context)
+    {
+        if (await context.ServiceItems.AnyAsync())
+        {
+            return;
+        }
+
+        var serviceItems = new List<ServiceItem>
+    {
+        // --- Bảo dưỡng định kỳ ---
+        new()
+        {
+            Description = "Bảo dưỡng định kỳ 10,000km (Thay dầu, lọc dầu, kiểm tra chung)",
+            Type = ServiceType.Maintenance,
+            UnitPrice = 450_000,
+        },
+        new()
+        {
+            Description = "Bảo dưỡng định kỳ 20,000km (Kiểm tra toàn bộ, bảo dưỡng hệ thống)",
+            Type = ServiceType.Maintenance,
+            UnitPrice = 850_000,
+        },
+        new()
+        {
+            Description = "Bảo dưỡng định kỳ 40,000km (Kiểm tra sâu, thay thế linh kiện)",
+            Type = ServiceType.Maintenance,
+            UnitPrice = 1_200_000,
+        },
+        new()
+        {
+            Description = "Kiểm tra xe định kỳ (Kiểm tra an toàn, hiệu suất)",
+            Type = ServiceType.Inspection,
+            UnitPrice = 300_000,
+        },
+
+        // --- Thay dầu & bộ lọc ---
+        new()
+        {
+            Description = "Thay dầu động cơ + lọc dầu + lọc gió",
+            Type = ServiceType.OilChange,
+            UnitPrice = 400_000,
+        },
+        new()
+        {
+            Description = "Thay lọc cabin + khử mùi",
+            Type = ServiceType.OilChange,
+            UnitPrice = 250_000,
+        },
+        new()
+        {
+            Description = "Thay lọc nhiên liệu",
+            Type = ServiceType.OilChange,
+            UnitPrice = 180_000,
+        },
+
+        // --- Dịch vụ lốp xe ---
+        new()
+        {
+            Description = "Thay lốp xe (1 cái)",
+            Type = ServiceType.TireService,
+            UnitPrice = 200_000,
+        },
+        new()
+        {
+            Description = "Vá lốp xe",
+            Type = ServiceType.TireService,
+            UnitPrice = 50_000,
+        },
+        new()
+        {
+            Description = "Cân bằng lốp xe (bộ 4 cái)",
+            Type = ServiceType.TireService,
+            UnitPrice = 300_000,
+        },
+        new()
+        {
+            Description = "Cân chỉnh góc đặt bánh xe (Alignment)",
+            Type = ServiceType.WheelAlignment,
+            UnitPrice = 350_000,
+        },
+
+        // --- Dịch vụ điều hòa ---
+        new()
+        {
+            Description = "Bảo dưỡng điều hòa (Vệ sinh, khử mùi)",
+            Type = ServiceType.ACService,
+            UnitPrice = 400_000,
+        },
+        new()
+        {
+            Description = "Nạp gas điều hòa (R134a)",
+            Type = ServiceType.ACService,
+            UnitPrice = 300_000,
+        },
+        new()
+        {
+            Description = "Thay dầu điều hòa",
+            Type = ServiceType.ACService,
+            UnitPrice = 250_000,
+        },
+
+        // --- Sửa chữa chung ---
+        new()
+        {
+            Description = "Sửa chữa động cơ (theo yêu cầu)",
+            Type = ServiceType.EngineRepair,
+            UnitPrice = 1_500_000,
+        },
+        new()
+        {
+            Description = "Sửa chữa hộp số tự động",
+            Type = ServiceType.TransmissionRepair,
+            UnitPrice = 2_000_000,
+        },
+        new()
+        {
+            Description = "Sửa chữa hệ thống phanh (Kiểm tra & bảo dưỡng)",
+            Type = ServiceType.BrakeRepair,
+            UnitPrice = 600_000,
+        },
+        new()
+        {
+            Description = "Sửa chữa hệ thống lái & treo",
+            Type = ServiceType.SuspensionRepair,
+            UnitPrice = 800_000,
+        },
+        new()
+        {
+            Description = "Sửa chữa hệ thống nhiên liệu",
+            Type = ServiceType.FuelSystemRepair,
+            UnitPrice = 700_000,
+        },
+        new()
+        {
+            Description = "Sửa chữa hệ thống điện (Điều tra lỗi)",
+            Type = ServiceType.ElectricalService,
+            UnitPrice = 400_000,
+        },
+        new()
+        {
+            Description = "Thay bình ắc quy",
+            Type = ServiceType.ElectricalService,
+            UnitPrice = 500_000,
+        },
+        new()
+        {
+            Description = "Sửa chữa hệ thống đánh lửa",
+            Type = ServiceType.IgnitionRepair,
+            UnitPrice = 300_000,
+        },
+
+        // --- Làm đẹp ---
+        new()
+        {
+            Description = "Rửa xe bàn tay",
+            Type = ServiceType.CarWashAndDetailing,
+            UnitPrice = 150_000,
+        },
+        new()
+        {
+            Description = "Chăm sóc nội thất (Vệ sinh, khử mùi, bảo dưỡng)",
+            Type = ServiceType.CarWashAndDetailing,
+            UnitPrice = 300_000,
+        },
+        new()
+        {
+            Description = "Đánh bóng & sơn phục hồi",
+            Type = ServiceType.Painting,
+            UnitPrice = 1_000_000,
+        },
+        new()
+        {
+            Description = "Phục hồi đèn pha (Polishing & coating)",
+            Type = ServiceType.HeadlightRestoration,
+            UnitPrice = 400_000,
+        },
+        new()
+        {
+            Description = "Dán phim cách nhiệt toàn kính",
+            Type = ServiceType.WindowTintingAndPPF,
+            UnitPrice = 2_000_000,
+        },
+        new()
+        {
+            Description = "Phủ sơn bảo vệ (Paint Protection Film)",
+            Type = ServiceType.WindowTintingAndPPF,
+            UnitPrice = 3_000_000,
+        },
+        new()
+        {
+            Description = "Phủ Ceramic coating 9H",
+            Type = ServiceType.CeramicCoating,
+            UnitPrice = 2_500_000,
+        },
+
+        // --- An toàn & kiểm định ---
+        new()
+        {
+            Description = "Dịch vụ kiểm định xe (Đăng kiểm)",
+            Type = ServiceType.VehicleInspection,
+            UnitPrice = 500_000,
+        },
+        new()
+        {
+            Description = "Lắp đặt camera hành trình",
+            Type = ServiceType.DashcamInstallation,
+            UnitPrice = 800_000,
+        },
+        new()
+        {
+            Description = "Lắp đặt cảm biến đỗ xe (4 cảm biến)",
+            Type = ServiceType.ParkingSensorAndADAS,
+            UnitPrice = 600_000,
+        },
+        new()
+        {
+            Description = "Lắp đặt hệ thống hỗ trợ lái (ADAS)",
+            Type = ServiceType.ParkingSensorAndADAS,
+            UnitPrice = 1_500_000,
+        },
+
+        // --- Dịch vụ khẩn cấp ---
+        new()
+        {
+            Description = "Dịch vụ cứu hộ xe khẩn cấp (Kéo xe + chẩn đoán)",
+            Type = ServiceType.EmergencyRoadsideAssistance,
+            UnitPrice = 2_000_000,
+        },
+        new()
+        {
+            Description = "Dịch vụ kéo xe đến gara",
+            Type = ServiceType.TowingService,
+            UnitPrice = 1_500_000,
+        },
+        new()
+        {
+            Description = "Hỗ trợ khởi động xe (Nhảy bình)",
+            Type = ServiceType.JumpStartService,
+            UnitPrice = 200_000,
+        },
+        new()
+        {
+            Description = "Hỗ trợ mở khóa xe",
+            Type = ServiceType.LockoutAssistance,
+            UnitPrice = 150_000,
+        },
+        new()
+        {
+            Description = "Cung cấp nhiên liệu khẩn cấp",
+            Type = ServiceType.EmergencyFuelDelivery,
+            UnitPrice = 100_000,
+        },
+    };
+
+        context.ServiceItems.AddRange(serviceItems);
+        await context.SaveChangesAsync();
+    }
+
+    // =========================================================================
+    // EMPLOYEE — 8 nhân viên
+    // =========================================================================
+
+    // =========================================================================
+    // REPAIR TASK — 12+ công việc sửa chữa
+    // =========================================================================
+
+    private static async System.Threading.Tasks.Task SeedRepairTasksAsync(AutoXDbContext context)
+    {
+        if (await context.RepairTasks.AnyAsync())
+        {
+            return;
+        }
+
+        var employees = await context.Employees.Where(e => e.Status == EmploymentStatus.Active).ToListAsync();
+        var serviceItems = await context.ServiceItems.ToListAsync();
+
+        if (employees.Count == 0 || serviceItems.Count == 0)
+        {
+            return;
+        }
+
+        var repairTasks = new List<RepairTask>();
+        var today = DateTime.UtcNow;
+
+        // Công việc đang chờ xử lý
+        repairTasks.Add(new()
+        {
+            EmployeeId = employees[0].Id,
+            ServiceItemId = serviceItems.First(s => s.Description.Contains("Bảo dưỡng định kỳ 10,000km")).Id,
+            RepairOrderId = 0, // Sẽ update sau khi có RepairOrder
+            Status = RepairOrderStatus.Pending,
+            StartDate = null,
+            EstimatedDuration = 2.0,
+            CompletionDate = null,
+        });
+
+        // Công việc đang thực hiện
+        repairTasks.Add(new()
+        {
+            EmployeeId = employees[1].Id,
+            ServiceItemId = serviceItems.First(s => s.Description.Contains("Sửa chữa động cơ")).Id,
+            RepairOrderId = 0,
+            Status = RepairOrderStatus.InProgress,
+            StartDate = today.AddDays(-2),
+            EstimatedDuration = 8.0,
+            CompletionDate = null,
+        });
+
+        // Công việc đã hoàn thành
+        repairTasks.Add(new()
+        {
+            EmployeeId = employees[2].Id,
+            ServiceItemId = serviceItems.First(s => s.Description.Contains("Thay dầu động cơ")).Id,
+            RepairOrderId = 0,
+            Status = RepairOrderStatus.Completed,
+            StartDate = today.AddDays(-5),
+            EstimatedDuration = 1.5,
+            CompletionDate = today.AddDays(-4),
+        });
+
+        repairTasks.Add(new()
+        {
+            EmployeeId = employees[3].Id,
+            ServiceItemId = serviceItems.First(s => s.Description.Contains("Cân bằng lốp xe")).Id,
+            RepairOrderId = 0,
+            Status = RepairOrderStatus.Completed,
+            StartDate = today.AddDays(-3),
+            EstimatedDuration = 1.0,
+            CompletionDate = today.AddDays(-3),
+        });
+
+        repairTasks.Add(new()
+        {
+            EmployeeId = employees[4].Id,
+            ServiceItemId = serviceItems.First(s => s.Description.Contains("Nạp gas điều hòa")).Id,
+            RepairOrderId = 0,
+            Status = RepairOrderStatus.Completed,
+            StartDate = today.AddDays(-7),
+            EstimatedDuration = 1.0,
+            CompletionDate = today.AddDays(-7),
+        });
+
+        repairTasks.Add(new()
+        {
+            EmployeeId = employees[0].Id,
+            ServiceItemId = serviceItems.First(s => s.Description.Contains("Sửa chữa hệ thống phanh")).Id,
+            RepairOrderId = 0,
+            Status = RepairOrderStatus.InProgress,
+            StartDate = today.AddDays(-1),
+            EstimatedDuration = 4.0,
+            CompletionDate = null,
+        });
+
+        repairTasks.Add(new()
+        {
+            EmployeeId = employees[2].Id,
+            ServiceItemId = serviceItems.First(s => s.Description.Contains("Kiểm tra xe định kỳ")).Id,
+            RepairOrderId = 0,
+            Status = RepairOrderStatus.Pending,
+            StartDate = null,
+            EstimatedDuration = 1.5,
+            CompletionDate = null,
+        });
+
+        repairTasks.Add(new()
+        {
+            EmployeeId = employees[1].Id,
+            ServiceItemId = serviceItems.First(s => s.Description.Contains("Phủ Ceramic coating")).Id,
+            RepairOrderId = 0,
+            Status = RepairOrderStatus.InProgress,
+            StartDate = today.AddDays(-1),
+            EstimatedDuration = 3.0,
+            CompletionDate = null,
+        });
+
+        context.RepairTasks.AddRange(repairTasks);
+        await context.SaveChangesAsync();
+    }
+
+    // =========================================================================
+    // REPAIR ORDER — 8+ đơn sửa chữa
+    // =========================================================================
+
+    private static async System.Threading.Tasks.Task SeedRepairOrdersAsync(AutoXDbContext context)
+    {
+        if (await context.RepairOrders.AnyAsync())
+        {
+            return;
+        }
+
+        var customers = await context.Customers.ToListAsync();
+        var vehicles = await context.Vehicles.ToListAsync();
+
+        if (customers.Count == 0 || vehicles.Count == 0)
+        {
+            return;
+        }
+
+        var repairOrders = new List<RepairOrder>();
+        var today = DateTime.UtcNow;
+
+        // Đơn sửa chữa chờ xác nhận
+        repairOrders.Add(new()
+        {
+            CustomerId = customers[0].Id,
+            VehicleId = vehicles.First(v => v.CustomerId == customers[0].Id).Id,
+            InvoiceId = null,
+            OrderDate = today.AddDays(-3),
+            CompletionDate = null,
+            Status = RepairOrderStatus.Pending,
+        });
+
+        // Đơn sửa chữa đang kiểm tra
+        repairOrders.Add(new()
+        {
+            CustomerId = customers[1].Id,
+            VehicleId = vehicles.First(v => v.CustomerId == customers[1].Id).Id,
+            InvoiceId = null,
+            OrderDate = today.AddDays(-2),
+            CompletionDate = null,
+            Status = RepairOrderStatus.Inspecting,
+        });
+
+        // Đơn sửa chữa chờ báo giá
+        repairOrders.Add(new()
+        {
+            CustomerId = customers[2].Id,
+            VehicleId = vehicles.First(v => v.CustomerId == customers[2].Id).Id,
+            InvoiceId = null,
+            OrderDate = today.AddDays(-1),
+            CompletionDate = null,
+            Status = RepairOrderStatus.QuotationPending,
+        });
+
+        // Đơn sửa chữa đang thực hiện
+        repairOrders.Add(new()
+        {
+            CustomerId = customers[3].Id,
+            VehicleId = vehicles.First(v => v.CustomerId == customers[3].Id).Id,
+            InvoiceId = null,
+            OrderDate = today.AddDays(-5),
+            CompletionDate = null,
+            Status = RepairOrderStatus.InProgress,
+        });
+
+        // Đơn sửa chữa chờ phụ tùng
+        repairOrders.Add(new()
+        {
+            CustomerId = customers[4].Id,
+            VehicleId = vehicles.First(v => v.CustomerId == customers[4].Id).Id,
+            InvoiceId = null,
+            OrderDate = today.AddDays(-7),
+            CompletionDate = null,
+            Status = RepairOrderStatus.WaitingForParts,
+        });
+
+        // Đơn sửa chữa đã hoàn thành
+        repairOrders.Add(new()
+        {
+            CustomerId = customers[5].Id,
+            VehicleId = vehicles.First(v => v.CustomerId == customers[5].Id).Id,
+            InvoiceId = null,
+            OrderDate = today.AddDays(-10),
+            CompletionDate = today.AddDays(-1),
+            Status = RepairOrderStatus.Completed,
+        });
+
+        // Đơn sửa chữa đã thanh toán
+        repairOrders.Add(new()
+        {
+            CustomerId = customers[6].Id,
+            VehicleId = vehicles.FirstOrDefault(v => v.CustomerId == customers[6].Id)?.Id,
+            InvoiceId = null,
+            OrderDate = today.AddDays(-15),
+            CompletionDate = today.AddDays(-5),
+            Status = RepairOrderStatus.Paid,
+        });
+
+        // Đơn sửa chữa bị khách từ chối
+        repairOrders.Add(new()
+        {
+            CustomerId = customers[7].Id,
+            VehicleId = vehicles.FirstOrDefault(v => v.CustomerId == customers[7].Id)?.Id,
+            InvoiceId = null,
+            OrderDate = today.AddDays(-4),
+            CompletionDate = null,
+            Status = RepairOrderStatus.RejectedByCustomer,
+        });
+
+        context.RepairOrders.AddRange(repairOrders);
+        await context.SaveChangesAsync();
+    }
+
+    // =========================================================================
+    // REPAIR ORDER ITEM — Liên kết phụ tùng với đơn sửa chữa
+    // =========================================================================
+
+    private static async System.Threading.Tasks.Task SeedRepairOrderItemsAsync(AutoXDbContext context)
+    {
+        if (await context.RepairOrderItems.AnyAsync())
+        {
+            return;
+        }
+
+        var repairOrders = await context.RepairOrders.ToListAsync();
+        var parts = await context.Parts.ToListAsync();
+
+        if (repairOrders.Count == 0 || parts.Count == 0)
+        {
+            return;
+        }
+
+        var repairOrderItems = new List<RepairOrderItem>();
+
+        // Đơn 1: 2 phụ tùng
+        if (repairOrders.Count > 0)
+        {
+            repairOrderItems.Add(new()
+            {
+                RepairOrderId = repairOrders[0].Id,
+                PartId = parts.First(p => p.PartCode == "SP_TOYOTA_004").Id, // Lọc dầu
+                Quantity = 1,
+            });
+
+            repairOrderItems.Add(new()
+            {
+                RepairOrderId = repairOrders[0].Id,
+                PartId = parts.First(p => p.PartCode == "SP_HONDA_005").Id, // Dầu động cơ
+                Quantity = 2,
+            });
+        }
+
+        // Đơn 2: 3 phụ tùng
+        if (repairOrders.Count > 1)
+        {
+            repairOrderItems.Add(new()
+            {
+                RepairOrderId = repairOrders[1].Id,
+                PartId = parts.First(p => p.PartCode == "SP_HONDA_001").Id, // Đèn pha
+                Quantity = 1,
+            });
+
+            repairOrderItems.Add(new()
+            {
+                RepairOrderId = repairOrders[1].Id,
+                PartId = parts.First(p => p.PartCode == "SP_HONDA_003").Id, // Lốp xe
+                Quantity = 4,
+            });
+
+            repairOrderItems.Add(new()
+            {
+                RepairOrderId = repairOrders[1].Id,
+                PartId = parts.First(p => p.PartCode == "SP_BOSCH_001").Id, // Cảm biến ABS
+                Quantity = 2,
+            });
+        }
+
+        // Đơn 3: 2 phụ tùng
+        if (repairOrders.Count > 2)
+        {
+            repairOrderItems.Add(new()
+            {
+                RepairOrderId = repairOrders[2].Id,
+                PartId = parts.First(p => p.PartCode == "SP_TOYOTA_003").Id, // Két điều hòa
+                Quantity = 1,
+            });
+
+            repairOrderItems.Add(new()
+            {
+                RepairOrderId = repairOrders[2].Id,
+                PartId = parts.First(p => p.PartCode == "RP001").Id, // Lọc gió đa năng
+                Quantity = 3,
+            });
+        }
+
+        // Đơn 4: 1 phụ tùng
+        if (repairOrders.Count > 3)
+        {
+            repairOrderItems.Add(new()
+            {
+                RepairOrderId = repairOrders[3].Id,
+                PartId = parts.First(p => p.PartCode == "SP_TOYOTA_005").Id, // Má phanh
+                Quantity = 2,
+            });
+        }
+
+        // Đơn 5: 2 phụ tùng
+        if (repairOrders.Count > 4)
+        {
+            repairOrderItems.Add(new()
+            {
+                RepairOrderId = repairOrders[4].Id,
+                PartId = parts.First(p => p.PartCode == "SP_TOYOTA_008").Id, // Bơm nước
+                Quantity = 1,
+            });
+
+            repairOrderItems.Add(new()
+            {
+                RepairOrderId = repairOrders[4].Id,
+                PartId = parts.First(p => p.PartCode == "RP017").Id, // Giảm xóc
+                Quantity = 2,
+            });
+        }
+
+        context.RepairOrderItems.AddRange(repairOrderItems);
+        await context.SaveChangesAsync();
+    }
+
+    // =========================================================================
+    // INVOICE — 6+ hóa đơn
+    // =========================================================================
+
+    private static async System.Threading.Tasks.Task SeedInvoicesAsync(AutoXDbContext context)
+    {
+        if (await context.Invoices.AnyAsync())
+        {
+            return;
+        }
+
+        var customers = await context.Customers.ToListAsync();
+
+        if (customers.Count == 0)
+        {
+            return;
+        }
+
+        var invoices = new List<Invoice>();
+        var today = DateTime.UtcNow;
+
+        // Hóa đơn 1: Chưa thanh toán
+        invoices.Add(new()
+        {
+            CustomerId = customers[0].Id,
+            InvoiceNumber = "INV-2026-00001",
+            InvoiceDate = today.AddDays(-5),
+            PaymentStatus = PaymentStatus.Unpaid,
+            TaxRate = TaxRateType.VAT10,
+            DiscountType = DiscountType.None,
+            Discount = 0,
+        });
+
+        // Hóa đơn 2: Đã thanh toán
+        invoices.Add(new()
+        {
+            CustomerId = customers[1].Id,
+            InvoiceNumber = "INV-2026-00002",
+            InvoiceDate = today.AddDays(-10),
+            PaymentStatus = PaymentStatus.Paid,
+            TaxRate = TaxRateType.VAT10,
+            DiscountType = DiscountType.Percentage,
+            Discount = 5,
+        });
+
+        // Hóa đơn 3: Thanh toán một phần
+        invoices.Add(new()
+        {
+            CustomerId = customers[2].Id,
+            InvoiceNumber = "INV-2026-00003",
+            InvoiceDate = today.AddDays(-3),
+            PaymentStatus = PaymentStatus.PartiallyPaid,
+            TaxRate = TaxRateType.VAT10,
+            DiscountType = DiscountType.Amount,
+            Discount = 500_000,
+        });
+
+        // Hóa đơn 4: Quá hạn
+        invoices.Add(new()
+        {
+            CustomerId = customers[3].Id,
+            InvoiceNumber = "INV-2026-00004",
+            InvoiceDate = today.AddDays(-45),
+            PaymentStatus = PaymentStatus.Overdue,
+            TaxRate = TaxRateType.VAT5,
+            DiscountType = DiscountType.None,
+            Discount = 0,
+        });
+
+        // Hóa đơn 5: Đã hoàn tiền
+        invoices.Add(new()
+        {
+            CustomerId = customers[4].Id,
+            InvoiceNumber = "INV-2026-00005",
+            InvoiceDate = today.AddDays(-20),
+            PaymentStatus = PaymentStatus.Refunded,
+            TaxRate = TaxRateType.VAT10,
+            DiscountType = DiscountType.None,
+            Discount = 0,
+        });
+
+        // Hóa đơn 6: Mới tạo
+        invoices.Add(new()
+        {
+            CustomerId = customers[5].Id,
+            InvoiceNumber = "INV-2026-00006",
+            InvoiceDate = today,
+            PaymentStatus = PaymentStatus.Unpaid,
+            TaxRate = TaxRateType.VAT10,
+            DiscountType = DiscountType.Percentage,
+            Discount = 10,
+        });
+
+        context.Invoices.AddRange(invoices);
+        await context.SaveChangesAsync();
+    }
+
+    // =========================================================================
+    // TRANSACTION — 10+ giao dịch
+    // =========================================================================
+
+    private static async System.Threading.Tasks.Task SeedTransactionsAsync(AutoXDbContext context)
+    {
+        if (await context.Transactions.AnyAsync())
+        {
+            return;
+        }
+
+        var invoices = await context.Invoices.ToListAsync();
+        var employees = await context.Employees.ToListAsync();
+
+        if (invoices.Count == 0 || employees.Count == 0)
+        {
+            return;
+        }
+
+        var transactions = new List<Transaction>();
+        var today = DateTime.UtcNow;
+
+        // Giao dịch 1: Thu tiền từ hóa đơn 2 (Đã thanh toán)
+        transactions.Add(new()
+        {
+            InvoiceId = invoices[1].Id,
+            Type = TransactionType.Revenue,
+            PaymentMethod = PaymentMethod.BankTransfer,
+            Status = TransactionStatus.Completed,
+            Amount = 5_177_500,
+            Description = "Thanh toán hóa đơn INV-2026-00002",
+            TransactionDate = invoices[1].InvoiceDate.AddDays(3),
+            CreatedBy = employees[0].Id,
+            ModifiedBy = null,
+            UpdatedAt = null,
+            IsReversed = false,
+        });
+
+        // Giao dịch 2: Thu tiền từ hóa đơn 3 (Thanh toán một phần)
+        transactions.Add(new()
+        {
+            InvoiceId = invoices[2].Id,
+            Type = TransactionType.Revenue,
+            PaymentMethod = PaymentMethod.Cash,
+            Status = TransactionStatus.Completed,
+            Amount = 4_000_000,
+            Description = "Thanh toán một phần hóa đơn INV-2026-00003",
+            TransactionDate = invoices[2].InvoiceDate.AddDays(2),
+            CreatedBy = employees[1].Id,
+            ModifiedBy = null,
+            UpdatedAt = null,
+            IsReversed = false,
+        });
+
+        // Giao dịch 3: Giao dịch chờ xử lý
+        transactions.Add(new()
+        {
+            InvoiceId = invoices[0].Id,
+            Type = TransactionType.Revenue,
+            PaymentMethod = PaymentMethod.VNPay,
+            Status = TransactionStatus.Pending,
+            Amount = 2_750_000,
+            Description = "Chờ xác nhận thanh toán hóa đơn INV-2026-00001",
+            TransactionDate = today.AddDays(-1),
+            CreatedBy = employees[2].Id,
+            ModifiedBy = null,
+            UpdatedAt = null,
+            IsReversed = false,
+        });
+
+        // Giao dịch 4: Chi tiền mua phụ tùng
+        transactions.Add(new()
+        {
+            InvoiceId = invoices[1].Id,
+            Type = TransactionType.Expense,
+            PaymentMethod = PaymentMethod.BankTransfer,
+            Status = TransactionStatus.Completed,
+            Amount = 1_500_000,
+            Description = "Chi tiền mua phụ tùng từ nhà cung cấp",
+            TransactionDate = today.AddDays(-15),
+            CreatedBy = employees[3].Id,
+            ModifiedBy = null,
+            UpdatedAt = null,
+            IsReversed = false,
+        });
+
+        // Giao dịch 5: Hoàn tiền cho khách
+        transactions.Add(new()
+        {
+            InvoiceId = invoices[4].Id,
+            Type = TransactionType.Refund,
+            PaymentMethod = PaymentMethod.BankTransfer,
+            Status = TransactionStatus.Completed,
+            Amount = 1_650_000,
+            Description = "Hoàn tiền do lỗi dịch vụ",
+            TransactionDate = invoices[4].InvoiceDate.AddDays(10),
+            CreatedBy = employees[4].Id,
+            ModifiedBy = null,
+            UpdatedAt = null,
+            IsReversed = false,
+        });
+
+        // Giao dịch 6: Lỗi thanh toán (Failed)
+        transactions.Add(new()
+        {
+            InvoiceId = invoices[3].Id,
+            Type = TransactionType.Revenue,
+            PaymentMethod = PaymentMethod.CreditCard,
+            Status = TransactionStatus.Failed,
+            Amount = 3_360_000,
+            Description = "Thanh toán thất bại - Vui lòng thử lại",
+            TransactionDate = today.AddDays(-2),
+            CreatedBy = employees[0].Id,
+            ModifiedBy = null,
+            UpdatedAt = null,
+            IsReversed = false,
+        });
+
+        // Giao dịch 7: Tạm ứng cho nhân viên
+        transactions.Add(new()
+        {
+            InvoiceId = invoices[0].Id,
+            Type = TransactionType.AdvancePayment,
+            PaymentMethod = PaymentMethod.Cash,
+            Status = TransactionStatus.Completed,
+            Amount = 500_000,
+            Description = "Tạm ứng lương cho Trần Minh Hùng",
+            TransactionDate = today.AddDays(-20),
+            CreatedBy = employees[5].Id,
+            ModifiedBy = null,
+            UpdatedAt = null,
+            IsReversed = false,
+        });
+
+        // Giao dịch 8: Tiền đặt cọc
+        transactions.Add(new()
+        {
+            InvoiceId = invoices[5].Id,
+            Type = TransactionType.Deposit,
+            PaymentMethod = PaymentMethod.Cash,
+            Status = TransactionStatus.Completed,
+            Amount = 1_000_000,
+            Description = "Khách hàng đặt cọc cho dịch vụ sửa chữa",
+            TransactionDate = invoices[5].InvoiceDate,
+            CreatedBy = employees[1].Id,
+            ModifiedBy = null,
+            UpdatedAt = null,
+            IsReversed = false,
+        });
+
+        // Giao dịch 9: Chuyển khoản nội bộ
+        transactions.Add(new()
+        {
+            InvoiceId = invoices[1].Id,
+            Type = TransactionType.InternalTransfer,
+            PaymentMethod = PaymentMethod.BankTransfer,
+            Status = TransactionStatus.Completed,
+            Amount = 2_000_000,
+            Description = "Chuyển tiền từ quỹ tiền mặt sang tài khoản ngân hàng",
+            TransactionDate = today.AddDays(-8),
+            CreatedBy = employees[5].Id,
+            ModifiedBy = null,
+            UpdatedAt = null,
+            IsReversed = false,
+        });
+
+        // Giao dịch 10: Giao dịch bị đảo ngược
+        transactions.Add(new()
+        {
+            InvoiceId = invoices[2].Id,
+            Type = TransactionType.Revenue,
+            PaymentMethod = PaymentMethod.Momo,
+            Status = TransactionStatus.Completed,
+            Amount = 1_500_000,
+            Description = "Giao dịch đã hoàn tiền do yêu cầu khách hàng",
+            TransactionDate = today.AddDays(-30),
+            CreatedBy = employees[0].Id,
+            ModifiedBy = employees[1].Id,
+            UpdatedAt = today.AddDays(-5),
+            IsReversed = true,
+        });
+
+        context.Transactions.AddRange(transactions);
         await context.SaveChangesAsync();
     }
 }
