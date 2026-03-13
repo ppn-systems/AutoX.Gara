@@ -400,6 +400,10 @@
                                                 Style="{StaticResource RowVehicle}"
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenVehiclesCommand}"
                                                 CommandParameter="{Binding .}" />
+                                        <Button Text="🧾 HĐ"
+                                                Style="{StaticResource RowVehicle}"
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenInvoicesCommand}"
+                                                CommandParameter="{Binding .}" />
                                         <Button Text="✏ Sửa"
                                                 Style="{StaticResource RowEdit}"
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}"

@@ -315,6 +315,10 @@
                                     <!-- Actions -->
                                     <VerticalStackLayout Grid.Column="2"
                                                          Spacing="6" VerticalOptions="Center">
+                                        <Button Text="🔧 Lệnh"
+                                                Style="{StaticResource RowEdit}"
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenRepairOrdersCommand}"
+                                                CommandParameter="{Binding .}" />
                                         <Button Text="✏ Sửa"
                                                 Style="{StaticResource RowEdit}"
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}"

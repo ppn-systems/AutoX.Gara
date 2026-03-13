@@ -2,12 +2,21 @@
 
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
+using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Framework.Injection;
+using System.IO;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace AutoX.Gara.Frontend;
 
 public partial class App : Application
 {
-    public App() => InitializeComponent();
+    public App()
+    {
+        InitializeComponent();
+        InstallGlobalExceptionHandlers();
+    }
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
@@ -19,5 +28,66 @@ public partial class App : Application
         };
 
         return window;
+    }
+
+    private static void InstallGlobalExceptionHandlers()
+    {
+        System.AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            try
+            {
+                LogCrash("AppDomain.UnhandledException", e.ExceptionObject as System.Exception);
+            }
+            catch
+            {
+            }
+        };
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            try
+            {
+                LogCrash("TaskScheduler.UnobservedTaskException", e.Exception);
+                e.SetObserved();
+            }
+            catch
+            {
+            }
+        };
+    }
+
+    private static void LogCrash(System.String source, System.Exception? ex)
+    {
+        try
+        {
+            System.String location = Shell.Current?.CurrentState?.Location?.ToString() ?? "(no-shell)";
+            System.String message = $"[CRASH] source={source} location={location}\n{(ex is null ? "(null exception)" : ex.ToString())}";
+
+            // Prefer existing logger (registered by AppShell) to keep logs in AutoX.log.
+            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+            if (logger is not null)
+            {
+                logger.Error(message);
+            }
+            else
+            {
+                InstanceManager.Instance.GetOrCreateInstance<ILogger>().Error(message);
+            }
+
+            Debug.WriteLine(message);
+
+            // Extra fallback: write crash log to a known location for easy sharing.
+            try
+            {
+                System.String path = Path.Combine(Microsoft.Maui.Storage.FileSystem.AppDataDirectory, "crash.log");
+                File.AppendAllText(path, $"{System.DateTimeOffset.Now:o}\n{message}\n\n");
+            }
+            catch
+            {
+            }
+        }
+        catch
+        {
+        }
     }
 }

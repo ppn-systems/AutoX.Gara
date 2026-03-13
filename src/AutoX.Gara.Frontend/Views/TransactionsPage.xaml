@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Name="PageRoot"
+    x:Class="AutoX.Gara.Frontend.Views.TransactionsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
+    xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Billings;assembly=AutoX.Gara.Shared"
+    x:DataType="vm:TransactionsViewModel"
+    Title="{Binding PageTitle}"
+    BackgroundColor="#0A0A0F">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Style x:Key="CardStyle" TargetType="Border">
+                <Setter Property="BackgroundColor" Value="#111118" />
+                <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+                <Setter Property="Stroke" Value="#2A2A38" />
+                <Setter Property="StrokeThickness" Value="1" />
+            </Style>
+            <Style x:Key="AccentBtn" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#6366F1" />
+                <Setter Property="TextColor" Value="White" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="HeightRequest" Value="40" />
+            </Style>
+            <Style x:Key="GhostBtn" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#1A1A24" />
+                <Setter Property="TextColor" Value="#F1F1F5" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="HeightRequest" Value="40" />
+                <Setter Property="BorderColor" Value="#2A2A38" />
+                <Setter Property="BorderWidth" Value="1" />
+            </Style>
+            <Style x:Key="DangerBtn" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#EF4444" />
+                <Setter Property="TextColor" Value="White" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="HeightRequest" Value="40" />
+            </Style>
+            <Style x:Key="MutedLabel" TargetType="Label">
+                <Setter Property="TextColor" Value="#6B6B80" />
+                <Setter Property="FontSize" Value="12" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*" Padding="14">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+            <Button Text="←" Style="{StaticResource GhostBtn}" WidthRequest="44" Clicked="OnBackClicked" />
+            <Label Grid.Column="1" Text="{Binding PageTitle}" TextColor="#F1F1F5" FontAttributes="Bold" VerticalOptions="Center" />
+            <Button Grid.Column="2" Text="+" Style="{StaticResource AccentBtn}" WidthRequest="44" Command="{Binding OpenAddFormCommand}" />
+        </Grid>
+
+        <Grid Grid.Row="1" RowDefinitions="Auto,*" Margin="0,12,0,0">
+            <Label Text="{Binding ErrorMessage}" TextColor="#EF4444" IsVisible="{Binding HasError}" />
+
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Transactions}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="pkt:TransactionDto">
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Padding="12">
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="{Binding Amount, StringFormat='{0:N0}'}" TextColor="#F1F1F5" FontAttributes="Bold" />
+                                <Label Text="{Binding PaymentMethod, StringFormat='PTTT: {0}'}" Style="{StaticResource MutedLabel}" />
+                                <Label Text="{Binding Status, StringFormat='Trạng thái: {0}'}" Style="{StaticResource MutedLabel}" />
+                                <Label Text="{Binding Description}" Style="{StaticResource MutedLabel}" />
+                                <Button Text="Xóa" Style="{StaticResource DangerBtn}"
+                                        Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.DeleteCommand}"
+                                        CommandParameter="{Binding .}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Form overlay -->
+        <Grid IsVisible="{Binding IsFormVisible}" BackgroundColor="#70000010" RowSpan="2">
+            <Border Style="{StaticResource CardStyle}" VerticalOptions="Center" HorizontalOptions="Center" Padding="16" WidthRequest="340">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Thêm giao dịch" TextColor="#F1F1F5" FontAttributes="Bold" />
+
+                    <Label Text="Số tiền" Style="{StaticResource MutedLabel}" />
+                    <Entry Text="{Binding FormAmount}" Keyboard="Numeric" TextColor="#F1F1F5" />
+
+                    <Label Text="Mô tả" Style="{StaticResource MutedLabel}" />
+                    <Entry Text="{Binding FormDescription}" TextColor="#F1F1F5" />
+
+                    <Label Text="Phương thức" Style="{StaticResource MutedLabel}" />
+                    <Picker ItemsSource="{Binding PaymentMethodOptions}" SelectedIndex="{Binding PickerPaymentMethodIndex}" />
+
+                    <Label Text="Loại" Style="{StaticResource MutedLabel}" />
+                    <Picker ItemsSource="{Binding TypeOptions}" SelectedIndex="{Binding PickerTypeIndex}" />
+
+                    <Label Text="Trạng thái" Style="{StaticResource MutedLabel}" />
+                    <Picker ItemsSource="{Binding StatusOptions}" SelectedIndex="{Binding PickerStatusIndex}" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
+                        <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CancelFormCommand}" />
+                        <Button Grid.Column="1" Text="Lưu" Style="{StaticResource AccentBtn}" Command="{Binding SaveCommand}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>
+

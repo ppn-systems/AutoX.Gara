@@ -479,7 +479,15 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         page.Initialize(customer);
 
         // Push page lên navigation stack của Shell
-        await Shell.Current.Navigation.PushAsync(page).ConfigureAwait(false);
+        await Shell.Current.Navigation.PushAsync(page);
+    }
+
+    [RelayCommand]
+    private static async System.Threading.Tasks.Task OpenInvoicesAsync(CustomerDto customer)
+    {
+        var page = new Views.InvoicesPage();
+        page.Initialize(customer);
+        await Shell.Current.Navigation.PushAsync(page);
     }
 
     [RelayCommand]

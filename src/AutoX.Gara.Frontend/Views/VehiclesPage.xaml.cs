@@ -36,11 +36,13 @@ public partial class VehiclesPage : ContentPage
 
     /// <summary>Back button — navigate về CustomersPage.</summary>
     private async void OnBackClicked(System.Object sender, System.EventArgs e)
-        => await Shell.Current.GoToAsync("..").ConfigureAwait(false);
-
-    protected override void OnDisappearing()
     {
-        base.OnDisappearing();
+        if (Shell.Current?.Navigation is null)
+        {
+            return;
+        }
+
         _vm.Dispose();
+        await Shell.Current.Navigation.PopAsync();
     }
 }

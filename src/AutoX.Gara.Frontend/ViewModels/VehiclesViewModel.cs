@@ -7,6 +7,7 @@ using AutoX.Gara.Shared.Protocol.Customers;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Maui.Controls;
 using Nalix.Common.Networking.Protocols;
 using System.Diagnostics;
 
@@ -276,6 +277,10 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
                 HandleError("Tải danh sách thất bại", result.ErrorMessage!, result.Advice);
             }
         }
+        catch (System.OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // User navigated away or refreshed quickly; swallow cancellation.
+        }
         finally
         {
             IsLoading = false;
@@ -447,6 +452,9 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
                 SetFormError(result.ErrorMessage ?? "Thao tác thất bại.");
             }
         }
+        catch (System.OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+        }
         finally
         {
             IsLoading = false;
@@ -503,6 +511,9 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
                 HandleError("Xóa thất bại", result.ErrorMessage!, result.Advice);
             }
         }
+        catch (System.OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+        }
         finally
         {
             IsLoading = false;
@@ -540,8 +551,25 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
 
     public void Dispose()
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
+        // Dispose can be called multiple times (toolbar back, physical back, etc.).
+        // Make it idempotent to avoid ObjectDisposedException from calling Cancel()
+        // on a disposed CancellationTokenSource.
+        var cts = System.Threading.Interlocked.Exchange(ref _cts, null);
+        if (cts is null)
+        {
+            return;
+        }
+
+        try
+        {
+            cts.Cancel();
+        }
+        catch (System.ObjectDisposedException)
+        {
+            // Ignore: CTS may already be disposed.
+        }
+
+        cts.Dispose();
     }
 
     // ─── Private Helpers ─────────────────────────────────────────────────────
@@ -612,6 +640,19 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
             }
         }
         return -1;
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task OpenRepairOrdersAsync(VehicleDto vehicle)
+    {
+        if (Owner is null)
+        {
+            return;
+        }
+
+        var page = new Views.RepairOrdersPage();
+        page.Initialize(Owner, vehicle);
+        await Shell.Current.Navigation.PushAsync(page);
     }
 
     private void HandleError(System.String title, System.String message, ProtocolAdvice advice)
