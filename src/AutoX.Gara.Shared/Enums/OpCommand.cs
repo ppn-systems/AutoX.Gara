@@ -74,6 +74,30 @@ public enum OpCommand : System.UInt16
 
     TRANSACTION_DELETE = 0x1C3,
 
+    SERVICE_ITEM_GET = 0x1D0,
+
+    SERVICE_ITEM_CREATE = 0x1D1,
+
+    SERVICE_ITEM_UPDATE = 0x1D2,
+
+    SERVICE_ITEM_DELETE = 0x1D3,
+
+    REPAIR_TASK_GET = 0x1E0,
+
+    REPAIR_TASK_CREATE = 0x1E1,
+
+    REPAIR_TASK_UPDATE = 0x1E2,
+
+    REPAIR_TASK_DELETE = 0x1E3,
+
+    REPAIR_ORDER_ITEM_GET = 0x1F0,
+
+    REPAIR_ORDER_ITEM_CREATE = 0x1F1,
+
+    REPAIR_ORDER_ITEM_UPDATE = 0x1F2,
+
+    REPAIR_ORDER_ITEM_DELETE = 0x1F3,
+
     /// <summary>
     /// Get list of employees.
     /// </summary>
