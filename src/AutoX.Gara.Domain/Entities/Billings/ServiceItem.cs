@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace AutoX.Gara.Domain.Entities.Billing;
+namespace AutoX.Gara.Domain.Entities.Billings;
 
 /// <summary>
 /// Lớp đại diện cho một dịch vụ trong hóa đơn.

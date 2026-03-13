@@ -1,14 +1,14 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Entities.Billing;
-using AutoX.Gara.Domain.Entities.Customers;
+using AutoX.Gara.Domain.Entities.Billings;
+using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Domain.Enums.Repairs;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
-namespace AutoX.Gara.Domain.Entities.Repairs;
+namespace AutoX.Gara.Domain.Entities.Invoices;
 
 /// <summary>
 /// Lớp đại diện cho đơn sửa chữa.
@@ -16,12 +16,6 @@ namespace AutoX.Gara.Domain.Entities.Repairs;
 [Table(nameof(RepairOrder))]
 public class RepairOrder
 {
-    #region Fields
-
-    // Hiện tại không có private fields, để lại region này cho tính nhất quán.
-
-    #endregion
-
     #region Identification Properties
 
     /// <summary>
@@ -37,32 +31,20 @@ public class RepairOrder
     public System.Int32 CustomerId { get; set; }
 
     /// <summary>
-    /// Id hóa đơn.
-    /// </summary>
-    public System.Int32 InvoiceId { get; set; }
-
-    /// <summary>
     /// Mã xe liên quan đến đơn sửa chữa.
     /// </summary>
     public System.Int32? VehicleId { get; set; }
 
     /// <summary>
-    /// Thông tin chủ xe (Navigation Property).
+    /// Hóa đơn liên quan đến đơn sửa chữa (nếu đã có).
     /// </summary>
-    [ForeignKey(nameof(CustomerId))]
-    public virtual Customer Customer { get; set; }
+    public System.Int32? InvoiceId { get; set; }
 
     /// <summary>
     /// Thông tin hóa đơn liên quan (Navigation Property).
     /// </summary>
     [ForeignKey(nameof(InvoiceId))]
-    public virtual Invoice Invoice { get; set; }
-
-    /// <summary>
-    /// Thông tin xe liên quan (Navigation Property).
-    /// </summary>
-    [ForeignKey(nameof(VehicleId))]
-    public virtual Vehicle Vehicle { get; set; }
+    public virtual Invoice Invoice { get; set; } = null!;
 
     #endregion
 
@@ -88,20 +70,21 @@ public class RepairOrder
     /// <summary>
     /// Danh sách công việc sửa chữa liên quan.
     /// </summary>
-    public virtual ICollection<RepairTask> RepairTaskList { get; set; } = [];
+    public virtual ICollection<RepairTask> Tasks { get; set; } = [];
 
     /// <summary>
     /// Danh sách phụ tùng thay thế liên quan.
     /// </summary>
-    public virtual ICollection<RepairOrderItem> RepairOrderItems { get; set; } = [];
+    public virtual ICollection<RepairOrderItem> Parts { get; set; } = [];
 
     /// <summary>
     /// Tổng chi phí sửa chữa.
     /// </summary>
+    [NotMapped]
     [Column(TypeName = "decimal(18,2)")]
     public System.Decimal TotalRepairCost =>
-        (RepairTaskList?.Sum(task => task.ServiceItem.UnitPrice) ?? 0) +
-        (RepairOrderItems?.Sum(sp => sp.SparePart.SellingPrice * sp.Quantity) ?? 0);
+        Tasks.Sum(t => t.ServiceItem.UnitPrice) +
+        Parts.Sum(p => p.SparePart.SellingPrice * p.Quantity);
 
     /// <summary>
     /// Xác định xem lệnh sửa chữa đã hoàn thành hay chưa.

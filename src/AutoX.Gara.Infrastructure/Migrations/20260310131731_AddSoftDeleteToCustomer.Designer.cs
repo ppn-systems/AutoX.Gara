@@ -820,7 +820,7 @@ namespace AutoX.Gara.Infrastructure.Migrations
             modelBuilder.Entity("AutoX.Gara.Domain.Entities.Repairs.RepairOrderItem", b =>
                 {
                     b.HasOne("AutoX.Gara.Domain.Entities.Repairs.RepairOrder", "RepairOrder")
-                        .WithMany("RepairOrderItems")
+                        .WithMany("Parts")
                         .HasForeignKey("RepairOrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -845,7 +845,7 @@ namespace AutoX.Gara.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("AutoX.Gara.Domain.Entities.Repairs.RepairOrder", "RepairOrder")
-                        .WithMany("RepairTaskList")
+                        .WithMany("Tasks")
                         .HasForeignKey("RepairOrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -891,9 +891,9 @@ namespace AutoX.Gara.Infrastructure.Migrations
 
             modelBuilder.Entity("AutoX.Gara.Domain.Entities.Repairs.RepairOrder", b =>
                 {
-                    b.Navigation("RepairOrderItems");
+                    b.Navigation("Parts");
 
-                    b.Navigation("RepairTaskList");
+                    b.Navigation("Tasks");
                 });
 #pragma warning restore 612, 618
         }

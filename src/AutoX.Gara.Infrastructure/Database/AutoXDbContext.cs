@@ -1,9 +1,10 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Entities.Billing;
+using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Entities.Inventory;
+using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Domain.Enums;
@@ -71,6 +72,7 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.UsePropertyAccessMode(PropertyAccessMode.Field);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AutoXDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
 
@@ -96,81 +98,89 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
     {
         // Đảm bảo Username là duy nhất để tránh trùng lặp tài khoản trong hệ thống
         modelBuilder.Entity<Account>()
-            .HasIndex(a => a.Username)
-            .IsUnique();
+                    .HasIndex(a => a.Username)
+                    .IsUnique();
 
         // Chuyển đổi thuộc tính Role (kiểu enum) thành byte khi lưu vào cơ sở dữ liệu
         // Giúp giảm kích thước cột, tối ưu hiệu suất lưu trữ và truy vấn
         modelBuilder.Entity<Account>()
-            .Property(a => a.Role)
-            .HasConversion<System.Byte>();
+                    .Property(a => a.Role)
+                    .HasConversion<System.Byte>();
     }
 
     private static void CONFIGURE_VEHICLE(ModelBuilder modelBuilder)
     {
         // Chuyển đổi enum thành byte để tiết kiệm dung lượng và tối ưu hiệu suất truy vấn
         modelBuilder.Entity<Vehicle>()
-            .Property(v => v.Brand)
-            .HasConversion<System.Byte>();
+                    .Property(v => v.Brand)
+                    .HasConversion<System.Byte>();
 
         modelBuilder.Entity<Vehicle>()
-            .Property(v => v.Type)
-            .HasConversion<System.Byte>();
+                    .Property(v => v.Type)
+                    .HasConversion<System.Byte>();
 
         modelBuilder.Entity<Vehicle>()
-            .Property(v => v.Color)
-            .HasConversion<System.Byte>();
+                    .Property(v => v.Color)
+                    .HasConversion<System.Byte>();
 
         // Đảm bảo mỗi biển số xe là duy nhất để tránh trùng lặp dữ liệu
         modelBuilder.Entity<Vehicle>()
-            .HasIndex(v => v.LicensePlate)
-            .IsUnique();
+                    .HasIndex(v => v.LicensePlate)
+                    .IsUnique();
 
         // Index cho Id giúp tối ưu truy vấn khi tìm kiếm xe theo chủ sở hữu
-        modelBuilder.Entity<Vehicle>().HasIndex(v => v.CustomerId);
+        modelBuilder.Entity<Vehicle>()
+                    .HasIndex(v => v.CustomerId);
 
         // Index cho CarBrand giúp tăng tốc tìm kiếm xe theo hãng
-        modelBuilder.Entity<Vehicle>().HasIndex(v => v.Brand);
+        modelBuilder.Entity<Vehicle>()
+                    .HasIndex(v => v.Brand);
 
         // Index phức hợp giúp tối ưu truy vấn khi lọc theo nhiều tiêu chí
         modelBuilder.Entity<Vehicle>()
-            .HasIndex(v => new { v.Brand, v.Type, v.Color, v.Year });
+                    .HasIndex(v => new { v.Brand, v.Type, v.Color, v.Year });
     }
 
     private static void CONFIGURE_INVOICE(ModelBuilder modelBuilder)
     {
-        // Định dạng số thập phân cho Discount với tối đa 18 chữ số và 2 số lẻ
         modelBuilder.Entity<Invoice>()
-            .Property(i => i.Discount)
-            .HasPrecision(18, 2);
-
-        // Đảm bảo mã hóa đơn là duy nhất để tránh trùng lặp
-        modelBuilder.Entity<Invoice>()
-            .HasIndex(i => i.InvoiceNumber)
-            .IsUnique();
+                        .Property(i => i.Discount)
+                        .HasPrecision(18, 2);
 
         modelBuilder.Entity<Invoice>()
-            .Property(i => i.PaymentStatus)
-            .HasConversion<System.Byte>();
+                    .Property(i => i.Subtotal)
+                    .HasPrecision(18, 2);
 
         modelBuilder.Entity<Invoice>()
-            .Property(i => i.TaxRate)
-            .HasConversion<System.Byte>();
+                    .Property(i => i.TaxAmount)
+                    .HasPrecision(18, 2);
 
         modelBuilder.Entity<Invoice>()
-            .Property(i => i.DiscountType)
-            .HasConversion<System.Byte>();
+                    .Property(i => i.TotalAmount)
+                    .HasPrecision(18, 2);
 
-        // Index
-        // 1.Giúp tối ưu truy vấn theo chủ hóa đơn
-        // 2.Hỗ trợ truy vấn nhanh theo người tạo hóa đơn
-        // 3.Giúp tối ưu tìm kiếm hóa đơn theo ngày lập
+        modelBuilder.Entity<Invoice>()
+                    .Property(i => i.BalanceDue)
+                    .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Invoice>()
+                    .Property(i => i.PaymentStatus)
+                    .HasConversion<System.Byte>();
+
+        modelBuilder.Entity<Invoice>()
+                    .Property(i => i.TaxRate)
+                    .HasConversion<System.Byte>();
+
+        modelBuilder.Entity<Invoice>()
+                    .Property(i => i.DiscountType)
+                    .HasConversion<System.Byte>();
+
+        modelBuilder.Entity<Invoice>()
+                    .HasIndex(i => i.InvoiceNumber)
+                    .IsUnique();
+
         modelBuilder.Entity<Invoice>().HasIndex(i => i.CustomerId);
-        modelBuilder.Entity<Invoice>().HasIndex(i => i.CreatedById);
         modelBuilder.Entity<Invoice>().HasIndex(i => i.InvoiceDate);
-
-        // Bộ lọc toàn cục (Global Query Filter) để chỉ lấy hóa đơn chưa thanh toán
-        // modelBuilder.Entity<Invoice>().HasQueryFilter(i => !i.IsFullyPaid);
     }
 
     private static void CONFIGURE_CUSTOMER(ModelBuilder modelBuilder)
@@ -303,30 +313,23 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
 
     private static void CONFIGURE_REPAIR_TASK(ModelBuilder modelBuilder)
     {
-        // Quan hệ 1-N với Employee
-        modelBuilder.Entity<RepairTask>()
-            .HasOne(rt => rt.Employee)
-            .WithMany()
-            .HasForeignKey(rt => rt.EmployeeId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         // Quan hệ 1-N với ServiceItem
         modelBuilder.Entity<RepairTask>()
-            .HasOne(rt => rt.ServiceItem)
-            .WithMany()
-            .HasForeignKey(rt => rt.ServiceItemId)
-            .OnDelete(DeleteBehavior.Restrict);
+                    .HasOne(rt => rt.ServiceItem)
+                    .WithMany()
+                    .HasForeignKey(rt => rt.ServiceItemId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<RepairTask>()
+                    .HasOne(rt => rt.Employee)
+                    .WithMany()
+                    .HasForeignKey(rt => rt.EmployeeId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
         // Index tối ưu tìm kiếm và truy vấn
         modelBuilder.Entity<RepairTask>().HasIndex(rt => rt.Status);
         modelBuilder.Entity<RepairTask>().HasIndex(rt => new { rt.StartDate, rt.CompletionDate });
         modelBuilder.Entity<RepairTask>().HasIndex(rt => rt.EmployeeId);
-
-        // Ràng buộc kiểm tra CompletionDate phải lớn hơn hoặc bằng StartDate hoặc null
-        //modelBuilder.Entity<RepairTask>()
-        //    .ToTable(tb => tb.HasCheckConstraint(
-        //        "CK_RepairTask_CompletionDate",
-        //        "CompletionDate >= StartDate OR CompletionDate IS NULL"));
     }
 
     private static void CONFIGURE_SERVICE_ITEM(ModelBuilder modelBuilder)
@@ -343,48 +346,43 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
     private static void CONFIGURE_REPAIR_ORDER_ITEMS(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<RepairOrderItem>()
-            .HasOne(rsp => rsp.RepairOrder)
-            .WithMany(ro => ro.RepairOrderItems)
-            .HasForeignKey(rsp => rsp.RepairOrderId);
+                    .HasOne(rsp => rsp.RepairOrder)
+                    .WithMany(ro => ro.Parts)
+                    .HasForeignKey(rsp => rsp.RepairOrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<RepairOrderItem>()
-            .HasOne(rsp => rsp.SparePart)
-            .WithMany()
-            .HasForeignKey(rsp => rsp.PartId);
+                    .HasOne(rsp => rsp.SparePart)
+                    .WithMany()
+                    .HasForeignKey(rsp => rsp.PartId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<RepairOrderItem>()
+                    .HasIndex(rsp => rsp.RepairOrderId);
+
+        modelBuilder.Entity<RepairOrderItem>()
+                    .HasIndex(rsp => rsp.PartId);
     }
 
     private static void CONFIGURE_REPAIR_ORDER(ModelBuilder modelBuilder)
     {
-        // Thiết lập quan hệ và ràng buộc xóa
         modelBuilder.Entity<RepairOrder>()
-            .HasOne(ro => ro.Invoice)
-            .WithMany()
-            .HasForeignKey(ro => ro.InvoiceId)
-            .OnDelete(DeleteBehavior.Restrict); // Không xóa Invoice nếu có RepairOrder liên quan
+                    .HasMany(ro => ro.Tasks)
+                    .WithOne(rt => rt.RepairOrder) // Chỉ định rõ ràng quan hệ với RepairTask
+                    .HasForeignKey(rt => rt.RepairOrderId) // Đảm bảo có thuộc tính khoá ngoại trong RepairTask
+                    .OnDelete(DeleteBehavior.Cascade); // Xóa RepairOrder sẽ xóa luôn RepairTask
 
         modelBuilder.Entity<RepairOrder>()
-            .HasOne(ro => ro.Customer)
-            .WithMany()
-            .HasForeignKey(ro => ro.CustomerId)
-            .OnDelete(DeleteBehavior.NoAction); // Giữ RepairOrder nếu Customer bị xóa
+                    .HasMany(ro => ro.Parts)
+                    .WithOne(rsp => rsp.RepairOrder) // Chỉ định rõ ràng quan hệ với RepairOrderSparePart
+                    .HasForeignKey(rsp => rsp.RepairOrderId) // Đảm bảo có thuộc tính khoá ngoại trong RepairOrderSparePart
+                    .OnDelete(DeleteBehavior.Cascade); // Xóa RepairOrder sẽ xóa luôn RepairOrderSparePart
 
         modelBuilder.Entity<RepairOrder>()
-            .HasOne(ro => ro.Vehicle)
-            .WithMany()
-            .HasForeignKey(ro => ro.VehicleId)
-            .OnDelete(DeleteBehavior.SetNull); // Set Id về null nếu Vehicle bị xóa
-
-        modelBuilder.Entity<RepairOrder>()
-            .HasMany(ro => ro.RepairTaskList)
-            .WithOne(rt => rt.RepairOrder) // Chỉ định rõ ràng quan hệ với RepairTask
-            .HasForeignKey(rt => rt.RepairOrderId) // Đảm bảo có thuộc tính khoá ngoại trong RepairTask
-            .OnDelete(DeleteBehavior.Cascade); // Xóa RepairOrder sẽ xóa luôn RepairTask
-
-        modelBuilder.Entity<RepairOrder>()
-            .HasMany(ro => ro.RepairOrderItems)
-            .WithOne(rsp => rsp.RepairOrder) // Chỉ định rõ ràng quan hệ với RepairOrderSparePart
-            .HasForeignKey(rsp => rsp.RepairOrderId) // Đảm bảo có thuộc tính khoá ngoại trong RepairOrderSparePart
-            .OnDelete(DeleteBehavior.Cascade); // Xóa RepairOrder sẽ xóa luôn RepairOrderSparePart
+                    .HasOne(ro => ro.Invoice)
+                    .WithMany(i => i.RepairOrders)
+                    .HasForeignKey(ro => ro.InvoiceId)
+                    .OnDelete(DeleteBehavior.SetNull);
 
         // Tạo index tối ưu truy vấn
         modelBuilder.Entity<RepairOrder>().HasIndex(ro => ro.VehicleId);
@@ -399,26 +397,29 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
             .Property(t => t.Type)
             .HasConversion<System.Byte>();
 
+        modelBuilder.Entity<Transaction>()
+            .Property(t => t.PaymentMethod)
+            .HasConversion<System.Byte>();
+
+        modelBuilder.Entity<Transaction>()
+            .Property(t => t.Status)
+            .HasConversion<System.Byte>();
+
+        modelBuilder.Entity<Transaction>()
+            .Property(t => t.Amount)
+            .HasPrecision(18, 2);
+
         // Thiết lập quan hệ với Invoice
         modelBuilder.Entity<Transaction>()
-            .HasOne<Invoice>()
-            .WithMany()
+            .HasOne(t => t.Invoice)
+            .WithMany(i => i.Transactions)
             .HasForeignKey(t => t.InvoiceId)
-            .OnDelete(DeleteBehavior.Restrict); // Không xóa Transaction nếu Invoice bị xóa
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // Tạo index để tối ưu truy vấn
+        modelBuilder.Entity<Transaction>().HasIndex(t => t.InvoiceId);
         modelBuilder.Entity<Transaction>().HasIndex(t => t.Status);
         modelBuilder.Entity<Transaction>().HasIndex(t => t.Type);
-        modelBuilder.Entity<Transaction>().HasIndex(t => t.InvoiceId);
-        modelBuilder.Entity<Transaction>().HasIndex(t => t.CreatedBy);
         modelBuilder.Entity<Transaction>().HasIndex(t => t.TransactionDate);
-
-        // Ràng buộc dữ liệu để đảm bảo tính hợp lệ
-        //modelBuilder.Entity<Transaction>()
-        //    .ToTable(tb => tb.HasCheckConstraint("CK_Transaction_Amount", "Amount > 0"));
-
-        //modelBuilder.Entity<Transaction>()
-        //    .ToTable(tb => tb.HasCheckConstraint("CK_Transaction_Date", "TransactionDate <= GETUTCDATE()"));
     }
 
     #endregion Private Methods

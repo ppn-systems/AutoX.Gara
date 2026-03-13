@@ -1,8 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Entities.Customers;
-using AutoX.Gara.Domain.Entities.Identity;
-using AutoX.Gara.Domain.Entities.Repairs;
+using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
@@ -11,7 +9,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
-namespace AutoX.Gara.Domain.Entities.Billing;
+namespace AutoX.Gara.Domain.Entities.Billings;
 
 /// <summary>
 /// Lớp đại diện cho hóa đơn gara ô tô.
@@ -41,16 +39,6 @@ public class Invoice
     public System.Int32 CustomerId { get; set; }
 
     /// <summary>
-    /// Thông tin người tạo hóa đơn (Id nhân viên).
-    /// </summary>
-    public System.Int32 CreatedById { get; set; }
-
-    /// <summary>
-    /// Thay đổi bởi (Id nhân viên).
-    /// </summary>
-    public System.Int32? ModifiedById { get; set; }
-
-    /// <summary>
     /// Số hóa đơn (mã duy nhất).
     /// </summary>
     [Required(ErrorMessage = "Invoice number is required.")]
@@ -64,24 +52,6 @@ public class Invoice
     #endregion
 
     #region Audit Properties
-
-    /// <summary>
-    /// Thông tin chủ xe (Navigation Property).
-    /// </summary>
-    [ForeignKey(nameof(CustomerId))]
-    public virtual Customer Customer { get; set; }
-
-    /// <summary>
-    /// Người tạo hóa đơn.
-    /// </summary>
-    [ForeignKey(nameof(CreatedById))]
-    public Employee CreatedBy { get; set; } = null!;
-
-    /// <summary>
-    /// Người chỉnh sửa hóa đơn.
-    /// </summary>
-    [ForeignKey(nameof(ModifiedById))]
-    public Employee ModifiedBy { get; set; }
 
     /// <summary>
     /// Ngày lập hóa đơn.
@@ -210,11 +180,11 @@ public class Invoice
     {
         // Tiền dịch vụ
         ServiceSubtotal = RepairOrders?
-            .Sum(o => o.RepairTaskList?.Sum(task => task.ServiceItem.UnitPrice) ?? 0) ?? 0;
+            .Sum(o => o.Tasks?.Sum(task => task.ServiceItem.UnitPrice) ?? 0) ?? 0;
 
         // Tiền phụ tùng
         PartsSubtotal = RepairOrders?
-            .Sum(o => o.RepairOrderItems?
+            .Sum(o => o.Parts?
                 .Sum(sp => sp.SparePart.SellingPrice * sp.Quantity) ?? 0
             ) ?? 0;
 

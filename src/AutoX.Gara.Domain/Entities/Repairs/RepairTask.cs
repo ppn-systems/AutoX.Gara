@@ -1,7 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Entities.Billing;
+using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Identity;
+using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums.Repairs;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -46,10 +47,10 @@ public class RepairTask
     public System.Int32 RepairOrderId { get; set; }
 
     /// <summary>
-    /// Thông tin nhân viên thực hiện (Navigation Property).
+    /// Thông tin nhân viên liên quan (Navigation Property).
     /// </summary>
     [ForeignKey(nameof(EmployeeId))]
-    public virtual Employee Employee { get; set; }
+    public virtual Employee Employee { get; set; } = null!;
 
     /// <summary>
     /// Thông tin dịch vụ liên quan (Navigation Property).
