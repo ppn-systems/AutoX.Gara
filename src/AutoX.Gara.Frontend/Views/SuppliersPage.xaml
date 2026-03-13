@@ -76,7 +76,7 @@
                 <Setter Property="HeightRequest" Value="32" />
                 <Setter Property="WidthRequest" Value="80" />
                 <Setter Property="CornerRadius" Value="8" />
-                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontSize" Value="13" />
                 <Setter Property="FontAttributes" Value="Bold" />
                 <Setter Property="Padding" Value="10,0" />
                 <Setter Property="BackgroundColor" Value="#1E1E2E" />
@@ -181,8 +181,19 @@
 
                                     <!-- Actions -->
                                     <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
-                                        <Button Text="✏ Sửa" Style="{StaticResource RowEdit}" Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}" CommandParameter="{Binding .}" />
-                                        <Button Text="⚙ Trạng thái" BackgroundColor="#1E1E2E" TextColor="#818CF8" FontSize="12" CornerRadius="8" HeightRequest="32" WidthRequest="110" Padding="0" Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RequestChangeStatusCommand}" CommandParameter="{Binding .}" />
+                                        <Button Text="✏ Sửa" 
+                                                Style="{StaticResource RowEdit}" 
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}" 
+                                                CommandParameter="{Binding .}" />
+                                        <Button Text="⚙ Trạng thái" 
+                                                BackgroundColor="#1E1E2E" 
+                                                TextColor="#818CF8" 
+                                                FontSize="13" CornerRadius="8" 
+                                                HeightRequest="32" 
+                                                WidthRequest="110" 
+                                                Padding="0" 
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RequestChangeStatusCommand}" 
+                                                CommandParameter="{Binding .}" />
                                     </HorizontalStackLayout>
                                 </Grid>
                             </Border>

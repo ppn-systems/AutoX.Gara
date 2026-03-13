@@ -116,7 +116,7 @@
                 <Setter Property="HeightRequest"   Value="32" />
                 <Setter Property="WidthRequest"    Value="80" />
                 <Setter Property="CornerRadius"    Value="8" />
-                <Setter Property="FontSize"        Value="14" />
+                <Setter Property="FontSize"        Value="13" />
                 <Setter Property="FontAttributes"  Value="Bold" />
                 <Setter Property="Padding"         Value="10,0" />
                 <Setter Property="BackgroundColor" Value="#0D1F14" />
@@ -129,7 +129,7 @@
                 <Setter Property="HeightRequest"   Value="32" />
                 <Setter Property="WidthRequest"    Value="80" />
                 <Setter Property="CornerRadius"    Value="8" />
-                <Setter Property="FontSize"        Value="14" />
+                <Setter Property="FontSize"        Value="13" />
                 <Setter Property="FontAttributes"  Value="Bold" />
                 <Setter Property="Padding"         Value="10,0" />
                 <Setter Property="BackgroundColor" Value="#1E1E2E" />
@@ -142,7 +142,7 @@
                 <Setter Property="HeightRequest"   Value="32" />
                 <Setter Property="WidthRequest"    Value="80" />
                 <Setter Property="CornerRadius"    Value="8" />
-                <Setter Property="FontSize"        Value="14" />
+                <Setter Property="FontSize"        Value="13" />
                 <Setter Property="FontAttributes"  Value="Bold" />
                 <Setter Property="Padding"         Value="10,0" />
                 <Setter Property="BackgroundColor" Value="#1E1014" />

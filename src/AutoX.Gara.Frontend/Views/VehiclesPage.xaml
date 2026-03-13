@@ -62,7 +62,7 @@
             </Style>
 
             <Style x:Key="MutedLabel" TargetType="Label">
-                <Setter Property="FontSize"   Value="12" />
+                <Setter Property="FontSize"   Value="13" />
                 <Setter Property="TextColor"  Value="#6B6B80" />
                 <Setter Property="VerticalOptions" Value="Center" />
             </Style>
@@ -104,8 +104,9 @@
 
             <Style x:Key="RowEdit" TargetType="Button">
                 <Setter Property="HeightRequest"   Value="32" />
+                <Setter Property="WidthRequest"    Value="100" />
                 <Setter Property="CornerRadius"    Value="8" />
-                <Setter Property="FontSize"        Value="12" />
+                <Setter Property="FontSize"        Value="13" />
                 <Setter Property="FontAttributes"  Value="Bold" />
                 <Setter Property="Padding"         Value="10,0" />
                 <Setter Property="BackgroundColor" Value="#1E1E2E" />
@@ -116,8 +117,9 @@
 
             <Style x:Key="RowDelete" TargetType="Button">
                 <Setter Property="HeightRequest"   Value="32" />
+                <Setter Property="WidthRequest"    Value="100" />
                 <Setter Property="CornerRadius"    Value="8" />
-                <Setter Property="FontSize"        Value="12" />
+                <Setter Property="FontSize"        Value="13" />
                 <Setter Property="FontAttributes"  Value="Bold" />
                 <Setter Property="Padding"         Value="10,0" />
                 <Setter Property="BackgroundColor" Value="#1E1014" />
@@ -278,7 +280,7 @@
 
                                         <!-- Màu + Loại -->
                                         <HorizontalStackLayout Spacing="5">
-                                            <Label Text="🎨" FontSize="11" VerticalOptions="Center" />
+                                            <Label Text="🎨" FontSize="12" VerticalOptions="Center" />
                                             <Label Text="{Binding Color}"
                                                    Style="{StaticResource MutedLabel}" />
                                             <Label Text="·" Style="{StaticResource MutedLabel}" />
@@ -293,7 +295,7 @@
                                                 <Label.FormattedText>
                                                     <FormattedString>
                                                         <Span Text="{Binding Mileage, StringFormat='{0:N0}'}"
-                                                              TextColor="#6B6B80" FontSize="12" />
+                                                              TextColor="#6B6B80" FontSize="13" />
                                                         <Span Text=" km" TextColor="#6B6B80" FontSize="12" />
                                                     </FormattedString>
                                                 </Label.FormattedText>
