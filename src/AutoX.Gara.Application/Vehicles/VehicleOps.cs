@@ -1,7 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Customers;
-using AutoX.Gara.Infrastructure.Abstractions;
+using AutoX.Gara.Infrastructure.Database;
+using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Abstractions;
@@ -24,10 +25,10 @@ namespace AutoX.Gara.Application.Vehicles;
 /// </list>
 /// </summary>
 [PacketController]
-public sealed class VehicleOps(IVehicleRepository vehicles)
+public sealed class VehicleOps(AutoXDbContextFactory dbContextFactory)
 {
-    private readonly IVehicleRepository _vehicles = vehicles
-        ?? throw new System.ArgumentNullException(nameof(vehicles));
+    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
+        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
 
     private const System.Int32 DefaultPageSize = 10;
 
@@ -50,14 +51,12 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
             return;
         }
 
-        // ── Nếu có VehicleId → lấy 1 xe (dùng cho detail) ───────────────────
         if (packet.VehicleId is not null)
         {
             await GetSingleAsync(packet, connection).ConfigureAwait(false);
             return;
         }
 
-        // ── Không có VehicleId → lấy danh sách theo CustomerId ───────────────
         if (packet.CustomerId <= 0)
         {
             await connection.SendAsync(
@@ -86,7 +85,6 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
@@ -96,27 +94,28 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-            return;
-        }
-
-        System.Boolean existed = await _vehicles.ExistsAsync(
-            packet.LicensePlate,
-            packet.EngineNumber,
-            packet.FrameNumber).ConfigureAwait(false);
-
-        if (existed)
-        {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.ALREADY_EXISTS,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
         try
         {
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var vehicles = new VehicleRepository(db);
+
+            System.Boolean existed = await vehicles.ExistsAsync(
+                packet.LicensePlate,
+                packet.EngineNumber,
+                packet.FrameNumber).ConfigureAwait(false);
+
+            if (existed)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.ALREADY_EXISTS,
+                    ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                return;
+            }
+
             var now = System.DateTime.UtcNow;
             var vehicle = new Vehicle
             {
@@ -135,8 +134,8 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
                 DeletedAt = null,
             };
 
-            await _vehicles.AddAsync(vehicle).ConfigureAwait(false);
-            await _vehicles.SaveChangesAsync().ConfigureAwait(false);
+            await vehicles.AddAsync(vehicle).ConfigureAwait(false);
+            await vehicles.SaveChangesAsync().ConfigureAwait(false);
 
             var confirmed = MapToPacket(vehicle, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(
@@ -163,7 +162,7 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((System.UInt16)OpCommand.VEHICLE_UPDATE)] // 0x152 — đã có trong OpCommand
+    [PacketOpcode((System.UInt16)OpCommand.VEHICLE_UPDATE)]
     public async System.Threading.Tasks.Task UpdateAsync(
         IPacket p,
         IConnection connection)
@@ -180,8 +179,10 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
 
         try
         {
-            Vehicle existing = await _vehicles.GetByIdAsync(
-                packet.VehicleId.Value).ConfigureAwait(false);
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var vehicles = new VehicleRepository(db);
+
+            Vehicle existing = await vehicles.GetByIdAsync(packet.VehicleId.Value).ConfigureAwait(false);
 
             if (existing is null || existing.DeletedAt != null)
             {
@@ -205,8 +206,8 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
             existing.RegistrationDate = packet.RegistrationDate;
             existing.InsuranceExpiryDate = packet.InsuranceExpiryDate;
 
-            _vehicles.Update(existing);
-            await _vehicles.SaveChangesAsync().ConfigureAwait(false);
+            vehicles.Update(existing);
+            await vehicles.SaveChangesAsync().ConfigureAwait(false);
 
             var confirmed = MapToPacket(existing, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(
@@ -250,8 +251,10 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
 
         try
         {
-            Vehicle existing = await _vehicles.GetByIdAsync(
-                packet.VehicleId.Value).ConfigureAwait(false);
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var vehicles = new VehicleRepository(db);
+
+            Vehicle existing = await vehicles.GetByIdAsync(packet.VehicleId.Value).ConfigureAwait(false);
 
             if (existing is null || existing.DeletedAt != null)
             {
@@ -263,8 +266,8 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
             }
 
             existing.DeletedAt = System.DateTime.UtcNow;
-            _vehicles.Update(existing);
-            await _vehicles.SaveChangesAsync().ConfigureAwait(false);
+            vehicles.Update(existing);
+            await vehicles.SaveChangesAsync().ConfigureAwait(false);
 
             await connection.SendAsync(
                 ControlType.NONE,
@@ -288,7 +291,10 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
     {
         try
         {
-            Vehicle vehicle = await _vehicles.GetByIdAsync(
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var vehicles = new VehicleRepository(db);
+
+            Vehicle vehicle = await vehicles.GetByIdAsync(
                 packet.VehicleId!.Value).ConfigureAwait(false);
 
             if (vehicle is null || vehicle.DeletedAt != null)
@@ -329,12 +335,13 @@ public sealed class VehicleOps(IVehicleRepository vehicles)
     {
         try
         {
-            // Page được encode vào Year field để tái dùng VehicleDataPacket mà không cần packet mới.
-            // Nếu Year <= 0 hoặc bất thường → mặc định trang 1.
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var vehicles = new VehicleRepository(db);
+
             System.Int32 page = packet.Year > 0 ? packet.Year : 1;
 
             (System.Collections.Generic.List<Vehicle> items, System.Int32 total) =
-                await _vehicles.GetByCustomerIdAsync(
+                await vehicles.GetByCustomerIdAsync(
                     packet.CustomerId,
                     page,
                     DefaultPageSize).ConfigureAwait(false);

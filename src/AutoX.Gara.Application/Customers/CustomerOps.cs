@@ -3,6 +3,8 @@
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Infrastructure.Abstractions;
+using AutoX.Gara.Infrastructure.Database;
+using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Customers;
@@ -32,9 +34,10 @@ namespace AutoX.Gara.Application.Customers;
 /// </para>
 /// </summary>
 [PacketController]
-public sealed class CustomerOps(ICustomerRepository customers)
+public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
 {
-    private readonly ICustomerRepository _customers = customers ?? throw new System.ArgumentNullException(nameof(customers));
+    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
+        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
 
     // ─── GET LIST ─────────────────────────────────────────────────────────────
 
@@ -60,8 +63,6 @@ public sealed class CustomerOps(ICustomerRepository customers)
 
         try
         {
-            // Translate packet → domain value object
-            // CustomerOps không còn biết về IQueryable hay EF Core
             CustomerListQuery query = new(
                 Page: packet.Page,
                 PageSize: packet.PageSize,
@@ -71,7 +72,11 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 FilterType: packet.FilterType,
                 FilterMembership: packet.FilterMembership);
 
-            (System.Collections.Generic.List<Customer> items, System.Int32 totalCount) = await _customers.GetPageAsync(query).ConfigureAwait(false);
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var customers = new CustomerRepository(db);
+
+            (System.Collections.Generic.List<Customer> items, System.Int32 totalCount) =
+                await customers.GetPageAsync(query).ConfigureAwait(false);
 
             response = new()
             {
@@ -101,9 +106,12 @@ public sealed class CustomerOps(ICustomerRepository customers)
         }
         finally
         {
-            foreach (CustomerDto cdp in response.Customers)
+            if (response?.Customers != null)
             {
-                InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(cdp);
+                foreach (CustomerDto cdp in response.Customers)
+                {
+                    InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(cdp);
+                }
             }
         }
     }
@@ -137,22 +145,24 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
-        System.Boolean existed = await _customers.ExistsByContactAsync(packet.Email, packet.PhoneNumber).ConfigureAwait(false);
-
-        if (existed)
-        {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.ALREADY_EXISTS,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-            return;
-        }
-
         CustomerDto confirmed = null;
-
         try
         {
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var customers = new CustomerRepository(db);
+
+            System.Boolean existed = await customers.ExistsByContactAsync(packet.Email, packet.PhoneNumber).ConfigureAwait(false);
+
+            if (existed)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.ALREADY_EXISTS,
+                    ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                return;
+            }
+
             System.DateTime now = System.DateTime.UtcNow;
             Customer newCustomer = new()
             {
@@ -171,8 +181,8 @@ public sealed class CustomerOps(ICustomerRepository customers)
                 UpdatedAt = now
             };
 
-            await _customers.AddAsync(newCustomer).ConfigureAwait(false);
-            await _customers.SaveChangesAsync().ConfigureAwait(false);
+            await customers.AddAsync(newCustomer).ConfigureAwait(false);
+            await customers.SaveChangesAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(newCustomer, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
@@ -199,7 +209,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
             if (confirmed != null)
             {
                 InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                        .Return(confirmed);
+                    .Return(confirmed);
             }
         }
     }
@@ -233,36 +243,38 @@ public sealed class CustomerOps(ICustomerRepository customers)
             return;
         }
 
-        Customer existing = await _customers.GetByIdAsync(packet.CustomerId!.Value).ConfigureAwait(false);
-
-        if (existing is null)
-        {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.NOT_FOUND,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-            return;
-        }
-
-        existing.Name = packet.Name;
-        existing.Type = packet.Type;
-        existing.Email = packet.Email;
-        existing.TaxCode = packet.TaxCode;
-        existing.Address = packet.Address;
-        existing.Membership = packet.Membership;
-        existing.PhoneNumber = packet.PhoneNumber;
-        existing.DateOfBirth = packet.DateOfBirth;
-        existing.Gender = packet.Gender ?? Gender.None;
-        existing.Notes = packet.Notes ?? System.String.Empty;
-        existing.UpdatedAt = System.DateTime.UtcNow;
-
         CustomerDto confirmed = null;
-
         try
         {
-            _customers.Update(existing);
-            await _customers.SaveChangesAsync().ConfigureAwait(false);
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var customers = new CustomerRepository(db);
+
+            var existing = await customers.GetByIdAsync(packet.CustomerId!.Value).ConfigureAwait(false);
+
+            if (existing is null)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.NOT_FOUND,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                return;
+            }
+
+            existing.Name = packet.Name;
+            existing.Type = packet.Type;
+            existing.Email = packet.Email;
+            existing.TaxCode = packet.TaxCode;
+            existing.Address = packet.Address;
+            existing.Membership = packet.Membership;
+            existing.PhoneNumber = packet.PhoneNumber;
+            existing.DateOfBirth = packet.DateOfBirth;
+            existing.Gender = packet.Gender ?? Gender.None;
+            existing.Notes = packet.Notes ?? System.String.Empty;
+            existing.UpdatedAt = System.DateTime.UtcNow;
+
+            customers.Update(existing);
+            await customers.SaveChangesAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(existing, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
@@ -289,7 +301,7 @@ public sealed class CustomerOps(ICustomerRepository customers)
             if (confirmed != null)
             {
                 InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                                        .Return(confirmed);
+                    .Return(confirmed);
             }
         }
     }
@@ -316,7 +328,10 @@ public sealed class CustomerOps(ICustomerRepository customers)
 
         try
         {
-            Customer existing = await _customers.GetByIdAsync(packet.CustomerId.Value).ConfigureAwait(false);
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var customers = new CustomerRepository(db);
+
+            var existing = await customers.GetByIdAsync(packet.CustomerId.Value).ConfigureAwait(false);
 
             if (existing is null)
             {
@@ -332,8 +347,8 @@ public sealed class CustomerOps(ICustomerRepository customers)
             existing.DeletedAt = now;
             existing.UpdatedAt = now;
 
-            _customers.Update(existing);
-            await _customers.SaveChangesAsync().ConfigureAwait(false);
+            customers.Update(existing);
+            await customers.SaveChangesAsync().ConfigureAwait(false);
 
             await connection.SendAsync(
                 ControlType.NONE,

@@ -2,7 +2,8 @@
 
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Infrastructure.Abstractions;
+using AutoX.Gara.Infrastructure.Database;
+using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Suppliers;
@@ -29,9 +30,10 @@ namespace AutoX.Gara.Application.Suppliers;
 /// </list>
 /// </summary>
 [PacketController]
-public sealed class SupplierOps(ISupplierRepository suppliers)
+public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
 {
-    private readonly ISupplierRepository _suppliers = suppliers ?? throw new System.ArgumentNullException(nameof(suppliers));
+    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
+        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
 
     // ─── GET LIST ─────────────────────────────────────────────────────────────
 
@@ -49,7 +51,6 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
@@ -66,8 +67,11 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
                 FilterStatus: packet.FilterStatus,
                 FilterPaymentTerms: packet.FilterPaymentTerms);
 
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var suppliers = new SupplierRepository(db);
+
             (System.Collections.Generic.List<Supplier> items, System.Int32 totalCount)
-                = await _suppliers.GetPageAsync(query).ConfigureAwait(false);
+                = await suppliers.GetPageAsync(query).ConfigureAwait(false);
 
             response = new()
             {
@@ -121,7 +125,6 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
@@ -134,20 +137,6 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-            return;
-        }
-
-        System.Boolean existed = await _suppliers
-            .ExistsByContactAsync(packet.Email, packet.TaxCode).ConfigureAwait(false);
-
-        if (existed)
-        {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.ALREADY_EXISTS,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
@@ -155,6 +144,21 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
 
         try
         {
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var suppliers = new SupplierRepository(db);
+
+            System.Boolean existed = await suppliers
+                .ExistsByContactAsync(packet.Email, packet.TaxCode).ConfigureAwait(false);
+
+            if (existed)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.ALREADY_EXISTS,
+                    ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                return;
+            }
+
             Supplier newSupplier = new()
             {
                 Name = packet.Name,
@@ -167,11 +171,9 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
                 Status = packet.Status ?? SupplierStatus.Active,
                 ContractStartDate = packet.ContractStartDate ?? System.DateTime.UtcNow,
                 ContractEndDate = packet.ContractEndDate,
-                // PhoneNumbers được tạo riêng hoặc qua endpoint khác
                 PhoneNumbers = []
             };
 
-            // Parse PhoneNumbers từ string CSV → SupplierContactPhone entities
             if (!System.String.IsNullOrWhiteSpace(packet.PhoneNumbers))
             {
                 foreach (System.String phone in packet.PhoneNumbers
@@ -188,8 +190,8 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
                 }
             }
 
-            await _suppliers.AddAsync(newSupplier).ConfigureAwait(false);
-            await _suppliers.SaveChangesAsync().ConfigureAwait(false);
+            await suppliers.AddAsync(newSupplier).ConfigureAwait(false);
+            await suppliers.SaveChangesAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(newSupplier, packet.SequenceId);
             System.Boolean sent = await connection.TCP
@@ -235,7 +237,6 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
@@ -245,7 +246,6 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
@@ -257,47 +257,48 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
-        }
-
-        Supplier existing = await _suppliers
-            .GetByIdAsync(packet.SupplierId.Value).ConfigureAwait(false);
-
-        if (existing is null)
-        {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.NOT_FOUND,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-            return;
-        }
-
-        existing.Name = packet.Name;
-        existing.Email = packet.Email;
-        existing.Address = packet.Address;
-        existing.TaxCode = packet.TaxCode;
-        existing.BankAccount = packet.BankAccount;
-        existing.Notes = packet.Notes ?? System.String.Empty;
-        existing.ContractEndDate = packet.ContractEndDate;
-
-        if (packet.PaymentTerms.HasValue)
-        {
-            existing.PaymentTerms = packet.PaymentTerms.Value;
-        }
-
-        if (packet.ContractStartDate.HasValue)
-        {
-            existing.ContractStartDate = packet.ContractStartDate.Value;
         }
 
         SupplierDto confirmed = null;
 
         try
         {
-            _suppliers.Update(existing);
-            await _suppliers.SaveChangesAsync().ConfigureAwait(false);
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var suppliers = new SupplierRepository(db);
+
+            Supplier existing = await suppliers
+                .GetByIdAsync(packet.SupplierId.Value).ConfigureAwait(false);
+
+            if (existing is null)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.NOT_FOUND,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                return;
+            }
+
+            existing.Name = packet.Name;
+            existing.Email = packet.Email;
+            existing.Address = packet.Address;
+            existing.TaxCode = packet.TaxCode;
+            existing.BankAccount = packet.BankAccount;
+            existing.Notes = packet.Notes ?? System.String.Empty;
+            existing.ContractEndDate = packet.ContractEndDate;
+
+            if (packet.PaymentTerms.HasValue)
+            {
+                existing.PaymentTerms = packet.PaymentTerms.Value;
+            }
+
+            if (packet.ContractStartDate.HasValue)
+            {
+                existing.ContractStartDate = packet.ContractStartDate.Value;
+            }
+
+            suppliers.Update(existing);
+            await suppliers.SaveChangesAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(existing, packet.SequenceId);
             System.Boolean sent = await connection.TCP
@@ -330,10 +331,6 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
 
     // ─── CHANGE STATUS ────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Thay đổi trạng thái nhà cung cấp (Active → Suspended, Inactive, Blacklisted, v.v.).
-    /// Yêu cầu quyền SUPERVISOR.
-    /// </summary>
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
     [PacketOpcode((System.UInt16)OpCommand.SUPPLIER_CHANGE_STATUS)]
@@ -345,18 +342,20 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
             || packet.SupplierId is null
             || packet.Status is null)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
+            System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
         try
         {
-            Supplier existing = await _suppliers
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var suppliers = new SupplierRepository(db);
+
+            Supplier existing = await suppliers
                 .GetByIdAsync(packet.SupplierId.Value).ConfigureAwait(false);
 
             if (existing is null)
@@ -365,14 +364,13 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
                 return;
             }
 
             existing.Status = packet.Status.Value;
 
-            _suppliers.Update(existing);
-            await _suppliers.SaveChangesAsync().ConfigureAwait(false);
+            suppliers.Update(existing);
+            await suppliers.SaveChangesAsync().ConfigureAwait(false);
 
             await connection.SendAsync(
                 ControlType.NONE,
@@ -390,10 +388,6 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
 
     // ─── Private Helpers ──────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Parse và validate <see cref="SupplierDto"/> từ IPacket.
-    /// Trả về <c>false</c> nếu sai kiểu hoặc email không hợp lệ.
-    /// </summary>
     private static System.Boolean TryParseSupplierPacket(
         IPacket p,
         out SupplierDto packet,
@@ -412,10 +406,6 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
         return true;
     }
 
-    /// <summary>
-    /// Map <see cref="Supplier"/> entity → <see cref="SupplierDto"/> packet (từ object pool).
-    /// PhoneNumbers được join thành CSV string để truyền qua network.
-    /// </summary>
     private static SupplierDto MapToPacket(Supplier s, System.UInt32 sequenceId)
     {
         SupplierDto data = InstanceManager.Instance
@@ -435,7 +425,6 @@ public sealed class SupplierOps(ISupplierRepository suppliers)
         data.ContractStartDate = s.ContractStartDate;
         data.ContractEndDate = s.ContractEndDate;
 
-        // Join tất cả SĐT thành CSV để serializer truyền qua 1 string field
         data.PhoneNumbers = s.PhoneNumbers?.Count > 0
             ? System.String.Join(',', System.Linq.Enumerable.Select(s.PhoneNumbers, ph => ph.PhoneNumber))
             : System.String.Empty;

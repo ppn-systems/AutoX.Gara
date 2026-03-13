@@ -1,7 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Inventory;
-using AutoX.Gara.Infrastructure.Abstractions;
+using AutoX.Gara.Infrastructure.Database;
+using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Inventory;
@@ -30,10 +31,10 @@ namespace AutoX.Gara.Application.Inventory;
 /// </para>
 /// </summary>
 [PacketController]
-public sealed class ReplacementPartOps(IReplacementPartRepository replacementParts)
+public sealed class ReplacementPartOps(AutoXDbContextFactory dbContextFactory)
 {
-    private readonly IReplacementPartRepository _replacementParts = replacementParts
-        ?? throw new System.ArgumentNullException(nameof(replacementParts));
+    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
+        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
 
     // ─── GET LIST ─────────────────────────────────────────────────────────────
 
@@ -49,7 +50,6 @@ public sealed class ReplacementPartOps(IReplacementPartRepository replacementPar
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
@@ -67,8 +67,11 @@ public sealed class ReplacementPartOps(IReplacementPartRepository replacementPar
                 FilterDefective: packet.FilterDefective,
                 FilterExpired: packet.FilterExpired);
 
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var replacementParts = new ReplacementPartRepository(db);
+
             (System.Collections.Generic.List<ReplacementPart> items, System.Int32 totalCount)
-                = await _replacementParts.GetPageAsync(query).ConfigureAwait(false);
+                = await replacementParts.GetPageAsync(query).ConfigureAwait(false);
 
             response = new()
             {
@@ -124,7 +127,6 @@ public sealed class ReplacementPartOps(IReplacementPartRepository replacementPar
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
@@ -135,20 +137,6 @@ public sealed class ReplacementPartOps(IReplacementPartRepository replacementPar
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-            return;
-        }
-
-        System.Boolean existed = await _replacementParts
-            .ExistsByPartCodeAsync(packet.PartCode).ConfigureAwait(false);
-
-        if (existed)
-        {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.ALREADY_EXISTS,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
@@ -156,6 +144,21 @@ public sealed class ReplacementPartOps(IReplacementPartRepository replacementPar
 
         try
         {
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var replacementParts = new ReplacementPartRepository(db);
+
+            System.Boolean existed = await replacementParts
+                .ExistsByPartCodeAsync(packet.PartCode).ConfigureAwait(false);
+
+            if (existed)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.ALREADY_EXISTS,
+                    ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                return;
+            }
+
             ReplacementPart newPart = new()
             {
                 PartCode = packet.PartCode,
@@ -168,8 +171,8 @@ public sealed class ReplacementPartOps(IReplacementPartRepository replacementPar
                 // IsDefective mặc định false theo entity
             };
 
-            await _replacementParts.AddAsync(newPart).ConfigureAwait(false);
-            await _replacementParts.SaveChangesAsync().ConfigureAwait(false);
+            await replacementParts.AddAsync(newPart).ConfigureAwait(false);
+            await replacementParts.SaveChangesAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(newPart, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
@@ -213,7 +216,6 @@ public sealed class ReplacementPartOps(IReplacementPartRepository replacementPar
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
@@ -223,50 +225,49 @@ public sealed class ReplacementPartOps(IReplacementPartRepository replacementPar
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
-        }
-
-        ReplacementPart existing = await _replacementParts
-            .GetByIdAsync(packet.PartId.Value).ConfigureAwait(false);
-
-        if (existing is null)
-        {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.NOT_FOUND,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-            return;
-        }
-
-        // Dùng domain methods thay vì gán thẳng để giữ business rules
-        existing.PartName = packet.PartName;
-        existing.Manufacturer = packet.Manufacturer ?? System.String.Empty;
-        existing.UnitPrice = packet.UnitPrice;
-        existing.DateAdded = packet.DateAdded;
-        existing.ExpiryDate = packet.ExpiryDate;
-
-        // IsDefective chỉ được thay đổi qua domain methods (MarkAsDefective/UnmarkAsDefective)
-        if (packet.IsDefective && !existing.IsDefective)
-        {
-            existing.MarkAsDefective();
-        }
-        else if (!packet.IsDefective && existing.IsDefective)
-        {
-            existing.UnmarkAsDefective();
         }
 
         ReplacementPartDto confirmed = null;
-
         try
         {
-            _replacementParts.Update(existing);
-            await _replacementParts.SaveChangesAsync().ConfigureAwait(false);
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var replacementParts = new ReplacementPartRepository(db);
+
+            ReplacementPart existing = await replacementParts
+                .GetByIdAsync(packet.PartId.Value).ConfigureAwait(false);
+
+            if (existing is null)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.NOT_FOUND,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                return;
+            }
+
+            // Dùng domain methods thay vì gán thẳng để giữ business rules
+            existing.PartName = packet.PartName;
+            existing.Manufacturer = packet.Manufacturer ?? System.String.Empty;
+            existing.UnitPrice = packet.UnitPrice;
+            existing.DateAdded = packet.DateAdded;
+            existing.ExpiryDate = packet.ExpiryDate;
+
+            // IsDefective chỉ được thay đổi qua domain methods (MarkAsDefective/UnmarkAsDefective)
+            if (packet.IsDefective && !existing.IsDefective)
+            {
+                existing.MarkAsDefective();
+            }
+            else if (!packet.IsDefective && existing.IsDefective)
+            {
+                existing.UnmarkAsDefective();
+            }
+
+            replacementParts.Update(existing);
+            await replacementParts.SaveChangesAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(existing, packet.SequenceId);
-            System.Boolean sent = await connection.TCP
-                .SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
             if (!sent)
             {
@@ -306,13 +307,15 @@ public sealed class ReplacementPartOps(IReplacementPartRepository replacementPar
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
         try
         {
-            ReplacementPart existing = await _replacementParts
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var replacementParts = new ReplacementPartRepository(db);
+
+            ReplacementPart existing = await replacementParts
                 .GetByIdAsync(packet.PartId.Value).ConfigureAwait(false);
 
             if (existing is null)
@@ -321,12 +324,11 @@ public sealed class ReplacementPartOps(IReplacementPartRepository replacementPar
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
                 return;
             }
 
-            _replacementParts.Delete(existing);
-            await _replacementParts.SaveChangesAsync().ConfigureAwait(false);
+            replacementParts.Delete(existing);
+            await replacementParts.SaveChangesAsync().ConfigureAwait(false);
 
             await connection.SendAsync(
                 ControlType.NONE,

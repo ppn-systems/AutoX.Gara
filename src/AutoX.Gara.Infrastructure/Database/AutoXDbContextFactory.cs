@@ -42,7 +42,7 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
     /// <item>Loại database không được hỗ trợ</item>
     /// </list>
     /// </exception>
-    public AutoXDbContext CreateDbContext(System.String[] args)
+    public AutoXDbContext CreateDbContext(System.String[] args = null)
     {
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
             .Info($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Start initialization sequence.");

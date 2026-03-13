@@ -2,10 +2,10 @@
 
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Auth;
 using AutoX.Gara.Shared.Validation;
+using Microsoft.EntityFrameworkCore;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
@@ -22,13 +22,13 @@ namespace AutoX.Gara.Application.Communication;
 /// Dịch vụ quản lý tài khoản người dùng, bao gồm đăng ký, đăng nhập, xóa tài khoản và cập nhật mật khẩu.
 /// </summary>
 /// <remarks>
-/// Khởi tạo AccountService với DbContext.
+/// Sử dụng DbContextFactory để tạo context "mới" mỗi lần request (tránh lỗi multi-thread).
 /// </remarks>
-/// <param name="context">Context của cơ sở dữ liệu để thao tác với bảng Accounts.</param>
 [PacketController]
-public sealed class AccountOps(AutoXDbContext context)
+public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
 {
-    private readonly DataRepository<Account> s_account = new(context);
+    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
+        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
 
     [PacketPermission(PermissionLevel.NONE)]
     [PacketOpcode((System.UInt16)OpCommand.LOGIN)]
@@ -45,31 +45,29 @@ public sealed class AccountOps(AutoXDbContext context)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
-        Account account = await s_account.GetFirstOrDefaultAsync(a => a.Username == packet.Account.Username.Trim().ToLower());
+        // Tạo context mới cho mỗi lệnh
+        await using var context = _dbContextFactory.CreateDbContext();
+        var account = await context.Set<Account>().FirstOrDefaultAsync(a => a.Username == packet.Account.Username.Trim().ToLower());
+
         if (account == null)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.NOT_FOUND,
                 ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
         if (account.FailedLoginAttempts >= 5 && account.LastFailedLogin.HasValue &&
             System.DateTime.UtcNow < account.LastFailedLogin.Value.AddMinutes(15))
         {
-            // ACCOUNT_LOCKED --> Báo cho client là tài khoản đang bị tạm khóa
-            // BACKOFF_RETRY  --> Gợi ý: nên đợi thời gian mới thử lại
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.ACCOUNT_LOCKED,
                 ProtocolAdvice.BACKOFF_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
@@ -78,28 +76,22 @@ public sealed class AccountOps(AutoXDbContext context)
             account.FailedLoginAttempts++;
             account.LastFailedLogin = System.DateTime.UtcNow;
 
-            await s_account.SaveChangesAsync();
+            await context.SaveChangesAsync();
 
-            // UNAUTHENTICATED -> Sai mật khẩu
-            // FIX_AND_RETRY -> Có thể nhập lại và thử tiếp
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.UNAUTHENTICATED,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
+        // SỬA: Nếu không active thì forbidden
         if (!account.IsActive)
         {
-            // FORBIDDEN: Tài khoản đúng nhưng bị khóa/chưa được kích hoạt sử dụng
-            // 202: Tài khoản bị cấm sử dụng (chưa active)
-            // Gợi ý nên liên hệ quản trị viên hoặc CSKH, không tự thử lại được
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.FORBIDDEN,
                 ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
@@ -109,7 +101,7 @@ public sealed class AccountOps(AutoXDbContext context)
             account.FailedLoginAttempts = 0;
             account.LastLogin = System.DateTime.UtcNow;
 
-            await s_account.SaveChangesAsync();
+            await context.SaveChangesAsync();
 
             connection.Level = account.Role;
             connection.OnCloseEvent += OnAccountLogout;
@@ -147,7 +139,6 @@ public sealed class AccountOps(AutoXDbContext context)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
@@ -157,7 +148,6 @@ public sealed class AccountOps(AutoXDbContext context)
                 ControlType.ERROR,
                 ProtocolReason.INVALID_USERNAME,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
@@ -167,21 +157,21 @@ public sealed class AccountOps(AutoXDbContext context)
                 ControlType.ERROR,
                 ProtocolReason.WEAK_PASSWORD,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
-        if (await s_account.AnyAsync(a => a.Username == packet.Account.Username))
+        await using var context = _dbContextFactory.CreateDbContext();
+        System.Boolean existed = await context.Set<Account>().AnyAsync(a => a.Username == packet.Account.Username.Trim().ToLower());
+        if (existed)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.ALREADY_EXISTS,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
-        // Hash password & sinh salt
+        // Hash password & create salt/hash
         Pbkdf2.Hash(packet.Account.Password, out System.Byte[] salt, out System.Byte[] hash);
 
         Account newAccount = new()
@@ -195,8 +185,8 @@ public sealed class AccountOps(AutoXDbContext context)
         try
         {
             newAccount.Deactivate();
-            await s_account.AddAsync(newAccount);
-            await s_account.SaveChangesAsync();
+            await context.Set<Account>().AddAsync(newAccount);
+            await context.SaveChangesAsync();
 
             System.Array.Clear(salt, 0, salt.Length);
             System.Array.Clear(hash, 0, hash.Length);
@@ -210,7 +200,6 @@ public sealed class AccountOps(AutoXDbContext context)
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
                 ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
             return;
         }
 
@@ -218,8 +207,6 @@ public sealed class AccountOps(AutoXDbContext context)
             ControlType.NONE,
             ProtocolReason.NONE,
             ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
-
-        // TODO (pro): Gửi email xác thực nếu bạn dùng kịch bản kích hoạt email
     }
 
     [System.Diagnostics.StackTraceHidden]
@@ -229,15 +216,21 @@ public sealed class AccountOps(AutoXDbContext context)
     {
         args.Connection.OnCloseEvent -= OnAccountLogout;
 
-        System.String username = InstanceManager.Instance.GetExistingInstance<ConnectionHub>()
-                                                         .GetUsername(args.Connection.ID);
+        System.String username = InstanceManager.Instance.GetExistingInstance<ConnectionHub>()?
+                                                     .GetUsername(args.Connection.ID);
 
-        Account account = await s_account.GetFirstOrDefaultAsync(a => a.Username == username);
+        if (System.String.IsNullOrEmpty(username))
+        {
+            return;
+        }
+
+        await using var context = _dbContextFactory.CreateDbContext();
+        var account = await context.Set<Account>().FirstOrDefaultAsync(a => a.Username == username);
 
         if (account != null)
         {
             account.Deactivate();
-            await s_account.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
     }
 }

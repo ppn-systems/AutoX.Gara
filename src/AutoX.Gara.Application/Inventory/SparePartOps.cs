@@ -2,7 +2,8 @@
 
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Domain.Enums.Parts;
-using AutoX.Gara.Infrastructure.Abstractions;
+using AutoX.Gara.Infrastructure.Database;
+using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Inventory;
@@ -23,16 +24,17 @@ namespace AutoX.Gara.Application.Inventory;
 /// <para>
 /// Tuân theo cùng pattern với <c>CustomerOps</c>:
 /// <list type="bullet">
-///   <item>Inject <see cref="ISparePartRepository"/> — tách Infrastructure khỏi Application.</item>
+///   <item>Inject factory, tạo repository từ context cho từng request.</item>
 ///   <item>Translate packet → <see cref="SparePartListQuery"/> value object trước khi query.</item>
 ///   <item>Mapping tập trung tại <see cref="MapToPacket"/>.</item>
 /// </list>
 /// </para>
 /// </summary>
 [PacketController]
-public sealed class SparePartOps(ISparePartRepository spareParts)
+public sealed class SparePartOps(AutoXDbContextFactory dbContextFactory)
 {
-    private readonly ISparePartRepository _spareParts = spareParts ?? throw new System.ArgumentNullException(nameof(spareParts));
+    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
+        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
 
     // ─── GET LIST ─────────────────────────────────────────────────────────────
 
@@ -48,7 +50,6 @@ public sealed class SparePartOps(ISparePartRepository spareParts)
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
                 ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
             return;
         }
 
@@ -66,8 +67,11 @@ public sealed class SparePartOps(ISparePartRepository spareParts)
                 FilterCategory: packet.FilterCategory,
                 FilterDiscontinued: packet.FilterDiscontinued);
 
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var spareParts = new SparePartRepository(db);
+
             (System.Collections.Generic.List<SparePart> items, System.Int32 totalCount)
-                = await _spareParts.GetPageAsync(query).ConfigureAwait(false);
+                = await spareParts.GetPageAsync(query).ConfigureAwait(false);
 
             response = new()
             {
@@ -136,24 +140,27 @@ public sealed class SparePartOps(ISparePartRepository spareParts)
             return;
         }
 
-        System.Boolean existed = await _spareParts
-            .ExistsByNameAndSupplierAsync(packet.PartName, packet.SupplierId)
-            .ConfigureAwait(false);
-
-        if (existed)
-        {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.ALREADY_EXISTS,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-            return;
-        }
-
         SparePartDto confirmed = null;
 
         try
         {
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var spareParts = new SparePartRepository(db);
+
+            System.Boolean existed = await spareParts
+                .ExistsByNameAndSupplierAsync(packet.PartName, packet.SupplierId)
+                .ConfigureAwait(false);
+
+            if (existed)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.ALREADY_EXISTS,
+                    ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                return;
+            }
+
             SparePart newPart = new()
             {
                 SupplierId = packet.SupplierId,
@@ -165,8 +172,8 @@ public sealed class SparePartOps(ISparePartRepository spareParts)
                 IsDiscontinued = false
             };
 
-            await _spareParts.AddAsync(newPart).ConfigureAwait(false);
-            await _spareParts.SaveChangesAsync().ConfigureAwait(false);
+            await spareParts.AddAsync(newPart).ConfigureAwait(false);
+            await spareParts.SaveChangesAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(newPart, packet.SequenceId);
             System.Boolean sent = await connection.TCP
@@ -225,32 +232,35 @@ public sealed class SparePartOps(ISparePartRepository spareParts)
             return;
         }
 
-        SparePart existing = await _spareParts
-            .GetByIdAsync(packet.SparePartId.Value).ConfigureAwait(false);
-
-        if (existing is null)
-        {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.NOT_FOUND,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-            return;
-        }
-
-        existing.PartName = packet.PartName;
-        existing.PartCategory = packet.PartCategory ?? existing.PartCategory;
-        existing.PurchasePrice = packet.PurchasePrice;
-        existing.SellingPrice = packet.SellingPrice;
-        existing.InventoryQuantity = packet.InventoryQuantity;
-        existing.IsDiscontinued = packet.IsDiscontinued;
-
         SparePartDto confirmed = null;
 
         try
         {
-            _spareParts.Update(existing);
-            await _spareParts.SaveChangesAsync().ConfigureAwait(false);
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var spareParts = new SparePartRepository(db);
+
+            SparePart existing = await spareParts
+                .GetByIdAsync(packet.SparePartId.Value).ConfigureAwait(false);
+
+            if (existing is null)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.NOT_FOUND,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                return;
+            }
+
+            existing.PartName = packet.PartName;
+            existing.PartCategory = packet.PartCategory ?? existing.PartCategory;
+            existing.PurchasePrice = packet.PurchasePrice;
+            existing.SellingPrice = packet.SellingPrice;
+            existing.InventoryQuantity = packet.InventoryQuantity;
+            existing.IsDiscontinued = packet.IsDiscontinued;
+
+            spareParts.Update(existing);
+            await spareParts.SaveChangesAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(existing, packet.SequenceId);
             System.Boolean sent = await connection.TCP
@@ -300,7 +310,10 @@ public sealed class SparePartOps(ISparePartRepository spareParts)
 
         try
         {
-            SparePart existing = await _spareParts
+            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            var spareParts = new SparePartRepository(db);
+
+            SparePart existing = await spareParts
                 .GetByIdAsync(packet.SparePartId.Value).ConfigureAwait(false);
 
             if (existing is null)
@@ -315,8 +328,8 @@ public sealed class SparePartOps(ISparePartRepository spareParts)
 
             existing.IsDiscontinued = true;
 
-            _spareParts.Update(existing);
-            await _spareParts.SaveChangesAsync().ConfigureAwait(false);
+            spareParts.Update(existing);
+            await spareParts.SaveChangesAsync().ConfigureAwait(false);
 
             await connection.SendAsync(
                 ControlType.NONE,

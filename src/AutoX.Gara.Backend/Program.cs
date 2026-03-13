@@ -7,7 +7,6 @@ using AutoX.Gara.Application.Suppliers;
 using AutoX.Gara.Application.Vehicles;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Networking;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared;
 using Nalix.Common.Concurrency;
 using Nalix.Common.Diagnostics.Abstractions;
@@ -160,7 +159,6 @@ public static class Program
 
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "<Pending>")]
     public static void InitializeComponent()
     {
 #if DEBUG
@@ -170,7 +168,7 @@ public static class Program
         ILogger logger = new NLogix(cfg => cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = true)));
 #else
         ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Info;
+                            .MinLevel = LogLevel.Information;
 
         ILogger logger = new NLogix(cfg =>
         {
@@ -210,47 +208,31 @@ public static class Program
             dispatchOptions.WithHandler(() =>
                 new AccountOps(
                     InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                                            .CreateDbContext(System.Array.Empty<System.String>())
                 )
             );
             dispatchOptions.WithHandler(() =>
                 new CustomerOps(
-                    new CustomerRepository(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                                                .CreateDbContext(System.Array.Empty<System.String>())
-                    )
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                 )
             );
             dispatchOptions.WithHandler(() =>
                 new VehicleOps(
-                    new VehicleRepository(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                                                .CreateDbContext(System.Array.Empty<System.String>())
-                    )
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                 )
             );
             dispatchOptions.WithHandler(() =>
                 new ReplacementPartOps(
-                    new ReplacementPartRepository(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                                                .CreateDbContext(System.Array.Empty<System.String>())
-                    )
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                 )
             );
             dispatchOptions.WithHandler(() =>
                 new SparePartOps(
-                    new SparePartRepository(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                                                .CreateDbContext(System.Array.Empty<System.String>())
-                    )
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                 )
             );
             dispatchOptions.WithHandler(() =>
                 new SupplierOps(
-                    new SupplierRepository(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                                                .CreateDbContext(System.Array.Empty<System.String>())
-                    )
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                 )
             );
         });
