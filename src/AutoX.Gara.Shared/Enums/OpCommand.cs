@@ -50,6 +50,30 @@ public enum OpCommand : System.UInt16
 
     PART_DELETE = 0x183,
 
+    INVOICE_GET = 0x1A0,
+
+    INVOICE_CREATE = 0x1A1,
+
+    INVOICE_UPDATE = 0x1A2,
+
+    INVOICE_DELETE = 0x1A3,
+
+    REPAIR_ORDER_GET = 0x1B0,
+
+    REPAIR_ORDER_CREATE = 0x1B1,
+
+    REPAIR_ORDER_UPDATE = 0x1B2,
+
+    REPAIR_ORDER_DELETE = 0x1B3,
+
+    TRANSACTION_GET = 0x1C0,
+
+    TRANSACTION_CREATE = 0x1C1,
+
+    TRANSACTION_UPDATE = 0x1C2,
+
+    TRANSACTION_DELETE = 0x1C3,
+
     /// <summary>
     /// Get list of employees.
     /// </summary>

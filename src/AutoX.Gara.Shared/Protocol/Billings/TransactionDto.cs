@@ -1,0 +1,99 @@
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using AutoX.Gara.Domain.Enums.Payments;
+using AutoX.Gara.Domain.Enums.Transactions;
+using AutoX.Gara.Shared.Enums;
+using AutoX.Gara.Shared.Extensions;
+using Nalix.Common.Networking.Packets.Abstractions;
+using Nalix.Common.Networking.Packets.Enums;
+using Nalix.Common.Serialization;
+using Nalix.Common.Serialization.Attributes;
+using Nalix.Shared.Frames;
+
+namespace AutoX.Gara.Shared.Protocol.Billings;
+
+[SerializePackable(SerializeLayout.Explicit)]
+public sealed class TransactionDto : PacketBase<TransactionDto>, IPacketTransformer<TransactionDto>, IPacketSequenced
+{
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
+    public System.UInt32 SequenceId { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    public System.Int32? TransactionId { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    public System.Int32 InvoiceId { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
+    public TransactionType Type { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
+    public PaymentMethod PaymentMethod { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
+    public TransactionStatus Status { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
+    public System.Decimal Amount { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
+    public System.DateTime TransactionDate { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 8)]
+    public System.Int32 CreatedBy { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 9)]
+    public System.Int32? ModifiedBy { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 10)]
+    public System.DateTime? UpdatedAt { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 11)]
+    public System.Boolean IsReversed { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 12)]
+    public System.String Description { get; set; }
+
+    public TransactionDto()
+    {
+        Description = System.String.Empty;
+        TransactionDate = System.DateTime.UtcNow;
+        Type = TransactionType.Revenue;
+        PaymentMethod = PaymentMethod.None;
+        Status = TransactionStatus.Pending;
+        OpCode = OpCommand.NONE.AsUInt16();
+    }
+
+    public override void ResetForPool()
+    {
+        base.ResetForPool();
+
+        SequenceId = 0;
+        TransactionId = null;
+        InvoiceId = 0;
+        Type = TransactionType.Revenue;
+        PaymentMethod = PaymentMethod.None;
+        Status = TransactionStatus.Pending;
+        Amount = 0;
+        TransactionDate = System.DateTime.UtcNow;
+        CreatedBy = 0;
+        ModifiedBy = null;
+        UpdatedAt = null;
+        IsReversed = false;
+        Description = System.String.Empty;
+        OpCode = OpCommand.NONE.AsUInt16();
+    }
+
+    public static TransactionDto Compress(TransactionDto packet)
+    {
+        System.ArgumentNullException.ThrowIfNull(packet);
+        return packet;
+    }
+
+    public static TransactionDto Decompress(TransactionDto packet)
+    {
+        System.ArgumentNullException.ThrowIfNull(packet);
+        return packet;
+    }
+}
+
