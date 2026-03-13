@@ -1,5 +1,6 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Billings;
 using AutoX.Gara.Application.Communication;
 using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Application.Employees;
@@ -244,6 +245,21 @@ public static class Program
             );
             dispatchOptions.WithHandler(() =>
                 new SupplierOps(
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                )
+            );
+            dispatchOptions.WithHandler(() =>
+                new InvoiceOps(
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                )
+            );
+            dispatchOptions.WithHandler(() =>
+                new RepairOrderOps(
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                )
+            );
+            dispatchOptions.WithHandler(() =>
+                new TransactionOps(
                     InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                 )
             );
