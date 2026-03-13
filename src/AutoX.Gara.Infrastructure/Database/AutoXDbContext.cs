@@ -427,21 +427,6 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
             .HasConversion(
                 d => d.HasValue ? d.Value.ToDateTime(System.TimeOnly.MinValue) : default(System.DateTime?),
                 dt => dt != null ? System.DateOnly.FromDateTime(dt.Value) : null);
-
-        // Thêm dữ liệu mẫu
-        modelBuilder.Entity<ReplacementPart>().HasData(
-            new ReplacementPart
-            {
-                Id = 1,
-                PartCode = "ABC123",
-                PartName = "Brake Pad",
-                DateAdded = new System.DateOnly(2025, 2, 25),
-                ExpiryDate = new System.DateOnly(2029, 2, 25),
-                UnitPrice = 150.50m,
-                Manufacturer = "OEM"
-            }
-        );
-
     }
 
     #endregion Private Methods

@@ -15,13 +15,7 @@ public sealed partial class SuppliersPage : ContentPage
     {
         InitializeComponent();
 
-        if (InstanceManager.Instance.GetExistingInstance<SuppliersViewModel>() == null)
-        {
-            SupplierService service = new(InstanceManager.Instance.GetOrCreateInstance<SupplierQueryCache>());
-            InstanceManager.Instance.Register<SuppliersViewModel>(new SuppliersViewModel(service));
-        }
-
-        _viewModel = InstanceManager.Instance.GetOrCreateInstance<SuppliersViewModel>();
+        _viewModel = new SuppliersViewModel(new SupplierService(InstanceManager.Instance.GetOrCreateInstance<SupplierQueryCache>()));
         BindingContext = _viewModel;
     }
 
@@ -35,7 +29,7 @@ public sealed partial class SuppliersPage : ContentPage
         // Only load if collection is empty (avoid reload on back-navigation)
         if (_viewModel.Suppliers.Count == 0)
         {
-            _ = _viewModel.LoadCommand.ExecuteAsync(null);
+            Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(async () => await _viewModel.LoadCommand.ExecuteAsync(null));
         }
     }
 }

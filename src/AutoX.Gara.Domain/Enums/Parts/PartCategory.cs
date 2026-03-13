@@ -160,6 +160,9 @@ public enum PartCategory : System.Byte
     [Display(Name = "Bộ móc kéo xe")]
     TowHitch = 45,
 
+    [Display(Name = "Bộ lọc không khí và nhiên liệu")]
+    Filter = 46,
+
     // ❓ Khác
     [Display(Name = "Phụ tùng khác")]
     Other = 255

@@ -370,11 +370,12 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
             return;
         }
 
-        _suppressAutoLoad = true;   // tắt hook
+        _suppressAutoLoad = true;
         try
         {
+            Boolean isSameColumn = SortBy == field;
             SortBy = field;
-            SortDescending = SortBy == field && !SortDescending;
+            SortDescending = isSameColumn && !SortDescending;
         }
         finally
         {

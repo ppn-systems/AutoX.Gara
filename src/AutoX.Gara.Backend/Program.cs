@@ -163,12 +163,12 @@ public static class Program
     {
 #if DEBUG
         ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Meta;
+                            .MinLevel = LogLevel.Debug;
 
         ILogger logger = new NLogix(cfg => cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = true)));
 #else
         ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Information;
+                            .MinLevel = LogLevel.Debug;
 
         ILogger logger = new NLogix(cfg =>
         {
@@ -183,6 +183,19 @@ public static class Program
 
         AutoXDbContextFactory factory = new();
         InstanceManager.Instance.Register<AutoXDbContextFactory>(factory);
+
+        // Seed initial data if necessary
+        using (AutoXDbContext context = factory.CreateDbContext())
+        {
+            // EnsureCreated sẽ tự kiểm tra database chưa có mới tạo, nếu đã có thì không làm gì cả.
+            if (context.Database.EnsureCreated())
+            {
+                // Sau khi TẠO MỚI database thành công, seed data.
+                DataSeeder.SeedAsync(context).Wait();
+            }
+        }
+
+        System.Environment.Exit(0);
 
         PacketDispatchChannel channel = new(dispatchOptions =>
         {
