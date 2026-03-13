@@ -655,7 +655,8 @@
                                                 Format="dd/MM/yyyy"
                                                 TextColor="#C4C4D4"
                                                 BackgroundColor="Transparent"
-                                                VerticalOptions="Center" />
+                                                VerticalOptions="Center" 
+                                                WidthRequest="244" />
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>

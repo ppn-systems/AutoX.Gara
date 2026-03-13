@@ -128,7 +128,7 @@
                     </Border>
 
                     <!-- Picker Status -->
-                    <Border Style="{StaticResource PickerBorder}" WidthRequest="150">
+                    <Border Style="{StaticResource PickerBorder}" WidthRequest="160">
                         <Picker SelectedIndex="{Binding PickerStatusIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44">
                             <Picker.Items>
                                 <x:String>Tất cả trạng thái</x:String>
@@ -367,7 +367,12 @@
                             <VerticalStackLayout Grid.Column="1">
                                 <Label Text="NGÀY SINH" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource InputBorder}">
-                                    <DatePicker Date="{Binding FormDateOfBirth}" Format="dd/MM/yyyy" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" />
+                                    <DatePicker Date="{Binding FormDateOfBirth}" 
+                                                Format="dd/MM/yyyy" 
+                                                TextColor="#C4C4D4"
+                                                BackgroundColor="Transparent" 
+                                                VerticalOptions="Center"
+                                                WidthRequest="280" />
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>
@@ -377,13 +382,23 @@
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="NGÀY BẮT ĐẦU" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource InputBorder}">
-                                    <DatePicker Date="{Binding FormStartDate}" Format="dd/MM/yyyy" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" />
+                                    <DatePicker Date="{Binding FormStartDate}" 
+                                                Format="dd/MM/yyyy" 
+                                                TextColor="#C4C4D4" 
+                                                BackgroundColor="Transparent" 
+                                                VerticalOptions="Center" 
+                                                WidthRequest="280" />
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
                                 <Label Text="NGÀY KẾT THÚC" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource InputBorder}">
-                                    <DatePicker Date="{Binding FormEndDate, TargetNullValue={x:Static sys:DateTime.Today}}" Format="dd/MM/yyyy" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" />
+                                    <DatePicker Date="{Binding FormEndDate, TargetNullValue={x:Static sys:DateTime.Today}}" 
+                                                Format="dd/MM/yyyy" 
+                                                TextColor="#C4C4D4" 
+                                                BackgroundColor="Transparent" 
+                                                VerticalOptions="Center" 
+                                                WidthRequest="280" />
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>

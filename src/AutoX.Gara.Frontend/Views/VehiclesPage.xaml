@@ -556,7 +556,8 @@
                                                 Format="dd/MM/yyyy"
                                                 TextColor="#C4C4D4"
                                                 BackgroundColor="Transparent"
-                                                VerticalOptions="Center" />
+                                                VerticalOptions="Center"
+                                                WidthRequest="224"/>
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
@@ -566,7 +567,8 @@
                                                 Format="dd/MM/yyyy"
                                                 TextColor="#C4C4D4"
                                                 BackgroundColor="Transparent"
-                                                VerticalOptions="Center" />
+                                                VerticalOptions="Center"
+                                                WidthRequest="224" />
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>

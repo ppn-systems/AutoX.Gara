@@ -525,7 +525,8 @@
                                                 Format="dd/MM/yyyy"
                                                 TextColor="#C4C4D4"
                                                 BackgroundColor="Transparent"
-                                                VerticalOptions="Center" />
+                                                VerticalOptions="Center" 
+                                                WidthRequest="254" />
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>
@@ -537,7 +538,8 @@
                                         Format="dd/MM/yyyy"
                                         TextColor="#C4C4D4"
                                         BackgroundColor="Transparent"
-                                        VerticalOptions="Center" />
+                                        VerticalOptions="Center" 
+                                        WidthRequest="521" />
                         </Border>
 
                         <!-- Bị lỗi + Ngừng bán toggles -->

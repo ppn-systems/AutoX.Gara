@@ -326,13 +326,23 @@
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="NGÀY BẮT ĐẦU HỢP TÁC" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource InputBorder}">
-                                    <DatePicker Date="{Binding FormContractStartDate}" Format="dd/MM/yyyy" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" />
+                                    <DatePicker Date="{Binding FormContractStartDate}" 
+                                                Format="dd/MM/yyyy" 
+                                                TextColor="#C4C4D4" 
+                                                BackgroundColor="Transparent" 
+                                                VerticalOptions="Center"
+                                                WidthRequest="255" />
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
                                 <Label Text="NGÀY KẾT THÚC HỢP TÁC" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource InputBorder}">
-                                    <DatePicker Date="{Binding FormContractEndDate, TargetNullValue={x:Static sys:DateTime.Today}}" Format="dd/MM/yyyy" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" />
+                                    <DatePicker Date="{Binding FormContractEndDate, TargetNullValue={x:Static sys:DateTime.Today}}" 
+                                                Format="dd/MM/yyyy" 
+                                                TextColor="#C4C4D4" 
+                                                BackgroundColor="Transparent" 
+                                                VerticalOptions="Center"
+                                                WidthRequest="255" />
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>
