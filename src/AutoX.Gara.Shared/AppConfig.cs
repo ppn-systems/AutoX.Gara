@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Auth;
+using AutoX.Gara.Shared.Protocol.Billings;
 using AutoX.Gara.Shared.Protocol.Customers;
 using AutoX.Gara.Shared.Protocol.Employees;
 using AutoX.Gara.Shared.Protocol.Inventory;
@@ -43,6 +44,30 @@ public static class AppConfig
         _ = factory.RegisterPacket<PartDto>();
         _ = factory.RegisterPacket<PartQueryRequest>();
         _ = factory.RegisterPacket<PartQueryResponse>();
+
+        _ = factory.RegisterPacket<InvoiceDto>();
+        _ = factory.RegisterPacket<InvoiceQueryRequest>();
+        _ = factory.RegisterPacket<InvoiceQueryResponse>();
+
+        _ = factory.RegisterPacket<RepairOrderDto>();
+        _ = factory.RegisterPacket<RepairOrderQueryRequest>();
+        _ = factory.RegisterPacket<RepairOrderQueryResponse>();
+
+        _ = factory.RegisterPacket<RepairOrderItemDto>();
+        _ = factory.RegisterPacket<RepairOrderItemQueryRequest>();
+        _ = factory.RegisterPacket<RepairOrderItemQueryResponse>();
+
+        _ = factory.RegisterPacket<RepairTaskDto>();
+        _ = factory.RegisterPacket<RepairTaskQueryRequest>();
+        _ = factory.RegisterPacket<RepairTaskQueryResponse>();
+
+        _ = factory.RegisterPacket<ServiceItemDto>();
+        _ = factory.RegisterPacket<ServiceItemQueryRequest>();
+        _ = factory.RegisterPacket<ServiceItemQueryResponse>();
+
+        _ = factory.RegisterPacket<TransactionDto>();
+        _ = factory.RegisterPacket<TransactionQueryRequest>();
+        _ = factory.RegisterPacket<TransactionQueryResponse>();
 
         PacketRegistry catalog = factory.CreateCatalog();
 

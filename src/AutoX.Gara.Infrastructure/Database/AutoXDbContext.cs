@@ -72,7 +72,7 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.UsePropertyAccessMode(PropertyAccessMode.Field);
+        //modelBuilder.UsePropertyAccessMode(PropertyAccessMode.Field);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AutoXDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
 
