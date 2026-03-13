@@ -114,8 +114,9 @@
             <!-- Row actions — pill buttons có text label -->
             <Style x:Key="RowVehicle" TargetType="Button">
                 <Setter Property="HeightRequest"   Value="32" />
+                <Setter Property="WidthRequest"    Value="80" />
                 <Setter Property="CornerRadius"    Value="8" />
-                <Setter Property="FontSize"        Value="12" />
+                <Setter Property="FontSize"        Value="14" />
                 <Setter Property="FontAttributes"  Value="Bold" />
                 <Setter Property="Padding"         Value="10,0" />
                 <Setter Property="BackgroundColor" Value="#0D1F14" />
@@ -126,8 +127,9 @@
 
             <Style x:Key="RowEdit" TargetType="Button">
                 <Setter Property="HeightRequest"   Value="32" />
+                <Setter Property="WidthRequest"    Value="80" />
                 <Setter Property="CornerRadius"    Value="8" />
-                <Setter Property="FontSize"        Value="12" />
+                <Setter Property="FontSize"        Value="14" />
                 <Setter Property="FontAttributes"  Value="Bold" />
                 <Setter Property="Padding"         Value="10,0" />
                 <Setter Property="BackgroundColor" Value="#1E1E2E" />
@@ -138,8 +140,9 @@
 
             <Style x:Key="RowDelete" TargetType="Button">
                 <Setter Property="HeightRequest"   Value="32" />
+                <Setter Property="WidthRequest"    Value="80" />
                 <Setter Property="CornerRadius"    Value="8" />
-                <Setter Property="FontSize"        Value="12" />
+                <Setter Property="FontSize"        Value="14" />
                 <Setter Property="FontAttributes"  Value="Bold" />
                 <Setter Property="Padding"         Value="10,0" />
                 <Setter Property="BackgroundColor" Value="#1E1014" />
@@ -322,7 +325,7 @@
                                             InputTransparent="True">
                                         <Label Text="{Binding Name, Converter={StaticResource ToInitials}}"
                                                TextColor="White"
-                                               FontSize="14" FontAttributes="Bold"
+                                               FontSize="16" FontAttributes="Bold"
                                                HorizontalOptions="Center"
                                                VerticalOptions="Center" />
                                     </Border>
@@ -336,34 +339,34 @@
                                         <!-- Tên + badges -->
                                         <HorizontalStackLayout Spacing="6">
                                             <Label Text="{Binding Name}"
-                                                   FontSize="14" FontAttributes="Bold"
+                                                   FontSize="16" FontAttributes="Bold"
                                                    TextColor="#F1F1F5"
                                                    VerticalOptions="Center"
                                                    LineBreakMode="TailTruncation" MaxLines="1" />
                                             <Border Style="{StaticResource BadgeStyle}"
                                                     BackgroundColor="{Binding Type, Converter={StaticResource TypeToColor}, ConverterParameter=dark}">
                                                 <Label Text="{Binding Type, Converter={StaticResource TypeToLabel}}"
-                                                       FontSize="10" FontAttributes="Bold"
+                                                       FontSize="12" FontAttributes="Bold"
                                                        TextColor="White" />
                                             </Border>
                                             <Border Style="{StaticResource BadgeStyle}"
                                                     BackgroundColor="{Binding Membership, Converter={StaticResource MemberToColor}}">
                                                 <Label Text="{Binding Membership, Converter={StaticResource MemberToLabel}}"
-                                                       FontSize="10" FontAttributes="Bold"
+                                                       FontSize="12" FontAttributes="Bold"
                                                        TextColor="White" />
                                             </Border>
                                         </HorizontalStackLayout>
 
                                         <!-- SĐT -->
                                         <HorizontalStackLayout Spacing="5">
-                                            <Label Text="📞" FontSize="11" VerticalOptions="Center" />
+                                            <Label Text="📞" FontSize="13" VerticalOptions="Center" />
                                             <Label Text="{Binding PhoneNumber}"
                                                    Style="{StaticResource MutedLabel}" />
                                         </HorizontalStackLayout>
 
                                         <!-- Email -->
                                         <HorizontalStackLayout Spacing="5">
-                                            <Label Text="✉" FontSize="11" VerticalOptions="Center" />
+                                            <Label Text="✉" FontSize="13" VerticalOptions="Center" />
                                             <Label Text="{Binding Email}"
                                                    Style="{StaticResource MutedLabel}"
                                                    LineBreakMode="TailTruncation" MaxLines="1" />

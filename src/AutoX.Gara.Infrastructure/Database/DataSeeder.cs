@@ -35,17 +35,11 @@ public static class DataSeeder
     /// </example>
     public static async System.Threading.Tasks.Task SeedAsync(AutoXDbContext context)
     {
-        System.Console.WriteLine("Đang seed dữ liệu mẫu vào database...");
         await SeedAccountsAsync(context);
-        System.Console.WriteLine("Đã seed Accounts.");
         await SeedCustomersAsync(context);
-        System.Console.WriteLine("Đã seed Customers.");
         await SeedVehiclesAsync(context);
-        System.Console.WriteLine("Đã seed Vehicles.");
         await SeedSuppliersAsync(context);
-        System.Console.WriteLine("Đã seed Suppliers.");
         await SeedSparePartsAsync(context);
-        System.Console.WriteLine("Đã seed SpareParts.");
         await SeedReplacementPartsAsync(context);
     }
 
@@ -66,7 +60,7 @@ public static class DataSeeder
             return;
         }
 
-        static Account MakeAccount(String username, String password, PermissionLevel role, Boolean active = true)
+        static Account MakeAccount(String username, String password, PermissionLevel role, Boolean active = false)
         {
             // Pbkdf2.Hash là helper từ Nalix — phải khớp với logic xác thực trong hệ thống
             Pbkdf2.Hash(password, out System.Byte[] salt, out System.Byte[] hash);
@@ -79,10 +73,6 @@ public static class DataSeeder
                 FailedLoginAttempts = 0,
                 CreatedAt = DateTime.UtcNow,
             };
-            if (active)
-            {
-                acc.Activate();
-            }
 
             return acc;
         }

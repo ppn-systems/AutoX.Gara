@@ -195,8 +195,6 @@ public static class Program
             }
         }
 
-        System.Environment.Exit(0);
-
         PacketDispatchChannel channel = new(dispatchOptions =>
         {
             // Inbound

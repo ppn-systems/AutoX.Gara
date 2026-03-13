@@ -25,6 +25,7 @@ public partial class VehiclesPage : ContentPage
         _vm = new VehiclesViewModel(
             new VehicleService(
                 InstanceManager.Instance.GetOrCreateInstance<VehicleQueryCache>()));
+
         BindingContext = _vm;
     }
 

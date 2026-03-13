@@ -216,17 +216,23 @@
 
                                 <!-- Filter toggle badge -->
                                 <Border Grid.Column="1"
-                                    BackgroundColor="{Binding HasActiveFilters, Converter={StaticResource BoolToAccentConverter}}"
-                                    StrokeThickness="1"
-                                    Stroke="#2A2A38"
-                                    StrokeShape="RoundRectangle 8"
-                                    Padding="14,0"
-                                    HeightRequest="44"
-                                    WidthRequest="48">
-                                    <Label Text="⚡"
-                                       FontSize="16"
-                                       HorizontalOptions="Center"
-                                       VerticalOptions="Center"/>
+                                        BackgroundColor="#1A1A24"
+                                        StrokeThickness="1"
+                                        Stroke="#2A2A38"
+                                        StrokeShape="RoundRectangle 8"
+                                        Padding="14,0"
+                                        HeightRequest="44"
+                                        WidthRequest="48">
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border"
+                                                     Binding="{Binding HasActiveFilters}"
+                                                     Value="True">
+                                            <Setter Property="BackgroundColor" Value="#6366F1"/>
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                        <Label Text="⚡" FontSize="16"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"/>
                                 </Border>
                             </Grid>
 
@@ -384,7 +390,7 @@
                             <DataTemplate x:DataType="dto:SupplierDto">
                                 <Border Style="{StaticResource CardStyle}"
                                     Padding="0">
-                                    <Grid ColumnDefinitions="*,110,90,70"
+                                    <Grid ColumnDefinitions="*,120,90,90"
                                       ColumnSpacing="0"
                                       Padding="16,14">
 
@@ -392,16 +398,16 @@
                                         <VerticalStackLayout Grid.Column="0" Spacing="3">
                                             <Label Text="{Binding Name}"
                                                TextColor="#F1F1F5"
-                                               FontSize="14"
+                                               FontSize="16"
                                                FontAttributes="Bold"
                                                LineBreakMode="TailTruncation"/>
                                             <Label Text="{Binding Email}"
                                                TextColor="#6B6B80"
-                                               FontSize="12"
+                                               FontSize="14"
                                                LineBreakMode="TailTruncation"/>
                                             <Label Text="{Binding PhoneNumbers}"
                                                TextColor="#6B6B80"
-                                               FontSize="11"
+                                               FontSize="13"
                                                IsVisible="{Binding PhoneNumbers, Converter={StaticResource StringNotEmptyConverter}}"
                                                LineBreakMode="TailTruncation"/>
                                         </VerticalStackLayout>
@@ -412,10 +418,10 @@
                                                          Padding="8,0">
                                             <Label Text="{Binding PaymentTerms}"
                                                TextColor="#F1F1F5"
-                                               FontSize="12"/>
+                                               FontSize="14"/>
                                             <Label Text="{Binding TaxCode}"
                                                TextColor="#6B6B80"
-                                               FontSize="11"
+                                               FontSize="13"
                                                IsVisible="{Binding TaxCode, Converter={StaticResource StringNotEmptyConverter}}"/>
                                         </VerticalStackLayout>
 
@@ -584,6 +590,7 @@
                                Text="{Binding FormTitle}"
                                TextColor="#F1F1F5"
                                FontSize="18"
+                               MaximumWidthRequest="400"
                                FontAttributes="Bold"
                                VerticalOptions="Center"/>
                             <Button Grid.Column="1"
@@ -617,8 +624,7 @@
                                Style="{StaticResource LabelCaption}"/>
                             <Border BackgroundColor="#1A1A24"
                                 StrokeThickness="1" Stroke="#2A2A38"
-                                StrokeShape="RoundRectangle 8"
-                                Padding="12,0">
+                                StrokeShape="RoundRectangle 8">
                                 <Entry Text="{Binding FormName}"
                                    Placeholder="Tên công ty / cá nhân"
                                    Style="{StaticResource InputStyle}"
@@ -631,8 +637,7 @@
                             <Label Text="EMAIL *" Style="{StaticResource LabelCaption}"/>
                             <Border BackgroundColor="#1A1A24"
                                 StrokeThickness="1" Stroke="#2A2A38"
-                                StrokeShape="RoundRectangle 8"
-                                Padding="12,0">
+                                StrokeShape="RoundRectangle 8">
                                 <Entry Text="{Binding FormEmail}"
                                    Placeholder="supplier@example.com"
                                    Keyboard="Email"
@@ -647,8 +652,7 @@
                                 <Label Text="MÃ SỐ THUẾ *" Style="{StaticResource LabelCaption}"/>
                                 <Border BackgroundColor="#1A1A24"
                                     StrokeThickness="1" Stroke="#2A2A38"
-                                    StrokeShape="RoundRectangle 8"
-                                    Padding="12,0">
+                                    StrokeShape="RoundRectangle 8">
                                     <Entry Text="{Binding FormTaxCode}"
                                        Placeholder="0123456789"
                                        Keyboard="Numeric"
@@ -661,8 +665,7 @@
                                 <Label Text="TÀI KHOẢN NH" Style="{StaticResource LabelCaption}"/>
                                 <Border BackgroundColor="#1A1A24"
                                     StrokeThickness="1" Stroke="#2A2A38"
-                                    StrokeShape="RoundRectangle 8"
-                                    Padding="12,0">
+                                    StrokeShape="RoundRectangle 8">
                                     <Entry Text="{Binding FormBankAccount}"
                                        Placeholder="0001 2345 6789"
                                        Keyboard="Numeric"
@@ -677,8 +680,7 @@
                             <Label Text="ĐỊA CHỈ" Style="{StaticResource LabelCaption}"/>
                             <Border BackgroundColor="#1A1A24"
                                 StrokeThickness="1" Stroke="#2A2A38"
-                                StrokeShape="RoundRectangle 8"
-                                Padding="12,0">
+                                StrokeShape="RoundRectangle 8">
                                 <Entry Text="{Binding FormAddress}"
                                    Placeholder="Số nhà, đường, quận, tỉnh..."
                                    Style="{StaticResource InputStyle}"
@@ -693,8 +695,7 @@
                                TextColor="#6B6B80" FontSize="11"/>
                             <Border BackgroundColor="#1A1A24"
                                 StrokeThickness="1" Stroke="#2A2A38"
-                                StrokeShape="RoundRectangle 8"
-                                Padding="12,0">
+                                StrokeShape="RoundRectangle 8">
                                 <Entry Text="{Binding FormPhoneNumbers}"
                                    Placeholder="0901234567"
                                    Keyboard="Telephone"
@@ -706,11 +707,11 @@
                         <!-- Trạng thái + Điều khoản TT -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <VerticalStackLayout Grid.Column="0" Spacing="6">
-                                <Label Text="TRẠNG THÁI" Style="{StaticResource LabelCaption}"/>
+                                <Label Text=" TRẠNG THÁI" Style="{StaticResource LabelCaption}"/>
                                 <Border BackgroundColor="#1A1A24"
                                     StrokeThickness="1" Stroke="#2A2A38"
                                     StrokeShape="RoundRectangle 8">
-                                    <Picker Title="Chọn trạng thái"
+                                    <Picker Title="  Chọn trạng thái"
                                             HeightRequest="80"
                                             Style="{StaticResource PickerStyle}"
                                             SelectedIndex="{Binding FormPickerStatusIndex}"
@@ -730,11 +731,11 @@
                             </VerticalStackLayout>
 
                             <VerticalStackLayout Grid.Column="1" Spacing="6">
-                                <Label Text="ĐIỀU KHOẢN THANH TOÁN" Style="{StaticResource LabelCaption}"/>
+                                <Label Text=" ĐIỀU KHOẢN THANH TOÁN" Style="{StaticResource LabelCaption}"/>
                                 <Border BackgroundColor="#1A1A24"
                                     StrokeThickness="1" Stroke="#2A2A38"
                                     StrokeShape="RoundRectangle 8">
-                                    <Picker Title="Chọn điều khoản"
+                                    <Picker Title="  Chọn điều khoản"
                                             HeightRequest="80"
                                             Style="{StaticResource PickerStyle}"
                                             SelectedIndex="{Binding FormPickerPaymentTermsIndex}"

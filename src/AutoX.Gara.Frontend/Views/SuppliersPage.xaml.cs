@@ -9,14 +9,13 @@ namespace AutoX.Gara.Frontend.Views;
 
 public sealed partial class SuppliersPage : ContentPage
 {
-    private readonly SuppliersViewModel _viewModel;
-
     public SuppliersPage()
     {
         InitializeComponent();
 
-        _viewModel = new SuppliersViewModel(new SupplierService(InstanceManager.Instance.GetOrCreateInstance<SupplierQueryCache>()));
-        BindingContext = _viewModel;
+        BindingContext = new SuppliersViewModel(
+            new SupplierService(
+                InstanceManager.Instance.GetOrCreateInstance<SupplierQueryCache>()));
     }
 
     /// <summary>
@@ -26,10 +25,10 @@ public sealed partial class SuppliersPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        // Only load if collection is empty (avoid reload on back-navigation)
-        if (_viewModel.Suppliers.Count == 0)
+
+        if (BindingContext is SuppliersViewModel vm && vm.Suppliers.Count == 0)
         {
-            Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(async () => await _viewModel.LoadCommand.ExecuteAsync(null));
+            _ = vm.LoadCommand.ExecuteAsync(null);
         }
     }
 }

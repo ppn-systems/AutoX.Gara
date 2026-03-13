@@ -7,32 +7,32 @@
     Title="AutoX.Gara">
 
     <ShellContent
-        Title="Login"
+        Title="Đăng nhập"
         ContentTemplate="{DataTemplate views:LoginPage}"
         Route="LoginPage" />
     
     <ShellContent
-        Title="Home"
+        Title="Trang chủ"
         ContentTemplate="{DataTemplate views:MainPage}"
         Route="MainPage" />
 
     <ShellContent 
-        Title="Customers"
+        Title="Khách hàng"
         ContentTemplate="{DataTemplate views:CustomersPage}"
         Route="CustomersPage" />
 
     <ShellContent 
-        Title="Suppliers"
+        Title="Nhà cung cấp"
         ContentTemplate="{DataTemplate views:SuppliersPage}"
         Route="SuppliersPage" />
 
     <ShellContent 
-        Title="Replacement parts"
+        Title="Linh kiện thay thế"
         ContentTemplate="{DataTemplate views:ReplacementPartsPage}"
         Route="ReplacementPartsPage" />
 
     <ShellContent 
-        Title="Spare parts"
+        Title="Kho hàng"
         ContentTemplate="{DataTemplate views:SparePartsPage}"
         Route="SparePartsPage" />
 </Shell>

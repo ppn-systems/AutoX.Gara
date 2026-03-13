@@ -303,7 +303,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
     // ─── Commands ─────────────────────────────────────────────────────────────
 
     [RelayCommand]
-    public async Task LoadAsync()
+    private async Task LoadAsync()
     {
         // Cancel any in-flight load request before starting a new one
         _loadCts?.Cancel();
