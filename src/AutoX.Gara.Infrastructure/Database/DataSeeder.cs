@@ -3,6 +3,7 @@
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Entities.Inventory;
+using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Cars;
 using AutoX.Gara.Domain.Enums.Customers;
@@ -13,6 +14,8 @@ using Nalix.Common.Security.Enums;
 using Nalix.Shared.Security.Credentials;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace AutoX.Gara.Infrastructure.Database;
 
@@ -39,8 +42,7 @@ public static class DataSeeder
         await SeedCustomersAsync(context);
         await SeedVehiclesAsync(context);
         await SeedSuppliersAsync(context);
-        await SeedSparePartsAsync(context);
-        await SeedReplacementPartsAsync(context);
+        await SeedPartsAsync(context);
     }
 
     // =========================================================================
@@ -559,9 +561,13 @@ public static class DataSeeder
     // SPARE PART — 17 phụ tùng
     // =========================================================================
 
-    private static async System.Threading.Tasks.Task SeedSparePartsAsync(AutoXDbContext context)
+    /// <summary>
+    /// Seeds the database with part data.
+    /// Includes both spare parts (for sale) and replacement parts (for inventory).
+    /// </summary>
+    public static async Task SeedPartsAsync(AutoXDbContext context)
     {
-        if (await context.SpareParts.AnyAsync())
+        if (await context.Parts.AnyAsync())
         {
             return;
         }
@@ -572,7 +578,11 @@ public static class DataSeeder
             return;
         }
 
-        Int32 IdOf(String keyword) => suppliers.Find(s => s.Name.Contains(keyword))?.Id
+        /// <summary>
+        /// Helper method to find supplier ID by keyword.
+        /// </summary>
+        Int32 IdOf(String keyword) => suppliers
+            .FirstOrDefault(s => s.Name.Contains(keyword))?.Id
             ?? throw new InvalidOperationException($"Supplier có từ khóa '{keyword}' không tồn tại.");
 
         Int32 toyotaId = IdOf("Toyota");
@@ -580,518 +590,784 @@ public static class DataSeeder
         Int32 boschId = IdOf("Bosch");
         Int32 starkId = IdOf("Stark");
 
-        var spareParts = new List<SparePart>
-        {
-            // --- Toyota ---
-            new()
-            {
-                SupplierId        = toyotaId,
-                PartName          = "Giảm xóc trước Toyota Fortuner (KYB OEM)",
-                PartCategory      = PartCategory.Suspension,
-                PurchasePrice     = 1_400_000,
-                SellingPrice      = 2_000_000,
-                InventoryQuantity = 10,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = toyotaId,
-                PartName          = "Thanh cân bằng Toyota Camry 2.5",
-                PartCategory      = PartCategory.Steering,
-                PurchasePrice     = 620_000,
-                SellingPrice      = 920_000,
-                InventoryQuantity = 8,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = toyotaId,
-                PartName          = "Két điều hòa Toyota Innova 2.0",
-                PartCategory      = PartCategory.AirConditioning,
-                PurchasePrice     = 1_850_000,
-                SellingPrice      = 2_700_000,
-                InventoryQuantity = 5,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = toyotaId,
-                PartName          = "Lọc dầu Toyota Camry",
-                PartCategory      = PartCategory.Filter,
-                PurchasePrice     = 85_000,
-                SellingPrice      = 120_000,
-                InventoryQuantity = 50,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = toyotaId,
-                PartName          = "Má phanh trước Toyota Camry",
-                PartCategory      = PartCategory.Brake,
-                PurchasePrice     = 450_000,
-                SellingPrice      = 650_000,
-                InventoryQuantity = 20,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = toyotaId,
-                PartName          = "Bình ắc quy Toyota Vios 45Ah",
-                PartCategory      = PartCategory.Electrical,
-                PurchasePrice     = 1_100_000,
-                SellingPrice      = 1_550_000,
-                InventoryQuantity = 15,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = toyotaId,
-                PartName          = "Dây curoa cam Toyota Innova 2.0",
-                PartCategory      = PartCategory.Engine,
-                PurchasePrice     = 320_000,
-                SellingPrice      = 480_000,
-                InventoryQuantity = 30,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = toyotaId,
-                PartName          = "Bơm nước Toyota Fortuner 2.7",
-                PartCategory      = PartCategory.Cooling,
-                PurchasePrice     = 850_000,
-                SellingPrice      = 1_250_000,
-                InventoryQuantity = 8,
-                IsDiscontinued    = false,
-            },
-            // --- Honda ---
-            new()
-            {
-                SupplierId        = hondaId,
-                PartName          = "Đèn pha LED Honda CR-V 2023 (trái)",
-                PartCategory      = PartCategory.Lighting,
-                PurchasePrice     = 3_500_000,
-                SellingPrice      = 5_200_000,
-                InventoryQuantity = 4,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = hondaId,
-                PartName          = "Kính chắn gió Honda City (chống UV)",
-                PartCategory      = PartCategory.UVGlass,
-                PurchasePrice     = 2_200_000,
-                SellingPrice      = 3_100_000,
-                InventoryQuantity = 3,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = hondaId,
-                PartName          = "Lốp xe Honda HR-V 215/60R16",
-                PartCategory      = PartCategory.WheelAndTire,
-                PurchasePrice     = 1_600_000,
-                SellingPrice      = 2_200_000,
-                InventoryQuantity = 16,
-                IsDiscontinued    = false,
-            },
-            // --- Stark Industries (tiếp theo) ---
-            new()
-            {
-                SupplierId        = starkId,
-                PartName          = "HUD Holographic Stark — Hiển Thị 3D Toàn Cảnh 360°",
-                PartCategory      = PartCategory.HUD,
-                PurchasePrice     = 75_000_000,
-                SellingPrice      = 120_000_000,
-                InventoryQuantity = 2,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = starkId,
-                PartName          = "Cánh Gió Điều Khiển Tự Động Stark Aerodynamics Kit",
-                PartCategory      = PartCategory.Aerodynamics,
-                PurchasePrice     = 200_000_000,
-                SellingPrice      = 350_000_000,
-                InventoryQuantity = 1,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = hondaId,
-                PartName          = "Bugi Honda CR-V 1.5T (NGK)",
-                PartCategory      = PartCategory.Ignition,
-                PurchasePrice     = 65_000,
-                SellingPrice      = 95_000,
-                InventoryQuantity = 100,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = hondaId,
-                PartName          = "Dầu động cơ Honda Ultra 5W-30 (4L)",
-                PartCategory      = PartCategory.Lubrication,
-                PurchasePrice     = 280_000,
-                SellingPrice      = 390_000,
-                InventoryQuantity = 60,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = hondaId,
-                PartName          = "Lọc gió Honda City",
-                PartCategory      = PartCategory.Filter,
-                PurchasePrice     = 70_000,
-                SellingPrice      = 110_000,
-                InventoryQuantity = 45,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = hondaId,
-                PartName          = "Cao su gạt mưa Honda HR-V (cặp)",
-                PartCategory      = PartCategory.Maintenance,
-                PurchasePrice     = 120_000,
-                SellingPrice      = 180_000,
-                InventoryQuantity = 35,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = hondaId,
-                PartName          = "Bộ piston và xéc măng Honda Civic 1.8",
-                PartCategory      = PartCategory.Engine,
-                PurchasePrice     = 3_200_000,
-                SellingPrice      = 4_500_000,
-                InventoryQuantity = 5,
-                IsDiscontinued    = false,
-            },
-            // --- Bosch ---
-            new()
-            {
-                SupplierId        = boschId,
-                PartName          = "Cảm biến ABS Bosch bánh trước (universal)",
-                PartCategory      = PartCategory.ABS,
-                PurchasePrice     = 480_000,
-                SellingPrice      = 720_000,
-                InventoryQuantity = 12,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = boschId,
-                PartName          = "Máy phát điện Bosch 14V 90A",
-                PartCategory      = PartCategory.Electrical,
-                PurchasePrice     = 2_800_000,
-                SellingPrice      = 3_900_000,
-                InventoryQuantity = 6,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = boschId,
-                PartName          = "Kim phun nhiên liệu Bosch (universal)",
-                PartCategory      = PartCategory.FuelInjection,
-                PurchasePrice     = 750_000,
-                SellingPrice      = 1_100_000,
-                InventoryQuantity = 20,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = boschId,
-                PartName          = "Cảm biến oxy Bosch O2 Sensor",
-                PartCategory      = PartCategory.SensorsAndModules,
-                PurchasePrice     = 550_000,
-                SellingPrice      = 820_000,
-                InventoryQuantity = 18,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = boschId,
-                PartName          = "Bugi Bosch Iridium đa hãng",
-                PartCategory      = PartCategory.Ignition,
-                PurchasePrice     = 95_000,
-                SellingPrice      = 145_000,
-                InventoryQuantity = 80,
-                IsDiscontinued    = false,
-            },
-            // --- STARK INDUSTRIES ---
-            new()
-            {
-                SupplierId        = starkId,
-                PartName          = "Động Cơ Tên Lửa Thu Nhỏ Stark Mk.1",
-                PartCategory      = PartCategory.Engine,
-                PurchasePrice     = 500_000_000,
-                SellingPrice      = 999_000_000,
-                InventoryQuantity = 2,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = starkId,
-                PartName          = "Radar Phát Hiện Địch Stark (Car Edition)",
-                PartCategory      = PartCategory.SensorsAndModules,
-                PurchasePrice     = 150_000_000,
-                SellingPrice      = 250_000_000,
-                InventoryQuantity = 3,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = starkId,
-                PartName          = "Arc Reactor Mini (Thay Bình Ắc Quy Thông Thường)",
-                PartCategory      = PartCategory.BatteryAndModules,
-                PurchasePrice     = 1_000_000_000,
-                SellingPrice      = 2_000_000_000,
-                InventoryQuantity = 1,
-                IsDiscontinued    = false,
-            },
-            new()
-            {
-                SupplierId        = starkId,
-                PartName          = "Flux Capacitor (Hàng Chính Hãng 1885 — Dành Cho DeLorean)",
-                PartCategory      = PartCategory.Electrical,
-                PurchasePrice     = 88_000_000,
-                SellingPrice      = 88_888_888,
-                InventoryQuantity = 1,
-                IsDiscontinued    = false,
-            },
-        };
-
-        context.SpareParts.AddRange(spareParts);
-        await context.SaveChangesAsync();
-    }
-
-    // =========================================================================
-    // REPLACEMENT PART — 12 phụ tùng thay thế
-    // =========================================================================
-
-    private static async System.Threading.Tasks.Task SeedReplacementPartsAsync(AutoXDbContext context)
-    {
-        if (await context.ReplacementParts.AnyAsync())
-        {
-            return;
-        }
-
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var parts = new List<Part>();
 
-        var parts = new List<ReplacementPart>
-        {
-            // --- Thực tế ---
+        #region Spare Parts - Toyota (Phụ tùng bán)
+
+        parts.AddRange(
+        [
+            // --- Toyota Spare Parts ---
             new()
             {
-                PartCode     = "RP001",
-                PartName     = "Lọc gió động cơ đa năng",
-                Manufacturer = "Denso",
-                Quantity     = 40,
-                UnitPrice    = 150_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(3),
-            },
-            new()
-            {
-                PartCode     = "RP002",
-                PartName     = "Dây curoa dẫn động",
-                Manufacturer = "Gates",
-                Quantity     = 25,
-                UnitPrice    = 320_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(5),
-            },
-            new()
-            {
-                PartCode     = "RP003",
-                PartName     = "Má phanh sau đa hãng",
-                Manufacturer = "Brembo",
-                Quantity     = 16,
-                UnitPrice    = 580_000,
-                DateAdded    = today,
-                ExpiryDate   = null,
-            },
-            new()
-            {
-                PartCode     = "RP004",
-                PartName     = "Bình chứa dầu phanh DOT4 500ml",
-                Manufacturer = "Castrol",
-                Quantity     = 30,
-                UnitPrice    = 95_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(2),
-            },
-            new()
-            {
-                PartCode     = "RP005",
-                PartName     = "Nước làm mát Ready-to-Use 1L",
-                Manufacturer = "Prestone",
-                Quantity     = 50,
-                UnitPrice    = 75_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(4),
-            },
-            new()
-            {
-                PartCode     = "RP006",
-                PartName     = "Bộ gioăng nắp máy đa dụng",
-                Manufacturer = "Fel-Pro",
-                Quantity     = 10,
-                UnitPrice    = 420_000,
-                DateAdded    = today,
-                ExpiryDate   = null,
-            },
-            new()
-            {
-                PartCode     = "RP007",
-                PartName     = "Cao su chắn bùn bộ 4 bánh",
-                Manufacturer = "WeatherTech",
-                Quantity     = 20,
-                UnitPrice    = 380_000,
-                DateAdded    = today,
-                ExpiryDate   = null,
-            },
-            new()
-            {
-                PartCode     = "RP008",
-                PartName     = "Bugi NGK Iridium IX hộp 4 cái",
-                Manufacturer = "NGK",
-                Quantity     = 60,
-                UnitPrice    = 380_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(5),
-            },
-            new()
-            {
-                PartCode     = "RP009",
-                PartName     = "Lọc nhiên liệu đa hãng",
-                Manufacturer = "Bosch",
-                Quantity     = 35,
-                UnitPrice    = 175_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(3),
-            },
-            new()
-            {
-                PartCode     = "RP013",
-                PartName     = "Dầu động cơ tổng hợp 5W-30 4L",
-                Manufacturer = "Mobil 1",
-                Quantity     = 45,
-                UnitPrice    = 420_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(5),
-            },
-            new()
-            {
-                PartCode     = "RP014",
-                PartName     = "Ắc quy khô 12V 45Ah",
-                Manufacturer = "Bosch",
-                Quantity     = 12,
-                UnitPrice    = 1_350_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(3),
-            },
-            new()
-            {
-                PartCode     = "RP015",
-                PartName     = "Lọc nhớt đa hãng",
-                Manufacturer = "Mann-Filter",
-                Quantity     = 80,
-                UnitPrice    = 85_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(4),
-            },
-            new()
-            {
-                PartCode     = "RP016",
-                PartName     = "Gạt mưa mềm 24 inch",
-                Manufacturer = "Bosch",
-                Quantity     = 55,
-                UnitPrice    = 120_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(2),
-            },
-            new()
-            {
-                PartCode     = "RP017",
-                PartName     = "Giảm xóc trước thay thế",
+                SupplierId = toyotaId,
+                PartCode = "SP_TOYOTA_001",
+                PartName = "Giảm xóc trước Toyota Fortuner (KYB OEM)",
                 Manufacturer = "KYB",
-                Quantity     = 18,
-                UnitPrice    = 1_200_000,
-                DateAdded    = today,
-                ExpiryDate   = null,
+                PartCategory = PartCategory.Suspension,
+                PurchasePrice = 1_400_000,
+                SellingPrice = 2_000_000,
+                InventoryQuantity = 10,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
             },
             new()
             {
-                PartCode     = "RP018",
-                PartName     = "Bộ lọc cabin khử mùi",
-                Manufacturer = "3M",
-                Quantity     = 40,
-                UnitPrice    = 185_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(2),
+                SupplierId = toyotaId,
+                PartCode = "SP_TOYOTA_002",
+                PartName = "Thanh cân bằng Toyota Camry 2.5",
+                Manufacturer = "Toyota",
+                PartCategory = PartCategory.Steering,
+                PurchasePrice = 620_000,
+                SellingPrice = 920_000,
+                InventoryQuantity = 8,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
             },
             new()
             {
-                PartCode     = "RP010",
-                PartName     = "Bộ Giáp Iron Man Mk.85 (Thay Cản Trước Xe)",
-                Manufacturer = "Stark Industries",
-                Quantity     = 1,
-                UnitPrice    = 9_999_999_999m,
-                DateAdded    = today,
-                ExpiryDate   = null,
+                SupplierId = toyotaId,
+                PartCode = "SP_TOYOTA_003",
+                PartName = "Két điều hòa Toyota Innova 2.0",
+                Manufacturer = "Toyota",
+                PartCategory = PartCategory.AirConditioning,
+                PurchasePrice = 1_850_000,
+                SellingPrice = 2_700_000,
+                InventoryQuantity = 5,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
             },
             new()
             {
-                PartCode     = "RP011",
-                PartName     = "Đầu Đạn Tên Lửa RPG Thay Thế Cản Sau Xe Tăng T-54",
-                Manufacturer = "Unknown",
-                Quantity     = 5,
-                UnitPrice    = 50_000_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(99),
+                SupplierId = toyotaId,
+                PartCode = "SP_TOYOTA_004",
+                PartName = "Lọc dầu Toyota Camry",
+                Manufacturer = "Toyota",
+                PartCategory = PartCategory.Filter,
+                PurchasePrice = 85_000,
+                SellingPrice = 120_000,
+                InventoryQuantity = 50,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
             },
             new()
             {
-                PartCode     = "RP012",
-                PartName     = "Xăng Hypersonic Pha Lê Nhiên Liệu Cho Động Cơ Tên Lửa",
-                Manufacturer = "Area 51 Fuel Co.",
-                Quantity     = 0, // hết hàng — đặt trước cho NASA
-                UnitPrice    = 500_000_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddDays(30), // dễ bay hơi, hạn ngắn
+                SupplierId = toyotaId,
+                PartCode = "SP_TOYOTA_005",
+                PartName = "Má phanh trước Toyota Camry",
+                Manufacturer = "Toyota",
+                PartCategory = PartCategory.Brake,
+                PurchasePrice = 450_000,
+                SellingPrice = 650_000,
+                InventoryQuantity = 20,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
             },
             new()
             {
-                PartCode     = "RP019",
-                PartName     = "Lốp Xe Graphene Siêu Dẫn Nhiệt Chống Nổ Cấp Quân Sự",
-                Manufacturer = "MIT Advanced Materials Lab",
-                Quantity     = 4,
-                UnitPrice    = 45_000_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(50),
+                SupplierId = toyotaId,
+                PartCode = "SP_TOYOTA_006",
+                PartName = "Bình ắc quy Toyota Vios 45Ah",
+                Manufacturer = "Toyota",
+                PartCategory = PartCategory.Electrical,
+                PurchasePrice = 1_100_000,
+                SellingPrice = 1_550_000,
+                InventoryQuantity = 15,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
             },
             new()
             {
-                PartCode     = "RP020",
-                PartName     = "Bộ Pin Hydrogen Fuel Cell 150kW Thay Thế Động Cơ Đốt Trong",
-                Manufacturer = "Toyota Research Institute",
-                Quantity     = 2,
-                UnitPrice    = 320_000_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(10),
+                SupplierId = toyotaId,
+                PartCode = "SP_TOYOTA_007",
+                PartName = "Dây curoa cam Toyota Innova 2.0",
+                Manufacturer = "Toyota",
+                PartCategory = PartCategory.Engine,
+                PurchasePrice = 320_000,
+                SellingPrice = 480_000,
+                InventoryQuantity = 30,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
             },
             new()
             {
-                PartCode     = "RP021",
-                PartName     = "Cảm Biến LiDAR 128-Layer Tự Lái Cấp Độ 5",
-                Manufacturer = "Waymo",
-                Quantity     = 1,
-                UnitPrice    = 180_000_000,
-                DateAdded    = today,
-                ExpiryDate   = today.AddYears(5),
+                SupplierId = toyotaId,
+                PartCode = "SP_TOYOTA_008",
+                PartName = "Bơm nước Toyota Fortuner 2.7",
+                Manufacturer = "Toyota",
+                PartCategory = PartCategory.Cooling,
+                PurchasePrice = 850_000,
+                SellingPrice = 1_250_000,
+                InventoryQuantity = 8,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
             },
-        };
+        ]);
 
-        context.ReplacementParts.AddRange(parts);
+        #endregion
+
+        #region Spare Parts - Honda (Phụ tùng bán)
+
+        parts.AddRange(
+        [
+            // --- Honda Spare Parts ---
+            new()
+            {
+                SupplierId = hondaId,
+                PartCode = "SP_HONDA_001",
+                PartName = "Đèn pha LED Honda CR-V 2023 (trái)",
+                Manufacturer = "Honda",
+                PartCategory = PartCategory.Lighting,
+                PurchasePrice = 3_500_000,
+                SellingPrice = 5_200_000,
+                InventoryQuantity = 4,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = hondaId,
+                PartCode = "SP_HONDA_002",
+                PartName = "Kính chắn gió Honda City (chống UV)",
+                Manufacturer = "Honda",
+                PartCategory = PartCategory.UVGlass,
+                PurchasePrice = 2_200_000,
+                SellingPrice = 3_100_000,
+                InventoryQuantity = 3,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = hondaId,
+                PartCode = "SP_HONDA_003",
+                PartName = "Lốp xe Honda HR-V 215/60R16",
+                Manufacturer = "Michelin",
+                PartCategory = PartCategory.WheelAndTire,
+                PurchasePrice = 1_600_000,
+                SellingPrice = 2_200_000,
+                InventoryQuantity = 16,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = hondaId,
+                PartCode = "SP_HONDA_004",
+                PartName = "Bugi Honda CR-V 1.5T (NGK)",
+                Manufacturer = "NGK",
+                PartCategory = PartCategory.Ignition,
+                PurchasePrice = 65_000,
+                SellingPrice = 95_000,
+                InventoryQuantity = 100,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = hondaId,
+                PartCode = "SP_HONDA_005",
+                PartName = "Dầu động cơ Honda Ultra 5W-30 (4L)",
+                Manufacturer = "Honda",
+                PartCategory = PartCategory.Lubrication,
+                PurchasePrice = 280_000,
+                SellingPrice = 390_000,
+                InventoryQuantity = 60,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(2),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = hondaId,
+                PartCode = "SP_HONDA_006",
+                PartName = "Lọc gió Honda City",
+                Manufacturer = "Honda",
+                PartCategory = PartCategory.Filter,
+                PurchasePrice = 70_000,
+                SellingPrice = 110_000,
+                InventoryQuantity = 45,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = hondaId,
+                PartCode = "SP_HONDA_007",
+                PartName = "Cao su gạt mưa Honda HR-V (cặp)",
+                Manufacturer = "Honda",
+                PartCategory = PartCategory.Maintenance,
+                PurchasePrice = 120_000,
+                SellingPrice = 180_000,
+                InventoryQuantity = 35,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = hondaId,
+                PartCode = "SP_HONDA_008",
+                PartName = "Bộ piston và xéc măng Honda Civic 1.8",
+                Manufacturer = "Honda",
+                PartCategory = PartCategory.Engine,
+                PurchasePrice = 3_200_000,
+                SellingPrice = 4_500_000,
+                InventoryQuantity = 5,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+        ]);
+
+        #endregion
+
+        #region Spare Parts - Bosch (Phụ tùng bán)
+
+        parts.AddRange(
+        [
+            // --- Bosch Spare Parts ---
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "SP_BOSCH_001",
+                PartName = "Cảm biến ABS Bosch bánh trước (universal)",
+                Manufacturer = "Bosch",
+                PartCategory = PartCategory.ABS,
+                PurchasePrice = 480_000,
+                SellingPrice = 720_000,
+                InventoryQuantity = 12,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "SP_BOSCH_002",
+                PartName = "Máy phát điện Bosch 14V 90A",
+                Manufacturer = "Bosch",
+                PartCategory = PartCategory.Electrical,
+                PurchasePrice = 2_800_000,
+                SellingPrice = 3_900_000,
+                InventoryQuantity = 6,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "SP_BOSCH_003",
+                PartName = "Kim phun nhiên liệu Bosch (universal)",
+                Manufacturer = "Bosch",
+                PartCategory = PartCategory.FuelInjection,
+                PurchasePrice = 750_000,
+                SellingPrice = 1_100_000,
+                InventoryQuantity = 20,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "SP_BOSCH_004",
+                PartName = "Cảm biến oxy Bosch O2 Sensor",
+                Manufacturer = "Bosch",
+                PartCategory = PartCategory.SensorsAndModules,
+                PurchasePrice = 550_000,
+                SellingPrice = 820_000,
+                InventoryQuantity = 18,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "SP_BOSCH_005",
+                PartName = "Bugi Bosch Iridium đa hãng",
+                Manufacturer = "Bosch",
+                PartCategory = PartCategory.Ignition,
+                PurchasePrice = 95_000,
+                SellingPrice = 145_000,
+                InventoryQuantity = 80,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+        ]);
+
+        #endregion
+
+        #region Spare Parts - Stark Industries (Phụ tùng bán - Fantasy)
+
+        parts.AddRange(
+        [
+            // --- Stark Industries Fantasy Spare Parts ---
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "SP_STARK_001",
+                PartName = "HUD Holographic Stark — Hiển Thị 3D Toàn Cảnh 360°",
+                Manufacturer = "Stark Industries",
+                PartCategory = PartCategory.HUD,
+                PurchasePrice = 75_000_000,
+                SellingPrice = 120_000_000,
+                InventoryQuantity = 2,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "SP_STARK_002",
+                PartName = "Cánh Gió Điều Khiển Tự Động Stark Aerodynamics Kit",
+                Manufacturer = "Stark Industries",
+                PartCategory = PartCategory.Aerodynamics,
+                PurchasePrice = 200_000_000,
+                SellingPrice = 350_000_000,
+                InventoryQuantity = 1,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "SP_STARK_003",
+                PartName = "Động Cơ Tên Lửa Thu Nhỏ Stark Mk.1",
+                Manufacturer = "Stark Industries",
+                PartCategory = PartCategory.Engine,
+                PurchasePrice = 500_000_000,
+                SellingPrice = 999_000_000,
+                InventoryQuantity = 2,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "SP_STARK_004",
+                PartName = "Radar Phát Hiện Địch Stark (Car Edition)",
+                Manufacturer = "Stark Industries",
+                PartCategory = PartCategory.SensorsAndModules,
+                PurchasePrice = 150_000_000,
+                SellingPrice = 250_000_000,
+                InventoryQuantity = 3,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "SP_STARK_005",
+                PartName = "Arc Reactor Mini (Thay Bình Ắc Quy Thông Thường)",
+                Manufacturer = "Stark Industries",
+                PartCategory = PartCategory.BatteryAndModules,
+                PurchasePrice = 1_000_000_000,
+                SellingPrice = 2_000_000_000,
+                InventoryQuantity = 1,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "SP_STARK_006",
+                PartName = "Flux Capacitor (Hàng Chính Hãng 1885 — Dành Cho DeLorean)",
+                Manufacturer = "Stark Industries",
+                PartCategory = PartCategory.Electrical,
+                PurchasePrice = 88_000_000,
+                SellingPrice = 88_888_888,
+                InventoryQuantity = 1,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+        ]);
+
+        #endregion
+
+        #region Replacement Parts - Generic (Phụ tùng thay thế)
+
+        parts.AddRange(
+        [
+            // --- Generic Replacement Parts (Thực tế) ---
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP001",
+                PartName = "Lọc gió động cơ đa năng",
+                Manufacturer = "Denso",
+                PartCategory = PartCategory.Filter,
+                PurchasePrice = 150_000,
+                SellingPrice = 225_000,
+                InventoryQuantity = 40,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(3),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP002",
+                PartName = "Dây curoa dẫn động",
+                Manufacturer = "Gates",
+                PartCategory = PartCategory.Engine,
+                PurchasePrice = 320_000,
+                SellingPrice = 480_000,
+                InventoryQuantity = 25,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(5),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP003",
+                PartName = "Má phanh sau đa hãng",
+                Manufacturer = "Brembo",
+                PartCategory = PartCategory.Brake,
+                PurchasePrice = 580_000,
+                SellingPrice = 870_000,
+                InventoryQuantity = 16,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP004",
+                PartName = "Bình chứa dầu phanh DOT4 500ml",
+                Manufacturer = "Castrol",
+                PartCategory = PartCategory.Brake,
+                PurchasePrice = 95_000,
+                SellingPrice = 142_500,
+                InventoryQuantity = 30,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(2),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = toyotaId,
+                PartCode = "RP005",
+                PartName = "Nước làm mát Ready-to-Use 1L",
+                Manufacturer = "Prestone",
+                PartCategory = PartCategory.Cooling,
+                PurchasePrice = 75_000,
+                SellingPrice = 112_500,
+                InventoryQuantity = 50,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(4),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP006",
+                PartName = "Bộ gioăng nắp máy đa dụng",
+                Manufacturer = "Fel-Pro",
+                PartCategory = PartCategory.Engine,
+                PurchasePrice = 420_000,
+                SellingPrice = 630_000,
+                InventoryQuantity = 10,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP007",
+                PartName = "Cao su chắn bùn bộ 4 bánh",
+                Manufacturer = "WeatherTech",
+                PartCategory = PartCategory.Maintenance,
+                PurchasePrice = 380_000,
+                SellingPrice = 570_000,
+                InventoryQuantity = 20,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP008",
+                PartName = "Bugi NGK Iridium IX hộp 4 cái",
+                Manufacturer = "NGK",
+                PartCategory = PartCategory.Ignition,
+                PurchasePrice = 380_000,
+                SellingPrice = 570_000,
+                InventoryQuantity = 60,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(5),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP009",
+                PartName = "Lọc nhiên liệu đa hãng",
+                Manufacturer = "Bosch",
+                PartCategory = PartCategory.Filter,
+                PurchasePrice = 175_000,
+                SellingPrice = 262_500,
+                InventoryQuantity = 35,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(3),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = toyotaId,
+                PartCode = "RP013",
+                PartName = "Dầu động cơ tổng hợp 5W-30 4L",
+                Manufacturer = "Mobil 1",
+                PartCategory = PartCategory.Lubrication,
+                PurchasePrice = 420_000,
+                SellingPrice = 630_000,
+                InventoryQuantity = 45,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(5),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP014",
+                PartName = "Ắc quy khô 12V 45Ah",
+                Manufacturer = "Bosch",
+                PartCategory = PartCategory.Electrical,
+                PurchasePrice = 1_350_000,
+                SellingPrice = 2_025_000,
+                InventoryQuantity = 12,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(3),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP015",
+                PartName = "Lọc nhớt đa hãng",
+                Manufacturer = "Mann-Filter",
+                PartCategory = PartCategory.Filter,
+                PurchasePrice = 85_000,
+                SellingPrice = 127_500,
+                InventoryQuantity = 80,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(4),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP016",
+                PartName = "Gạt mưa mềm 24 inch",
+                Manufacturer = "Bosch",
+                PartCategory = PartCategory.Maintenance,
+                PurchasePrice = 120_000,
+                SellingPrice = 180_000,
+                InventoryQuantity = 55,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(2),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP017",
+                PartName = "Giảm xóc trước thay thế",
+                Manufacturer = "KYB",
+                PartCategory = PartCategory.Suspension,
+                PurchasePrice = 1_200_000,
+                SellingPrice = 1_800_000,
+                InventoryQuantity = 18,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = boschId,
+                PartCode = "RP018",
+                PartName = "Bộ lọc cabin khử mùi",
+                Manufacturer = "3M",
+                PartCategory = PartCategory.Filter,
+                PurchasePrice = 185_000,
+                SellingPrice = 277_500,
+                InventoryQuantity = 40,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(2),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+        ]);
+
+        #endregion
+
+        #region Replacement Parts - Fantasy (Phụ tùng thay thế - Fantasy)
+
+        parts.AddRange(
+        [
+            // --- Fantasy Replacement Parts ---
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "RP010",
+                PartName = "Bộ Giáp Iron Man Mk.85 (Thay Cản Trước Xe)",
+                Manufacturer = "Stark Industries",
+                PartCategory = PartCategory.Engine,
+                PurchasePrice = 9_999_999_999,
+                SellingPrice = 15_000_000_000,
+                InventoryQuantity = 1,
+                DateAdded = today,
+                ExpiryDate = null,
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "RP011",
+                PartName = "Đầu Đạn Tên Lửa RPG Thay Thế Cản Sau Xe Tăng T-54",
+                Manufacturer = "Unknown",
+                PartCategory = PartCategory.Engine,
+                PurchasePrice = 50_000_000,
+                SellingPrice = 75_000_000,
+                InventoryQuantity = 5,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(99),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "RP012",
+                PartName = "Xăng Hypersonic Pha Lê Nhiên Liệu Cho Động Cơ Tên Lửa",
+                Manufacturer = "Area 51 Fuel Co.",
+                PartCategory = PartCategory.Lubrication,
+                PurchasePrice = 500_000_000,
+                SellingPrice = 750_000_000,
+                InventoryQuantity = 0,
+                DateAdded = today,
+                ExpiryDate = today.AddDays(30),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "RP019",
+                PartName = "Lốp Xe Graphene Siêu Dẫn Nhiệt Chống Nổ Cấp Quân Sự",
+                Manufacturer = "MIT Advanced Materials Lab",
+                PartCategory = PartCategory.WheelAndTire,
+                PurchasePrice = 45_000_000,
+                SellingPrice = 67_500_000,
+                InventoryQuantity = 4,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(50),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "RP020",
+                PartName = "Bộ Pin Hydrogen Fuel Cell 150kW Thay Thế Động Cơ Đốt Trong",
+                Manufacturer = "Toyota Research Institute",
+                PartCategory = PartCategory.Electrical,
+                PurchasePrice = 320_000_000,
+                SellingPrice = 480_000_000,
+                InventoryQuantity = 2,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(10),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+            new()
+            {
+                SupplierId = starkId,
+                PartCode = "RP021",
+                PartName = "Cảm Biến LiDAR 128-Layer Tự Lái Cấp Độ 5",
+                Manufacturer = "Waymo",
+                PartCategory = PartCategory.SensorsAndModules,
+                PurchasePrice = 180_000_000,
+                SellingPrice = 270_000_000,
+                InventoryQuantity = 1,
+                DateAdded = today,
+                ExpiryDate = today.AddYears(5),
+                IsDefective = false,
+                IsDiscontinued = false,
+            },
+        ]);
+
+        #endregion
+
+        context.Parts.AddRange(parts);
         await context.SaveChangesAsync();
     }
 }

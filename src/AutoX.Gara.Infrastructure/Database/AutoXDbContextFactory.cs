@@ -26,23 +26,9 @@ namespace AutoX.Gara.Infrastructure.Database;
 /// </remarks>
 public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbContext>
 {
-    /// <summary>
-    /// Tạo mới một instance của <see cref="AutoXDbContext"/> tại design-time.
-    /// </summary>
-    /// <param name="args">
-    /// Tham số dòng lệnh được EF Core truyền vào (hiện tại không sử dụng).
-    /// </param>
-    /// <returns>
-    /// Một instance đã được cấu hình hoàn chỉnh của <see cref="AutoXDbContext"/>.
-    /// </returns>
-    /// <exception cref="System.InvalidOperationException">
-    /// Ném ra khi:
-    /// <list type="bullet">
-    /// <item>Không thể kết nối tới database</item>
-    /// <item>Loại database không được hỗ trợ</item>
-    /// </list>
-    /// </exception>
-    public AutoXDbContext CreateDbContext(System.String[] args = null)
+    private static readonly DbContextOptionsBuilder<AutoXDbContext> OptionsBuilder = new();
+
+    static AutoXDbContextFactory()
     {
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
                                 .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Start initialization sequence.");
@@ -67,8 +53,6 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
                                 .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Database connectivity check passed.");
 
-        DbContextOptionsBuilder<AutoXDbContext> optionsBuilder = new();
-
         try
         {
             if (configuration.DatabaseType.Equals("PostgreSQL", System.StringComparison.OrdinalIgnoreCase))
@@ -76,7 +60,7 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
                                         .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Configuring DbContext for PostgreSQL.");
 
-                optionsBuilder.UseNpgsql(configuration.ConnectionString, npgsqlOptions =>
+                OptionsBuilder.UseNpgsql(configuration.ConnectionString, npgsqlOptions =>
                 {
                     npgsqlOptions.EnableRetryOnFailure(5, System.TimeSpan.FromSeconds(30), null);
                     npgsqlOptions.CommandTimeout(60);
@@ -97,11 +81,11 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
                                         .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Configuring DbContext for SQLite.");
 
-                optionsBuilder.UseSqlite(configuration.ConnectionString, sqliteOptions =>
-                    {
-                        sqliteOptions.CommandTimeout(60);
-                        sqliteOptions.MigrationsHistoryTable("__MigrationsHistory");
-                    })
+                OptionsBuilder.UseSqlite(configuration.ConnectionString, sqliteOptions =>
+                {
+                    sqliteOptions.CommandTimeout(60);
+                    sqliteOptions.MigrationsHistoryTable("__MigrationsHistory");
+                })
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                 .EnableServiceProviderCaching();
 
@@ -122,11 +106,30 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
                                     .Error($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Error configuring DbContext for {configuration.DatabaseType}.", ex);
             throw;
         }
+    }
 
-        AutoXDbContext dbContext = new(optionsBuilder.Options);
+    /// <summary>
+    /// Tạo mới một instance của <see cref="AutoXDbContext"/> tại design-time.
+    /// </summary>
+    /// <param name="args">
+    /// Tham số dòng lệnh được EF Core truyền vào (hiện tại không sử dụng).
+    /// </param>
+    /// <returns>
+    /// Một instance đã được cấu hình hoàn chỉnh của <see cref="AutoXDbContext"/>.
+    /// </returns>
+    /// <exception cref="System.InvalidOperationException">
+    /// Ném ra khi:
+    /// <list type="bullet">
+    /// <item>Không thể kết nối tới database</item>
+    /// <item>Loại database không được hỗ trợ</item>
+    /// </list>
+    /// </exception>
+    public AutoXDbContext CreateDbContext(System.String[] args = null)
+    {
+        AutoXDbContext dbContext = new(OptionsBuilder.Options);
 
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] AutoDbContext successfully created.");
+                                .Trace($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] AutoDbContext successfully created.");
 
         return dbContext;
     }

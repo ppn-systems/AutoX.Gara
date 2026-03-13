@@ -5,6 +5,7 @@ using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Domain.Entities.Repairs;
+using AutoX.Gara.Domain.Entities.Suppliers;
 using Microsoft.EntityFrameworkCore;
 
 namespace AutoX.Gara.Infrastructure.Abstractions;
@@ -47,7 +48,7 @@ public interface IAutoXDbContext
     /// <summary>
     /// Tập hợp các phụ tùng trong kho.
     /// </summary>
-    DbSet<SparePart> SpareParts { get; set; }
+    DbSet<Part> Parts { get; set; }
 
     /// <summary>
     /// Tập hợp các công việc sửa chữa (task).
@@ -68,11 +69,6 @@ public interface IAutoXDbContext
     /// Tập hợp các giao dịch tài chính.
     /// </summary>
     DbSet<Transaction> Transactions { get; set; }
-
-    /// <summary>
-    /// Tập hợp các phụ tùng được thay thế trong quá trình sửa chữa.
-    /// </summary>
-    DbSet<ReplacementPart> ReplacementParts { get; set; }
 
     /// <summary>
     /// Tập hợp các dòng chi tiết trong lệnh sửa chữa.

@@ -5,6 +5,7 @@ using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Domain.Entities.Repairs;
+using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Infrastructure.Abstractions;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,9 @@ namespace AutoX.Gara.Infrastructure.Database;
 public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : DbContext(options), IAutoXDbContext
 {
     #region Properties
+
+    /// <inheritdoc/>
+    public DbSet<Part> Parts { get; set; }
 
     /// <inheritdoc/>
     public DbSet<Vehicle> Vehicles { get; set; }
@@ -37,9 +41,6 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
     public DbSet<Supplier> Suppliers { get; set; }
 
     /// <inheritdoc/>
-    public DbSet<SparePart> SpareParts { get; set; }
-
-    /// <inheritdoc/>
     public DbSet<RepairTask> RepairTasks { get; set; }
 
     /// <inheritdoc/>
@@ -50,9 +51,6 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
 
     /// <inheritdoc/>
     public DbSet<Transaction> Transactions { get; set; }
-
-    /// <inheritdoc/>
-    public DbSet<ReplacementPart> ReplacementParts { get; set; }
 
     /// <inheritdoc/>
     public DbSet<RepairOrderItem> RepairOrderItems { get; set; }
@@ -82,12 +80,11 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
         CONFIGURE_CUSTOMER(modelBuilder);
         CONFIGURE_EMPLOYEE(modelBuilder);
         CONFIGURE_SUPPLIER(modelBuilder);
-        CONFIGURE_SPARE_PART(modelBuilder);
+        CONFIGURE_PART(modelBuilder);
         CONFIGURE_REPAIR_TASK(modelBuilder);
         CONFIGURE_SERVICE_ITEM(modelBuilder);
         CONFIGURE_REPAIR_ORDER(modelBuilder);
         CONFIGURE_TRANSACTION(modelBuilder);
-        CONFIGURE_REPLACEMENT_PART(modelBuilder);
         CONFIGURE_REPAIR_ORDER_ITEMS(modelBuilder);
     }
 
@@ -162,10 +159,6 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
 
         modelBuilder.Entity<Invoice>()
             .Property(i => i.DiscountType)
-            .HasConversion<System.Byte>();
-
-        modelBuilder.Entity<SparePart>()
-            .Property(sp => sp.PartCategory)
             .HasConversion<System.Byte>();
 
         // Index
@@ -251,34 +244,58 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
             .HasQueryFilter(s => s.Status == SupplierStatus.Active);
     }
 
-    private static void CONFIGURE_SPARE_PART(ModelBuilder modelBuilder)
+    private static void CONFIGURE_PART(ModelBuilder modelBuilder)
     {
-        // Cấu hình độ chính xác cho giá mua và giá bán
-        modelBuilder.Entity<SparePart>()
-            .Property(sp => sp.PurchasePrice)
+        // Cấu hình độ chính xác cho giá
+        modelBuilder.Entity<Part>()
+            .Property(p => p.PurchasePrice)
             .HasPrecision(18, 2);
 
-        modelBuilder.Entity<SparePart>()
-            .Property(sp => sp.SellingPrice)
+        modelBuilder.Entity<Part>()
+            .Property(p => p.SellingPrice)
             .HasPrecision(18, 2);
 
-        // Quan hệ 1-N giữa Supplier và SparePart
-        modelBuilder.Entity<SparePart>()
-            .HasOne(sp => sp.Supplier)
-            .WithMany(s => s.SpareParts)
-            .HasForeignKey(sp => sp.SupplierId)
-            .OnDelete(DeleteBehavior.Restrict); // Không cho phép xóa Supplier nếu còn SparePart
-
-        // Đảm bảo tên phụ tùng không trùng trong cùng một nhà cung cấp
-        modelBuilder.Entity<SparePart>()
-            .HasIndex(sp => new { sp.SupplierId, sp.PartName })
+        // Đảm bảo mã phụ tùng là duy nhất
+        modelBuilder.Entity<Part>()
+            .HasIndex(p => p.PartCode)
             .IsUnique();
 
-        // Index giúp tăng tốc tìm kiếm phụ tùng theo tên
-        modelBuilder.Entity<SparePart>().HasIndex(sp => sp.PartName);
+        // Index tối ưu tìm kiếm theo tên
+        modelBuilder.Entity<Part>().HasIndex(p => p.PartName);
 
-        modelBuilder.Entity<SparePart>()
-            .HasQueryFilter(sp => !sp.IsDiscontinued);
+        // Index hỗ trợ tìm kiếm nhanh theo nhà sản xuất
+        modelBuilder.Entity<Part>().HasIndex(p => p.Manufacturer);
+
+        // Index hỗ trợ filter theo supplier
+        modelBuilder.Entity<Part>().HasIndex(p => p.SupplierId);
+
+        // Index phức hợp cho filter theo nhiều tiêu chí
+        modelBuilder.Entity<Part>()
+            .HasIndex(p => new { p.IsDiscontinued, p.IsDefective, p.InventoryQuantity });
+
+        // Quan hệ 1-N với Supplier
+        modelBuilder.Entity<Part>()
+            .HasOne(p => p.Supplier)
+            .WithMany(s => s.Parts)
+            .HasForeignKey(p => p.SupplierId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Convert DateOnly
+        modelBuilder.Entity<Part>()
+            .Property(p => p.DateAdded)
+            .HasConversion(
+                d => d.ToDateTime(System.TimeOnly.MinValue),
+                dt => System.DateOnly.FromDateTime(dt));
+
+        modelBuilder.Entity<Part>()
+            .Property(p => p.ExpiryDate)
+            .HasConversion(
+                d => d.HasValue ? d.Value.ToDateTime(System.TimeOnly.MinValue) : default(System.DateTime?),
+                dt => dt != null ? System.DateOnly.FromDateTime(dt.Value) : null);
+
+        // Query filter: loại trừ các phụ tùng đã ngừng bán
+        // Có thể bỏ comment nếu không muốn auto-filter
+        // modelBuilder.Entity<Part>().HasQueryFilter(p => !p.IsDiscontinued);
     }
 
     private static void CONFIGURE_REPAIR_TASK(ModelBuilder modelBuilder)
@@ -330,7 +347,7 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
         modelBuilder.Entity<RepairOrderItem>()
             .HasOne(rsp => rsp.SparePart)
             .WithMany()
-            .HasForeignKey(rsp => rsp.SparePartId);
+            .HasForeignKey(rsp => rsp.PartId);
     }
 
     private static void CONFIGURE_REPAIR_ORDER(ModelBuilder modelBuilder)
@@ -399,34 +416,6 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
 
         //modelBuilder.Entity<Transaction>()
         //    .ToTable(tb => tb.HasCheckConstraint("CK_Transaction_Date", "TransactionDate <= GETUTCDATE()"));
-    }
-
-    private static void CONFIGURE_REPLACEMENT_PART(ModelBuilder modelBuilder)
-    {
-        // Đảm bảo mã phụ tùng là duy nhất để tránh trùng lặp dữ liệu
-        modelBuilder.Entity<ReplacementPart>()
-            .HasIndex(rp => rp.PartCode)
-            .IsUnique();
-
-        // Index hỗ trợ tìm kiếm nhanh theo nhà sản xuất
-        modelBuilder.Entity<ReplacementPart>().HasIndex(rp => rp.Manufacturer);
-
-        // Định dạng kiểu dữ liệu chính xác cho giá phụ tùng
-        modelBuilder.Entity<ReplacementPart>()
-            .Property(rp => rp.UnitPrice)
-            .HasPrecision(18, 2);
-
-        modelBuilder.Entity<ReplacementPart>()
-            .Property(r => r.DateAdded)
-            .HasConversion(
-                d => d.ToDateTime(System.TimeOnly.MinValue),
-                dt => System.DateOnly.FromDateTime(dt));
-
-        modelBuilder.Entity<ReplacementPart>()
-            .Property(r => r.ExpiryDate)
-            .HasConversion(
-                d => d.HasValue ? d.Value.ToDateTime(System.TimeOnly.MinValue) : default(System.DateTime?),
-                dt => dt != null ? System.DateOnly.FromDateTime(dt.Value) : null);
     }
 
     #endregion Private Methods

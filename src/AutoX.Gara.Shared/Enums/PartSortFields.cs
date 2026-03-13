@@ -1,29 +1,11 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-namespace AutoX.Gara.Domain.Enums.Parts;
-
-/// <summary>
-/// Các cột có thể dùng để sắp xếp kết quả truy vấn <c>SparePart</c>.
-/// </summary>
-public enum SparePartSortField : System.Byte
-{
-    /// <summary>Sắp xếp theo tên phụ tùng.</summary>
-    PartName = 0,
-
-    /// <summary>Sắp xếp theo giá nhập.</summary>
-    PurchasePrice = 1,
-
-    /// <summary>Sắp xếp theo giá bán.</summary>
-    SellingPrice = 2,
-
-    /// <summary>Sắp xếp theo số lượng tồn kho.</summary>
-    InventoryQuantity = 3,
-}
+namespace AutoX.Gara.Shared.Enums;
 
 /// <summary>
 /// Các cột có thể dùng để sắp xếp kết quả truy vấn <c>ReplacementPart</c>.
 /// </summary>
-public enum ReplacementPartSortField : System.Byte
+public enum PartSortField : System.Byte
 {
     /// <summary>Sắp xếp theo tên phụ tùng.</summary>
     PartName = 0,
@@ -39,4 +21,18 @@ public enum ReplacementPartSortField : System.Byte
 
     /// <summary>Sắp xếp theo đơn giá.</summary>
     UnitPrice = 4,
+
+    /// <summary>Sắp xếp theo giá nhập.</summary>
+    PurchasePrice = 5,
+
+    /// <summary>Sắp xếp theo giá bán.</summary>
+    SellingPrice = 6,
+
+    /// <summary>Sắp xếp theo số lượng tồn kho.</summary>
+    InventoryQuantity = 7,
+
+    /// <summary>
+    /// Giá trị tối đa (không phải cột thực tế, dùng để validate input).
+    /// </summary>
+    TotalValue = 8,
 }

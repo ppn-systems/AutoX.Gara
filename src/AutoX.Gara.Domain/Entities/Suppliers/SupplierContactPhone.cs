@@ -3,7 +3,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace AutoX.Gara.Domain.Entities.Inventory;
+namespace AutoX.Gara.Domain.Entities.Suppliers;
 
 /// <summary>
 /// Lớp đại diện cho số điện thoại của nhà cung cấp.

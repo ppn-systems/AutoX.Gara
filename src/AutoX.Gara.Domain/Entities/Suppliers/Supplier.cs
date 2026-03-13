@@ -1,12 +1,13 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace AutoX.Gara.Domain.Entities.Inventory;
+namespace AutoX.Gara.Domain.Entities.Suppliers;
 
 /// <summary>
 /// Lớp đại diện cho nhà cung cấp.
@@ -122,7 +123,7 @@ public class Supplier
     /// <summary>
     /// Những loại phụ tùng cung cấp.
     /// </summary>
-    public virtual ICollection<SparePart> SpareParts { get; set; } = [];
+    public virtual ICollection<Part> Parts { get; set; } = [];
 
     #endregion
 }

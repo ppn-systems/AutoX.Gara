@@ -30,7 +30,7 @@ public class RepairOrderItem
     /// <summary>
     /// Khóa ngoại tới SparePart.
     /// </summary>
-    public System.Int32 SparePartId { get; set; }
+    public System.Int32 PartId { get; set; }
 
     /// <summary>
     /// Khóa ngoại tới RepairOrder.
@@ -40,8 +40,8 @@ public class RepairOrderItem
     /// <summary>
     /// Thông tin phụ tùng liên quan (Navigation Property).
     /// </summary>
-    [ForeignKey(nameof(SparePartId))]
-    public SparePart SparePart { get; set; } = null!;
+    [ForeignKey(nameof(PartId))]
+    public Part SparePart { get; set; } = null!;
 
     /// <summary>
     /// Thông tin đơn sửa chữa liên quan (Navigation Property).

@@ -35,13 +35,9 @@ public static class AppConfig
         _ = factory.RegisterPacket<SupplierQueryRequest>();
         _ = factory.RegisterPacket<SupplierQueryResponse>();
 
-        _ = factory.RegisterPacket<SparePartDto>();
-        _ = factory.RegisterPacket<SparePartQueryRequest>();
-        _ = factory.RegisterPacket<SparePartQueryResponse>();
-
-        _ = factory.RegisterPacket<ReplacementPartDto>();
-        _ = factory.RegisterPacket<ReplacementPartQueryRequest>();
-        _ = factory.RegisterPacket<ReplacementPartQueryResponse>();
+        _ = factory.RegisterPacket<PartDto>();
+        _ = factory.RegisterPacket<PartQueryRequest>();
+        _ = factory.RegisterPacket<PartQueryResponse>();
 
         PacketRegistry catalog = factory.CreateCatalog();
 

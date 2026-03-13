@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Entities.Inventory;
+using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Shared.Models;
 
 namespace AutoX.Gara.Infrastructure.Abstractions;

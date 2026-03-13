@@ -1,121 +1,176 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Inventory;
-using AutoX.Gara.Domain.Enums.Parts;
-using AutoX.Gara.Infrastructure.Abstractions;
 using AutoX.Gara.Infrastructure.Database;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AutoX.Gara.Infrastructure.Repositories;
 
 /// <summary>
-/// EF Core implementation của <see cref="ISparePartRepository"/>.
-/// <para>
-/// Infrastructure layer — đây là nơi DUY NHẤT được phép import
-/// <c>Microsoft.EntityFrameworkCore</c> cho SparePart queries.
-/// </para>
+/// Repository for managing Part entities.
+/// Provides CRUD operations and advanced querying capabilities.
 /// </summary>
-public sealed class SparePartRepository(AutoXDbContext context) : ISparePartRepository
+public sealed class PartRepository
 {
-    private readonly AutoXDbContext _context = context
-        ?? throw new System.ArgumentNullException(nameof(context));
+    private readonly AutoXDbContext _dbContext;
 
-    // ─── Query ────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// Initializes a new instance of the PartRepository class.
+    /// </summary>
+    public PartRepository(AutoXDbContext dbContext) => _dbContext = dbContext ?? throw new System.ArgumentNullException(nameof(dbContext));
 
-    /// <inheritdoc/>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1862:Use the 'StringComparison' method overloads to perform case-insensitive string comparisons", Justification = "EF Core translates ToLower() to SQL LOWER() — StringComparison overloads are not supported by the provider.")]
-    public async System.Threading.Tasks.Task<(System.Collections.Generic.List<SparePart> Items, System.Int32 TotalCount)> GetPageAsync(
-        SparePartListQuery query,
-        System.Threading.CancellationToken ct = default)
+    /// <summary>
+    /// Retrieves a paginated list of parts with filtering and sorting.
+    /// </summary>
+    public async Task<(List<Part> items, System.Int32 totalCount)> GetPageAsync(PartListQuery query)
     {
-        IQueryable<SparePart> q = _context.SpareParts
-            .AsNoTracking()
-            .Include(s => s.Supplier);
+        query.Validate();
 
-        // ── Search ─────────────────────────────────────────────────────────
+        IQueryable<Part> q = _dbContext.Parts.AsQueryable();
+
+        // Apply filters
         if (!System.String.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            System.String term = query.SearchTerm.Trim().ToLowerInvariant();
-            q = q.Where(s => s.PartName != null && s.PartName.ToLower().Contains(term));
+            System.String searchLower = query.SearchTerm.ToLower();
+            q = q.Where(p => p.PartName.ToLower().Contains(searchLower) ||
+                              p.PartCode.ToLower().Contains(searchLower) ||
+                              p.Manufacturer.ToLower().Contains(searchLower));
         }
 
-        // ── Filter: Supplier ───────────────────────────────────────────────
         if (query.FilterSupplierId.HasValue)
         {
-            q = q.Where(s => s.SupplierId == query.FilterSupplierId.Value);
+            q = q.Where(p => p.SupplierId == query.FilterSupplierId.Value);
         }
 
-        // ── Filter: Category ───────────────────────────────────────────────
         if (query.FilterCategory.HasValue)
         {
-            q = q.Where(s => s.PartCategory == query.FilterCategory.Value);
+            q = q.Where(p => p.PartCategory == query.FilterCategory.Value);
         }
 
-        // ── Filter: Discontinued ───────────────────────────────────────────
+        if (query.FilterInStock.HasValue)
+        {
+            q = query.FilterInStock.Value
+                ? q.Where(p => p.InventoryQuantity > 0)
+                : q.Where(p => p.InventoryQuantity <= 0);
+        }
+
+        if (query.FilterDefective.HasValue)
+        {
+            q = q.Where(p => p.IsDefective == query.FilterDefective.Value);
+        }
+
+        if (query.FilterExpired.HasValue)
+        {
+            q = query.FilterExpired.Value
+                ? q.Where(p => p.ExpiryDate.HasValue &&
+                                  System.DateOnly.FromDateTime(System.DateTime.UtcNow) > p.ExpiryDate.Value)
+                : q.Where(p => !p.ExpiryDate.HasValue ||
+                                  System.DateOnly.FromDateTime(System.DateTime.UtcNow) <= p.ExpiryDate.Value);
+        }
+
         if (query.FilterDiscontinued.HasValue)
         {
-            q = q.Where(s => s.IsDiscontinued == query.FilterDiscontinued.Value);
+            q = q.Where(p => p.IsDiscontinued == query.FilterDiscontinued.Value);
         }
 
-        // ── Sort ───────────────────────────────────────────────────────────
-        q = (query.SortBy, query.SortDescending) switch
+        // Count total before pagination
+        System.Int32 totalCount = await q.CountAsync();
+
+        // Apply sorting
+        q = query.SortBy switch
         {
-            (SparePartSortField.PartName, false) => q.OrderBy(s => s.PartName),
-            (SparePartSortField.PartName, true) => q.OrderByDescending(s => s.PartName),
-            (SparePartSortField.PurchasePrice, false) => q.OrderBy(s => s.PurchasePrice),
-            (SparePartSortField.PurchasePrice, true) => q.OrderByDescending(s => s.PurchasePrice),
-            (SparePartSortField.SellingPrice, false) => q.OrderBy(s => s.SellingPrice),
-            (SparePartSortField.SellingPrice, true) => q.OrderByDescending(s => s.SellingPrice),
-            (SparePartSortField.InventoryQuantity, false) => q.OrderBy(s => s.InventoryQuantity),
-            (SparePartSortField.InventoryQuantity, true) => q.OrderByDescending(s => s.InventoryQuantity),
-            _ => q.OrderBy(s => s.PartName)
+            PartSortField.PartName => query.SortDescending
+                ? q.OrderByDescending(p => p.PartName)
+                : q.OrderBy(p => p.PartName),
+
+            PartSortField.PurchasePrice => query.SortDescending
+                ? q.OrderByDescending(p => p.PurchasePrice)
+                : q.OrderBy(p => p.PurchasePrice),
+
+            PartSortField.SellingPrice => query.SortDescending
+                ? q.OrderByDescending(p => p.SellingPrice)
+                : q.OrderBy(p => p.SellingPrice),
+
+            PartSortField.InventoryQuantity => query.SortDescending
+                ? q.OrderByDescending(p => p.InventoryQuantity)
+                : q.OrderBy(p => p.InventoryQuantity),
+
+            PartSortField.DateAdded => query.SortDescending
+                ? q.OrderByDescending(p => p.DateAdded)
+                : q.OrderBy(p => p.DateAdded),
+
+            PartSortField.ExpiryDate => query.SortDescending
+                ? q.OrderByDescending(p => p.ExpiryDate)
+                : q.OrderBy(p => p.ExpiryDate),
+
+            PartSortField.TotalValue => query.SortDescending
+                ? q.OrderByDescending(p => p.InventoryQuantity * p.PurchasePrice)
+                : q.OrderBy(p => p.InventoryQuantity * p.PurchasePrice),
+
+            _ => q.OrderBy(p => p.PartName)
         };
 
-        // ── Count + Page ───────────────────────────────────────────────────
-        System.Int32 totalCount = await q.CountAsync(ct).ConfigureAwait(false);
-
-        System.Collections.Generic.List<SparePart> items = await q
+        // Apply pagination
+        List<Part> items = await q
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
-            .ToListAsync(ct)
-            .ConfigureAwait(false);
+            .ToListAsync();
 
         return (items, totalCount);
     }
 
-    /// <inheritdoc/>
-    public System.Threading.Tasks.Task<SparePart> GetByIdAsync(
-        System.Int32 id,
-        System.Threading.CancellationToken ct = default)
-        => _context.SpareParts
-            .AsNoTracking()
-            .Include(s => s.Supplier)
-            .FirstOrDefaultAsync(s => s.Id == id, ct);
+    /// <summary>
+    /// Retrieves a part by identifier.
+    /// </summary>
+    public async Task<Part> GetByIdAsync(System.Int32 id)
+    {
+        return await _dbContext.Parts
+            .FirstOrDefaultAsync(p => p.Id == id);
+    }
 
-    /// <inheritdoc/>
-    public System.Threading.Tasks.Task<System.Boolean> ExistsByNameAndSupplierAsync(
-        System.String partName,
-        System.Int32 supplierId,
-        System.Threading.CancellationToken ct = default)
-        => _context.SpareParts.AnyAsync(
-            s => s.PartName == partName && s.SupplierId == supplierId, ct);
+    /// <summary>
+    /// Checks if a part with the given code exists.
+    /// </summary>
+    public async Task<System.Boolean> ExistsByPartCodeAsync(System.String partCode)
+    {
+        return await _dbContext.Parts
+            .AnyAsync(p => p.PartCode == partCode);
+    }
 
-    // ─── Write ────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// Adds a new part to the repository.
+    /// </summary>
+    public async Task AddAsync(Part part)
+    {
+        System.ArgumentNullException.ThrowIfNull(part);
+        await _dbContext.Parts.AddAsync(part);
+    }
 
-    /// <inheritdoc/>
-    public System.Threading.Tasks.Task AddAsync(
-        SparePart sparePart,
-        System.Threading.CancellationToken ct = default)
-        => _context.SpareParts.AddAsync(sparePart, ct).AsTask();
+    /// <summary>
+    /// Updates an existing part.
+    /// </summary>
+    public void Update(Part part)
+    {
+        System.ArgumentNullException.ThrowIfNull(part);
+        _dbContext.Parts.Update(part);
+    }
 
-    /// <inheritdoc/>
-    public void Update(SparePart sparePart)
-        => _context.SpareParts.Update(sparePart);
+    /// <summary>
+    /// Deletes a part from the repository.
+    /// </summary>
+    public void Delete(Part part)
+    {
+        System.ArgumentNullException.ThrowIfNull(part);
+        _dbContext.Parts.Remove(part);
+    }
 
-    /// <inheritdoc/>
-    public System.Threading.Tasks.Task SaveChangesAsync(
-        System.Threading.CancellationToken ct = default)
-        => _context.SaveChangesAsync(ct);
+    /// <summary>
+    /// Saves all changes to the database.
+    /// </summary>
+    public async Task SaveChangesAsync() => await _dbContext.SaveChangesAsync();
 }

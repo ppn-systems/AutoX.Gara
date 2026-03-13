@@ -1,13 +1,12 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Entities.Inventory;
+using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Suppliers;
-using AutoX.Gara.Shared.Validation;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Attributes;
@@ -21,13 +20,7 @@ using Nalix.Shared.Serialization;
 namespace AutoX.Gara.Application.Suppliers;
 
 /// <summary>
-/// Packet controller xử lý tất cả nghiệp vụ CRUD cho Supplier.
-/// <list type="bullet">
-///   <item><see cref="GetAsync"/> — Lấy danh sách có phân trang, filter, sort.</item>
-///   <item><see cref="CreateAsync"/> — Tạo mới nhà cung cấp.</item>
-///   <item><see cref="UpdateAsync"/> — Cập nhật thông tin nhà cung cấp.</item>
-///   <item><see cref="ChangeStatusAsync"/> — Thay đổi trạng thái (Active/Inactive/Suspended/...).</item>
-/// </list>
+/// Packet controller handling all CRUD operations for Supplier.
 /// </summary>
 [PacketController]
 public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
@@ -40,13 +33,11 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((System.UInt16)OpCommand.SUPPLIER_GET)]
-    public async System.Threading.Tasks.Task GetAsync(
-        IPacket p,
-        IConnection connection)
+    public async System.Threading.Tasks.Task GetAsync(IPacket p, IConnection connection)
     {
         if (p is not SupplierQueryRequest packet)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
+            System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
@@ -102,9 +93,10 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         {
             if (response is not null)
             {
+                var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
                 foreach (SupplierDto dto in response.Suppliers)
                 {
-                    InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(dto);
+                    pool.Return(dto);
                 }
             }
         }
@@ -115,9 +107,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((System.UInt16)OpCommand.SUPPLIER_CREATE)]
-    public async System.Threading.Tasks.Task CreateAsync(
-        IPacket p,
-        IConnection connection)
+    public async System.Threading.Tasks.Task CreateAsync(IPacket p, IConnection connection)
     {
         if (!TryParseSupplierPacket(p, out SupplierDto packet, out System.UInt32 fallbackSeq))
         {
@@ -128,7 +118,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             return;
         }
 
-        // ContractEndDate nếu có phải sau ContractStartDate
+        // Validate contract dates
         if (packet!.ContractEndDate.HasValue
             && packet.ContractStartDate.HasValue
             && packet.ContractEndDate <= packet.ContractStartDate)
@@ -174,13 +164,14 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
                 PhoneNumbers = []
             };
 
+            // Parse phone numbers safely
             if (!System.String.IsNullOrWhiteSpace(packet.PhoneNumbers))
             {
                 foreach (System.String phone in packet.PhoneNumbers
                     .Split(',', System.StringSplitOptions.RemoveEmptyEntries))
                 {
                     System.String trimmed = phone.Trim();
-                    if (AccountValidation.IsValidVietnamPhoneNumber(trimmed))
+                    if (trimmed.Length > 0)
                     {
                         newSupplier.PhoneNumbers.Add(new SupplierContactPhone
                         {
@@ -216,8 +207,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         {
             if (confirmed is not null)
             {
-                InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                    .Return(confirmed);
+                InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(confirmed);
             }
         }
     }
@@ -227,9 +217,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((System.UInt16)OpCommand.SUPPLIER_UPDATE)]
-    public async System.Threading.Tasks.Task UpdateAsync(
-        IPacket p,
-        IConnection connection)
+    public async System.Threading.Tasks.Task UpdateAsync(IPacket p, IConnection connection)
     {
         if (!TryParseSupplierPacket(p, out SupplierDto packet, out System.UInt32 fallbackSeq))
         {
@@ -297,6 +285,24 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
                 existing.ContractStartDate = packet.ContractStartDate.Value;
             }
 
+            // Update phone numbers
+            existing.PhoneNumbers.Clear();
+            if (!System.String.IsNullOrWhiteSpace(packet.PhoneNumbers))
+            {
+                foreach (System.String phone in packet.PhoneNumbers
+                    .Split(',', System.StringSplitOptions.RemoveEmptyEntries))
+                {
+                    System.String trimmed = phone.Trim();
+                    if (trimmed.Length > 0)
+                    {
+                        existing.PhoneNumbers.Add(new SupplierContactPhone
+                        {
+                            PhoneNumber = trimmed
+                        });
+                    }
+                }
+            }
+
             suppliers.Update(existing);
             await suppliers.SaveChangesAsync().ConfigureAwait(false);
 
@@ -323,8 +329,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         {
             if (confirmed is not null)
             {
-                InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>()
-                    .Return(confirmed);
+                InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(confirmed);
             }
         }
     }
@@ -334,9 +339,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
     [PacketOpcode((System.UInt16)OpCommand.SUPPLIER_CHANGE_STATUS)]
-    public async System.Threading.Tasks.Task ChangeStatusAsync(
-        IPacket p,
-        IConnection connection)
+    public async System.Threading.Tasks.Task ChangeStatusAsync(IPacket p, IConnection connection)
     {
         if (p is not SupplierDto packet
             || packet.SupplierId is null
@@ -395,8 +398,10 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
     {
         fallbackSeqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
 
-        if (p is not SupplierDto sp ||
-            !AccountValidation.IsValidEmail(sp.Email))
+        if (p is not SupplierDto sp
+            || System.String.IsNullOrWhiteSpace(sp.Name)
+            || System.String.IsNullOrWhiteSpace(sp.Email)
+            || System.String.IsNullOrWhiteSpace(sp.TaxCode))
         {
             packet = null;
             return false;

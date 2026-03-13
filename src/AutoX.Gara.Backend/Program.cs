@@ -232,12 +232,7 @@ public static class Program
                 )
             );
             dispatchOptions.WithHandler(() =>
-                new ReplacementPartOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new SparePartOps(
+                new PartOps(
                     InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                 )
             );
