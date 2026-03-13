@@ -85,8 +85,7 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             return;
         }
 
-        // SỬA: Nếu không active thì forbidden
-        if (!account.IsActive)
+        if (account.IsActive)
         {
             await connection.SendAsync(
                 ControlType.ERROR,

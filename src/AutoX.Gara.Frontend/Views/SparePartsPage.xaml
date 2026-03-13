@@ -431,7 +431,8 @@
             <BoxView BackgroundColor="#70000010" />
             <Border BackgroundColor="#111118" StrokeShape="RoundRectangle 14"
                     Stroke="#3A1A1A" StrokeThickness="1"
-                    Margin="48,0" MaximumWidthRequest="380"
+                    Margin="48,0"
+                    WidthRequest="400"
                     VerticalOptions="Center" HorizontalOptions="Center" Padding="28,24">
                 <VerticalStackLayout Spacing="14">
                     <Label Text="Xác nhận ngừng bán" FontSize="18" FontAttributes="Bold"
@@ -470,7 +471,8 @@
             <BoxView BackgroundColor="#70000010" />
             <Border BackgroundColor="#111118" StrokeShape="RoundRectangle 14"
                     Stroke="#2A2A38" StrokeThickness="1"
-                    Margin="48,0" MaximumWidthRequest="360"
+                    Margin="48,0" 
+                    WidthRequest="400"
                     VerticalOptions="Center" HorizontalOptions="Center" Padding="28,24">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="{Binding PopupTitle}" FontSize="17" FontAttributes="Bold"

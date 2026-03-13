@@ -45,7 +45,7 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
     public AutoXDbContext CreateDbContext(System.String[] args = null)
     {
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
-            .Info($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Start initialization sequence.");
+                                .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Start initialization sequence.");
 
         // Load cấu hình từ DatabaseOptions
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
@@ -74,7 +74,7 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
             if (configuration.DatabaseType.Equals("PostgreSQL", System.StringComparison.OrdinalIgnoreCase))
             {
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                    .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Configuring DbContext for PostgreSQL.");
+                                        .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Configuring DbContext for PostgreSQL.");
 
                 optionsBuilder.UseNpgsql(configuration.ConnectionString, npgsqlOptions =>
                 {
@@ -90,7 +90,7 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
                 .EnableServiceProviderCaching();
 
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Info($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] DbContext configured for PostgreSQL.");
+                                        .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] DbContext configured for PostgreSQL.");
             }
             else if (configuration.DatabaseType.Equals("SQLite", System.StringComparison.OrdinalIgnoreCase))
             {
@@ -106,7 +106,7 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
                 .EnableServiceProviderCaching();
 
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Info($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] DbContext configured for SQLite.");
+                                        .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] DbContext configured for SQLite.");
             }
             else
             {
@@ -126,7 +126,7 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
         AutoXDbContext dbContext = new(optionsBuilder.Options);
 
         InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Info($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] AutoDbContext successfully created.");
+                                .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] AutoDbContext successfully created.");
 
         return dbContext;
     }
