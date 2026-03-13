@@ -2,7 +2,6 @@
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
-using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Suppliers;
@@ -17,19 +16,12 @@ using Nalix.Shared.Frames.Controls;
 namespace AutoX.Gara.Frontend.Services.Suppliers;
 
 /// <summary>
-/// Real implementation của <see cref="ISupplierService"/>.
-/// <para>
-/// <list type="bullet">
-///   <item>Inject <see cref="ISupplierQueryCache"/> → cache 30 giây tránh duplicate request.</item>
-///   <item>Write operations tự động gọi <see cref="ISupplierQueryCache.Invalidate"/> sau khi thành công.</item>
-///   <item>Cache hit hoàn toàn bypass network — trả về ngay từ memory.</item>
-/// </list>
-/// </para>
+/// Frontend service for supplier operations.
+/// Handles GET/POST/PUT for supplier management.
 /// </summary>
 public sealed class SupplierService : ISupplierService
 {
     private const System.Int32 RequestTimeoutMs = 10_000;
-
     private readonly ISupplierQueryCache _cache;
 
     public SupplierService(ISupplierQueryCache cache)
@@ -37,7 +29,6 @@ public sealed class SupplierService : ISupplierService
 
     // ─── GetListAsync ─────────────────────────────────────────────────────────
 
-    /// <inheritdoc/>
     public async System.Threading.Tasks.Task<SupplierListResult> GetListAsync(
         System.Int32 page,
         System.Int32 pageSize,
@@ -48,7 +39,6 @@ public sealed class SupplierService : ISupplierService
         PaymentTerms filterPaymentTerms = PaymentTerms.None,
         System.Threading.CancellationToken ct = default)
     {
-        // ── Cache hit: trả về ngay, không tốn băng thông ─────────────────
         SupplierCacheKey key = new(
             page, pageSize,
             searchTerm ?? System.String.Empty,
@@ -58,13 +48,9 @@ public sealed class SupplierService : ISupplierService
         if (_cache.TryGet(key, out SupplierCacheEntry? cached))
         {
             System.Boolean hasMore = page * pageSize < cached!.TotalCount;
-            return SupplierListResult.Success(
-                cached.Suppliers,
-                totalCount: cached.TotalCount,
-                hasMore: hasMore);
+            return SupplierListResult.Success(cached.Suppliers, cached.TotalCount, hasMore);
         }
 
-        // ── Cache miss: gửi request lên server ────────────────────────────
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
@@ -72,9 +58,9 @@ public sealed class SupplierService : ISupplierService
 
             SupplierQueryRequest packet = new()
             {
-                SequenceId = sq,
                 Page = page,
                 PageSize = pageSize,
+                SequenceId = sq,
                 SearchTerm = searchTerm ?? System.String.Empty,
                 SortBy = sortBy,
                 SortDescending = sortDescending,
@@ -95,14 +81,9 @@ public sealed class SupplierService : ISupplierService
                 {
                     sub?.Dispose();
                     errSub?.Dispose();
-
                     _cache.Set(key, resp.Suppliers, resp.TotalCount);
-
                     System.Boolean hasMore = page * pageSize < resp.TotalCount;
-                    tcs.TrySetResult(SupplierListResult.Success(
-                        resp.Suppliers,
-                        totalCount: resp.TotalCount,
-                        hasMore: hasMore));
+                    tcs.TrySetResult(SupplierListResult.Success(resp.Suppliers, resp.TotalCount, hasMore));
                 });
 
             errSub = client.OnOnce<Directive>(
@@ -111,22 +92,17 @@ public sealed class SupplierService : ISupplierService
                 {
                     sub?.Dispose();
                     errSub?.Dispose();
-                    tcs.TrySetResult(
-                        SupplierListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
+                    tcs.TrySetResult(SupplierListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
                 });
 
             await client.SendAsync(packet, ct).ConfigureAwait(false);
 
             using System.Threading.CancellationTokenSource cts =
                 System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
-
             System.Threading.Tasks.Task timeoutTask =
                 System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
-
             System.Threading.Tasks.Task winner =
-                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask)
-                    .ConfigureAwait(false);
-
+                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
             cts.Cancel();
 
             if (!ReferenceEquals(winner, tcs.Task))
@@ -145,21 +121,18 @@ public sealed class SupplierService : ISupplierService
         catch (System.Exception ex)
         {
             LogException(ex);
-            return SupplierListResult.Failure(
-                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return SupplierListResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     // ─── CreateAsync ──────────────────────────────────────────────────────────
 
-    /// <inheritdoc/>
     public async System.Threading.Tasks.Task<SupplierWriteResult> CreateAsync(
         SupplierDto data,
         System.Threading.CancellationToken ct = default)
     {
         SupplierWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.SUPPLIER_CREATE, data, expectEcho: true, ct)
-            .ConfigureAwait(false);
+            (System.UInt16)OpCommand.SUPPLIER_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
 
         if (result.IsSuccess)
         {
@@ -171,14 +144,12 @@ public sealed class SupplierService : ISupplierService
 
     // ─── UpdateAsync ──────────────────────────────────────────────────────────
 
-    /// <inheritdoc/>
     public async System.Threading.Tasks.Task<SupplierWriteResult> UpdateAsync(
         SupplierDto data,
         System.Threading.CancellationToken ct = default)
     {
         SupplierWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.SUPPLIER_UPDATE, data, expectEcho: true, ct)
-            .ConfigureAwait(false);
+            (System.UInt16)OpCommand.SUPPLIER_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
 
         if (result.IsSuccess)
         {
@@ -188,23 +159,14 @@ public sealed class SupplierService : ISupplierService
         return result;
     }
 
-    // ─── ChangeStatusAsync ────────────────────────────────────────────────────
+    // ─── ChangeStatusAsync ───────────────────────────────────────────��────────
 
-    /// <inheritdoc/>
     public async System.Threading.Tasks.Task<SupplierWriteResult> ChangeStatusAsync(
-        System.Int32 supplierId,
-        SupplierStatus newStatus,
+        SupplierDto data,
         System.Threading.CancellationToken ct = default)
     {
-        SupplierDto data = new()
-        {
-            SupplierId = supplierId,
-            Status = newStatus
-        };
-
         SupplierWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.SUPPLIER_CHANGE_STATUS, data, expectEcho: false, ct)
-            .ConfigureAwait(false);
+            (System.UInt16)OpCommand.SUPPLIER_CHANGE_STATUS, data, expectEcho: false, ct).ConfigureAwait(false);
 
         if (result.IsSuccess)
         {
@@ -214,7 +176,7 @@ public sealed class SupplierService : ISupplierService
         return result;
     }
 
-    // ─── Private Helpers ─────────────────────────────────────────────────────
+    // ─── Private Helpers ──────────────────────────────────────────────────────
 
     private static async System.Threading.Tasks.Task<SupplierWriteResult> SendWritePacketAsync(
         System.UInt16 opcode,
@@ -229,9 +191,6 @@ public sealed class SupplierService : ISupplierService
 
             data.OpCode = opcode;
             data.SequenceId = sq;
-
-            ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
-            logger.Info($"Sending packet SeqId={sq} OpCode={opcode} expectEcho={expectEcho}");
 
             System.Threading.Tasks.TaskCompletionSource<SupplierWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
@@ -257,11 +216,9 @@ public sealed class SupplierService : ISupplierService
                 {
                     echoSub?.Dispose();
                     errSub?.Dispose();
-
                     SupplierWriteResult result = resp.Type == ControlType.NONE
                         ? SupplierWriteResult.Success()
                         : SupplierWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
-
                     tcs.TrySetResult(result);
                 });
 
@@ -269,14 +226,10 @@ public sealed class SupplierService : ISupplierService
 
             using System.Threading.CancellationTokenSource cts =
                 System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
-
             System.Threading.Tasks.Task timeoutTask =
                 System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
-
             System.Threading.Tasks.Task winner =
-                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask)
-                    .ConfigureAwait(false);
-
+                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
             cts.Cancel();
 
             if (!ReferenceEquals(winner, tcs.Task))
@@ -295,8 +248,7 @@ public sealed class SupplierService : ISupplierService
         catch (System.Exception ex)
         {
             LogException(ex);
-            return SupplierWriteResult.Failure(
-                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return SupplierWriteResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
@@ -310,10 +262,6 @@ public sealed class SupplierService : ISupplierService
             ProtocolReason.FORBIDDEN => "Bạn không có quyền thực hiện thao tác này.",
             ProtocolReason.UNAUTHENTICATED => "Bạn không có quyền thực hiện thao tác này.",
             ProtocolReason.RATE_LIMITED => "Bạn đang thao tác quá nhanh. Vui lòng chờ một chút rồi thử lại.",
-            ProtocolReason.UNSUPPORTED_PACKET => "Yêu cầu không được hỗ trợ. Vui lòng cập nhật phần mềm nếu có thể.",
-            ProtocolReason.CRYPTO_UNSUPPORTED => "Lỗi mã hóa. Vui lòng cập nhật phần mềm nếu có thể.",
-            ProtocolReason.COMPRESSION_FAILED => "Lỗi nén dữ liệu. Vui lòng cập nhật phần mềm nếu có thể.",
-            ProtocolReason.TRANSFORM_FAILED => "Lỗi xử lý dữ liệu. Vui lòng cập nhật phần mềm nếu có thể.",
             ProtocolReason.TIMEOUT => "Máy chủ phản hồi hết hạn. Vui lòng thử lại.",
             _ => "Thao tác thất bại. Vui lòng thử lại."
         };
@@ -327,4 +275,24 @@ public sealed class SupplierService : ISupplierService
             logger.Error("Inner: " + ex.InnerException);
         }
     }
+}
+
+/// <summary>
+/// Abstraction for supplier service.
+/// </summary>
+public interface ISupplierService
+{
+    System.Threading.Tasks.Task<SupplierListResult> GetListAsync(
+        System.Int32 page,
+        System.Int32 pageSize,
+        System.String? searchTerm = null,
+        SupplierSortField sortBy = SupplierSortField.Name,
+        System.Boolean sortDescending = false,
+        SupplierStatus filterStatus = SupplierStatus.None,
+        PaymentTerms filterPaymentTerms = PaymentTerms.None,
+        System.Threading.CancellationToken ct = default);
+
+    System.Threading.Tasks.Task<SupplierWriteResult> CreateAsync(SupplierDto data, System.Threading.CancellationToken ct = default);
+    System.Threading.Tasks.Task<SupplierWriteResult> UpdateAsync(SupplierDto data, System.Threading.CancellationToken ct = default);
+    System.Threading.Tasks.Task<SupplierWriteResult> ChangeStatusAsync(SupplierDto data, System.Threading.CancellationToken ct = default);
 }

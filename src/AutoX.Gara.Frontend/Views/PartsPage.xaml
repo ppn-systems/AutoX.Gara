@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!--
-    ReplacementPartsPage.xaml — Minimal / Modern Dark
-    Palette: #0A0A0F, #111118, #1A1A24, #2A2A38, #6366F1
--->
 <ContentPage
     x:Name="PageRoot"
-    x:Class="AutoX.Gara.Frontend.Views.ReplacementPartsPage"
+    x:Class="AutoX.Gara.Frontend.Views.PartsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
     xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Inventory;assembly=AutoX.Gara.Shared"
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
-    Title="Phụ tùng kho"
+    Title="Quản lý phụ tùng"
     BackgroundColor="#0A0A0F">
 
     <ContentPage.Resources>
@@ -20,7 +16,8 @@
             <conv:InverseBoolConverter          x:Key="InverseBool"   />
             <conv:DecimalToCurrencyConverter    x:Key="ToCurrency"    />
             <conv:DateOnlyToStringConverter     x:Key="ToDateStr"     />
-            <conv:BoolToDefectiveColorConverter x:Key="DefectiveColor"/>
+            <conv:PartCategoryToLabelConverter  x:Key="CategoryLabel" />
+            <conv:PartCategoryToColorConverter  x:Key="CategoryColor" />
 
             <Style x:Key="CardStyle" TargetType="Border">
                 <Setter Property="BackgroundColor"  Value="#111118" />
@@ -80,7 +77,7 @@
             </Style>
             <Style x:Key="RowEdit" TargetType="Button">
                 <Setter Property="HeightRequest"   Value="32" />
-                <Setter Property="WidthRequest"   Value="80" />
+                <Setter Property="WidthRequest"    Value="80" />
                 <Setter Property="CornerRadius"    Value="8" />
                 <Setter Property="FontSize"        Value="12" />
                 <Setter Property="FontAttributes"  Value="Bold" />
@@ -92,7 +89,7 @@
             </Style>
             <Style x:Key="RowDelete" TargetType="Button">
                 <Setter Property="HeightRequest"   Value="32" />
-                <Setter Property="WidthRequest"   Value="80" />
+                <Setter Property="WidthRequest"    Value="90" />
                 <Setter Property="CornerRadius"    Value="8" />
                 <Setter Property="FontSize"        Value="12" />
                 <Setter Property="FontAttributes"  Value="Bold" />
@@ -122,7 +119,7 @@
                   Padding="16,18,16,12" ColumnSpacing="12">
                 <Border Grid.Column="0" BackgroundColor="#111118"
                         StrokeShape="RoundRectangle 8" StrokeThickness="1" Stroke="#2A2A38"
-                        Padding="0,0" HeightRequest="44">
+                        Padding="0" HeightRequest="44">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                         <Label Grid.Column="0" Text="⌕" FontSize="18" TextColor="#3A3A50"
                                VerticalOptions="Center" Padding="12,0" InputTransparent="True" />
@@ -133,10 +130,10 @@
                                ReturnType="Search" ClearButtonVisibility="WhileEditing" />
                     </Grid>
                 </Border>
-                <Button Grid.Column="1" Text="＋ Nhập kho"
+                <Button Grid.Column="1" Text="＋ Thêm"
                         Style="{StaticResource AccentBtn}"
                         Command="{Binding OpenCreateFormCommand}"
-                        Padding="20,0" />
+                        Padding="28,0" />
             </Grid>
 
             <!-- ROW 1: FILTER BAR -->
@@ -146,6 +143,26 @@
                     <Label Text="LỌC" FontSize="13" FontAttributes="Bold"
                            CharacterSpacing="1.5" TextColor="#3A3A50"
                            VerticalOptions="Center" Margin="0,0,4,0" />
+
+                    <!-- Loại phụ tùng -->
+                    <Border Style="{StaticResource PickerBorder}" WidthRequest="148">
+                        <Picker SelectedIndex="{Binding PickerCategoryIndex}"
+                                TextColor="#C4C4D4" BackgroundColor="Transparent"
+                                VerticalOptions="Center" HeightRequest="44">
+                            <Picker.Items>
+                                <x:String>Tất cả loại</x:String>
+                                <x:String>Động cơ</x:String>
+                                <x:String>Phanh</x:String>
+                                <x:String>Hệ thống treo</x:String>
+                                <x:String>Điện</x:String>
+                                <x:String>Thân xe</x:String>
+                                <x:String>Hộp số</x:String>
+                                <x:String>Làm mát</x:String>
+                                <x:String>Xả</x:String>
+                                <x:String>Khác</x:String>
+                            </Picker.Items>
+                        </Picker>
+                    </Border>
 
                     <!-- Tồn kho -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="130">
@@ -186,14 +203,29 @@
                         </Picker>
                     </Border>
 
+                    <!-- Trạng thái bán -->
+                    <Border Style="{StaticResource PickerBorder}" WidthRequest="130">
+                        <Picker SelectedIndex="{Binding PickerDiscontinuedIndex}"
+                                TextColor="#C4C4D4" BackgroundColor="Transparent"
+                                VerticalOptions="Center" HeightRequest="44">
+                            <Picker.Items>
+                                <x:String>Tất cả</x:String>
+                                <x:String>Đang bán</x:String>
+                                <x:String>Ngừng bán</x:String>
+                            </Picker.Items>
+                        </Picker>
+                    </Border>
+
                     <Button Text="✕" IsVisible="{Binding HasActiveFilters}"
                             Command="{Binding ClearFiltersCommand}"
                             BackgroundColor="#1E1014" TextColor="#EF4444"
                             BorderColor="#3A1A1A" BorderWidth="1"
                             FontSize="13" CornerRadius="8"
                             HeightRequest="36" WidthRequest="36" Padding="0" />
+
                     <BoxView WidthRequest="1" HeightRequest="20"
                              BackgroundColor="#2A2A38" VerticalOptions="Center" Margin="4,0" />
+
                     <Label VerticalOptions="Center">
                         <Label.FormattedText>
                             <FormattedString>
@@ -212,7 +244,7 @@
                                 IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}"
                                 Margin="16,0" VerticalOptions="Fill">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="pkt:ReplacementPartDto">
+                        <DataTemplate x:DataType="pkt:PartDto">
                             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="14,12">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
 
@@ -226,10 +258,9 @@
                                                    TextColor="#F1F1F5" VerticalOptions="Center"
                                                    LineBreakMode="TailTruncation" MaxLines="1" />
                                             <Border Style="{StaticResource BadgeStyle}"
-                                                    BackgroundColor="#1A1A24">
-                                                <Label Text="{Binding PartCode}"
-                                                       FontSize="14" FontAttributes="Bold"
-                                                       TextColor="#6366F1" />
+                                                    BackgroundColor="{Binding PartCategory, Converter={StaticResource CategoryColor}}">
+                                                <Label Text="{Binding PartCategory, Converter={StaticResource CategoryLabel}}"
+                                                       FontSize="11" FontAttributes="Bold" TextColor="Black" />
                                             </Border>
                                             <!-- Badge lỗi -->
                                             <Border Style="{StaticResource BadgeStyle}"
@@ -239,50 +270,74 @@
                                                        FontSize="10" FontAttributes="Bold"
                                                        TextColor="#EF4444" />
                                             </Border>
+                                            <!-- Badge ngừng bán -->
+                                            <Border Style="{StaticResource BadgeStyle}"
+                                                    BackgroundColor="#3A1A1A"
+                                                    IsVisible="{Binding IsDiscontinued}">
+                                                <Label Text="Ngừng bán"
+                                                       FontSize="10" FontAttributes="Bold"
+                                                       TextColor="#EF4444" />
+                                            </Border>
                                         </HorizontalStackLayout>
 
-                                        <!-- Nhà SX -->
-                                        <HorizontalStackLayout Spacing="4">
-                                            <Label Text="🏭" FontSize="11" VerticalOptions="Center" />
-                                            <Label Text="{Binding Manufacturer}"
-                                                   Style="{StaticResource MutedLabel}" />
+                                        <!-- Mã SKU + Nhà SX -->
+                                        <HorizontalStackLayout Spacing="10">
+                                            <HorizontalStackLayout Spacing="4">
+                                                <Label Text="SKU:" Style="{StaticResource MutedLabel}" />
+                                                <Label Text="{Binding PartCode}"
+                                                       FontSize="12" TextColor="#6366F1"
+                                                       FontAttributes="Bold" VerticalOptions="Center" />
+                                            </HorizontalStackLayout>
+                                            <Label Text="·" TextColor="#3A3A50" FontSize="12" VerticalOptions="Center" />
+                                            <HorizontalStackLayout Spacing="4">
+                                                <Label Text="🏭" FontSize="11" VerticalOptions="Center" />
+                                                <Label Text="{Binding Manufacturer}"
+                                                       Style="{StaticResource MutedLabel}" />
+                                            </HorizontalStackLayout>
                                         </HorizontalStackLayout>
 
-                                        <!-- Số lượng + Đơn giá -->
+                                        <!-- Giá nhập / Giá bán -->
+                                        <HorizontalStackLayout Spacing="10">
+                                            <HorizontalStackLayout Spacing="4">
+                                                <Label Text="Nhập:" Style="{StaticResource MutedLabel}" />
+                                                <Label Text="{Binding PurchasePrice, Converter={StaticResource ToCurrency}}"
+                                                       FontSize="12" TextColor="#6B6B80" VerticalOptions="Center" />
+                                            </HorizontalStackLayout>
+                                            <Label Text="→" TextColor="#3A3A50" FontSize="11" VerticalOptions="Center" />
+                                            <HorizontalStackLayout Spacing="4">
+                                                <Label Text="Bán:" Style="{StaticResource MutedLabel}" />
+                                                <Label Text="{Binding SellingPrice, Converter={StaticResource ToCurrency}}"
+                                                       FontSize="12" TextColor="#22C55E"
+                                                       FontAttributes="Bold" VerticalOptions="Center" />
+                                            </HorizontalStackLayout>
+                                        </HorizontalStackLayout>
+
+                                        <!-- Số lượng + Ngày -->
                                         <HorizontalStackLayout Spacing="10">
                                             <HorizontalStackLayout Spacing="4">
                                                 <Label Text="📦" FontSize="13" VerticalOptions="Center" />
                                                 <Label Style="{StaticResource MutedLabel}">
                                                     <Label.FormattedText>
                                                         <FormattedString>
-                                                            <Span Text="{Binding Quantity}"
+                                                            <Span Text="{Binding InventoryQuantity}"
                                                                   FontAttributes="Bold" TextColor="#C4C4D4" />
-                                                            <Span Text=" cái" TextColor="#6B6B80" />
+                                                            <Span Text=" trong kho" TextColor="#6B6B80" />
                                                         </FormattedString>
                                                     </Label.FormattedText>
                                                 </Label>
                                             </HorizontalStackLayout>
-                                            <Label Text="·" TextColor="#3A3A50"
-                                                   FontSize="14" VerticalOptions="Center" />
-                                            <HorizontalStackLayout Spacing="4">
-                                                <Label Text="Đơn giá:" Style="{StaticResource MutedLabel}" />
-                                                <Label Text="{Binding UnitPrice, Converter={StaticResource ToCurrency}}"
-                                                       FontSize="12" TextColor="#22C55E"
-                                                       FontAttributes="Bold" VerticalOptions="Center" />
-                                            </HorizontalStackLayout>
-                                        </HorizontalStackLayout>
-
-                                        <!-- Ngày nhập / hết hạn -->
-                                        <HorizontalStackLayout Spacing="10">
+                                            <Label Text="·" TextColor="#3A3A50" FontSize="11" VerticalOptions="Center" />
                                             <HorizontalStackLayout Spacing="4">
                                                 <Label Text="📅" FontSize="11" VerticalOptions="Center" />
                                                 <Label Text="{Binding DateAdded, Converter={StaticResource ToDateStr}}"
                                                        Style="{StaticResource MutedLabel}" />
                                             </HorizontalStackLayout>
-                                            <Label Text="→"
-                                                   TextColor="#3A3A50" FontSize="12"
-                                                   VerticalOptions="Center" />
-                                            <Label Text="{Binding ExpiryDate, Converter={StaticResource ToDateStr}, TargetNullValue='Không hết hạn'}"
+                                        </HorizontalStackLayout>
+
+                                        <!-- Hạn dùng -->
+                                        <HorizontalStackLayout Spacing="4" IsVisible="{Binding ExpiryDate, Converter={StaticResource InverseBool}}">
+                                            <Label Text="⏰" FontSize="11" VerticalOptions="Center" />
+                                            <Label Text="{Binding ExpiryDate, Converter={StaticResource ToDateStr}, TargetNullValue='Không hạn'}"
                                                    Style="{StaticResource MutedLabel}" />
                                         </HorizontalStackLayout>
                                     </VerticalStackLayout>
@@ -312,9 +367,9 @@
                                      VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
                     <Label Text="—" FontSize="40" FontAttributes="Bold"
                            TextColor="#2A2A38" HorizontalOptions="Center" />
-                    <Label Text="Kho trống" FontSize="16" FontAttributes="Bold"
+                    <Label Text="Không có phụ tùng" FontSize="16" FontAttributes="Bold"
                            TextColor="#3A3A50" HorizontalOptions="Center" />
-                    <Label Text="Nhấn ＋ Nhập kho để bắt đầu"
+                    <Label Text="Nhấn ＋ Thêm để bắt đầu"
                            FontSize="13" TextColor="#2A2A38" HorizontalOptions="Center" />
                 </VerticalStackLayout>
 
@@ -349,7 +404,7 @@
 
         </Grid>
 
-        <!-- ══ OVERLAY: FORM NHẬP KHO / SỬA ══ -->
+        <!-- ══ OVERLAY: FORM THÊM/SỬA ══ -->
         <Grid IsVisible="{Binding IsFormVisible}" ZIndex="20">
             <BoxView BackgroundColor="#70000010" InputTransparent="False">
                 <BoxView.GestureRecognizers>
@@ -358,7 +413,7 @@
             </BoxView>
             <Border BackgroundColor="#111118" StrokeShape="RoundRectangle 14"
                     Stroke="#2A2A38" StrokeThickness="1"
-                    Margin="20,0" MaximumWidthRequest="560"
+                    Margin="20,0" MaximumWidthRequest="600"
                     VerticalOptions="Center" HorizontalOptions="Center" Padding="28,24">
                 <ScrollView Padding="0,0,20,0">
                     <VerticalStackLayout Spacing="0">
@@ -392,37 +447,78 @@
                             </VerticalStackLayout>
                         </Grid>
 
-                        <!-- Nhà SX -->
-                        <Label Text="NHÀ SẢN XUẤT" Style="{StaticResource FieldLabel}" />
-                        <Border Style="{StaticResource InputBorder}" Padding="0">
-                            <Entry Text="{Binding FormManufacturer}"
-                                   Placeholder="Bosch, Denso, NGK..."
-                                   Style="{StaticResource FormEntry}" />
-                        </Border>
-
-                        <!-- Số lượng + Đơn giá -->
+                        <!-- Nhà SX + NCC -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <VerticalStackLayout Grid.Column="0">
-                                <Label Text="SỐ LƯỢNG *" Style="{StaticResource FieldLabel}" />
+                                <Label Text="NHÀ SẢN XUẤT" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource InputBorder}" Padding="0">
-                                    <Entry Text="{Binding FormQuantity}"
-                                           Placeholder="1" Keyboard="Numeric"
+                                    <Entry Text="{Binding FormManufacturer}"
+                                           Placeholder="Bosch, Denso, NGK..."
                                            Style="{StaticResource FormEntry}" />
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
-                                <Label Text="ĐƠN GIÁ (VNĐ) *" Style="{StaticResource FieldLabel}" />
+                                <Label Text="NHÀ CUNG CẤP *" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource InputBorder}" Padding="0">
-                                    <Entry Text="{Binding FormUnitPrice}"
+                                    <Entry Text="{Binding FormSupplierId}"
+                                           Placeholder="Nhập mã NCC..."
+                                           Keyboard="Numeric"
+                                           Style="{StaticResource FormEntry}" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Loại phụ tùng -->
+                        <Label Text="LOẠI PHỤ TÙNG" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
+                            <Picker SelectedIndex="{Binding FormPickerCategoryIndex}"
+                                    TextColor="#C4C4D4" BackgroundColor="Transparent"
+                                    VerticalOptions="Center" HeightRequest="44" Margin="10,0">
+                                <Picker.Items>
+                                    <x:String>Khác</x:String>
+                                    <x:String>Động cơ</x:String>
+                                    <x:String>Phanh</x:String>
+                                    <x:String>Hệ thống treo</x:String>
+                                    <x:String>Điện</x:String>
+                                    <x:String>Thân xe</x:String>
+                                    <x:String>Hộp số</x:String>
+                                    <x:String>Làm mát</x:String>
+                                    <x:String>Xả</x:String>
+                                </Picker.Items>
+                            </Picker>
+                        </Border>
+
+                        <!-- Giá nhập + Giá bán -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="GIÁ NHẬP (VNĐ) *" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource InputBorder}" Padding="0">
+                                    <Entry Text="{Binding FormPurchasePrice}"
+                                           Placeholder="0" Keyboard="Numeric"
+                                           Style="{StaticResource FormEntry}" />
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="GIÁ BÁN (VNĐ) *" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource InputBorder}" Padding="0">
+                                    <Entry Text="{Binding FormSellingPrice}"
                                            Placeholder="0" Keyboard="Numeric"
                                            Style="{StaticResource FormEntry}" />
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>
 
-                        <!-- Ngày nhập + hết hạn -->
+                        <!-- Số lượng + Ngày nhập -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <VerticalStackLayout Grid.Column="0">
+                                <Label Text="SỐ LƯỢNG *" Style="{StaticResource FieldLabel}" />
+                                <Border Style="{StaticResource InputBorder}" Padding="0">
+                                    <Entry Text="{Binding FormInventoryQuantity}"
+                                           Placeholder="0" Keyboard="Numeric"
+                                           Style="{StaticResource FormEntry}" />
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
                                 <Label Text="NGÀY NHẬP KHO" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource InputBorder}">
                                     <DatePicker Date="{Binding FormDateAdded}"
@@ -432,26 +528,32 @@
                                                 VerticalOptions="Center" />
                                 </Border>
                             </VerticalStackLayout>
-                            <VerticalStackLayout Grid.Column="1">
-                                <Label Text="NGÀY HẾT HẠN" Style="{StaticResource FieldLabel}" />
-                                <Border Style="{StaticResource InputBorder}">
-                                    <DatePicker Date="{Binding FormExpiryDate, TargetNullValue={x:Static sys:DateTime.Today}}"
-                                                Format="dd/MM/yyyy"
-                                                TextColor="#C4C4D4"
-                                                BackgroundColor="Transparent"
-                                                VerticalOptions="Center" />
-                                </Border>
-                            </VerticalStackLayout>
                         </Grid>
 
-                        <!-- Bị lỗi toggle -->
-                        <Grid ColumnDefinitions="*,Auto" Margin="0,12,0,0">
-                            <Label Grid.Column="0"
-                                   Text="PHỤ TÙNG BỊ LỖI / HƯ HỎNG"
+                        <!-- Ngày hết hạn -->
+                        <Label Text="NGÀY HẾT HẠN" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource InputBorder}">
+                            <DatePicker Date="{Binding FormExpiryDate, TargetNullValue={x:Static sys:DateTime.Today}}"
+                                        Format="dd/MM/yyyy"
+                                        TextColor="#C4C4D4"
+                                        BackgroundColor="Transparent"
+                                        VerticalOptions="Center" />
+                        </Border>
+
+                        <!-- Bị lỗi + Ngừng bán toggles -->
+                        <Grid ColumnDefinitions="*,Auto,*,Auto" ColumnSpacing="0" Margin="0,12,0,0">
+                            <Label Grid.Column="0" Text="BỊ LỖI"
                                    Style="{StaticResource FieldLabel}"
                                    VerticalOptions="Center" Margin="0" />
                             <Switch Grid.Column="1"
                                     IsToggled="{Binding FormIsDefective}"
+                                    OnColor="#EF4444" ThumbColor="White"
+                                    HeightRequest="30" VerticalOptions="Center" />
+                            <Label Grid.Column="2" Text="NGỪNG BÁN"
+                                   Style="{StaticResource FieldLabel}"
+                                   VerticalOptions="Center" Margin="12,0,0,0" />
+                            <Switch Grid.Column="3"
+                                    IsToggled="{Binding FormIsDiscontinued}"
                                     OnColor="#EF4444" ThumbColor="White"
                                     HeightRequest="30" VerticalOptions="Center" />
                         </Grid>

@@ -1,19 +1,13 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Domain.Enums.Payments;
-using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Suppliers;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace AutoX.Gara.Frontend.Services.Suppliers;
 
 /// <summary>
-/// Key duy nhất cho một tập tham số truy vấn nhà cung cấp.
-/// C# record tự sinh <c>Equals</c> + <c>GetHashCode</c> đúng —
-/// dùng được trực tiếp làm key của <see cref="ConcurrentDictionary{TKey,TValue}"/>.
+/// Cache key for supplier query parameters.
 /// </summary>
 public sealed record SupplierCacheKey(
     System.Int32 Page,
@@ -21,39 +15,47 @@ public sealed record SupplierCacheKey(
     System.String SearchTerm,
     SupplierSortField SortBy,
     System.Boolean SortDescending,
-    SupplierStatus FilterStatus,
-    PaymentTerms FilterPaymentTerms);
+    AutoX.Gara.Domain.Enums.SupplierStatus FilterStatus,
+    AutoX.Gara.Domain.Enums.Payments.PaymentTerms FilterPaymentTerms);
 
 /// <summary>
-/// Một entry trong cache gồm dữ liệu và thời điểm hết hạn.
+/// Cache entry for supplier query results.
 /// </summary>
 public sealed class SupplierCacheEntry
 {
-    public required List<SupplierDto> Suppliers { get; init; }
+    /// <summary>
+    /// List of suppliers in this cache entry.
+    /// </summary>
+    public required System.Collections.Generic.List<SupplierDto> Suppliers { get; init; }
+
+    /// <summary>
+    /// Total count of suppliers matching the query.
+    /// </summary>
     public required System.Int32 TotalCount { get; init; }
+
+    /// <summary>
+    /// Expiration timestamp in UTC.
+    /// </summary>
     public required System.DateTime ExpiresAt { get; init; }
 
     /// <summary>
-    /// <c>true</c> khi entry đã quá TTL và không còn hợp lệ.
+    /// Checks if this entry has expired.
     /// </summary>
     public System.Boolean IsExpired => System.DateTime.UtcNow >= ExpiresAt;
 }
 
 /// <summary>
-/// In-memory cache thread-safe với TTL 30 giây.
-/// <para>
-/// Vòng đời cache: mỗi (page, pageSize, search, filter, sort) là một entry độc lập.
-/// Khi user thực hiện write operation, toàn bộ cache bị xóa để tránh stale data.
-/// </para>
+/// Thread-safe in-memory cache for supplier queries with 30-second TTL.
+/// Invalidates all cache on write operations to prevent stale data.
 /// </summary>
 public sealed class SupplierQueryCache : ISupplierQueryCache
 {
-    /// <summary>TTL 30 giây — đủ để tránh duplicate request khi navigate, đủ ngắn để data không stale.</summary>
     private static readonly System.TimeSpan Ttl = System.TimeSpan.FromSeconds(30);
-
     private readonly ConcurrentDictionary<SupplierCacheKey, SupplierCacheEntry> _store = new();
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Attempts to retrieve a cached entry by key.
+    /// </summary>
     public System.Boolean TryGet(SupplierCacheKey key, out SupplierCacheEntry? entry)
     {
         if (_store.TryGetValue(key, out entry) && !entry.IsExpired)
@@ -61,7 +63,6 @@ public sealed class SupplierQueryCache : ISupplierQueryCache
             return true;
         }
 
-        // Entry tồn tại nhưng đã hết hạn → xóa luôn để tránh tích lũy bộ nhớ
         if (entry is not null)
         {
             _store.TryRemove(key, out _);
@@ -71,8 +72,10 @@ public sealed class SupplierQueryCache : ISupplierQueryCache
         return false;
     }
 
-    /// <inheritdoc/>
-    public void Set(SupplierCacheKey key, List<SupplierDto> suppliers, System.Int32 totalCount)
+    /// <summary>
+    /// Stores a cache entry with auto-expiration.
+    /// </summary>
+    public void Set(SupplierCacheKey key, System.Collections.Generic.List<SupplierDto> suppliers, System.Int32 totalCount)
     {
         _store[key] = new SupplierCacheEntry
         {
@@ -82,6 +85,18 @@ public sealed class SupplierQueryCache : ISupplierQueryCache
         };
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Invalidates all cached entries.
+    /// </summary>
     public void Invalidate() => _store.Clear();
+}
+
+/// <summary>
+/// Abstraction for supplier query cache.
+/// </summary>
+public interface ISupplierQueryCache
+{
+    System.Boolean TryGet(SupplierCacheKey key, out SupplierCacheEntry? entry);
+    void Set(SupplierCacheKey key, System.Collections.Generic.List<SupplierDto> suppliers, System.Int32 totalCount);
+    void Invalidate();
 }

@@ -2,189 +2,148 @@
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
-using AutoX.Gara.Frontend.Abstractions;
+using AutoX.Gara.Frontend.Services.Suppliers;
 using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Suppliers;
-using AutoX.Gara.Shared.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Maui.ApplicationModel;
 using Nalix.Common.Networking.Protocols;
 using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AutoX.Gara.Frontend.ViewModels;
 
-public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
+/// <summary>
+/// ViewModel for supplier management.
+/// </summary>
+public sealed partial class SuppliersViewModel : ObservableObject, System.IDisposable
 {
-    private readonly ISupplierService _supplierService;
+    private readonly SupplierService _service;
+    private System.Threading.CancellationTokenSource? _loadCts;
+    private System.Threading.CancellationTokenSource? _writeCts;
+    private System.Threading.CancellationTokenSource? _searchCts;
 
-    // Separate CTS for load vs write to avoid cancelling each other
-    private CancellationTokenSource? _loadCts;
-    private CancellationTokenSource? _writeCts;
-    private CancellationTokenSource? _searchCts;
-
-    private Boolean _suppressAutoLoad = false;
-
-    private const Int32 DefaultPageSize = 20;
-    private const Int32 SearchDebounceMs = 400;
+    private const System.Int32 DefaultPageSize = 20;
+    private const System.Int32 SearchDebounceMs = 400;
 
     // ─── Pagination ───────────────────────────────────────────────────────────
 
-    [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
-    [ObservableProperty] public partial bool HasNextPage { get; set; }
-    [ObservableProperty] public partial bool HasPreviousPage { get; set; }
-    [ObservableProperty] public partial int TotalCount { get; set; }
+    [ObservableProperty] public partial System.Int32 CurrentPage { get; set; } = 1;
+    [ObservableProperty] public partial System.Boolean HasNextPage { get; set; }
+    [ObservableProperty] public partial System.Boolean HasPreviousPage { get; set; }
+    [ObservableProperty] public partial System.Int32 TotalCount { get; set; }
 
-    public Int32 TotalPages
-        => TotalCount > 0
-            ? (Int32)Math.Ceiling((Double)TotalCount / DefaultPageSize)
-            : 0;
+    public System.Int32 TotalPages => TotalCount > 0
+        ? (System.Int32)System.Math.Ceiling((System.Double)TotalCount / DefaultPageSize)
+        : 0;
 
     // ─── Search / Sort ────────────────────────────────────────────────────────
 
-    [ObservableProperty] public partial string SearchTerm { get; set; } = string.Empty;
+    [ObservableProperty] public partial System.String SearchTerm { get; set; } = System.String.Empty;
     [ObservableProperty] public partial SupplierSortField SortBy { get; set; } = SupplierSortField.Name;
-    [ObservableProperty] public partial bool SortDescending { get; set; } = false;
+    [ObservableProperty] public partial System.Boolean SortDescending { get; set; } = false;
 
     // ─── Filter ───────────────────────────────────────────────────────────────
 
     [ObservableProperty] public partial SupplierStatus FilterStatus { get; set; } = SupplierStatus.None;
     [ObservableProperty] public partial PaymentTerms FilterPaymentTerms { get; set; } = PaymentTerms.None;
 
-    // SupplierStatus picker: 0=All, 1=Active, 2=Inactive, 3=Suspended, 4=Blacklisted
-    [ObservableProperty] public partial int PickerFilterStatusIndex { get; set; } = 0;
+    [ObservableProperty] public partial System.Int32 PickerStatusIndex { get; set; } = 0;
+    [ObservableProperty] public partial System.Int32 PickerPaymentTermsIndex { get; set; } = 0;
 
-    // PaymentTerms picker: 0=All, 1=Net7, 2=Net15, 3=Net30, 4=Net60, 5=Net90, 6=Immediate, 7=EndOfMonth
-    [ObservableProperty] public partial int PickerPaymentTermsIndex { get; set; } = 0;
-
-    public Boolean HasActiveFilters
+    public System.Boolean HasActiveFilters
         => FilterStatus != SupplierStatus.None || FilterPaymentTerms != PaymentTerms.None;
 
     // ─── State ────────────────────────────────────────────────────────────────
 
-    [ObservableProperty] public partial bool IsLoading { get; set; }
-    [ObservableProperty] public partial bool HasError { get; set; }
-    [ObservableProperty] public partial string? ErrorMessage { get; set; }
+    [ObservableProperty] public partial System.Boolean IsLoading { get; set; }
+    [ObservableProperty] public partial System.Boolean HasError { get; set; }
+    [ObservableProperty] public partial System.String? ErrorMessage { get; set; }
 
-    public Boolean IsEmpty => !IsLoading && Suppliers.Count == 0;
+    public System.Boolean IsEmpty => !IsLoading && Suppliers.Count == 0;
 
-    // ─── Popup ──────────────────────────────────────────────────────��────────
+    // ─── Popup ────────────────────────────────────────────────────────────────
 
-    [ObservableProperty] public partial bool IsPopupVisible { get; set; }
-    [ObservableProperty] public partial bool IsPopupRetry { get; set; }
-    [ObservableProperty] public partial string PopupTitle { get; set; } = string.Empty;
-    [ObservableProperty] public partial string PopupMessage { get; set; } = string.Empty;
-    [ObservableProperty] public partial string PopupButtonText { get; set; } = "OK";
+    [ObservableProperty] public partial System.Boolean IsPopupVisible { get; set; }
+    [ObservableProperty] public partial System.Boolean IsPopupRetry { get; set; }
+    [ObservableProperty] public partial System.String PopupTitle { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String PopupMessage { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String PopupButtonText { get; set; } = "OK";
 
-    public Boolean IsPopupNotRetry => !IsPopupRetry;
+    public System.Boolean IsPopupNotRetry => !IsPopupRetry;
 
-    // ─── Form Add/Edit ────────────────────────────────────────────────────────
+    // ─── Form ──────────────────────────────────────────────────────────────────
 
-    [ObservableProperty] public partial bool IsFormVisible { get; set; }
-    [ObservableProperty] public partial bool IsEditing { get; set; }
+    [ObservableProperty] public partial System.Boolean IsFormVisible { get; set; }
+    [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
     [ObservableProperty] public partial SupplierDto? SelectedSupplier { get; set; }
 
-    public String FormTitle => IsEditing ? "Sửa nhà cung cấp" : "Thêm nhà cung cấp";
-    public String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm nhà cung cấp";
+    public System.String FormTitle => IsEditing ? "Sửa nhà cung cấp" : "Thêm nhà cung cấp";
+    public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm nhà cung cấp";
 
-    [ObservableProperty] public partial string FormName { get; set; } = string.Empty;
-    [ObservableProperty] public partial string FormEmail { get; set; } = string.Empty;
-    [ObservableProperty] public partial string FormAddress { get; set; } = string.Empty;
-    [ObservableProperty] public partial string FormTaxCode { get; set; } = string.Empty;
-    [ObservableProperty] public partial string FormBankAccount { get; set; } = string.Empty;
-    [ObservableProperty] public partial string FormPhoneNumbers { get; set; } = string.Empty;
-    [ObservableProperty] public partial string FormNotes { get; set; } = string.Empty;
+    [ObservableProperty] public partial System.String FormName { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String FormEmail { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String FormAddress { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String FormTaxCode { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String FormBankAccount { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String FormPhoneNumbers { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String FormNotes { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.Int32 FormStatusIndex { get; set; } = 1;
+    [ObservableProperty] public partial System.Int32 FormPaymentTermsIndex { get; set; } = 0;
+    [ObservableProperty] public partial System.DateTime FormContractStartDate { get; set; } = System.DateTime.Today;
+    [ObservableProperty] public partial System.DateTime? FormContractEndDate { get; set; } = null;
+    [ObservableProperty] public partial System.Boolean HasFormError { get; set; }
+    [ObservableProperty] public partial System.String? FormErrorMessage { get; set; }
 
-    // FIX: Use non-nullable DateTime; null state tracked by HasContractStartDate
-    [ObservableProperty] public partial DateTime FormContractStartDate { get; set; } = DateTime.Today;
-    [ObservableProperty] public partial DateTime FormContractEndDate { get; set; } = DateTime.Today.AddYears(1);
-    [ObservableProperty] public partial Boolean HasContractStartDate { get; set; }
-    [ObservableProperty] public partial Boolean HasContractEndDate { get; set; }
+    // ─── Status Confirm ───────────────────────────────────────────────────────
 
-    [ObservableProperty] public partial SupplierStatus FormStatus { get; set; } = SupplierStatus.Active;
-    [ObservableProperty] public partial PaymentTerms FormPaymentTerms { get; set; } = PaymentTerms.None;
-
-    // FIX: Form SupplierStatus picker: 0=Active, 1=Inactive, 2=Suspended, 3=Blacklisted
-    [ObservableProperty] public partial int FormPickerStatusIndex { get; set; } = 0;
-
-    // FIX: Form PaymentTerms picker: 0=None, 1=Net7, 2=Net15, 3=Net30, 4=Net60, 5=Net90, 6=Immediate, 7=EndOfMonth
-    [ObservableProperty] public partial int FormPickerPaymentTermsIndex { get; set; } = 0;
-
-    [ObservableProperty] public partial bool HasFormError { get; set; }
-    [ObservableProperty] public partial string? FormErrorMessage { get; set; }
-
-    // ─── Change Status Confirm ────────────────────────────────────────────────
-
-    [ObservableProperty] public partial bool IsChangeStatusVisible { get; set; }
-    [ObservableProperty] public partial SupplierStatus PendingStatus { get; set; }
-
-    public String ChangeStatusConfirmName => SelectedSupplier?.Name ?? String.Empty;
-    public String ChangeStatusConfirmMessage
-        => $"Bạn có chắc muốn đổi trạng thái của \"{ChangeStatusConfirmName}\" thành {PendingStatus}?";
+    [ObservableProperty] public partial System.Boolean IsStatusConfirmVisible { get; set; }
+    [ObservableProperty] public partial System.Int32 NewStatusIndex { get; set; } = 1;
+    public System.String StatusConfirmName => SelectedSupplier?.Name ?? System.String.Empty;
 
     // ─── Collection ───────────────────────────────────────────────────────────
 
     public System.Collections.ObjectModel.ObservableCollection<SupplierDto> Suppliers { get; } = [];
 
-    // ─── Constructor ─────────────────────────────────────────────────────────
+    // ─── Constructor ───────────────────────────────────────────────────────────
 
-    public SuppliersViewModel(ISupplierService supplierService)
+    public SuppliersViewModel(SupplierService service)
     {
-        _supplierService = supplierService
-            ?? throw new ArgumentNullException(nameof(supplierService));
-
+        _service = service ?? throw new ArgumentNullException(nameof(service));
         Suppliers.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
     }
 
-    // ─── Property Change Hooks ────────────────────────────────────────────────
+    // ─── Property Hooks ───────────────────────────────────────────────────────
 
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(TotalPages));
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmpty));
-
-    partial void OnSelectedSupplierChanged(SupplierDto? value)
-    {
-        OnPropertyChanged(nameof(ChangeStatusConfirmName));
-        OnPropertyChanged(nameof(ChangeStatusConfirmMessage));
-    }
-
-    partial void OnPendingStatusChanged(SupplierStatus value)
-        => OnPropertyChanged(nameof(ChangeStatusConfirmMessage));
-
+    partial void OnSelectedSupplierChanged(SupplierDto? value) => OnPropertyChanged(nameof(StatusConfirmName));
     partial void OnIsEditingChanged(bool value)
     {
         OnPropertyChanged(nameof(FormTitle));
         OnPropertyChanged(nameof(FormSaveText));
     }
-
     partial void OnCurrentPageChanged(int value)
     {
         HasPreviousPage = value > 1;
         _ = LoadAsync();
     }
-
     partial void OnSearchTermChanged(string value)
     {
-        // Cancel previous debounce timer
         _searchCts?.Cancel();
         _searchCts?.Dispose();
-        _searchCts = new CancellationTokenSource();
+        _searchCts = new System.Threading.CancellationTokenSource();
         var token = _searchCts.Token;
-
-        // FIX: No need for Task.Run — Task.Delay already runs asynchronously
         _ = DebounceSearchAsync(token);
     }
-
-    private async Task DebounceSearchAsync(CancellationToken token)
+    private async System.Threading.Tasks.Task DebounceSearchAsync(System.Threading.CancellationToken token)
     {
         try
         {
-            await Task.Delay(SearchDebounceMs, token).ConfigureAwait(false);
-            await MainThread.InvokeOnMainThreadAsync(() =>
+            await System.Threading.Tasks.Task.Delay(SearchDebounceMs, token).ConfigureAwait(false);
+            await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
             {
                 if (CurrentPage != 1)
                 {
@@ -196,119 +155,37 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
                 }
             });
         }
-        catch (OperationCanceledException) { /* debounce cancelled — expected */ }
+        catch (System.OperationCanceledException) { }
     }
-
-    partial void OnSortByChanged(SupplierSortField value)
-    {
-        if (!_suppressAutoLoad) _ = LoadAsync();
-    }
-
-    partial void OnSortDescendingChanged(bool value)
-    {
-        if (!_suppressAutoLoad) _ = LoadAsync();
-    }
-
+    partial void OnSortByChanged(SupplierSortField value) => _ = LoadAsync();
+    partial void OnSortDescendingChanged(bool value) => _ = LoadAsync();
     partial void OnFilterStatusChanged(SupplierStatus value)
     {
         OnPropertyChanged(nameof(HasActiveFilters));
         ResetPageAndLoad();
     }
-
     partial void OnFilterPaymentTermsChanged(PaymentTerms value)
     {
         OnPropertyChanged(nameof(HasActiveFilters));
         ResetPageAndLoad();
     }
-
-    // FIX: PaymentTerms filter picker — correct full mapping
-    // ─── Picker index → enum (Filter bar) ────────────────────────────────────────
-
-    /// <summary>
-    /// Maps filter status picker index to <see cref="SupplierStatus"/>.
-    /// Index: 0=All(None), 1=Active, 2=Inactive, 3=Potential,
-    ///        4=Suspended, 5=UnderReview, 6=ContractSigned, 7=Blacklisted
-    /// </summary>
-    partial void OnPickerFilterStatusIndexChanged(int value)
+    partial void OnPickerStatusIndexChanged(int value)
     {
-        FilterStatus = value switch
-        {
-            1 => SupplierStatus.Active,
-            2 => SupplierStatus.Inactive,
-            3 => SupplierStatus.Potential,
-            4 => SupplierStatus.Suspended,
-            5 => SupplierStatus.UnderReview,
-            6 => SupplierStatus.ContractSigned,
-            7 => SupplierStatus.Blacklisted,
-            _ => SupplierStatus.None    // 0 = Tất cả
-        };
+        FilterStatus = (SupplierStatus)value;
     }
-
-    /// <summary>
-    /// Maps filter payment terms picker index to <see cref="PaymentTerms"/>.
-    /// Index: 0=All(None), 1=DueOnReceipt, 2=Net7, 3=Net15, 4=Net30, 5=Custom
-    /// </summary>
     partial void OnPickerPaymentTermsIndexChanged(int value)
     {
-        FilterPaymentTerms = value switch
-        {
-            1 => PaymentTerms.DueOnReceipt,
-            2 => PaymentTerms.Net7,
-            3 => PaymentTerms.Net15,
-            4 => PaymentTerms.Net30,
-            5 => PaymentTerms.Custom,
-            _ => PaymentTerms.None      // 0 = Tất cả
-        };
+        FilterPaymentTerms = (PaymentTerms)value;
     }
 
-    // ─── Picker index → enum (Create/Edit form) ──────────────────────────────────
-
-    /// <summary>
-    /// Maps form status picker index to <see cref="SupplierStatus"/>.
-    /// Index: 0=None, 1=Active, 2=Inactive, 3=Potential,
-    ///        4=Suspended, 5=UnderReview, 6=ContractSigned, 7=Blacklisted
-    /// </summary>
-    partial void OnFormPickerStatusIndexChanged(int value)
-    {
-        FormStatus = value switch
-        {
-            1 => SupplierStatus.Active,
-            2 => SupplierStatus.Inactive,
-            3 => SupplierStatus.Potential,
-            4 => SupplierStatus.Suspended,
-            5 => SupplierStatus.UnderReview,
-            6 => SupplierStatus.ContractSigned,
-            7 => SupplierStatus.Blacklisted,
-            _ => SupplierStatus.None    // 0 = Không xác định
-        };
-    }
-
-    /// <summary>
-    /// Maps form payment terms picker index to <see cref="PaymentTerms"/>.
-    /// Index: 0=None, 1=DueOnReceipt, 2=Net7, 3=Net15, 4=Net30, 5=Custom
-    /// </summary>
-    partial void OnFormPickerPaymentTermsIndexChanged(int value)
-    {
-        FormPaymentTerms = value switch
-        {
-            1 => PaymentTerms.DueOnReceipt,
-            2 => PaymentTerms.Net7,
-            3 => PaymentTerms.Net15,
-            4 => PaymentTerms.Net30,
-            5 => PaymentTerms.Custom,
-            _ => PaymentTerms.None      // 0 = Không xác định
-        };
-    }
-
-    // ─── Commands ─────────────────────────────────────────────────────────────
+    // ─── Commands ──────────────────────────────────────────────────────────────
 
     [RelayCommand]
-    private async Task LoadAsync()
+    private async System.Threading.Tasks.Task LoadAsync()
     {
-        // Cancel any in-flight load request before starting a new one
         _loadCts?.Cancel();
         _loadCts?.Dispose();
-        _loadCts = new CancellationTokenSource();
+        _loadCts = new System.Threading.CancellationTokenSource();
         var ct = _loadCts.Token;
 
         ClearError();
@@ -316,7 +193,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
 
         try
         {
-            SupplierListResult result = await _supplierService.GetListAsync(
+            SupplierListResult result = await _service.GetListAsync(
                 page: CurrentPage,
                 pageSize: DefaultPageSize,
                 searchTerm: SearchTerm,
@@ -326,13 +203,12 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
                 filterPaymentTerms: FilterPaymentTerms,
                 ct: ct);
 
+            Debug.WriteLine($"[SuppliersVM] Load ok={result.IsSuccess} count={result.Suppliers.Count} total={result.TotalCount}");
+
             if (ct.IsCancellationRequested)
             {
                 return;
             }
-
-            Debug.WriteLine(
-                $"[VM] Load ok={result.IsSuccess} count={result.Suppliers.Count} total={result.TotalCount}");
 
             if (result.IsSuccess)
             {
@@ -349,12 +225,8 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
             }
             else
             {
-                HandleWriteError("Tải danh sách thất bại", result.ErrorMessage!, result.Advice);
+                HandleError("Tải danh sách thất bại", result.ErrorMessage!, result.Advice);
             }
-        }
-        catch (OperationCanceledException)
-        {
-            // Load was cancelled by a newer request — silently ignore
         }
         finally
         {
@@ -363,35 +235,9 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void SortByColumn(String? fieldName)
-    {
-        if (!Enum.TryParse<SupplierSortField>(fieldName, out SupplierSortField field))
-        {
-            return;
-        }
-
-        _suppressAutoLoad = true;
-        try
-        {
-            Boolean isSameColumn = SortBy == field;
-            SortBy = field;
-            SortDescending = isSameColumn && !SortDescending;
-        }
-        finally
-        {
-            _suppressAutoLoad = false;
-        }
-
-        _ = LoadAsync();
-    }
-
-    [RelayCommand]
-    private void ClearSearch() => SearchTerm = String.Empty;
-
-    [RelayCommand]
     private void ClearFilters()
     {
-        PickerFilterStatusIndex = 0;
+        PickerStatusIndex = 0;
         PickerPaymentTermsIndex = 0;
     }
 
@@ -410,45 +256,17 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
         IsEditing = true;
         SelectedSupplier = supplier;
 
-        FormName = supplier.Name ?? String.Empty;
-        FormEmail = supplier.Email ?? String.Empty;
-        FormAddress = supplier.Address ?? String.Empty;
-        FormTaxCode = supplier.TaxCode ?? String.Empty;
-        FormBankAccount = supplier.BankAccount ?? String.Empty;
-        FormPhoneNumbers = supplier.PhoneNumbers ?? String.Empty;
-        FormNotes = supplier.Notes ?? String.Empty;
-
-        // FIX: Handle nullable DateTime for DatePicker
-        HasContractStartDate = supplier.ContractStartDate.HasValue;
-        FormContractStartDate = supplier.ContractStartDate ?? DateTime.Today;
-
-        HasContractEndDate = supplier.ContractEndDate.HasValue;
-        FormContractEndDate = supplier.ContractEndDate ?? DateTime.Today.AddYears(1);
-
-        // FIX: Correct index mapping — 0=Active, 1=Inactive, 2=Suspended, 3=Blacklisted
-        FormPickerStatusIndex = (supplier.Status ?? SupplierStatus.Active) switch
-        {
-            SupplierStatus.Active => 1,
-            SupplierStatus.Inactive => 2,
-            SupplierStatus.Potential => 3,
-            SupplierStatus.Suspended => 4,
-            SupplierStatus.UnderReview => 5,
-            SupplierStatus.ContractSigned => 6,
-            SupplierStatus.Blacklisted => 7,
-            _ => 0
-        };
-
-        // FIX: Full PaymentTerms mapping
-        FormPickerPaymentTermsIndex = (supplier.PaymentTerms ?? PaymentTerms.None) switch
-        {
-            PaymentTerms.None => 0,
-            PaymentTerms.DueOnReceipt => 1,
-            PaymentTerms.Net7 => 2,
-            PaymentTerms.Net15 => 3,
-            PaymentTerms.Net30 => 4,
-            PaymentTerms.Custom => 5,
-            _ => 0  // None / unknown
-        };
+        FormName = supplier.Name ?? System.String.Empty;
+        FormEmail = supplier.Email ?? System.String.Empty;
+        FormAddress = supplier.Address ?? System.String.Empty;
+        FormTaxCode = supplier.TaxCode ?? System.String.Empty;
+        FormBankAccount = supplier.BankAccount ?? System.String.Empty;
+        FormPhoneNumbers = supplier.PhoneNumbers ?? System.String.Empty;
+        FormNotes = supplier.Notes ?? System.String.Empty;
+        FormStatusIndex = (System.Int32)(supplier.Status ?? SupplierStatus.None);
+        FormPaymentTermsIndex = (System.Int32)(supplier.PaymentTerms ?? PaymentTerms.None);
+        FormContractStartDate = supplier.ContractStartDate ?? System.DateTime.Today;
+        FormContractEndDate = supplier.ContractEndDate;
 
         ClearFormError();
         IsFormVisible = true;
@@ -462,7 +280,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private async Task SaveFormAsync()
+    private async System.Threading.Tasks.Task SaveFormAsync()
     {
         if (!ValidateForm())
         {
@@ -471,7 +289,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
 
         _writeCts?.Cancel();
         _writeCts?.Dispose();
-        _writeCts = new CancellationTokenSource();
+        _writeCts = new System.Threading.CancellationTokenSource();
         var ct = _writeCts.Token;
 
         IsLoading = true;
@@ -480,8 +298,8 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
         {
             SupplierDto data = BuildPacketFromForm();
             SupplierWriteResult result = IsEditing
-                ? await _supplierService.UpdateAsync(data, ct)
-                : await _supplierService.CreateAsync(data, ct);
+                ? await _service.UpdateAsync(data, ct)
+                : await _service.CreateAsync(data, ct);
 
             if (result.IsSuccess)
             {
@@ -492,7 +310,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
                 {
                     if (IsEditing)
                     {
-                        Int32 idx = IndexOfSupplier(result.UpdatedEntity.SupplierId);
+                        System.Int32 idx = IndexOfSupplier(result.UpdatedEntity.SupplierId);
                         if (idx >= 0)
                         {
                             Suppliers[idx] = result.UpdatedEntity;
@@ -530,72 +348,54 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
     private void RequestChangeStatus(SupplierDto supplier)
     {
         SelectedSupplier = supplier;
-        // Suggest next logical status: Active → Suspended, anything else → Active
-        PendingStatus = (supplier.Status ?? SupplierStatus.Active) == SupplierStatus.Active
-            ? SupplierStatus.Suspended
-            : SupplierStatus.Active;
-        IsChangeStatusVisible = true;
+        NewStatusIndex = (System.Int32)(supplier.Status ?? SupplierStatus.None);
+        IsStatusConfirmVisible = true;
     }
 
     [RelayCommand]
-    private void CancelChangeStatus() => IsChangeStatusVisible = false;
+    private void CancelChangeStatus() => IsStatusConfirmVisible = false;
 
     [RelayCommand]
-    private async Task ConfirmChangeStatusAsync()
+    private async System.Threading.Tasks.Task ConfirmChangeStatusAsync()
     {
-        if (SelectedSupplier?.SupplierId is null)
+        if (SelectedSupplier is null)
         {
             return;
         }
 
         _writeCts?.Cancel();
         _writeCts?.Dispose();
-        _writeCts = new CancellationTokenSource();
+        _writeCts = new System.Threading.CancellationTokenSource();
         var ct = _writeCts.Token;
 
-        IsChangeStatusVisible = false;
+        IsStatusConfirmVisible = false;
         IsLoading = true;
-
-        Int32 id = SelectedSupplier.SupplierId.Value;
-        SupplierStatus newStatus = PendingStatus;
 
         try
         {
-            SupplierWriteResult result = await _supplierService.ChangeStatusAsync(id, newStatus, ct);
+            SupplierDto data = new()
+            {
+                SupplierId = SelectedSupplier.SupplierId,
+                Status = (SupplierStatus)NewStatusIndex,
+                SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
+            };
+
+            SupplierWriteResult result = await _service.ChangeStatusAsync(data, ct);
 
             if (result.IsSuccess)
             {
-                Int32 idx = IndexOfSupplier(id);
+                System.Int32 idx = IndexOfSupplier(SelectedSupplier.SupplierId);
                 if (idx >= 0)
                 {
-                    SupplierDto old = Suppliers[idx];
-
-                    // Manually clone with updated Status since SupplierDto is a class, not a record.
-                    // This creates a new reference so CollectionView detects the item change.
-                    SupplierDto updated = new()
-                    {
-                        SupplierId = old.SupplierId,
-                        Name = old.Name,
-                        Email = old.Email,
-                        Address = old.Address,
-                        TaxCode = old.TaxCode,
-                        BankAccount = old.BankAccount,
-                        PhoneNumbers = old.PhoneNumbers,
-                        Notes = old.Notes,
-                        Status = newStatus,          // ← only this changes
-                        PaymentTerms = old.PaymentTerms,
-                        ContractStartDate = old.ContractStartDate,
-                        ContractEndDate = old.ContractEndDate,
-                        OpCode = old.OpCode,
-                        SequenceId = old.SequenceId
-                    };
-
+                    SupplierDto updated = Suppliers[idx];
+                    updated.Status = (SupplierStatus)NewStatusIndex;
                     Suppliers[idx] = updated;
                 }
+                SelectedSupplier = null;
             }
             else
             {
-                HandleWriteError("Đổi trạng thái thất bại", result.ErrorMessage!, result.Advice);
+                HandleError("Đổi trạng thái thất bại", result.ErrorMessage!, result.Advice);
             }
         }
         finally
@@ -622,7 +422,8 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
         }
     }
 
-    [RelayCommand] private void ClosePopup() => IsPopupVisible = false;
+    [RelayCommand]
+    private void ClosePopup() => IsPopupVisible = false;
 
     [RelayCommand]
     private void RetryLoad()
@@ -630,8 +431,6 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
         IsPopupVisible = false;
         _ = LoadAsync();
     }
-
-    // ─── IDisposable ─────────────────────────────────────────────────────────
 
     public void Dispose()
     {
@@ -643,7 +442,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
         _searchCts?.Dispose();
     }
 
-    // ─── Private Helpers ─────────────────────────────────────────────────────
+    // ─── Private Helpers ───────────────────────────────────────────────────────
 
     private void ResetPageAndLoad()
     {
@@ -665,14 +464,17 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
 
     private void ClearForm()
     {
-        FormName = FormEmail = FormAddress = FormTaxCode =
-            FormBankAccount = FormPhoneNumbers = FormNotes = String.Empty;
-        FormContractStartDate = DateTime.Today;
-        FormContractEndDate = DateTime.Today.AddYears(1);
-        HasContractStartDate = false;
-        HasContractEndDate = false;
-        FormPickerStatusIndex = 0;
-        FormPickerPaymentTermsIndex = 0;
+        FormName = System.String.Empty;
+        FormEmail = System.String.Empty;
+        FormAddress = System.String.Empty;
+        FormTaxCode = System.String.Empty;
+        FormBankAccount = System.String.Empty;
+        FormPhoneNumbers = System.String.Empty;
+        FormNotes = System.String.Empty;
+        FormStatusIndex = 1;
+        FormPaymentTermsIndex = 0;
+        FormContractStartDate = System.DateTime.Today;
+        FormContractEndDate = null;
         ClearFormError();
     }
 
@@ -682,78 +484,71 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
         FormErrorMessage = null;
     }
 
-    private void SetFormError(String message)
+    private void SetFormError(System.String message)
     {
         FormErrorMessage = message;
         HasFormError = true;
     }
 
-    private Boolean ValidateForm()
+    private System.Boolean ValidateForm()
     {
-        if (String.IsNullOrWhiteSpace(FormName))
+        if (System.String.IsNullOrWhiteSpace(FormName))
         { SetFormError("Tên nhà cung cấp không được để trống."); return false; }
 
-        if (FormName.Length > 100)
-        { SetFormError("Tên không được vượt quá 100 ký tự."); return false; }
+        if (FormName.Length > 150)
+        { SetFormError("Tên không được vượt quá 150 ký tự."); return false; }
 
-        if (!AccountValidation.IsValidEmail(FormEmail))
+        if (!IsValidEmail(FormEmail))
         { SetFormError("Email không hợp lệ."); return false; }
 
-        if (String.IsNullOrWhiteSpace(FormTaxCode))
+        if (System.String.IsNullOrWhiteSpace(FormTaxCode))
         { SetFormError("Mã số thuế không được để trống."); return false; }
 
-        if (!String.IsNullOrWhiteSpace(FormPhoneNumbers))
+        if (FormPhoneNumbers.Length > 0)
         {
-            foreach (String phone in FormPhoneNumbers
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            foreach (var phone in FormPhoneNumbers.Split(','))
             {
-                if (!AccountValidation.IsValidVietnamPhoneNumber(phone))
-                {
-                    SetFormError($"Số điện thoại \"{phone}\" không hợp lệ (VD: 0901234567).");
-                    return false;
-                }
+                if (!IsValidPhoneNumber(phone.Trim()))
+                { SetFormError("Số điện thoại không hợp lệ."); return false; }
             }
         }
 
-        if (HasContractEndDate && HasContractStartDate
-            && FormContractEndDate <= FormContractStartDate)
-        {
-            SetFormError("Ngày kết thúc hợp đồng phải sau ngày bắt đầu.");
-            return false;
-        }
-
-        if (FormNotes.Length > 500)
-        { SetFormError("Ghi chú không được vượt quá 500 ký tự."); return false; }
+        if (FormContractEndDate.HasValue && FormContractEndDate <= FormContractStartDate)
+        { SetFormError("Ngày kết thúc phải sau ngày bắt đầu."); return false; }
 
         return true;
     }
 
-    private SupplierDto BuildPacketFromForm() => new()
+    private SupplierDto BuildPacketFromForm()
     {
-        SupplierId = IsEditing ? SelectedSupplier?.SupplierId : null,
-        Name = FormName,
-        Email = FormEmail,
-        Address = FormAddress,
-        TaxCode = FormTaxCode,
-        BankAccount = FormBankAccount,
-        PhoneNumbers = FormPhoneNumbers,
-        Notes = FormNotes,
-        Status = FormStatus,
-        PaymentTerms = FormPaymentTerms,
-        ContractStartDate = HasContractStartDate ? FormContractStartDate : null,
-        ContractEndDate = HasContractEndDate ? FormContractEndDate : null
-    };
+        return new SupplierDto
+        {
+            SupplierId = IsEditing ? SelectedSupplier?.SupplierId : null,
+            Name = FormName,
+            Email = FormEmail,
+            Address = FormAddress,
+            TaxCode = FormTaxCode,
+            BankAccount = FormBankAccount,
+            PhoneNumbers = FormPhoneNumbers,
+            Notes = FormNotes,
+            Status = (SupplierStatus)FormStatusIndex,
+            PaymentTerms = (PaymentTerms)FormPaymentTermsIndex,
+            ContractStartDate = FormContractStartDate,
+            ContractEndDate = FormContractEndDate,
+            SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
+        };
+    }
 
-    private Int32 IndexOfSupplier(Int32? supplierId)
+    private System.Int32 IndexOfSupplier(System.Object? id)
     {
-        if (supplierId is null)
+        if (id is null)
         {
             return -1;
         }
 
-        for (Int32 i = 0; i < Suppliers.Count; i++)
+        for (System.Int32 i = 0; i < Suppliers.Count; i++)
         {
-            if (Suppliers[i].SupplierId == supplierId)
+            if (Suppliers[i].SupplierId is System.Object supplierId && supplierId.Equals(id))
             {
                 return i;
             }
@@ -762,21 +557,24 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
         return -1;
     }
 
-    private void HandleWriteError(String title, String message, ProtocolAdvice advice)
+    private void HandleError(System.String title, System.String message, ProtocolAdvice advice)
     {
         switch (advice)
         {
             case ProtocolAdvice.DO_NOT_RETRY:
-                ShowPopup(title, message, isRetry: false); break;
+                ShowPopup(title, message, isRetry: false);
+                break;
             case ProtocolAdvice.BACKOFF_RETRY:
-                ShowPopup(title, message, isRetry: true); break;
+                ShowPopup(title, message, isRetry: true);
+                break;
             default:
                 HasError = true;
-                ErrorMessage = message; break;
+                ErrorMessage = message;
+                break;
         }
     }
 
-    private void ShowPopup(String title, String message, Boolean isRetry)
+    private void ShowPopup(System.String title, System.String message, System.Boolean isRetry)
     {
         PopupTitle = title;
         PopupMessage = message;
@@ -784,4 +582,19 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
         PopupButtonText = isRetry ? "Thử lại" : "OK";
         IsPopupVisible = true;
     }
+
+    private static System.Boolean IsValidEmail(System.String email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static System.Boolean IsValidPhoneNumber(System.String phone) => System.Text.RegularExpressions.Regex.IsMatch(phone, @"^(\+?\d{1,3}[-.\s]?)?\d{10,15}$");
 }

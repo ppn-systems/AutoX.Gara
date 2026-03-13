@@ -28,11 +28,10 @@ public partial class AppShell : Shell
         AppConfig.Register();
 
         Routing.RegisterRoute("MainPage", typeof(MainPage));
+        Routing.RegisterRoute("PartsPage", typeof(PartsPage));
         Routing.RegisterRoute("LoginPage", typeof(LoginPage));
         Routing.RegisterRoute("CustomersPage", typeof(CustomersPage));
         Routing.RegisterRoute("SuppliersPage", typeof(SuppliersPage));
-        Routing.RegisterRoute("SparePartsPage", typeof(SparePartsPage));
-        Routing.RegisterRoute("ReplacementPartsPage", typeof(ReplacementPartsPage));
 
         base.GoToAsync("///LoginPage");
     }

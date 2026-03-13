@@ -1,7 +1,6 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Parts;
-using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Inventory;
@@ -16,43 +15,51 @@ using Nalix.Shared.Frames.Controls;
 namespace AutoX.Gara.Frontend.Services.Inventory;
 
 /// <summary>
-/// Frontend service giao tiếp với server cho nghiệp vụ <c>SparePart</c>.
-/// <para>
-/// Giống <c>CustomerService</c>: cache 30s cho GET, invalidate cache sau mọi write.
-/// </para>
+/// Frontend service communicating with server for part operations.
+/// Handles GET/POST/PUT/DELETE for unified Part entity.
+/// Cache 30s for GET, invalidate cache after all write operations.
 /// </summary>
-public sealed class SparePartService : ISparePartService
+public sealed class PartService : IPartService
 {
     private const System.Int32 RequestTimeoutMs = 10_000;
-    private readonly ISparePartQueryCache _cache;
+    private readonly IPartQueryCache _cache;
 
-    public SparePartService(ISparePartQueryCache cache)
+    /// <summary>
+    /// Initializes a new instance of PartService.
+    /// </summary>
+    public PartService(IPartQueryCache cache)
         => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
     // ─── GetListAsync ─────────────────────────────────────────────────────────
 
-    /// <inheritdoc/>
-    public async System.Threading.Tasks.Task<SparePartListResult> GetListAsync(
+    /// <summary>
+    /// Retrieves a paginated list of parts with filtering and sorting.
+    /// </summary>
+    public async System.Threading.Tasks.Task<PartListResult> GetListAsync(
         System.Int32 page,
         System.Int32 pageSize,
         System.String? searchTerm = null,
-        SparePartSortField sortBy = SparePartSortField.PartName,
+        PartSortField sortBy = PartSortField.PartName,
         System.Boolean sortDescending = false,
         System.Int32? filterSupplierId = null,
         PartCategory? filterCategory = null,
+        System.Boolean? filterInStock = null,
+        System.Boolean? filterDefective = null,
+        System.Boolean? filterExpired = null,
         System.Boolean? filterDiscontinued = null,
         System.Threading.CancellationToken ct = default)
     {
-        SparePartCacheKey key = new(
+        PartCacheKey key = new(
             page, pageSize,
             searchTerm ?? System.String.Empty,
             sortBy, sortDescending,
-            filterSupplierId, filterCategory, filterDiscontinued);
+            filterSupplierId, filterCategory,
+            filterInStock, filterDefective, filterExpired, filterDiscontinued);
 
-        if (_cache.TryGet(key, out SparePartCacheEntry? cached))
+        if (_cache.TryGet(key, out PartCacheEntry? cached))
         {
             System.Boolean hasMore = page * pageSize < cached!.TotalCount;
-            return SparePartListResult.Success(cached.Parts, cached.TotalCount, hasMore);
+            return PartListResult.Success(cached.Parts, cached.TotalCount, hasMore);
         }
 
         try
@@ -60,7 +67,7 @@ public sealed class SparePartService : ISparePartService
             System.UInt32 sq = Csprng.NextUInt32();
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
-            SparePartQueryRequest packet = new()
+            PartQueryRequest packet = new()
             {
                 Page = page,
                 PageSize = pageSize,
@@ -70,17 +77,20 @@ public sealed class SparePartService : ISparePartService
                 SortDescending = sortDescending,
                 FilterSupplierId = filterSupplierId ?? 0,
                 FilterCategory = filterCategory,
+                FilterInStock = filterInStock,
+                FilterDefective = filterDefective,
+                FilterExpired = filterExpired,
                 FilterDiscontinued = filterDiscontinued,
-                OpCode = (System.UInt16)OpCommand.SPARE_PART_GET
+                OpCode = (System.UInt16)OpCommand.PART_GET
             };
 
-            System.Threading.Tasks.TaskCompletionSource<SparePartListResult> tcs =
+            System.Threading.Tasks.TaskCompletionSource<PartListResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
             System.IDisposable? sub = null;
             System.IDisposable? errSub = null;
 
-            sub = client.OnOnce<SparePartQueryResponse>(
+            sub = client.OnOnce<PartQueryResponse>(
                 predicate: p => p.SequenceId == sq,
                 handler: resp =>
                 {
@@ -88,7 +98,7 @@ public sealed class SparePartService : ISparePartService
                     errSub?.Dispose();
                     _cache.Set(key, resp.Parts, resp.TotalCount);
                     System.Boolean hasMore = page * pageSize < resp.TotalCount;
-                    tcs.TrySetResult(SparePartListResult.Success(resp.Parts, resp.TotalCount, hasMore));
+                    tcs.TrySetResult(PartListResult.Success(resp.Parts, resp.TotalCount, hasMore));
                 });
 
             errSub = client.OnOnce<Directive>(
@@ -97,7 +107,7 @@ public sealed class SparePartService : ISparePartService
                 {
                     sub?.Dispose();
                     errSub?.Dispose();
-                    tcs.TrySetResult(SparePartListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
+                    tcs.TrySetResult(PartListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
                 });
 
             await client.SendAsync(packet, ct).ConfigureAwait(false);
@@ -114,31 +124,33 @@ public sealed class SparePartService : ISparePartService
             {
                 sub?.Dispose();
                 errSub?.Dispose();
-                return SparePartListResult.Timeout();
+                return PartListResult.Timeout();
             }
 
             return await tcs.Task.ConfigureAwait(false);
         }
         catch (System.OperationCanceledException)
         {
-            return SparePartListResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return PartListResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return SparePartListResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return PartListResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     // ─── CreateAsync ──────────────────────────────────────────────────────────
 
-    /// <inheritdoc/>
-    public async System.Threading.Tasks.Task<SparePartWriteResult> CreateAsync(
-        SparePartDto data,
+    /// <summary>
+    /// Creates a new part.
+    /// </summary>
+    public async System.Threading.Tasks.Task<PartWriteResult> CreateAsync(
+        PartDto data,
         System.Threading.CancellationToken ct = default)
     {
-        SparePartWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.SPARE_PART_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
+        PartWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.PART_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
 
         if (result.IsSuccess)
         {
@@ -150,13 +162,15 @@ public sealed class SparePartService : ISparePartService
 
     // ─── UpdateAsync ──────────────────────────────────────────────────────────
 
-    /// <inheritdoc/>
-    public async System.Threading.Tasks.Task<SparePartWriteResult> UpdateAsync(
-        SparePartDto data,
+    /// <summary>
+    /// Updates an existing part.
+    /// </summary>
+    public async System.Threading.Tasks.Task<PartWriteResult> UpdateAsync(
+        PartDto data,
         System.Threading.CancellationToken ct = default)
     {
-        SparePartWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.SPARE_PART_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
+        PartWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.PART_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
 
         if (result.IsSuccess)
         {
@@ -166,15 +180,17 @@ public sealed class SparePartService : ISparePartService
         return result;
     }
 
-    // ─── DiscontinueAsync ─────────────────────────────────────────────────────
+    // ─── DeleteAsync ──────────────────────────────────────────────────────────
 
-    /// <inheritdoc/>
-    public async System.Threading.Tasks.Task<SparePartWriteResult> DiscontinueAsync(
-        SparePartDto data,
+    /// <summary>
+    /// Deletes or discontinues a part (soft delete via IsDiscontinued flag).
+    /// </summary>
+    public async System.Threading.Tasks.Task<PartWriteResult> DeleteAsync(
+        PartDto data,
         System.Threading.CancellationToken ct = default)
     {
-        SparePartWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.SPARE_PART_DELETE, data, expectEcho: false, ct).ConfigureAwait(false);
+        PartWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.PART_DELETE, data, expectEcho: false, ct).ConfigureAwait(false);
 
         if (result.IsSuccess)
         {
@@ -186,9 +202,9 @@ public sealed class SparePartService : ISparePartService
 
     // ─── Private Helpers ─────────────────────────────────────────────────────
 
-    private static async System.Threading.Tasks.Task<SparePartWriteResult> SendWritePacketAsync(
+    private static async System.Threading.Tasks.Task<PartWriteResult> SendWritePacketAsync(
         System.UInt16 opcode,
-        SparePartDto data,
+        PartDto data,
         System.Boolean expectEcho,
         System.Threading.CancellationToken ct)
     {
@@ -200,7 +216,7 @@ public sealed class SparePartService : ISparePartService
             data.OpCode = opcode;
             data.SequenceId = sq;
 
-            System.Threading.Tasks.TaskCompletionSource<SparePartWriteResult> tcs =
+            System.Threading.Tasks.TaskCompletionSource<PartWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
             System.IDisposable? echoSub = null;
@@ -208,13 +224,13 @@ public sealed class SparePartService : ISparePartService
 
             if (expectEcho)
             {
-                echoSub = client.OnOnce<SparePartDto>(
+                echoSub = client.OnOnce<PartDto>(
                     predicate: p => p.SequenceId == sq,
                     handler: confirmed =>
                     {
                         echoSub?.Dispose();
                         errSub?.Dispose();
-                        tcs.TrySetResult(SparePartWriteResult.Success(confirmed));
+                        tcs.TrySetResult(PartWriteResult.Success(confirmed));
                     });
             }
 
@@ -224,9 +240,9 @@ public sealed class SparePartService : ISparePartService
                 {
                     echoSub?.Dispose();
                     errSub?.Dispose();
-                    SparePartWriteResult result = resp.Type == ControlType.NONE
-                        ? SparePartWriteResult.Success()
-                        : SparePartWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
+                    PartWriteResult result = resp.Type == ControlType.NONE
+                        ? PartWriteResult.Success()
+                        : PartWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
                     tcs.TrySetResult(result);
                 });
 
@@ -244,19 +260,19 @@ public sealed class SparePartService : ISparePartService
             {
                 echoSub?.Dispose();
                 errSub?.Dispose();
-                return SparePartWriteResult.Timeout();
+                return PartWriteResult.Timeout();
             }
 
             return await tcs.Task.ConfigureAwait(false);
         }
         catch (System.OperationCanceledException)
         {
-            return SparePartWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return PartWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return SparePartWriteResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return PartWriteResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
@@ -264,7 +280,7 @@ public sealed class SparePartService : ISparePartService
         => reason switch
         {
             ProtocolReason.NOT_FOUND => "Không tìm thấy phụ tùng.",
-            ProtocolReason.ALREADY_EXISTS => "Phụ tùng đã tồn tại với nhà cung cấp này.",
+            ProtocolReason.ALREADY_EXISTS => "Mã SKU/phụ tùng đã tồn tại.",
             ProtocolReason.MALFORMED_PACKET => "Dữ liệu không hợp lệ.",
             ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống. Vui lòng thử lại sau.",
             ProtocolReason.FORBIDDEN => "Bạn không có quyền thực hiện thao tác này.",
@@ -283,4 +299,42 @@ public sealed class SparePartService : ISparePartService
             logger.Error("Inner: " + ex.InnerException);
         }
     }
+}
+
+/// <summary>
+/// Abstraction for part service.
+/// </summary>
+public interface IPartService
+{
+    /// <summary>
+    /// Retrieves a paginated list of parts.
+    /// </summary>
+    System.Threading.Tasks.Task<PartListResult> GetListAsync(
+        System.Int32 page,
+        System.Int32 pageSize,
+        System.String? searchTerm = null,
+        PartSortField sortBy = PartSortField.PartName,
+        System.Boolean sortDescending = false,
+        System.Int32? filterSupplierId = null,
+        PartCategory? filterCategory = null,
+        System.Boolean? filterInStock = null,
+        System.Boolean? filterDefective = null,
+        System.Boolean? filterExpired = null,
+        System.Boolean? filterDiscontinued = null,
+        System.Threading.CancellationToken ct = default);
+
+    /// <summary>
+    /// Creates a new part.
+    /// </summary>
+    System.Threading.Tasks.Task<PartWriteResult> CreateAsync(PartDto data, System.Threading.CancellationToken ct = default);
+
+    /// <summary>
+    /// Updates an existing part.
+    /// </summary>
+    System.Threading.Tasks.Task<PartWriteResult> UpdateAsync(PartDto data, System.Threading.CancellationToken ct = default);
+
+    /// <summary>
+    /// Deletes or discontinues a part.
+    /// </summary>
+    System.Threading.Tasks.Task<PartWriteResult> DeleteAsync(PartDto data, System.Threading.CancellationToken ct = default);
 }

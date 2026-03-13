@@ -27,12 +27,7 @@
         Route="SuppliersPage" />
 
     <ShellContent 
-        Title="Linh kiện thay thế"
-        ContentTemplate="{DataTemplate views:ReplacementPartsPage}"
-        Route="ReplacementPartsPage" />
-
-    <ShellContent 
         Title="Kho hàng"
-        ContentTemplate="{DataTemplate views:SparePartsPage}"
+        ContentTemplate="{DataTemplate views:PartsPage}"
         Route="SparePartsPage" />
 </Shell>
