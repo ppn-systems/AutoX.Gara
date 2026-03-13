@@ -17,6 +17,7 @@
 		<ApplicationIcon>app.ico</ApplicationIcon>
 
 		<!-- Runtime -->
+		<UseAppHost>true</UseAppHost>
 		<SelfContained>true</SelfContained>
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 
