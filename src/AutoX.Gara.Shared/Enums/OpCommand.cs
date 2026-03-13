@@ -49,4 +49,24 @@ public enum OpCommand : System.UInt16
     PART_UPDATE = 0x182,
 
     PART_DELETE = 0x183,
+
+    /// <summary>
+    /// Get list of employees.
+    /// </summary>
+    EMPLOYEE_GET = 6001,
+
+    /// <summary>
+    /// Create a new employee.
+    /// </summary>
+    EMPLOYEE_CREATE = 6002,
+
+    /// <summary>
+    /// Update an existing employee.
+    /// </summary>
+    EMPLOYEE_UPDATE = 6003,
+
+    /// <summary>
+    /// Change employee status.
+    /// </summary>
+    EMPLOYEE_CHANGE_STATUS = 6004,
 }

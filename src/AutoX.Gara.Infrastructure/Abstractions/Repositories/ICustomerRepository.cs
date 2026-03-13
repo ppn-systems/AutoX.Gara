@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AutoX.Gara.Infrastructure.Abstractions;
+namespace AutoX.Gara.Infrastructure.Abstractions.Repositories;
 
 /// <summary>
 /// Repository interface cho Customer domain.

@@ -2,7 +2,7 @@
 
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Enums.Customers;
-using AutoX.Gara.Infrastructure.Abstractions;
+using AutoX.Gara.Infrastructure.Abstractions.Repositories;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;

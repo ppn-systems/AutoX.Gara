@@ -198,8 +198,11 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
             .IsUnique();
 
         // Index giúp tối ưu truy vấn theo số điện thoại và trạng thái làm việc
-        modelBuilder.Entity<Employee>().HasIndex(e => e.PhoneNumber);
+        modelBuilder.Entity<Employee>().HasIndex(e => e.Name);
+        modelBuilder.Entity<Employee>().HasIndex(e => e.Position);
         modelBuilder.Entity<Employee>().HasIndex(e => e.Status);
+        modelBuilder.Entity<Employee>().HasIndex(e => e.StartDate);
+        modelBuilder.Entity<Employee>().HasIndex(e => e.Gender);
 
         // Chuyển đổi enum thành byte để tối ưu lưu trữ
         modelBuilder.Entity<Employee>()

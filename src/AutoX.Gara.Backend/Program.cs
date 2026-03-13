@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Application.Communication;
 using AutoX.Gara.Application.Customers;
+using AutoX.Gara.Application.Employees;
 using AutoX.Gara.Application.Inventory;
 using AutoX.Gara.Application.Suppliers;
 using AutoX.Gara.Application.Vehicles;
@@ -218,6 +219,11 @@ public static class Program
             dispatchOptions.WithHandler(() => new HandshakeOps());
             dispatchOptions.WithHandler(() =>
                 new AccountOps(
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                )
+            );
+            dispatchOptions.WithHandler(() =>
+                new EmployeeOps(
                     InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                 )
             );

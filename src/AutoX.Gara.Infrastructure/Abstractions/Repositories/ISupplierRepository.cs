@@ -3,7 +3,7 @@
 using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Shared.Models;
 
-namespace AutoX.Gara.Infrastructure.Abstractions;
+namespace AutoX.Gara.Infrastructure.Abstractions.Repositories;
 
 /// <summary>
 /// Định nghĩa contract cho tất cả thao tác dữ liệu liên quan đến <see cref="Supplier"/>.

@@ -1,8 +1,11 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
 using AutoX.Gara.Domain.Entities.Customers;
 
-namespace AutoX.Gara.Infrastructure.Abstractions;
+namespace AutoX.Gara.Infrastructure.Abstractions.Repositories;
 
 /// <summary>
 /// Repository interface for Vehicles (CRUD &amp; query APIs).

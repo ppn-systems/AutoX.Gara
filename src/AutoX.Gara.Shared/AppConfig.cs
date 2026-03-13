@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Shared.Protocol.Auth;
 using AutoX.Gara.Shared.Protocol.Customers;
+using AutoX.Gara.Shared.Protocol.Employees;
 using AutoX.Gara.Shared.Protocol.Inventory;
 using AutoX.Gara.Shared.Protocol.Suppliers;
 using AutoX.Gara.Shared.Protocol.Vehicles;
@@ -23,6 +24,10 @@ public static class AppConfig
 
         // REGISTER packets here (single source of truth).
         _ = factory.RegisterPacket<LoginPacket>();
+
+        _ = factory.RegisterPacket<EmployeeDto>();
+        _ = factory.RegisterPacket<EmployeeQueryRequest>();
+        _ = factory.RegisterPacket<EmployeeQueryResponse>();
 
         _ = factory.RegisterPacket<CustomerDto>();
         _ = factory.RegisterPacket<CustomerQueryResponse>();
