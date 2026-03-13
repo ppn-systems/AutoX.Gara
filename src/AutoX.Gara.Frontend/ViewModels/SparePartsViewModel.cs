@@ -255,13 +255,18 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
             Debug.WriteLine(
                 $"[SparePartVM] Load ok={result.IsSuccess} count={result.Parts.Count} total={result.TotalCount}");
 
-            if (ct.IsCancellationRequested) return;
+            if (ct.IsCancellationRequested)
+            {
+                return;
+            }
 
             if (result.IsSuccess)
             {
                 Parts.Clear();
                 foreach (SparePartDto p in result.Parts)
+                {
                     Parts.Add(p);
+                }
 
                 TotalCount = result.TotalCount >= 0 ? result.TotalCount : TotalCount;
                 HasNextPage = result.TotalCount >= 0
@@ -316,15 +321,15 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
         // Form category picker: Khác=0, Engine=1, Brake=2, ...
         FormPickerCategoryIndex = (part.PartCategory ?? PartCategory.Other) switch
         {
-            PartCategory.Engine      => 1,
-            PartCategory.Brake       => 2,
-            PartCategory.Suspension  => 3,
-            PartCategory.Electrical  => 4,
-            PartCategory.Body        => 5,
+            PartCategory.Engine => 1,
+            PartCategory.Brake => 2,
+            PartCategory.Suspension => 3,
+            PartCategory.Electrical => 4,
+            PartCategory.Body => 5,
             PartCategory.Transmission => 6,
-            PartCategory.Cooling     => 7,
-            PartCategory.Exhaust     => 8,
-            _                        => 0  // Other
+            PartCategory.Cooling => 7,
+            PartCategory.Exhaust => 8,
+            _ => 0  // Other
         };
 
         ClearFormError();
@@ -341,7 +346,10 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
     [RelayCommand]
     private async System.Threading.Tasks.Task SaveFormAsync()
     {
-        if (!ValidateForm()) return;
+        if (!ValidateForm())
+        {
+            return;
+        }
 
         _cts?.Cancel();
         _cts?.Dispose();
@@ -368,9 +376,13 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
                     {
                         System.Int32 idx = IndexOfPart(result.UpdatedEntity.SparePartId);
                         if (idx >= 0)
+                        {
                             Parts[idx] = result.UpdatedEntity;
+                        }
                         else
+                        {
                             await LoadAsync();
+                        }
                     }
                     else
                     {
@@ -411,7 +423,10 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
     [RelayCommand]
     private async System.Threading.Tasks.Task ConfirmDiscontinueAsync()
     {
-        if (SelectedPart is null) return;
+        if (SelectedPart is null)
+        {
+            return;
+        }
 
         _cts?.Cancel();
         _cts?.Dispose();
@@ -452,13 +467,19 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
     [RelayCommand]
     private void NextPage()
     {
-        if (HasNextPage) CurrentPage++;
+        if (HasNextPage)
+        {
+            CurrentPage++;
+        }
     }
 
     [RelayCommand]
     private void PreviousPage()
     {
-        if (HasPreviousPage) CurrentPage--;
+        if (HasPreviousPage)
+        {
+            CurrentPage--;
+        }
     }
 
     [RelayCommand]
@@ -485,8 +506,14 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
 
     private void ResetPageAndLoad()
     {
-        if (CurrentPage != 1) CurrentPage = 1;
-        else _ = LoadAsync();
+        if (CurrentPage != 1)
+        {
+            CurrentPage = 1;
+        }
+        else
+        {
+            _ = LoadAsync();
+        }
     }
 
     private void ClearError()
@@ -567,12 +594,17 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
 
     private System.Int32 IndexOfPart(System.Object? partId)
     {
-        if (partId is null) return -1;
+        if (partId is null)
+        {
+            return -1;
+        }
 
         for (System.Int32 i = 0; i < Parts.Count; i++)
         {
             if (Parts[i].SparePartId is System.Object id && id.Equals(partId))
+            {
                 return i;
+            }
         }
 
         return -1;

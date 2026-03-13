@@ -232,7 +232,7 @@
 
                             <!-- Filter pickers row -->
                             <Grid Grid.Row="1"
-                                  HeightRequest="100"
+                                  HeightRequest="80"
                                   ColumnDefinitions="*,*,Auto"
                                   ColumnSpacing="10">
 
@@ -711,6 +711,7 @@
                                     StrokeThickness="1" Stroke="#2A2A38"
                                     StrokeShape="RoundRectangle 8">
                                     <Picker Title="Chọn trạng thái"
+                                            HeightRequest="80"
                                             Style="{StaticResource PickerStyle}"
                                             SelectedIndex="{Binding FormPickerStatusIndex}"
                                             BackgroundColor="Transparent">
@@ -734,6 +735,7 @@
                                     StrokeThickness="1" Stroke="#2A2A38"
                                     StrokeShape="RoundRectangle 8">
                                     <Picker Title="Chọn điều khoản"
+                                            HeightRequest="80"
                                             Style="{StaticResource PickerStyle}"
                                             SelectedIndex="{Binding FormPickerPaymentTermsIndex}"
                                             BackgroundColor="Transparent">

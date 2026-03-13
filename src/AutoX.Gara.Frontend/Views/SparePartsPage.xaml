@@ -340,6 +340,11 @@
                                    Style="{StaticResource FormEntry}" />
                         </Border>
 
+                        <Label Text="NHÀ CUNG CẤP *" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource InputBorder}" Padding="0">
+                            <Entry Text="{Binding FormSupplierId}" Placeholder="Nhập mã nhà cung cấp..." Style="{StaticResource FormEntry}" />
+                        </Border>
+
                         <Label Text="LOẠI PHỤ TÙNG" Style="{StaticResource FieldLabel}" />
                         <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
                             <!-- Thứ tự: Khác=0, Động cơ=1, Phanh=2, Hệ thống treo=3, Điện=4,
