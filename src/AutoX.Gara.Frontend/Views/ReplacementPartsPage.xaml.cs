@@ -16,4 +16,13 @@ public partial class ReplacementPartsPage : ContentPage
             new ReplacementPartService(
                 InstanceManager.Instance.GetOrCreateInstance<ReplacementPartQueryCache>()));
     }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        if (BindingContext is ReplacementPartsViewModel vm && vm.Parts.Count == 0)
+        {
+            _ = vm.LoadCommand.ExecuteAsync(null);
+        }
+    }
 }

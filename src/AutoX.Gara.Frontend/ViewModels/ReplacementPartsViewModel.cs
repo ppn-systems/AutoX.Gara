@@ -7,6 +7,7 @@ using AutoX.Gara.Shared.Protocol.Inventory;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
+using System;
 using System.Diagnostics;
 
 namespace AutoX.Gara.Frontend.ViewModels;
@@ -14,7 +15,8 @@ namespace AutoX.Gara.Frontend.ViewModels;
 public sealed partial class ReplacementPartsViewModel : ObservableObject, System.IDisposable
 {
     private readonly ReplacementPartService _service;
-    private System.Threading.CancellationTokenSource? _cts;
+    private System.Threading.CancellationTokenSource? _loadCts;
+    private System.Threading.CancellationTokenSource? _writeCts;
     private System.Threading.CancellationTokenSource? _searchCts;
 
     private const System.Int32 DefaultPageSize = 20;
@@ -104,9 +106,8 @@ public sealed partial class ReplacementPartsViewModel : ObservableObject, System
 
     public ReplacementPartsViewModel(ReplacementPartService service)
     {
-        _service = service;
+        _service = service ?? throw new ArgumentNullException(nameof(service));
         Parts.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
-        _ = LoadAsync();
     }
 
     // ─── Property Change Hooks ────────────────────────────────────────────────
@@ -136,19 +137,27 @@ public sealed partial class ReplacementPartsViewModel : ObservableObject, System
         _searchCts = new System.Threading.CancellationTokenSource();
         var token = _searchCts.Token;
 
-        _ = System.Threading.Tasks.Task.Run(async () =>
+        _ = DebounceSearchAsync(token);
+    }
+
+    private async System.Threading.Tasks.Task DebounceSearchAsync(System.Threading.CancellationToken token)
+    {
+        try
         {
-            try
+            await System.Threading.Tasks.Task.Delay(SearchDebounceMs, token).ConfigureAwait(false);
+            await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
             {
-                await System.Threading.Tasks.Task.Delay(SearchDebounceMs, token);
-                Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+                if (CurrentPage != 1)
                 {
-                    if (CurrentPage != 1) CurrentPage = 1;
-                    else _ = LoadAsync();
-                });
-            }
-            catch (System.OperationCanceledException) { }
-        }, token);
+                    CurrentPage = 1;
+                }
+                else
+                {
+                    _ = LoadAsync();
+                }
+            });
+        }
+        catch (System.OperationCanceledException) { }
     }
 
     partial void OnSortByChanged(ReplacementPartSortField value) => _ = LoadAsync();
@@ -174,8 +183,7 @@ public sealed partial class ReplacementPartsViewModel : ObservableObject, System
 
     partial void OnPickerInStockIndexChanged(int value)
     {
-        FilterInStock = value switch { 1 => false, 2 => true, _ => null };
-        // 1=Còn hàng (Quantity>0 => InStock=true), 2=Hết hàng (InStock=false)
+        // 0=Tất cả, 1=Còn hàng (InStock=true), 2=Hết hàng (InStock=false)
         FilterInStock = value switch { 1 => true, 2 => false, _ => null };
     }
 
@@ -194,10 +202,10 @@ public sealed partial class ReplacementPartsViewModel : ObservableObject, System
     [RelayCommand]
     private async System.Threading.Tasks.Task LoadAsync()
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = new System.Threading.CancellationTokenSource();
-        var ct = _cts.Token;
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _loadCts = new System.Threading.CancellationTokenSource();
+        var ct = _loadCts.Token;
 
         ClearError();
         IsLoading = true;
@@ -299,10 +307,10 @@ public sealed partial class ReplacementPartsViewModel : ObservableObject, System
             return;
         }
 
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = new System.Threading.CancellationTokenSource();
-        var ct = _cts.Token;
+        _writeCts?.Cancel();
+        _writeCts?.Dispose();
+        _writeCts = new System.Threading.CancellationTokenSource();
+        var ct = _writeCts.Token;
 
         IsLoading = true;
 
@@ -374,10 +382,10 @@ public sealed partial class ReplacementPartsViewModel : ObservableObject, System
             return;
         }
 
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = new System.Threading.CancellationTokenSource();
-        var ct = _cts.Token;
+        _writeCts?.Cancel();
+        _writeCts?.Dispose();
+        _writeCts = new System.Threading.CancellationTokenSource();
+        var ct = _writeCts.Token;
 
         IsDeleteConfirmVisible = false;
         IsLoading = true;
@@ -444,8 +452,10 @@ public sealed partial class ReplacementPartsViewModel : ObservableObject, System
 
     public void Dispose()
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _writeCts?.Cancel();
+        _writeCts?.Dispose();
         _searchCts?.Cancel();
         _searchCts?.Dispose();
     }

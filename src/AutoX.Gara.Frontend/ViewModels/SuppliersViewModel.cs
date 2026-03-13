@@ -27,6 +27,8 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
     private CancellationTokenSource? _writeCts;
     private CancellationTokenSource? _searchCts;
 
+    private Boolean _suppressAutoLoad = false;
+
     private const Int32 DefaultPageSize = 20;
     private const Int32 SearchDebounceMs = 400;
 
@@ -136,7 +138,6 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
             ?? throw new ArgumentNullException(nameof(supplierService));
 
         Suppliers.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
-        // NOTE: Load is triggered from SuppliersPage.OnAppearing(), not here.
     }
 
     // ─── Property Change Hooks ────────────────────────────────────────────────
@@ -198,8 +199,15 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
         catch (OperationCanceledException) { /* debounce cancelled — expected */ }
     }
 
-    partial void OnSortByChanged(SupplierSortField value) => _ = LoadAsync();
-    partial void OnSortDescendingChanged(bool value) => _ = LoadAsync();
+    partial void OnSortByChanged(SupplierSortField value)
+    {
+        if (!_suppressAutoLoad) _ = LoadAsync();
+    }
+
+    partial void OnSortDescendingChanged(bool value)
+    {
+        if (!_suppressAutoLoad) _ = LoadAsync();
+    }
 
     partial void OnFilterStatusChanged(SupplierStatus value)
     {
@@ -362,15 +370,18 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (SortBy == field)
-        {
-            SortDescending = !SortDescending;
-        }
-        else
+        _suppressAutoLoad = true;   // tắt hook
+        try
         {
             SortBy = field;
-            SortDescending = false;
+            SortDescending = SortBy == field && !SortDescending;
         }
+        finally
+        {
+            _suppressAutoLoad = false;
+        }
+
+        _ = LoadAsync();
     }
 
     [RelayCommand]
@@ -416,10 +427,14 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
         // FIX: Correct index mapping — 0=Active, 1=Inactive, 2=Suspended, 3=Blacklisted
         FormPickerStatusIndex = (supplier.Status ?? SupplierStatus.Active) switch
         {
-            SupplierStatus.Inactive => 1,
-            SupplierStatus.Suspended => 2,
-            SupplierStatus.Blacklisted => 3,
-            _ => 0  // Active and all unknown → 0
+            SupplierStatus.Active => 1,
+            SupplierStatus.Inactive => 2,
+            SupplierStatus.Potential => 3,
+            SupplierStatus.Suspended => 4,
+            SupplierStatus.UnderReview => 5,
+            SupplierStatus.ContractSigned => 6,
+            SupplierStatus.Blacklisted => 7,
+            _ => 0
         };
 
         // FIX: Full PaymentTerms mapping
@@ -430,6 +445,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, IDisposable
             PaymentTerms.Net7 => 2,
             PaymentTerms.Net15 => 3,
             PaymentTerms.Net30 => 4,
+            PaymentTerms.Custom => 5,
             _ => 0  // None / unknown
         };
 

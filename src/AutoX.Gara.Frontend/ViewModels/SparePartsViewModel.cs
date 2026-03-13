@@ -14,7 +14,8 @@ namespace AutoX.Gara.Frontend.ViewModels;
 public sealed partial class SparePartsViewModel : ObservableObject, System.IDisposable
 {
     private readonly SparePartService _service;
-    private System.Threading.CancellationTokenSource? _cts;
+    private System.Threading.CancellationTokenSource? _loadCts;
+    private System.Threading.CancellationTokenSource? _writeCts;
     private System.Threading.CancellationTokenSource? _searchCts;
 
     private const System.Int32 DefaultPageSize = 20;
@@ -144,19 +145,27 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
         _searchCts = new System.Threading.CancellationTokenSource();
         var token = _searchCts.Token;
 
-        _ = System.Threading.Tasks.Task.Run(async () =>
+        _ = DebounceSearchAsync(token);
+    }
+
+    private async System.Threading.Tasks.Task DebounceSearchAsync(System.Threading.CancellationToken token)
+    {
+        try
         {
-            try
+            await System.Threading.Tasks.Task.Delay(SearchDebounceMs, token).ConfigureAwait(false);
+            await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
             {
-                await System.Threading.Tasks.Task.Delay(SearchDebounceMs, token);
-                Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+                if (CurrentPage != 1)
                 {
-                    if (CurrentPage != 1) CurrentPage = 1;
-                    else _ = LoadAsync();
-                });
-            }
-            catch (System.OperationCanceledException) { }
-        }, token);
+                    CurrentPage = 1;
+                }
+                else
+                {
+                    _ = LoadAsync();
+                }
+            });
+        }
+        catch (System.OperationCanceledException) { }
     }
 
     partial void OnSortByChanged(SparePartSortField value) => _ = LoadAsync();
@@ -231,10 +240,10 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
     [RelayCommand]
     private async System.Threading.Tasks.Task LoadAsync()
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = new System.Threading.CancellationTokenSource();
-        var ct = _cts.Token;
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _loadCts = new System.Threading.CancellationTokenSource();
+        var ct = _loadCts.Token;
 
         ClearError();
         IsLoading = true;
@@ -351,10 +360,10 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
             return;
         }
 
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = new System.Threading.CancellationTokenSource();
-        var ct = _cts.Token;
+        _writeCts?.Cancel();
+        _writeCts?.Dispose();
+        _writeCts = new System.Threading.CancellationTokenSource();
+        var ct = _writeCts.Token;
 
         IsLoading = true;
 
@@ -428,10 +437,10 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
             return;
         }
 
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = new System.Threading.CancellationTokenSource();
-        var ct = _cts.Token;
+        _writeCts?.Cancel();
+        _writeCts?.Dispose();
+        _writeCts = new System.Threading.CancellationTokenSource();
+        var ct = _writeCts.Token;
 
         IsDiscontinueConfirmVisible = false;
         IsLoading = true;
@@ -447,8 +456,18 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
                 System.Int32 idx = IndexOfPart(toUpdate.SparePartId);
                 if (idx >= 0)
                 {
-                    toUpdate.IsDiscontinued = true;
-                    Parts[idx] = toUpdate;
+                    SparePartDto updated = new()
+                    {
+                        SparePartId = toUpdate.SparePartId,
+                        PartName = toUpdate.PartName,
+                        PurchasePrice = toUpdate.PurchasePrice,
+                        SellingPrice = toUpdate.SellingPrice,
+                        InventoryQuantity = toUpdate.InventoryQuantity,
+                        SupplierId = toUpdate.SupplierId,
+                        PartCategory = toUpdate.PartCategory,
+                        IsDiscontinued = true,
+                    };
+                    Parts[idx] = updated;
                 }
 
                 SelectedPart = null;
@@ -496,8 +515,10 @@ public sealed partial class SparePartsViewModel : ObservableObject, System.IDisp
 
     public void Dispose()
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _writeCts?.Cancel();
+        _writeCts?.Dispose();
         _searchCts?.Cancel();
         _searchCts?.Dispose();
     }
