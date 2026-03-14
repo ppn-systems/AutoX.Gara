@@ -380,7 +380,11 @@
 
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                                 <Label Text="Thuế (ước tính)" Style="{StaticResource MutedLabel}" VerticalOptions="Center" />
-                                <Label Grid.Column="1" Text="{Binding PreviewTaxAmount, StringFormat='{0:N0}'}" TextColor="#F1F1F5" HorizontalTextAlignment="End" VerticalOptions="Center" />
+                                <Label Grid.Column="1" 
+                                       Text="{Binding PreviewTaxAmount, StringFormat='{0:N0}'}" 
+                                       TextColor="#F1F1F5" 
+                                       HorizontalTextAlignment="End" 
+                                       VerticalOptions="Center" />
                             </Grid>
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                                 <Label Text="Giảm giá (ước tính)" Style="{StaticResource MutedLabel}" VerticalOptions="Center" />

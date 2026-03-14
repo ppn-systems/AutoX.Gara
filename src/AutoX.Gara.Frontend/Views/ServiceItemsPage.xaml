@@ -138,12 +138,12 @@
 
                     <!-- Min Price -->
                     <Border Style="{StaticResource InputBorder}" WidthRequest="120" Padding="0">
-                        <Entry Placeholder="Giá từ..." Keyboard="Numeric" TextColor="#F1F1F5" PlaceholderColor="#3A3A50" BackgroundColor="Transparent" Style="{StaticResource FormEntry}" Text="{Binding FilterMinPrice, StringFormat='{0:F2}', TargetNullValue=''}" />
+                        <Entry Placeholder="Giá từ..." Keyboard="Numeric" TextColor="#F1F1F5" PlaceholderColor="#3A3A50" BackgroundColor="Transparent" Style="{StaticResource FormEntry}" Text="{Binding FilterMinPrice, StringFormat='{0:N0}', TargetNullValue=''}" />
                     </Border>
 
                     <!-- Max Price -->
                     <Border Style="{StaticResource InputBorder}" WidthRequest="120" Padding="0">
-                        <Entry Placeholder="Giá đến..." Keyboard="Numeric" TextColor="#F1F1F5" PlaceholderColor="#3A3A50" BackgroundColor="Transparent" Style="{StaticResource FormEntry}" Text="{Binding FilterMaxPrice, StringFormat='{0:F2}', TargetNullValue=''}" />
+                        <Entry Placeholder="Giá đến..." Keyboard="Numeric" TextColor="#F1F1F5" PlaceholderColor="#3A3A50" BackgroundColor="Transparent" Style="{StaticResource FormEntry}" Text="{Binding FilterMaxPrice, StringFormat='{0:N0}', TargetNullValue=''}" />
                     </Border>
 
                     <!-- Clear Filter Button -->

@@ -85,7 +85,7 @@
                     <Label Text="Thêm giao dịch" TextColor="#F1F1F5" FontAttributes="Bold" />
 
                     <Label Text="Số tiền" Style="{StaticResource MutedLabel}" />
-                    <Entry Text="{Binding FormAmount}" Keyboard="Numeric" TextColor="#F1F1F5" />
+                    <Entry Text="{Binding FormAmount, StringFormat='{0:N0}'}" Keyboard="Numeric" TextColor="#F1F1F5" />
 
                     <Label Text="Mô tả" Style="{StaticResource MutedLabel}" />
                     <Entry Text="{Binding FormDescription}" TextColor="#F1F1F5" />
