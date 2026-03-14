@@ -180,6 +180,17 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     {
         _customerService = customerService;
         Customers.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
+
+        // Force initial "filter button" texts to render (MAUI/WinUI can show blank until changed).
+        Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+        {
+            OnPropertyChanged(nameof(SelectedFilterTypeText));
+            OnPropertyChanged(nameof(SelectedMembershipText));
+            OnPropertyChanged(nameof(SelectedFormTypeText));
+            OnPropertyChanged(nameof(SelectedFormMembershipText));
+            OnPropertyChanged(nameof(SelectedFormGenderText));
+        });
+
         _ = LoadAsync();
     }
 

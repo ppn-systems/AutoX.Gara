@@ -261,6 +261,23 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             OnPropertyChanged(nameof(IsEmpty));
             OnPropertyChanged(nameof(FilteredEmployees));
         };
+
+        // Some MAUI/WinUI layouts (especially when using gesture-based "picker" UI) can render
+        // the initial text as blank until a PropertyChanged is raised. Force a one-time refresh.
+        Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+        {
+            OnPropertyChanged(nameof(SelectedPositionText));
+            OnPropertyChanged(nameof(SelectedStatusText));
+            OnPropertyChanged(nameof(SelectedGenderText));
+            OnPropertyChanged(nameof(SelectedSalaryText));
+
+            // Form/dropdown labels
+            OnPropertyChanged(nameof(SelectedFormGenderText));
+            OnPropertyChanged(nameof(SelectedFormPositionText));
+            OnPropertyChanged(nameof(SelectedFormStatusText));
+            OnPropertyChanged(nameof(SelectedNewStatusText));
+            OnPropertyChanged(nameof(SelectedSalaryFormTypeText));
+        });
     }
 
     // ─── Property Hooks ───────────────────────────────────────────────────────

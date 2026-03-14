@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
 using Nalix.Common.Networking.Protocols;
 using System.Diagnostics;
+using System.Linq;
 
 namespace AutoX.Gara.Frontend.ViewModels;
 
@@ -80,15 +81,17 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     [ObservableProperty] public partial System.DateTime FormRegistrationDate { get; set; } = System.DateTime.Today;
     [ObservableProperty] public partial System.DateTime? FormInsuranceExpiryDate { get; set; }
 
-    // Picker index
-    [ObservableProperty] public partial System.Int32 FormPickerTypeIndex { get; set; } = 0;
-    [ObservableProperty] public partial System.Int32 FormPickerColorIndex { get; set; } = 0;
-    [ObservableProperty] public partial System.Int32 FormPickerBrandIndex { get; set; } = 0;
-
     // Enum values tương ứng với picker
     [ObservableProperty] public partial CarType FormType { get; set; } = CarType.None;
     [ObservableProperty] public partial CarColor FormColor { get; set; } = CarColor.None;
     [ObservableProperty] public partial CarBrand FormBrand { get; set; } = CarBrand.None;
+
+    public System.Collections.Generic.IReadOnlyList<CarBrand> BrandOptions { get; }
+        = System.Enum.GetValues<CarBrand>().ToList();
+    public System.Collections.Generic.IReadOnlyList<CarType> TypeOptions { get; }
+        = System.Enum.GetValues<CarType>().ToList();
+    public System.Collections.Generic.IReadOnlyList<CarColor> ColorOptions { get; }
+        = System.Enum.GetValues<CarColor>().ToList();
 
     // Form error
     [ObservableProperty] public partial System.Boolean HasFormError { get; set; }
@@ -139,89 +142,6 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     {
         HasPreviousPage = value > 1;
         _ = LoadAsync();
-    }
-
-    // Picker → Enum
-    partial void OnFormPickerTypeIndexChanged(int value)
-    {
-        FormType = value switch
-        {
-            1 => CarType.Sedan,
-            2 => CarType.SUV,
-            3 => CarType.Hatchback,
-            4 => CarType.Coupe,
-            5 => CarType.Convertible,
-            6 => CarType.Pickup,
-            7 => CarType.Minivan,
-            8 => CarType.Truck,
-            9 => CarType.Bus,
-            10 => CarType.Motorcycle,
-            11 => CarType.Other,
-            _ => CarType.None
-        };
-    }
-
-    partial void OnFormPickerColorIndexChanged(int value)
-    {
-        FormColor = value switch
-        {
-            1 => CarColor.Black,
-            2 => CarColor.White,
-            3 => CarColor.Gray,
-            4 => CarColor.Silver,
-            5 => CarColor.Red,
-            6 => CarColor.Blue,
-            7 => CarColor.Green,
-            8 => CarColor.Yellow,
-            9 => CarColor.Brown,
-            10 => CarColor.Orange,
-            11 => CarColor.Purple,
-            12 => CarColor.Pink,
-            13 => CarColor.Cyan,
-            14 => CarColor.Other,
-            _ => CarColor.None
-        };
-    }
-
-    partial void OnFormPickerBrandIndexChanged(int value)
-    {
-        FormBrand = value switch
-        {
-            1 => CarBrand.Audi,
-            2 => CarBrand.Bentley,
-            3 => CarBrand.BMW,
-            4 => CarBrand.BYD,
-            5 => CarBrand.Bugatti,
-            6 => CarBrand.Buick,
-            7 => CarBrand.Cadillac,
-            8 => CarBrand.Chevrolet,
-            9 => CarBrand.Ford,
-            10 => CarBrand.Ferrari,
-            11 => CarBrand.Honda,
-            12 => CarBrand.Hyundai,
-            13 => CarBrand.Jaguar,
-            14 => CarBrand.Jeep,
-            15 => CarBrand.KIA,
-            16 => CarBrand.Lamborghini,
-            17 => CarBrand.LandRover,
-            18 => CarBrand.Lexus,
-            19 => CarBrand.Mazda,
-            20 => CarBrand.McLaren,
-            21 => CarBrand.MercedesBenz,
-            22 => CarBrand.Mitsubishi,
-            23 => CarBrand.Nissan,
-            24 => CarBrand.Porsche,
-            25 => CarBrand.RollsRoyce,
-            26 => CarBrand.Subaru,
-            27 => CarBrand.Suzuki,
-            28 => CarBrand.Tesla,
-            29 => CarBrand.Toyota,
-            30 => CarBrand.VinFast,
-            31 => CarBrand.Volvo,
-            32 => CarBrand.Volkswagen,
-            33 => CarBrand.Other,
-            _ => CarBrand.None
-        };
     }
 
     // ─── Commands ─────────────────────────────────────────────────────────────
@@ -309,76 +229,9 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
         FormRegistrationDate = vehicle.RegistrationDate == default ? System.DateTime.Today : vehicle.RegistrationDate;
         FormInsuranceExpiryDate = vehicle.InsuranceExpiryDate;
 
-        FormPickerTypeIndex = vehicle.Type switch
-        {
-            CarType.Sedan => 1,
-            CarType.SUV => 2,
-            CarType.Hatchback => 3,
-            CarType.Coupe => 4,
-            CarType.Convertible => 5,
-            CarType.Pickup => 6,
-            CarType.Minivan => 7,
-            CarType.Truck => 8,
-            CarType.Bus => 9,
-            CarType.Motorcycle => 10,
-            CarType.Other => 11,
-            _ => 0
-        };
-        FormPickerColorIndex = vehicle.Color switch
-        {
-            CarColor.Black => 1,
-            CarColor.White => 2,
-            CarColor.Gray => 3,
-            CarColor.Silver => 4,
-            CarColor.Red => 5,
-            CarColor.Blue => 6,
-            CarColor.Green => 7,
-            CarColor.Yellow => 8,
-            CarColor.Brown => 9,
-            CarColor.Orange => 10,
-            CarColor.Purple => 11,
-            CarColor.Pink => 12,
-            CarColor.Cyan => 13,
-            CarColor.Other => 14,
-            _ => 0
-        };
-        FormPickerBrandIndex = vehicle.Brand switch
-        {
-            CarBrand.Audi => 1,
-            CarBrand.Bentley => 2,
-            CarBrand.BMW => 3,
-            CarBrand.BYD => 4,
-            CarBrand.Bugatti => 5,
-            CarBrand.Buick => 6,
-            CarBrand.Cadillac => 7,
-            CarBrand.Chevrolet => 8,
-            CarBrand.Ford => 9,
-            CarBrand.Ferrari => 10,
-            CarBrand.Honda => 11,
-            CarBrand.Hyundai => 12,
-            CarBrand.Jaguar => 13,
-            CarBrand.Jeep => 14,
-            CarBrand.KIA => 15,
-            CarBrand.Lamborghini => 16,
-            CarBrand.LandRover => 17,
-            CarBrand.Lexus => 18,
-            CarBrand.Mazda => 19,
-            CarBrand.McLaren => 20,
-            CarBrand.MercedesBenz => 21,
-            CarBrand.Mitsubishi => 22,
-            CarBrand.Nissan => 23,
-            CarBrand.Porsche => 24,
-            CarBrand.RollsRoyce => 25,
-            CarBrand.Subaru => 26,
-            CarBrand.Suzuki => 27,
-            CarBrand.Tesla => 28,
-            CarBrand.Toyota => 29,
-            CarBrand.VinFast => 30,
-            CarBrand.Volvo => 31,
-            CarBrand.Volkswagen => 32,
-            CarBrand.Other => 33,
-            _ => 0
-        };
+        FormType = vehicle.Type;
+        FormColor = vehicle.Color;
+        FormBrand = vehicle.Brand;
 
         ClearFormError();
         IsFormVisible = true;
@@ -581,7 +434,9 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
         FormMileage = 0;
         FormRegistrationDate = System.DateTime.Today;
         FormInsuranceExpiryDate = null;
-        FormPickerTypeIndex = FormPickerColorIndex = FormPickerBrandIndex = 0;
+        FormType = CarType.None;
+        FormColor = CarColor.None;
+        FormBrand = CarBrand.None;
         ClearFormError();
     }
 

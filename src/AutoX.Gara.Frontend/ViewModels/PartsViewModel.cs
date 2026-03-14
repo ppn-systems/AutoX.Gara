@@ -167,6 +167,16 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
         PartCategory[] rest = [.. allCategories.Where(c => c != PartCategory.Other)];
         _partCategoryFormValues = [PartCategory.Other, .. rest];
         PartCategoryFormOptions = [.. _partCategoryFormValues.Select(EnumText.Get)];
+
+        // Force initial "filter button" texts to render (MAUI/WinUI can show blank until changed).
+        Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+        {
+            OnPropertyChanged(nameof(SelectedCategoryText));
+            OnPropertyChanged(nameof(SelectedInStockText));
+            OnPropertyChanged(nameof(SelectedDefectiveText));
+            OnPropertyChanged(nameof(SelectedExpiredText));
+            OnPropertyChanged(nameof(SelectedDiscontinuedText));
+        });
     }
 
     // ─── Property Change Hooks ────────────────────────────────────────────────

@@ -25,6 +25,7 @@
             <conv:InverseBoolConverter           x:Key="InverseBool"   />
             <conv:StringNotEmptyConverter        x:Key="NotEmpty"      />
             <conv:DateTimeToShortStringConverter x:Key="ToShortDate"   />
+            <conv:EnumTextConverter              x:Key="EnumText"      />
 
             <Style x:Key="CardStyle" TargetType="Border">
                 <Setter Property="BackgroundColor" Value="#111118" />
@@ -270,7 +271,7 @@
 
                                         <!-- Hãng + Model -->
                                         <HorizontalStackLayout Spacing="5">
-                                            <Label Text="{Binding Brand}"
+                                            <Label Text="{Binding Brand, Converter={StaticResource EnumText}}"
                                                    Style="{StaticResource MutedLabel}" />
                                             <Label Text="·" Style="{StaticResource MutedLabel}" />
                                             <Label Text="{Binding Model}"
@@ -281,10 +282,10 @@
                                         <!-- Màu + Loại -->
                                         <HorizontalStackLayout Spacing="5">
                                             <Label Text="🎨" FontSize="12" VerticalOptions="Center" />
-                                            <Label Text="{Binding Color}"
+                                            <Label Text="{Binding Color, Converter={StaticResource EnumText}}"
                                                    Style="{StaticResource MutedLabel}" />
                                             <Label Text="·" Style="{StaticResource MutedLabel}" />
-                                            <Label Text="{Binding Type}"
+                                            <Label Text="{Binding Type, Converter={StaticResource EnumText}}"
                                                    Style="{StaticResource MutedLabel}" />
                                         </HorizontalStackLayout>
 
@@ -407,45 +408,11 @@
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="HÃNG XE" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}">
-                                    <Picker SelectedIndex="{Binding FormPickerBrandIndex}"
+                                    <Picker SelectedItem="{Binding FormBrand}"
+                                            ItemsSource="{Binding BrandOptions}"
+                                            ItemDisplayBinding="{Binding ., Converter={StaticResource EnumText}}"
                                             TextColor="#C4C4D4" BackgroundColor="Transparent"
                                             VerticalOptions="Center" HeightRequest="44">
-                                        <Picker.Items>
-                                            <x:String>— chọn —</x:String>
-                                            <x:String>Audi</x:String>
-                                            <x:String>Bentley</x:String>
-                                            <x:String>BMW</x:String>
-                                            <x:String>BYD</x:String>
-                                            <x:String>Bugatti</x:String>
-                                            <x:String>Buick</x:String>
-                                            <x:String>Cadillac</x:String>
-                                            <x:String>Chevrolet</x:String>
-                                            <x:String>Ford</x:String>
-                                            <x:String>Ferrari</x:String>
-                                            <x:String>Honda</x:String>
-                                            <x:String>Hyundai</x:String>
-                                            <x:String>Jaguar</x:String>
-                                            <x:String>Jeep</x:String>
-                                            <x:String>KIA</x:String>
-                                            <x:String>Lamborghini</x:String>
-                                            <x:String>Land Rover</x:String>
-                                            <x:String>Lexus</x:String>
-                                            <x:String>Mazda</x:String>
-                                            <x:String>McLaren</x:String>
-                                            <x:String>Mercedes-Benz</x:String>
-                                            <x:String>Mitsubishi</x:String>
-                                            <x:String>Nissan</x:String>
-                                            <x:String>Porsche</x:String>
-                                            <x:String>Rolls-Royce</x:String>
-                                            <x:String>Subaru</x:String>
-                                            <x:String>Suzuki</x:String>
-                                            <x:String>Tesla</x:String>
-                                            <x:String>Toyota</x:String>
-                                            <x:String>VinFast</x:String>
-                                            <x:String>Volvo</x:String>
-                                            <x:String>Volkswagen</x:String>
-                                            <x:String>Khác</x:String>
-                                        </Picker.Items>
                                     </Picker>
                                 </Border>
                             </VerticalStackLayout>
@@ -464,49 +431,22 @@
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="LOẠI XE" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}">
-                                    <Picker SelectedIndex="{Binding FormPickerTypeIndex}"
+                                    <Picker SelectedItem="{Binding FormType}"
+                                            ItemsSource="{Binding TypeOptions}"
+                                            ItemDisplayBinding="{Binding ., Converter={StaticResource EnumText}}"
                                             TextColor="#C4C4D4" BackgroundColor="Transparent"
                                             VerticalOptions="Center" HeightRequest="44">
-                                        <Picker.Items>
-                                            <x:String>— chọn —</x:String>
-                                            <x:String>Sedan - Xe du lịch</x:String>
-                                            <x:String>SUV - Xe đa dụng</x:String>
-                                            <x:String>Hatchback - Xe cỡ nhỏ</x:String>
-                                            <x:String>Coupe - Xe thể thao</x:String>
-                                            <x:String>Convertible - Mui trần</x:String>
-                                            <x:String>Pickup - Xe bán tải</x:String>
-                                            <x:String>Minivan - Xe gia đình</x:String>
-                                            <x:String>Truck - Xe tải</x:String>
-                                            <x:String>Bus - Xe buýt</x:String>
-                                            <x:String>Motorcycle - Xe máy</x:String>
-                                            <x:String>Khác</x:String>
-                                        </Picker.Items>
                                     </Picker>
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
                                 <Label Text="MÀU SẮC" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}">
-                                    <Picker SelectedIndex="{Binding FormPickerColorIndex}"
+                                    <Picker SelectedItem="{Binding FormColor}"
+                                            ItemsSource="{Binding ColorOptions}"
+                                            ItemDisplayBinding="{Binding ., Converter={StaticResource EnumText}}"
                                             TextColor="#C4C4D4" BackgroundColor="Transparent"
                                             VerticalOptions="Center" HeightRequest="44">
-                                        <Picker.Items>
-                                            <x:String>— chọn —</x:String>
-                                            <x:String>Đen</x:String>
-                                            <x:String>Trắng</x:String>
-                                            <x:String>Xám</x:String>
-                                            <x:String>Bạc</x:String>
-                                            <x:String>Đỏ</x:String>
-                                            <x:String>Xanh dương</x:String>
-                                            <x:String>Xanh lá</x:String>
-                                            <x:String>Vàng</x:String>
-                                            <x:String>Nâu</x:String>
-                                            <x:String>Cam</x:String>
-                                            <x:String>Tím</x:String>
-                                            <x:String>Hồng</x:String>
-                                            <x:String>Xanh ngọc</x:String>
-                                            <x:String>Khác</x:String>
-                                        </Picker.Items>
                                     </Picker>
                                 </Border>
                             </VerticalStackLayout>
