@@ -333,26 +333,26 @@
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="GIỚI TÍNH" Style="{StaticResource FieldLabel}" />
-                                <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                                    <Picker SelectedIndex="{Binding FormGenderIndex}"
-                                            ItemsSource="{Binding FormGenderOptions}"
-                                            TextColor="#C4C4D4"
-                                            BackgroundColor="Transparent"
-                                            VerticalOptions="Center"
-                                            HeightRequest="44"
-                                            Margin="10,0" />
+                                <Border Style="{StaticResource PickerBorder}" Padding="0,0">
+                                    <Grid ColumnDefinitions="*,Auto" Padding="12,0,12,0">
+                                        <Label Text="{Binding SelectedFormGenderText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                                        <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnEmployeeFormGenderTapped" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
                                 <Label Text="CHỨC VỤ *" Style="{StaticResource FieldLabel}" />
-                                <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                                    <Picker SelectedIndex="{Binding FormPositionIndex}"
-                                            ItemsSource="{Binding FormPositionOptions}"
-                                            TextColor="#C4C4D4"
-                                            BackgroundColor="Transparent"
-                                            VerticalOptions="Center"
-                                            HeightRequest="44"
-                                            Margin="10,0" />
+                                <Border Style="{StaticResource PickerBorder}" Padding="0,0">
+                                    <Grid ColumnDefinitions="*,Auto" Padding="12,0,12,0">
+                                        <Label Text="{Binding SelectedFormPositionText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                                        <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnEmployeeFormPositionTapped" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>
@@ -361,14 +361,14 @@
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="TRẠNG THÁI" Style="{StaticResource FieldLabel}" />
-                                <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                                    <Picker SelectedIndex="{Binding FormStatusIndex}"
-                                            ItemsSource="{Binding FormStatusOptions}"
-                                            TextColor="#C4C4D4"
-                                            BackgroundColor="Transparent"
-                                            VerticalOptions="Center"
-                                            HeightRequest="44"
-                                            Margin="10,0" />
+                                <Border Style="{StaticResource PickerBorder}" Padding="0,0">
+                                    <Grid ColumnDefinitions="*,Auto" Padding="12,0,12,0">
+                                        <Label Text="{Binding SelectedFormStatusText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                                        <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnEmployeeFormStatusTapped" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
@@ -433,14 +433,14 @@
                 <VerticalStackLayout Spacing="14">
                     <Label Text="Thay đổi trạng thái" FontSize="18" FontAttributes="Bold" TextColor="#F1F1F5" HorizontalOptions="Center" />
                     <Label Text="{Binding StatusConfirmName}" FontSize="14" TextColor="#6B6B80" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
-                    <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                        <Picker SelectedIndex="{Binding NewStatusIndex}"
-                                ItemsSource="{Binding ChangeStatusOptions}"
-                                TextColor="#C4C4D4"
-                                BackgroundColor="Transparent"
-                                VerticalOptions="Center"
-                                HeightRequest="44"
-                                Margin="10,0" />
+                    <Border Style="{StaticResource PickerBorder}" Padding="0,0">
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0,12,0">
+                            <Label Text="{Binding SelectedNewStatusText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnNewStatusTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
                     <BoxView HeightRequest="1" BackgroundColor="#2A2A38" Margin="0,4,0,4" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
@@ -487,13 +487,13 @@
                             <VerticalStackLayout Grid.Column="0" Spacing="6">
                                 <Label Text="Loại lương" Style="{StaticResource FieldLabel}" Margin="0,0,0,5" />
                                 <Border Style="{StaticResource PickerBorder}" Padding="0,0">
-                                    <Picker SelectedIndex="{Binding SalaryFormTypeIndex}"
-                                            ItemsSource="{Binding SalaryFormTypeOptions}"
-                                            TextColor="#C4C4D4"
-                                            BackgroundColor="Transparent"
-                                            VerticalOptions="Center"
-                                            HeightRequest="44"
-                                            Margin="0,0" />
+                                    <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                                        <Label Text="{Binding SelectedSalaryFormTypeText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                                        <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnSalaryTypeTapped" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1" Spacing="6">

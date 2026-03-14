@@ -156,6 +156,15 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Int32 FormPickerMembershipIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 FormPickerGenderIndex { get; set; } = 0;
 
+    public System.String SelectedFormTypeText =>
+        FormTypeOptions[System.Math.Clamp(FormPickerTypeIndex, 0, FormTypeOptions.Length - 1)];
+
+    public System.String SelectedFormMembershipText =>
+        FormMembershipOptions[System.Math.Clamp(FormPickerMembershipIndex, 0, FormMembershipOptions.Length - 1)];
+
+    public System.String SelectedFormGenderText =>
+        FormGenderOptions[System.Math.Clamp(FormPickerGenderIndex, 0, FormGenderOptions.Length - 1)];
+
     // ─── Delete Confirm ───────────────────────────────────────────────────────
 
     [ObservableProperty] public partial System.Boolean IsDeleteConfirmVisible { get; set; }
@@ -251,16 +260,19 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     partial void OnFormPickerTypeIndexChanged(int value)
     {
         FormType = CustomerTypeValues[System.Math.Clamp(value, 0, CustomerTypeValues.Length - 1)];
+        OnPropertyChanged(nameof(SelectedFormTypeText));
     }
 
     partial void OnFormPickerMembershipIndexChanged(int value)
     {
         FormMembership = MembershipValues[System.Math.Clamp(value, 0, MembershipValues.Length - 1)];
+        OnPropertyChanged(nameof(SelectedFormMembershipText));
     }
 
     partial void OnFormPickerGenderIndexChanged(int value)
     {
         FormGender = GenderValues[System.Math.Clamp(value, 0, GenderValues.Length - 1)];
+        OnPropertyChanged(nameof(SelectedFormGenderText));
     }
 
     // ─── Commands ─────────────────────────────────────────────────────────────

@@ -168,6 +168,15 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Int32 FormStatusIndex { get; set; } = 1;
     [ObservableProperty] public partial System.DateTime FormDateOfBirth { get; set; } = System.DateTime.Today.AddYears(-20);
     [ObservableProperty] public partial System.DateTime FormStartDate { get; set; } = System.DateTime.Today;
+
+    public System.String SelectedFormGenderText =>
+        FormGenderOptions[System.Math.Clamp(FormGenderIndex, 0, FormGenderOptions.Length - 1)];
+
+    public System.String SelectedFormPositionText =>
+        FormPositionOptions[System.Math.Clamp(FormPositionIndex, 0, FormPositionOptions.Length - 1)];
+
+    public System.String SelectedFormStatusText =>
+        FormStatusOptions[System.Math.Clamp(FormStatusIndex, 0, FormStatusOptions.Length - 1)];
     [ObservableProperty] public partial System.DateTime? FormEndDate { get; set; } = null;
     [ObservableProperty] public partial System.Boolean HasFormError { get; set; }
     [ObservableProperty] public partial System.String? FormErrorMessage { get; set; }
@@ -177,6 +186,9 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean IsStatusConfirmVisible { get; set; }
     [ObservableProperty] public partial System.Int32 NewStatusIndex { get; set; } = 1;
     public System.String StatusConfirmName => SelectedEmployee?.Dto?.Name ?? System.String.Empty;
+
+    public System.String SelectedNewStatusText =>
+        ChangeStatusOptions[System.Math.Clamp(NewStatusIndex, 0, ChangeStatusOptions.Length - 1)];
 
     // ─── Collection ───────────────────────────────────────────────────────────
 
@@ -235,6 +247,9 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     public System.String SalaryFormTitle => IsSalaryEditing ? "Chỉnh sửa lương" : "Thiết lập lương";
     public System.String SalaryFormSaveText => IsSalaryEditing ? "Lưu" : "Tạo";
 
+    public System.String SelectedSalaryFormTypeText =>
+        SalaryFormTypeOptions[System.Math.Clamp(SalaryFormTypeIndex, 0, SalaryFormTypeOptions.Length - 1)];
+
     // ─── Constructor ───────────────────────────────────────────────────────────
 
     public EmployeesViewModel(EmployeeService service, EmployeeSalaryService salaryService)
@@ -254,6 +269,11 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(TotalPages));
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmpty));
     partial void OnSelectedEmployeeChanged(EmployeeRow? value) => OnPropertyChanged(nameof(StatusConfirmName));
+    partial void OnNewStatusIndexChanged(int value) => OnPropertyChanged(nameof(SelectedNewStatusText));
+    partial void OnSalaryFormTypeIndexChanged(int value) => OnPropertyChanged(nameof(SelectedSalaryFormTypeText));
+    partial void OnFormGenderIndexChanged(int value) => OnPropertyChanged(nameof(SelectedFormGenderText));
+    partial void OnFormPositionIndexChanged(int value) => OnPropertyChanged(nameof(SelectedFormPositionText));
+    partial void OnFormStatusIndexChanged(int value) => OnPropertyChanged(nameof(SelectedFormStatusText));
     partial void OnPickerSalaryIndexChanged(int value)
     {
         if (value < 0)

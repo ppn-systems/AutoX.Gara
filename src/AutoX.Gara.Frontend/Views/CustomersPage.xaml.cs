@@ -52,8 +52,62 @@ public partial class CustomersPage : ContentPage
         if (idx2 >= 0) vm.PickerMembershipIndex = idx2;
     }
 
+    private async void OnFormTypeTapped(object? sender, TappedEventArgs e)
+    {
+        if (BindingContext is not CustomersViewModel vm)
+            return;
+
 #if WINDOWS
-    private static bool TryShowFlyout(VisualElement? anchor, string title, string[] options, Action<int> onSelected)
+        if (TryShowFlyout(sender as VisualElement, "Loại khách hàng", vm.FormTypeOptions, idx => vm.FormPickerTypeIndex = idx))
+            return;
+#endif
+
+        var page = Application.Current?.MainPage;
+        if (page is null) return;
+        string pick = await page.DisplayActionSheet("Loại khách hàng", "Hủy", null, vm.FormTypeOptions);
+        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
+        int idx2 = Array.IndexOf(vm.FormTypeOptions, pick);
+        if (idx2 >= 0) vm.FormPickerTypeIndex = idx2;
+    }
+
+    private async void OnFormMembershipTapped(object? sender, TappedEventArgs e)
+    {
+        if (BindingContext is not CustomersViewModel vm)
+            return;
+
+#if WINDOWS
+        if (TryShowFlyout(sender as VisualElement, "Hạng thành viên", vm.FormMembershipOptions, idx => vm.FormPickerMembershipIndex = idx))
+            return;
+#endif
+
+        var page = Application.Current?.MainPage;
+        if (page is null) return;
+        string pick = await page.DisplayActionSheet("Hạng thành viên", "Hủy", null, vm.FormMembershipOptions);
+        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
+        int idx2 = Array.IndexOf(vm.FormMembershipOptions, pick);
+        if (idx2 >= 0) vm.FormPickerMembershipIndex = idx2;
+    }
+
+    private async void OnFormGenderTapped(object? sender, TappedEventArgs e)
+    {
+        if (BindingContext is not CustomersViewModel vm)
+            return;
+
+#if WINDOWS
+        if (TryShowFlyout(sender as VisualElement, "Giới tính", vm.FormGenderOptions, idx => vm.FormPickerGenderIndex = idx))
+            return;
+#endif
+
+        var page = Application.Current?.MainPage;
+        if (page is null) return;
+        string pick = await page.DisplayActionSheet("Giới tính", "Hủy", null, vm.FormGenderOptions);
+        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
+        int idx2 = Array.IndexOf(vm.FormGenderOptions, pick);
+        if (idx2 >= 0) vm.FormPickerGenderIndex = idx2;
+    }
+
+#if WINDOWS
+    private static bool TryShowFlyout(VisualElement? anchor, string title, System.Collections.Generic.IReadOnlyList<string> options, Action<int> onSelected)
     {
         try
         {
@@ -68,7 +122,7 @@ public partial class CustomersPage : ContentPage
             flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutItem { Text = title, IsEnabled = false });
             flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutSeparator());
 
-            for (int i = 0; i < options.Length; i++)
+            for (int i = 0; i < options.Count; i++)
             {
                 int idx = i;
                 flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutItem
