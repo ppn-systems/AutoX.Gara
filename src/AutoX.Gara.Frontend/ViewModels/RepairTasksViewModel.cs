@@ -108,6 +108,11 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
     [ObservableProperty] public partial int PickerStatusIndex { get; set; } = (int)RepairOrderStatus.Pending;
     public System.String[] StatusOptions { get; } = EnumText.GetNames<RepairOrderStatus>();
 
+    public System.String SelectedStatusText =>
+        StatusOptions[System.Math.Clamp(PickerStatusIndex, 0, StatusOptions.Length - 1)];
+
+    partial void OnPickerStatusIndexChanged(int value) => OnPropertyChanged(nameof(SelectedStatusText));
+
     public RepairOrderStatus FormStatus
     {
         get

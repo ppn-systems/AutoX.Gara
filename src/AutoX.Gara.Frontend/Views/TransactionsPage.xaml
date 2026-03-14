@@ -46,6 +46,13 @@
                 <Setter Property="TextColor" Value="#6B6B80" />
                 <Setter Property="FontSize" Value="12" />
             </Style>
+            <Style x:Key="PickerBorder" TargetType="Border">
+                <Setter Property="BackgroundColor" Value="#1A1A24" />
+                <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+                <Setter Property="Stroke" Value="#2A2A38" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="HeightRequest" Value="44" />
+            </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -91,13 +98,55 @@
                     <Entry Text="{Binding FormDescription}" TextColor="#F1F1F5" />
 
                     <Label Text="Phương thức" Style="{StaticResource MutedLabel}" />
-                    <Picker ItemsSource="{Binding PaymentMethodOptions}" SelectedIndex="{Binding PickerPaymentMethodIndex}" />
+                    <Border Style="{StaticResource PickerBorder}">
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedPaymentMethodText}"
+                                   TextColor="#F1F1F5"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1"
+                                   VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="▾"
+                                   TextColor="#6B6B80"
+                                   VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPaymentMethodTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </Border>
 
                     <Label Text="Loại" Style="{StaticResource MutedLabel}" />
-                    <Picker ItemsSource="{Binding TypeOptions}" SelectedIndex="{Binding PickerTypeIndex}" />
+                    <Border Style="{StaticResource PickerBorder}">
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedTypeText}"
+                                   TextColor="#F1F1F5"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1"
+                                   VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="▾"
+                                   TextColor="#6B6B80"
+                                   VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnTypeTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </Border>
 
                     <Label Text="Trạng thái" Style="{StaticResource MutedLabel}" />
-                    <Picker ItemsSource="{Binding StatusOptions}" SelectedIndex="{Binding PickerStatusIndex}" />
+                    <Border Style="{StaticResource PickerBorder}">
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedStatusText}"
+                                   TextColor="#F1F1F5"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1"
+                                   VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="▾"
+                                   TextColor="#6B6B80"
+                                   VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnStatusTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </Border>
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
                         <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CancelFormCommand}" />

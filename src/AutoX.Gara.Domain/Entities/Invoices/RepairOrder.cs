@@ -3,6 +3,7 @@
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Domain.Enums.Repairs;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;

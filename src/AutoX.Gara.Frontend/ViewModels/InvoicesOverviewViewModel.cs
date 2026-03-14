@@ -48,6 +48,9 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
 
     [ObservableProperty] public partial int PickerPaymentStatusIndex { get; set; } = 0;
 
+    public String SelectedPaymentStatusText =>
+        PaymentStatusOptions[Math.Clamp(PickerPaymentStatusIndex, 0, PaymentStatusOptions.Length - 1)];
+
     [ObservableProperty] public partial bool UseDateFilter { get; set; } = false;
 
     [ObservableProperty] public partial DateTime FromDate { get; set; } = DateTime.Today.AddDays(-7);
@@ -57,6 +60,8 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
         PickerPaymentStatusIndex <= 0
             ? null
             : PaymentStatusValues[Math.Clamp(PickerPaymentStatusIndex - 1, 0, PaymentStatusValues.Length - 1)];
+
+    partial void OnPickerPaymentStatusIndexChanged(int value) => OnPropertyChanged(nameof(SelectedPaymentStatusText));
 
     public void Start()
     {

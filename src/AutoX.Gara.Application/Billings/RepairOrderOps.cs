@@ -8,6 +8,8 @@ using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Billings;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Attributes;
@@ -120,6 +122,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
             var repo = new RepairOrderRepository(db);
             var invoices = new InvoiceRepository(db);
+            await using var tx = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
 
             RepairOrder ro = new()
             {
@@ -132,18 +135,29 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             };
 
             await repo.AddAsync(ro).ConfigureAwait(false);
-            await repo.SaveChangesAsync().ConfigureAwait(false);
+            await db.SaveChangesAsync().ConfigureAwait(false);
 
             if (ro.InvoiceId.HasValue)
             {
                 Invoice inv = await invoices.GetByIdWithDetailsAsync(ro.InvoiceId.Value).ConfigureAwait(false);
                 if (inv is not null)
                 {
+                    if (inv.CustomerId != ro.CustomerId)
+                    {
+                        await connection.SendAsync(
+                            ControlType.ERROR,
+                            ProtocolReason.VALIDATION_FAILED,
+                            ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                        return;
+                    }
+
                     inv.Recalculate();
                     invoices.Update(inv);
-                    await invoices.SaveChangesAsync().ConfigureAwait(false);
+                    await db.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
+
+            await tx.CommitAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(ro, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
@@ -191,6 +205,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
             var repo = new RepairOrderRepository(db);
             var invoices = new InvoiceRepository(db);
+            await using var tx = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
 
             RepairOrder existing = await repo.GetByIdAsync(packet.RepairOrderId.Value).ConfigureAwait(false);
             if (existing is null)
@@ -198,6 +213,15 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                return;
+            }
+
+            if (existing.CustomerId != packet.CustomerId)
+            {
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.VALIDATION_FAILED,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
                 return;
             }
@@ -212,7 +236,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             existing.Status = packet.Status;
 
             repo.Update(existing);
-            await repo.SaveChangesAsync().ConfigureAwait(false);
+            await db.SaveChangesAsync().ConfigureAwait(false);
 
             if (oldInvoiceId.HasValue && (!existing.InvoiceId.HasValue || existing.InvoiceId.Value != oldInvoiceId.Value))
             {
@@ -221,7 +245,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                 {
                     invOld.Recalculate();
                     invoices.Update(invOld);
-                    await invoices.SaveChangesAsync().ConfigureAwait(false);
+                    await db.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
 
@@ -230,11 +254,22 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                 Invoice inv = await invoices.GetByIdWithDetailsAsync(existing.InvoiceId.Value).ConfigureAwait(false);
                 if (inv is not null)
                 {
+                    if (inv.CustomerId != existing.CustomerId)
+                    {
+                        await connection.SendAsync(
+                            ControlType.ERROR,
+                            ProtocolReason.VALIDATION_FAILED,
+                            ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                        return;
+                    }
+
                     inv.Recalculate();
                     invoices.Update(inv);
-                    await invoices.SaveChangesAsync().ConfigureAwait(false);
+                    await db.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
+
+            await tx.CommitAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(existing, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
@@ -245,6 +280,14 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        {
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.VALIDATION_FAILED,
+                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+            return;
         }
         catch (System.Exception)
         {
@@ -282,6 +325,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
             var repo = new RepairOrderRepository(db);
             var invoices = new InvoiceRepository(db);
+            await using var tx = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
 
             RepairOrder existing = await repo.GetByIdAsync(packet.RepairOrderId.Value).ConfigureAwait(false);
             if (existing is null)
@@ -296,7 +340,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             System.Int32? invoiceId = existing.InvoiceId;
 
             repo.Delete(existing);
-            await repo.SaveChangesAsync().ConfigureAwait(false);
+            await db.SaveChangesAsync().ConfigureAwait(false);
 
             if (invoiceId.HasValue)
             {
@@ -305,14 +349,23 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                 {
                     inv.Recalculate();
                     invoices.Update(inv);
-                    await invoices.SaveChangesAsync().ConfigureAwait(false);
+                    await db.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
+
+            await tx.CommitAsync().ConfigureAwait(false);
 
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
                 ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        {
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.VALIDATION_FAILED,
+                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
@@ -361,4 +414,3 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
-

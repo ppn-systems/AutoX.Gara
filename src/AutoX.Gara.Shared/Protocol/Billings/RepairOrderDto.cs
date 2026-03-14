@@ -80,4 +80,3 @@ public sealed class RepairOrderDto : PacketBase<RepairOrderDto>, IPacketTransfor
         return packet;
     }
 }
-

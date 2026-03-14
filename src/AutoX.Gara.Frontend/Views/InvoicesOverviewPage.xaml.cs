@@ -4,6 +4,7 @@ using AutoX.Gara.Frontend.Services.Billings;
 using AutoX.Gara.Frontend.ViewModels;
 using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
+using System;
 
 namespace AutoX.Gara.Frontend.Views;
 
@@ -26,6 +27,16 @@ public partial class InvoicesOverviewPage : ContentPage
         _vm.Start();
     }
 
+    private async void OnPaymentStatusFilterTapped(object sender, TappedEventArgs e)
+    {
+        if (BindingContext is not InvoicesOverviewViewModel vm)
+        {
+            return;
+        }
+
+        await PickerActionSheetHelper.ShowAsync(sender as VisualElement, "Trạng thái thanh toán", vm.PaymentStatusOptions, idx => vm.PickerPaymentStatusIndex = idx);
+    }
+
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
@@ -33,4 +44,3 @@ public partial class InvoicesOverviewPage : ContentPage
         _vm.Dispose();
     }
 }
-

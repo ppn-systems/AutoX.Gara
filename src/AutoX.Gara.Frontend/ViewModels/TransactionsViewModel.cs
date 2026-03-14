@@ -61,6 +61,21 @@ public sealed partial class TransactionsViewModel : ObservableObject, System.IDi
     public string[] StatusOptions { get; } = StatusValues.Select(EnumText.Get).ToArray();
     public string[] TypeOptions { get; } = TypeValues.Select(EnumText.Get).ToArray();
 
+    public string SelectedPaymentMethodText =>
+        PaymentMethodOptions[System.Math.Clamp(PickerPaymentMethodIndex, 0, PaymentMethodOptions.Length - 1)];
+
+    partial void OnPickerPaymentMethodIndexChanged(int value) => OnPropertyChanged(nameof(SelectedPaymentMethodText));
+
+    public string SelectedTypeText =>
+        TypeOptions[System.Math.Clamp(PickerTypeIndex, 0, TypeOptions.Length - 1)];
+
+    partial void OnPickerTypeIndexChanged(int value) => OnPropertyChanged(nameof(SelectedTypeText));
+
+    public string SelectedStatusText =>
+        StatusOptions[System.Math.Clamp(PickerStatusIndex, 0, StatusOptions.Length - 1)];
+
+    partial void OnPickerStatusIndexChanged(int value) => OnPropertyChanged(nameof(SelectedStatusText));
+
     public void Initialize(InvoiceDto invoice, bool autoOpenAddForm = false, decimal? prefillAmount = null)
     {
         Invoice = invoice;

@@ -10,6 +10,7 @@ using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Infrastructure.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
 namespace AutoX.Gara.Infrastructure.Database;
 
@@ -67,7 +68,22 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
     #region APIs
 
     /// <inheritdoc/>
-    public new System.Int32 SaveChanges() => base.SaveChanges();
+    public override System.Int32 SaveChanges(System.Boolean acceptAllChangesOnSuccess)
+        => base.SaveChanges(acceptAllChangesOnSuccess);
+
+    /// <inheritdoc/>
+    public override System.Int32 SaveChanges()
+        => base.SaveChanges();
+
+    /// <inheritdoc/>
+    public override System.Threading.Tasks.Task<System.Int32> SaveChangesAsync(
+        System.Boolean acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+        => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+    /// <inheritdoc/>
+    public override System.Threading.Tasks.Task<System.Int32> SaveChangesAsync(CancellationToken cancellationToken = default)
+        => base.SaveChangesAsync(cancellationToken);
 
     #endregion APIs
 

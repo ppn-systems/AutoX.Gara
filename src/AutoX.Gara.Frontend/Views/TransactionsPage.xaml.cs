@@ -5,6 +5,7 @@ using AutoX.Gara.Frontend.ViewModels;
 using AutoX.Gara.Shared.Protocol.Billings;
 using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
+using System;
 
 namespace AutoX.Gara.Frontend.Views;
 
@@ -21,7 +22,7 @@ public partial class TransactionsPage : ContentPage
         BindingContext = _vm;
     }
 
-    public void Initialize(InvoiceDto invoice, bool autoOpenAddForm = false, decimal? prefillAmount = null)
+    public void Initialize(InvoiceDto invoice, Boolean autoOpenAddForm = false, Decimal? prefillAmount = null)
         => _vm.Initialize(invoice, autoOpenAddForm, prefillAmount);
 
     private async void OnBackClicked(System.Object sender, System.EventArgs e)
@@ -33,5 +34,35 @@ public partial class TransactionsPage : ContentPage
 
         _vm.Dispose();
         await Shell.Current.Navigation.PopAsync();
+    }
+
+    private async void OnPaymentMethodTapped(object sender, TappedEventArgs e)
+    {
+        if (BindingContext is not TransactionsViewModel vm)
+        {
+            return;
+        }
+
+        await PickerActionSheetHelper.ShowAsync(sender as VisualElement, "Phương thức", vm.PaymentMethodOptions, idx => vm.PickerPaymentMethodIndex = idx);
+    }
+
+    private async void OnTypeTapped(object sender, TappedEventArgs e)
+    {
+        if (BindingContext is not TransactionsViewModel vm)
+        {
+            return;
+        }
+
+        await PickerActionSheetHelper.ShowAsync(sender as VisualElement, "Loại", vm.TypeOptions, idx => vm.PickerTypeIndex = idx);
+    }
+
+    private async void OnStatusTapped(object sender, TappedEventArgs e)
+    {
+        if (BindingContext is not TransactionsViewModel vm)
+        {
+            return;
+        }
+
+        await PickerActionSheetHelper.ShowAsync(sender as VisualElement, "Trạng thái", vm.StatusOptions, idx => vm.PickerStatusIndex = idx);
     }
 }

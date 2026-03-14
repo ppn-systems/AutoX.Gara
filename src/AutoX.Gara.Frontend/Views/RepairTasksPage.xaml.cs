@@ -38,4 +38,14 @@ public partial class RepairTasksPage : ContentPage
         _vm.Dispose();
         await Shell.Current.Navigation.PopAsync();
     }
+
+    private async void OnFormStatusTapped(object sender, TappedEventArgs e)
+    {
+        if (BindingContext is not RepairTasksViewModel vm)
+        {
+            return;
+        }
+
+        await PickerActionSheetHelper.ShowAsync(sender as VisualElement, "Trạng thái", vm.StatusOptions, idx => vm.PickerStatusIndex = idx);
+    }
 }

@@ -152,7 +152,6 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
     [ObservableProperty] public partial string FormInvoiceNumber { get; set; } = string.Empty;
     [ObservableProperty] public partial System.DateTime FormInvoiceDate { get; set; } = System.DateTime.Today;
-
     private static readonly TaxRateType[] TaxRateValues = System.Enum.GetValues<TaxRateType>();
     [ObservableProperty] public partial int PickerTaxRateIndex { get; set; } = System.Array.IndexOf(TaxRateValues, TaxRateType.VAT10);
     [ObservableProperty] public partial int PickerDiscountTypeIndex { get; set; } = 0; // None
@@ -225,10 +224,14 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
                 return;
             }
 
+            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
             Invoices.Clear();
             for (System.Int32 i = 0; i < result.Invoices.Count; i++)
             {
-                Invoices.Add(new InvoiceRow(result.Invoices[i]));
+                var dto = result.Invoices[i];
+                logger?.Info(
+                    $"[FE.{nameof(InvoicesViewModel)}:{nameof(LoadAsync)}] invoiceId={dto.InvoiceId}");
+                Invoices.Add(new InvoiceRow(dto));
             }
 
             TotalCount = result.TotalCount;
@@ -289,6 +292,9 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
     private void OpenEditForm(InvoiceRow row)
     {
         InvoiceDto inv = row.Dto;
+        ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+        logger?.Info(
+            $"[FE.{nameof(InvoicesViewModel)}:{nameof(OpenEditForm)}] invoiceId={inv.InvoiceId}");
         IsEditing = true;
         SelectedInvoice = inv;
         FormInvoiceNumber = inv.InvoiceNumber;
@@ -330,6 +336,10 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
         try
         {
+            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+            logger?.Info(
+                $"[FE.{nameof(InvoicesViewModel)}:{nameof(SaveAsync)}] invoiceId={SelectedInvoice?.InvoiceId} editing={IsEditing}");
+
             InvoiceDto packet = new()
             {
                 InvoiceId = IsEditing ? SelectedInvoice?.InvoiceId : null,
@@ -362,6 +372,7 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
                 PreviewDiscountAmount = result.UpdatedEntity.DiscountAmount;
                 PreviewTaxAmount = result.UpdatedEntity.TaxAmount;
                 PreviewTotalAmount = result.UpdatedEntity.TotalAmount;
+                SelectedInvoice = result.UpdatedEntity;
             }
 
             IsFormVisible = false;
@@ -1080,4 +1091,5 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
         PreviewTaxAmount = taxAmount;
         PreviewTotalAmount = subtotal - discountAmount + taxAmount;
     }
+
 }
