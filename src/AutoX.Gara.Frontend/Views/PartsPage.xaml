@@ -24,6 +24,11 @@
                 <Setter Property="StrokeShape"      Value="RoundRectangle 10" />
                 <Setter Property="Stroke"           Value="#2A2A38" />
                 <Setter Property="StrokeThickness"  Value="1" />
+                <Setter Property="Shadow">
+                    <Setter.Value>
+                        <Shadow Brush="#000000" Opacity="0.25" Radius="18" Offset="0,6" />
+                    </Setter.Value>
+                </Setter>
             </Style>
             <Style x:Key="InputBorder" TargetType="Border">
                 <Setter Property="BackgroundColor"  Value="#1A1A24" />
@@ -40,7 +45,7 @@
                 <Setter Property="InputTransparent" Value="True" />
             </Style>
             <Style x:Key="MutedLabel" TargetType="Label">
-                <Setter Property="FontSize"        Value="12" />
+                <Setter Property="FontSize"        Value="13" />
                 <Setter Property="TextColor"       Value="#6B6B80" />
                 <Setter Property="VerticalOptions" Value="Center" />
             </Style>
@@ -242,13 +247,13 @@
                                         <!-- Tên + badges -->
                                         <HorizontalStackLayout Spacing="6">
                                             <Label Text="{Binding PartName}"
-                                                   FontSize="16" FontAttributes="Bold"
+                                                   FontSize="17" FontAttributes="Bold"
                                                    TextColor="#F1F1F5" VerticalOptions="Center"
                                                    LineBreakMode="TailTruncation" MaxLines="1" />
                                             <Border Style="{StaticResource BadgeStyle}"
                                                     BackgroundColor="{Binding PartCategory, Converter={StaticResource CategoryColor}}">
                                                 <Label Text="{Binding PartCategory, Converter={StaticResource EnumText}}"
-                                                       FontSize="11" FontAttributes="Bold" TextColor="Black" />
+                                                       FontSize="12" FontAttributes="Bold" TextColor="Black" />
                                             </Border>
                                             <!-- Badge lỗi -->
                                             <Border Style="{StaticResource BadgeStyle}"
@@ -263,8 +268,27 @@
                                                     BackgroundColor="#3A1A1A"
                                                     IsVisible="{Binding IsDiscontinued}">
                                                 <Label Text="Ngừng bán"
-                                                       FontSize="10" FontAttributes="Bold"
-                                                       TextColor="#EF4444" />
+                                                        FontSize="10" FontAttributes="Bold"
+                                                        TextColor="#EF4444" />
+                                            </Border>
+                                            <!-- Badge tồn kho -->
+                                            <Border Style="{StaticResource BadgeStyle}" BackgroundColor="#102018">
+                                                <Border.Triggers>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding InventoryQuantity}" Value="0">
+                                                        <Setter Property="BackgroundColor" Value="#1E1014" />
+                                                    </DataTrigger>
+                                                </Border.Triggers>
+                                                <Label Text="Còn hàng"
+                                                       FontSize="10"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#22C55E">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding InventoryQuantity}" Value="0">
+                                                            <Setter Property="Text" Value="Hết hàng" />
+                                                            <Setter Property="TextColor" Value="#EF4444" />
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
                                             </Border>
                                         </HorizontalStackLayout>
 
@@ -273,12 +297,12 @@
                                             <HorizontalStackLayout Spacing="4">
                                                 <Label Text="SKU:" Style="{StaticResource MutedLabel}" />
                                                 <Label Text="{Binding PartCode}"
-                                                       FontSize="12" TextColor="#6366F1"
+                                                       FontSize="14" TextColor="#6366F1"
                                                        FontAttributes="Bold" VerticalOptions="Center" />
                                             </HorizontalStackLayout>
                                             <Label Text="·" TextColor="#3A3A50" FontSize="12" VerticalOptions="Center" />
                                             <HorizontalStackLayout Spacing="4">
-                                                <Label Text="🏭" FontSize="11" VerticalOptions="Center" />
+                                                <Label Text="🏭" FontSize="13" VerticalOptions="Center" />
                                                 <Label Text="{Binding Manufacturer}"
                                                        Style="{StaticResource MutedLabel}" />
                                             </HorizontalStackLayout>
@@ -289,13 +313,13 @@
                                             <HorizontalStackLayout Spacing="4">
                                                 <Label Text="Nhập:" Style="{StaticResource MutedLabel}" />
                                                 <Label Text="{Binding PurchasePrice, Converter={StaticResource ToCurrency}}"
-                                                       FontSize="12" TextColor="#6B6B80" VerticalOptions="Center" />
+                                                       FontSize="13" TextColor="#6B6B80" VerticalOptions="Center" />
                                             </HorizontalStackLayout>
                                             <Label Text="→" TextColor="#3A3A50" FontSize="11" VerticalOptions="Center" />
                                             <HorizontalStackLayout Spacing="4">
                                                 <Label Text="Bán:" Style="{StaticResource MutedLabel}" />
                                                 <Label Text="{Binding SellingPrice, Converter={StaticResource ToCurrency}}"
-                                                       FontSize="12" TextColor="#22C55E"
+                                                       FontSize="13" TextColor="#22C55E"
                                                        FontAttributes="Bold" VerticalOptions="Center" />
                                             </HorizontalStackLayout>
                                         </HorizontalStackLayout>
@@ -303,7 +327,7 @@
                                         <!-- Số lượng + Ngày -->
                                         <HorizontalStackLayout Spacing="10">
                                             <HorizontalStackLayout Spacing="4">
-                                                <Label Text="📦" FontSize="13" VerticalOptions="Center" />
+                                                <Label Text="📦" FontSize="14" VerticalOptions="Center" />
                                                 <Label Style="{StaticResource MutedLabel}">
                                                     <Label.FormattedText>
                                                         <FormattedString>
@@ -314,17 +338,17 @@
                                                     </Label.FormattedText>
                                                 </Label>
                                             </HorizontalStackLayout>
-                                            <Label Text="·" TextColor="#3A3A50" FontSize="11" VerticalOptions="Center" />
-                                            <HorizontalStackLayout Spacing="4">
-                                                <Label Text="📅" FontSize="11" VerticalOptions="Center" />
-                                                <Label Text="{Binding DateAdded, Converter={StaticResource ToDateStr}}"
-                                                       Style="{StaticResource MutedLabel}" />
-                                            </HorizontalStackLayout>
                                         </HorizontalStackLayout>
 
                                         <!-- Hạn dùng -->
                                         <HorizontalStackLayout Spacing="4" IsVisible="{Binding ExpiryDate, Converter={StaticResource InverseBool}}">
-                                            <Label Text="⏰" FontSize="11" VerticalOptions="Center" />
+                                            <HorizontalStackLayout>
+                                                <Label Text="📅" FontSize="13" VerticalOptions="Center" />
+                                                <Label Text="{Binding DateAdded, Converter={StaticResource ToDateStr}}"
+                                                       Style="{StaticResource MutedLabel}" />
+                                            </HorizontalStackLayout>
+                                            <Label Text="·" TextColor="#3A3A50" FontSize="12" VerticalOptions="Center" />
+                                            <Label Text="⏰" FontSize="13" VerticalOptions="Center" />
                                             <Label Text="{Binding ExpiryDate, Converter={StaticResource ToDateStr}, TargetNullValue='Không hạn'}"
                                                    Style="{StaticResource MutedLabel}" />
                                         </HorizontalStackLayout>

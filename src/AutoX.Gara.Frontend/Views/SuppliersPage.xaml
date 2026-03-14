@@ -125,7 +125,7 @@
                     </Border>
 
                     <!-- Picker Payment Terms -->
-                    <Border Style="{StaticResource PickerBorder}" WidthRequest="150">
+                    <Border Style="{StaticResource PickerBorder}" WidthRequest="180">
                         <Picker SelectedIndex="{Binding PickerPaymentTermsIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44">
                             <Picker.Items>
                                 <x:String>Tất cả thanh toán</x:String>
@@ -166,9 +166,9 @@
                                     <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center" InputTransparent="True">
                                         <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#F1F1F5" LineBreakMode="TailTruncation" MaxLines="1" />
                                         <HorizontalStackLayout Spacing="10">
-                                            <Label Text="{Binding Email}" Style="{StaticResource MutedLabel}" />
+                                            <Label Text="{Binding Email, StringFormat='Email: {0}'}" Style="{StaticResource MutedLabel}" />
                                             <Label Text="·" TextColor="#3A3A50" FontSize="12" VerticalOptions="Center" />
-                                            <Label Text="{Binding TaxCode}" Style="{StaticResource MutedLabel}" />
+                                            <Label Text="{Binding TaxCode, StringFormat='Mã số thuế: {0}'}" Style="{StaticResource MutedLabel}" />
                                         </HorizontalStackLayout>
                                         <HorizontalStackLayout Spacing="4">
                                             <Label Text="📞" FontSize="12" VerticalOptions="Center" />

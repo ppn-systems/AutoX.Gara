@@ -60,9 +60,8 @@
         <Grid Grid.Row="1" RowDefinitions="Auto,*" Margin="0,12,0,0">
             <Label Text="{Binding ErrorMessage}" TextColor="#EF4444" IsVisible="{Binding HasError}" />
 
-            <!-- NOTE: We use BindableLayout instead of CollectionView here because this view supports
-                 expandable rows (money breakdown). CollectionView virtualization can clip/reuse
-                 measurements on some platforms, causing the expanded content to overlap. -->
+            <!-- NOTE: We use BindableLayout instead of CollectionView here to keep layout predictable
+                 across platforms (CollectionView virtualization can clip/reuse measurements). -->
             <ScrollView Grid.Row="1">
                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding Invoices}" Spacing="10">
                     <BindableLayout.ItemTemplate>
@@ -121,46 +120,6 @@
                                     </Border>
                                 </Grid>
 
-                                <Border Style="{StaticResource CardStyle}"
-                                        Padding="12" BackgroundColor="#0E0E16"
-                                        IsVisible="{Binding IsExpanded}">
-                                    <Grid ColumnDefinitions="*,Auto" RowSpacing="6" ColumnSpacing="12">
-                                        <Label Text="Dịch vụ" Style="{StaticResource MutedLabel}" />
-                                        <Label Grid.Column="1" Text="{Binding ServiceSubtotal, StringFormat='{0:N0}'}"
-                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
-
-                                        <Label Grid.Row="1" Text="Phụ tùng" Style="{StaticResource MutedLabel}" />
-                                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding PartsSubtotal, StringFormat='{0:N0}'}"
-                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
-
-                                        <Label Grid.Row="2" Text="Tạm tính" Style="{StaticResource MutedLabel}" />
-                                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding Subtotal, StringFormat='{0:N0}'}"
-                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
-
-                                        <Label Grid.Row="3" Text="Giảm giá" Style="{StaticResource MutedLabel}" />
-                                        <Label Grid.Row="3" Grid.Column="1" Text="{Binding DiscountAmount, StringFormat='-{0:N0}'}"
-                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
-
-                                        <Label Grid.Row="4" Text="{Binding TaxRateText}" Style="{StaticResource MutedLabel}" />
-                                        <Label Grid.Row="4" Grid.Column="1" Text="{Binding TaxAmount, StringFormat='{0:N0}'}"
-                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
-
-                                        <BoxView Grid.Row="5" Grid.ColumnSpan="2" HeightRequest="1" BackgroundColor="#2A2A38" Margin="0,6,0,6" />
-
-                                        <Label Grid.Row="6" Text="Tổng" TextColor="#F1F1F5" FontAttributes="Bold" />
-                                        <Label Grid.Row="6" Grid.Column="1" Text="{Binding TotalAmount, StringFormat='{0:N0}'}"
-                                               TextColor="#F1F1F5" FontAttributes="Bold" HorizontalTextAlignment="End" />
-
-                                        <Label Grid.Row="7" Text="Đã trả" Style="{StaticResource MutedLabel}" />
-                                        <Label Grid.Row="7" Grid.Column="1" Text="{Binding AmountPaid, StringFormat='{0:N0}'}"
-                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
-
-                                        <Label Grid.Row="8" Text="Còn nợ" Style="{StaticResource MutedLabel}" />
-                                        <Label Grid.Row="8" Grid.Column="1" Text="{Binding BalanceDue, StringFormat='{0:N0}'}"
-                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
-                                    </Grid>
-                                </Border>
-
                                 <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="8">
                                     <Button Grid.Row="0" Grid.Column="0"
                                             Text="Chi tiết tiền"
@@ -178,7 +137,7 @@
                                             Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}"
                                             CommandParameter="{Binding .}" />
                                     <Button Grid.Row="1" Grid.Column="1"
-                                            Text="Giao dịch"
+                                            Text="Xem giao dịch"
                                             Style="{StaticResource GhostBtn}"
                                             Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenTransactionsCommand}"
                                             CommandParameter="{Binding .}" />
@@ -186,15 +145,16 @@
 
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                                     <Button Grid.Column="0"
-                                            Text="Thanh toán"
+                                            Text="{Binding PayNowText}"
                                             Style="{StaticResource AccentBtn}"
+                                            IsEnabled="{Binding CanPay}"
                                             Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.PayNowCommand}"
                                             CommandParameter="{Binding .}" />
                                     <Button Grid.Column="1"
-                                            Text="Xóa"
+                                            Text="Giữ để xóa"
                                             Style="{StaticResource DangerBtn}"
-                                            Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.DeleteCommand}"
-                                            CommandParameter="{Binding .}" />
+                                            Pressed="OnDeletePressed"
+                                            Released="OnDeleteReleased" />
                                 </Grid>
                                 </VerticalStackLayout>
                             </Border>
@@ -202,6 +162,145 @@
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
             </ScrollView>
+        </Grid>
+
+        <!-- Money details popup -->
+        <Grid IsVisible="{Binding IsMoneyPopupVisible}" BackgroundColor="#80000010" RowSpan="2">
+            <Border Style="{StaticResource CardStyle}"
+                    VerticalOptions="Center" HorizontalOptions="Center"
+                    Padding="16" WidthRequest="520">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Chi tiết tiền" TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
+                            <Label Text="{Binding MoneyPopupRow.InvoiceNumber, StringFormat='Hóa đơn: {0}', TargetNullValue=''}"
+                                   Style="{StaticResource MutedLabel}" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Text="Đóng" Style="{StaticResource GhostBtn}" Command="{Binding CloseMoneyPopupCommand}" />
+                    </Grid>
+
+                    <Border Style="{StaticResource CardStyle}" Padding="12" BackgroundColor="#0E0E16">
+                        <Grid ColumnDefinitions="*,Auto"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                              RowSpacing="8" ColumnSpacing="12">
+                            <Label Text="Dịch vụ" Style="{StaticResource MutedLabel}" />
+                            <Label Grid.Column="1" Text="{Binding MoneyPopupRow.ServiceSubtotal, StringFormat='{0:N0}'}"
+                                   TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                            <Label Grid.Row="1" Text="Phụ tùng" Style="{StaticResource MutedLabel}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding MoneyPopupRow.PartsSubtotal, StringFormat='{0:N0}'}"
+                                   TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                            <Label Grid.Row="2" Text="Tạm tính" Style="{StaticResource MutedLabel}" />
+                            <Label Grid.Row="2" Grid.Column="1" Text="{Binding MoneyPopupRow.Subtotal, StringFormat='{0:N0}'}"
+                                   TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                            <Label Grid.Row="3" Text="Giảm giá" Style="{StaticResource MutedLabel}" />
+                            <Label Grid.Row="3" Grid.Column="1" Text="{Binding MoneyPopupRow.DiscountAmount, StringFormat='-{0:N0}'}"
+                                   TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                            <Label Grid.Row="4" Text="{Binding MoneyPopupRow.TaxRateText, TargetNullValue='Thuế'}" Style="{StaticResource MutedLabel}" />
+                            <Label Grid.Row="4" Grid.Column="1" Text="{Binding MoneyPopupRow.TaxAmount, StringFormat='{0:N0}'}"
+                                   TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                            <BoxView Grid.Row="5" Grid.ColumnSpan="2" HeightRequest="1" BackgroundColor="#2A2A38" Margin="0,6,0,6" />
+
+                            <Label Grid.Row="6" Text="Tổng" TextColor="#F1F1F5" FontAttributes="Bold" />
+                            <Label Grid.Row="6" Grid.Column="1" Text="{Binding MoneyPopupRow.TotalAmount, StringFormat='{0:N0}'}"
+                                   TextColor="#F1F1F5" FontAttributes="Bold" HorizontalTextAlignment="End" />
+
+                            <Label Grid.Row="7" Text="Đã trả" Style="{StaticResource MutedLabel}" />
+                            <Label Grid.Row="7" Grid.Column="1" Text="{Binding MoneyPopupRow.AmountPaid, StringFormat='{0:N0}'}"
+                                   TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                            <Label Grid.Row="8" Text="Còn nợ" Style="{StaticResource MutedLabel}" />
+                            <Label Grid.Row="8" Grid.Column="1" Text="{Binding MoneyPopupRow.BalanceDue, StringFormat='{0:N0}'}"
+                                   TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+                        </Grid>
+                    </Border>
+
+                    <ActivityIndicator IsRunning="{Binding IsMoneyPopupLineItemsLoading}"
+                                       IsVisible="{Binding IsMoneyPopupLineItemsLoading}"
+                                       Color="#6366F1" />
+                    <Label Text="{Binding MoneyPopupLineItemsError}"
+                           TextColor="#EF4444"
+                           IsVisible="{Binding HasMoneyPopupLineItemsError}" />
+
+                    <Label Text="Không xác định được lệnh liên kết của hóa đơn (server chưa trả RepairOrderId). Bạn có thể bấm 'Xem lệnh' để kiểm tra."
+                           Style="{StaticResource MutedLabel}"
+                           IsVisible="{Binding HasMoneyPopupRepairOrderLink, Converter={StaticResource InverseBool}}" />
+
+                    <VerticalStackLayout Spacing="10" IsVisible="{Binding HasMoneyPopupRepairOrderLink}">
+                        <Border Style="{StaticResource CardStyle}" Padding="12" BackgroundColor="#0E0E16"
+                                IsVisible="{Binding HasMoneyPopupServiceLines}">
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="Dịch vụ trong lệnh" TextColor="#F1F1F5" FontAttributes="Bold" />
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding MoneyPopupServiceLines}" Spacing="8">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicesViewModel+MoneyLineItemRow">
+                                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="2">
+                                                <Label Text="{Binding Title}" TextColor="#F1F1F5" LineBreakMode="TailTruncation" />
+                                                <Label Grid.Column="1" Text="{Binding LineTotal, StringFormat='{0:N0}', TargetNullValue=''}"
+                                                       TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+                                                <Label Grid.Row="1"
+                                                       Text="{Binding Subtitle}"
+                                                       Style="{StaticResource MutedLabel}" />
+                                                <Label Grid.Row="1" Grid.Column="1"
+                                                       Text="{Binding Quantity, StringFormat='x{0}'}"
+                                                       Style="{StaticResource MutedLabel}"
+                                                       HorizontalTextAlignment="End" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}" Padding="12" BackgroundColor="#0E0E16"
+                                IsVisible="{Binding HasMoneyPopupPartLines}">
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="Phụ tùng trong lệnh" TextColor="#F1F1F5" FontAttributes="Bold" />
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding MoneyPopupPartLines}" Spacing="8">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:InvoicesViewModel+MoneyLineItemRow">
+                                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="2">
+                                                <Label Text="{Binding Title}" TextColor="#F1F1F5" LineBreakMode="TailTruncation" />
+                                                <Label Grid.Column="1" Text="{Binding LineTotal, StringFormat='{0:N0}', TargetNullValue=''}"
+                                                       TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+                                                <Label Grid.Row="1"
+                                                       Text="{Binding Subtitle}"
+                                                       Style="{StaticResource MutedLabel}" />
+                                                <Label Grid.Row="1" Grid.Column="1"
+                                                       Text="{Binding Quantity, StringFormat='x{0}'}"
+                                                       Style="{StaticResource MutedLabel}"
+                                                       HorizontalTextAlignment="End" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- Delete confirmation popup -->
+        <Grid IsVisible="{Binding IsDeleteConfirmVisible}" BackgroundColor="#80000010" RowSpan="2">
+            <Border Style="{StaticResource CardStyle}"
+                    VerticalOptions="Center" HorizontalOptions="Center"
+                    Padding="16" WidthRequest="420">
+                <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
+                    <Label Text="Xác nhận xóa hóa đơn?" TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
+                    <Label Grid.Row="1"
+                           Text="{Binding DeleteConfirmRow.InvoiceNumber, StringFormat='Hóa đơn: {0}', TargetNullValue=''}"
+                           Style="{StaticResource MutedLabel}" />
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" HeightRequest="48" Command="{Binding CancelDeleteCommand}" />
+                        <Button Grid.Column="1" Text="Xóa" Style="{StaticResource DangerBtn}" HeightRequest="48" Command="{Binding ConfirmDeleteCommand}" />
+                    </Grid>
+                </Grid>
+            </Border>
         </Grid>
 
         <!-- Form overlay -->

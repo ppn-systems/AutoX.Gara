@@ -132,25 +132,21 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
         Parts.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
 
         // Build category pickers from enum so UI stays in sync when enum grows.
-        PartCategory[] allCategories = System.Enum.GetValues<PartCategory>()
-            .Where(c => c != PartCategory.None)
-            .ToArray();
+        PartCategory[] allCategories = [.. System.Enum.GetValues<PartCategory>().Where(c => c != PartCategory.None)];
 
         // Filter: "Tất cả loại" + all enum values (excluding None)
         _partCategoryFilterValues = new PartCategory?[allCategories.Length + 1];
         _partCategoryFilterValues[0] = null;
-        for (int i = 0; i < allCategories.Length; i++)
+        for (Int32 i = 0; i < allCategories.Length; i++)
         {
             _partCategoryFilterValues[i + 1] = allCategories[i];
         }
-        PartCategoryFilterOptions = new[] { "Tất cả loại" }
-            .Concat(allCategories.Select(EnumText.Get))
-            .ToArray();
+        PartCategoryFilterOptions = ["Tất cả loại", .. allCategories.Select(EnumText.Get)];
 
         // Form: put "Other" first for convenience, then remaining values (excluding None/Other).
-        PartCategory[] rest = allCategories.Where(c => c != PartCategory.Other).ToArray();
+        PartCategory[] rest = [.. allCategories.Where(c => c != PartCategory.Other)];
         _partCategoryFormValues = [PartCategory.Other, .. rest];
-        PartCategoryFormOptions = _partCategoryFormValues.Select(EnumText.Get).ToArray();
+        PartCategoryFormOptions = [.. _partCategoryFormValues.Select(EnumText.Get)];
     }
 
     // ─── Property Change Hooks ────────────────────────────────────────────────
@@ -364,12 +360,10 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
         FormIsDefective = part.IsDefective;
         FormIsDiscontinued = part.IsDiscontinued;
         FormDateAdded = part.DateAdded.ToDateTime(System.TimeOnly.MinValue);
-        FormExpiryDate = part.ExpiryDate.HasValue
-            ? part.ExpiryDate.Value.ToDateTime(System.TimeOnly.MinValue)
-            : null;
+        FormExpiryDate = part.ExpiryDate.HasValue ? part.ExpiryDate.Value.ToDateTime(System.TimeOnly.MinValue) : null;
 
         PartCategory cat = part.PartCategory ?? PartCategory.Other;
-        int idx = System.Array.IndexOf(_partCategoryFormValues, cat);
+        Int32 idx = System.Array.IndexOf(_partCategoryFormValues, cat);
         FormPickerCategoryIndex = idx >= 0 ? idx : 0;
 
         ClearFormError();
@@ -591,6 +585,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
         HasFormError = true;
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "SYSLIB1045:Convert to 'GeneratedRegexAttribute'.", Justification = "<Pending>")]
     private System.Boolean ValidateForm()
     {
         if (IsEditing && System.String.IsNullOrWhiteSpace(FormPartCode))

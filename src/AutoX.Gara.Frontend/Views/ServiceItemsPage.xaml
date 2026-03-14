@@ -14,6 +14,7 @@
         <ResourceDictionary>
             <conv:InverseBoolConverter x:Key="InverseBool" />
             <conv:DecimalToCurrencyConverter x:Key="ToCurrency" />
+            <conv:EnumTextConverter x:Key="EnumText" />
 
             <Style x:Key="CardStyle" TargetType="Border">
                 <Setter Property="BackgroundColor" Value="#111118" />
@@ -36,7 +37,7 @@
                 <Setter Property="HeightRequest" Value="44" />
             </Style>
             <Style x:Key="MutedLabel" TargetType="Label">
-                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontSize" Value="14" />
                 <Setter Property="TextColor" Value="#6B6B80" />
                 <Setter Property="VerticalOptions" Value="Center" />
             </Style>
@@ -118,9 +119,14 @@
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                     <Label Text="LỌC" FontSize="13" FontAttributes="Bold" CharacterSpacing="1.5" TextColor="#3A3A50" VerticalOptions="Center" Margin="0,0,4,0" />
 
-                    <!-- Picker Type (Dynamic từ ServiceTypeNames) -->
+                    <!-- Picker Type (Dynamic từ enum) -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="180">
-                        <Picker SelectedIndex="{Binding PickerTypeIndex}" ItemsSource="{Binding ServiceTypeNames}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44" />
+                        <Picker SelectedIndex="{Binding PickerTypeIndex}"
+                                ItemsSource="{Binding ServiceTypeFilterOptions}"
+                                TextColor="#C4C4D4"
+                                BackgroundColor="Transparent"
+                                VerticalOptions="Center"
+                                HeightRequest="44" />
                     </Border>
 
                     <!-- Min Price -->
@@ -163,12 +169,14 @@
                                         <HorizontalStackLayout Spacing="10">
                                             <Label Style="{StaticResource MutedLabel}">
                                                 <Label.FormattedText>
-                                                    <FormattedString>
-                                                        <Span Text="Loại: " TextColor="#6B6B80" />
-                                                        <Span Text="{Binding Type}" FontAttributes="Bold" TextColor="#C4C4D4" />
-                                                    </FormattedString>
-                                                </Label.FormattedText>
-                                            </Label>
+                                                          <FormattedString>
+                                                              <Span Text="Loại: " TextColor="#6B6B80" />
+                                                              <Span Text="{Binding Type, Converter={StaticResource EnumText}}"
+                                                                    FontAttributes="Bold"
+                                                                    TextColor="#C4C4D4" />
+                                                          </FormattedString>
+                                                      </Label.FormattedText>
+                                                  </Label>
                                             <Label Text="·" TextColor="#3A3A50" FontSize="12" VerticalOptions="Center" />
                                             <Label Style="{StaticResource MutedLabel}">
                                                 <Label.FormattedText>
@@ -228,8 +236,17 @@
                     <TapGestureRecognizer Command="{Binding CloseFormCommand}" />
                 </BoxView.GestureRecognizers>
             </BoxView>
-            <Border BackgroundColor="#111118" StrokeShape="RoundRectangle 14" Stroke="#2A2A38" StrokeThickness="1" Margin="20,0" MaximumWidthRequest="500" VerticalOptions="Center" HorizontalOptions="Center" Padding="28,24">
-                <ScrollView Padding="0,0,20,0">
+            <Border BackgroundColor="#111118" 
+                    StrokeShape="RoundRectangle 14" 
+                    Stroke="#2A2A38" 
+                    StrokeThickness="1" 
+                    Margin="20,0" 
+                    MaximumHeightRequest="700"
+                    MaximumWidthRequest="520" 
+                    VerticalOptions="Center" 
+                    HorizontalOptions="Center" 
+                    Padding="28,24">
+                <ScrollView Padding="20,0,20,0">
                     <VerticalStackLayout Spacing="0">
 
                         <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
@@ -240,14 +257,19 @@
                         <!-- Description -->
                         <Label Text="MÔ TẢ DỊCH VỤ *" Style="{StaticResource FieldLabel}" />
                         <Border Style="{StaticResource InputBorder}" Padding="0">
-                            <Editor Text="{Binding FormDescription}" Placeholder="Nhập mô tả dịch vụ..." BackgroundColor="Transparent" TextColor="#F1F1F5" PlaceholderColor="#3A3A50" HeightRequest="80" />
+                            <Editor Text="{Binding FormDescription}" 
+                                    Placeholder="Nhập mô tả dịch vụ..." 
+                                    BackgroundColor="Transparent" 
+                                    TextColor="#F1F1F5" 
+                                    PlaceholderColor="#3A3A50" 
+                                    MaximumHeightRequest="70" />
                         </Border>
 
                         <!-- Type Picker in Form (Dynamic) -->
                         <Label Text="LOẠI DỊCH VỤ *" Style="{StaticResource FieldLabel}" />
                         <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
                             <Picker SelectedIndex="{Binding FormTypeIndex}"
-                                    ItemsSource="{Binding ServiceTypeNames}"
+                                    ItemsSource="{Binding ServiceTypeFormOptions}"
                                     TextColor="#C4C4D4"
                                     BackgroundColor="Transparent"
                                     VerticalOptions="Center"
@@ -267,7 +289,7 @@
                         </Border>
 
                         <!-- Buttons -->
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,16,0,0">
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,50,0,0">
                             <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CloseFormCommand}" />
                             <Button Grid.Column="1" Text="{Binding FormSaveText}" Style="{StaticResource AccentBtn}" Command="{Binding SaveFormCommand}" />
                         </Grid>

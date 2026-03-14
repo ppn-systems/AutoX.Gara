@@ -5,14 +5,21 @@ using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Messages;
 using AutoX.Gara.Frontend.Results.Billings;
+using AutoX.Gara.Frontend.Results.Parts;
+using AutoX.Gara.Frontend.Results.ServiceItems;
 using AutoX.Gara.Frontend.Services.Billings;
+using AutoX.Gara.Frontend.Services.Inventory;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Billings;
 using AutoX.Gara.Shared.Protocol.Customers;
+using AutoX.Gara.Shared.Protocol.Inventory;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Maui.Controls;
+using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
+using Nalix.Framework.Injection;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -22,23 +29,39 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 {
     private readonly InvoiceService _service;
     private readonly RepairOrderService _repairOrderService;
+    private readonly RepairTaskService _repairTaskService;
+    private readonly RepairOrderItemService _repairOrderItemService;
+    private readonly ServiceItemService _serviceItemService;
+    private readonly PartService _partService;
     private System.Threading.CancellationTokenSource? _cts;
     private System.Threading.CancellationTokenSource? _lookupCts;
+    private System.Threading.CancellationTokenSource? _moneyDetailsCts;
 
     private const System.Int32 DefaultPageSize = 10;
 
     public InvoicesViewModel(
         InvoiceService service,
-        RepairOrderService repairOrderService)
+        RepairOrderService repairOrderService,
+        RepairTaskService repairTaskService,
+        RepairOrderItemService repairOrderItemService,
+        ServiceItemService serviceItemService,
+        PartService partService)
     {
         _service = service ?? throw new System.ArgumentNullException(nameof(service));
         _repairOrderService = repairOrderService ?? throw new System.ArgumentNullException(nameof(repairOrderService));
+        _repairTaskService = repairTaskService ?? throw new System.ArgumentNullException(nameof(repairTaskService));
+        _repairOrderItemService = repairOrderItemService ?? throw new System.ArgumentNullException(nameof(repairOrderItemService));
+        _serviceItemService = serviceItemService ?? throw new System.ArgumentNullException(nameof(serviceItemService));
+        _partService = partService ?? throw new System.ArgumentNullException(nameof(partService));
 
         WeakReferenceMessenger.Default.Register<InvoiceTotalsChangedMessage>(this, (_, __) =>
         {
             // Invoice totals depend on Transactions; refresh when they change.
             _ = LoadAsync();
         });
+
+        MoneyPopupServiceLines.CollectionChanged += (_, __) => OnPropertyChanged(nameof(HasMoneyPopupServiceLines));
+        MoneyPopupPartLines.CollectionChanged += (_, __) => OnPropertyChanged(nameof(HasMoneyPopupPartLines));
     }
 
     public sealed record LookupOption(System.Int32 Id, System.String Display);
@@ -52,6 +75,7 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
         public System.Int32? InvoiceId => Dto.InvoiceId;
         public System.String InvoiceNumber => Dto.InvoiceNumber;
         public System.DateTime InvoiceDate => Dto.InvoiceDate;
+        public System.Int32 RepairOrderId => Dto.RepairOrderId;
 
         public PaymentStatus PaymentStatus => Dto.PaymentStatus;
         public System.String PaymentStatusText => EnumText.Get(Dto.PaymentStatus);
@@ -72,14 +96,43 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
         public System.Decimal BalanceDue => Dto.BalanceDue;
         public System.Decimal AmountPaid => Dto.TotalAmount - Dto.BalanceDue;
 
+        public System.Boolean CanPay => BalanceDue > 0;
+        public System.String PayNowText => CanPay ? "Thanh toán" : "Đã thanh toán";
+
         [ObservableProperty] public partial System.Boolean IsExpanded { get; set; }
     }
+
+    public sealed record MoneyLineItemRow(
+        System.String Title,
+        System.String? Subtitle,
+        System.Int32 Quantity,
+        System.Decimal? UnitPrice,
+        System.Decimal? LineTotal);
 
     [ObservableProperty] public partial CustomerDto? Owner { get; set; }
 
     public System.String PageTitle => Owner is null ? "Hóa đơn" : $"Hóa đơn {Owner.Name}";
 
     public ObservableCollection<InvoiceRow> Invoices { get; } = [];
+
+    // Money details popup
+    [ObservableProperty] public partial bool IsMoneyPopupVisible { get; set; }
+    [ObservableProperty] public partial InvoiceRow? MoneyPopupRow { get; set; }
+    [ObservableProperty] public partial int MoneyPopupRepairOrderId { get; set; }
+    public ObservableCollection<MoneyLineItemRow> MoneyPopupServiceLines { get; } = [];
+    public ObservableCollection<MoneyLineItemRow> MoneyPopupPartLines { get; } = [];
+    [ObservableProperty] public partial bool IsMoneyPopupLineItemsLoading { get; set; }
+    [ObservableProperty] public partial string? MoneyPopupLineItemsError { get; set; }
+    public System.Boolean HasMoneyPopupLineItemsError => !System.String.IsNullOrWhiteSpace(MoneyPopupLineItemsError);
+    partial void OnMoneyPopupLineItemsErrorChanged(string? value) => OnPropertyChanged(nameof(HasMoneyPopupLineItemsError));
+    public System.Boolean HasMoneyPopupServiceLines => MoneyPopupServiceLines.Count > 0;
+    public System.Boolean HasMoneyPopupPartLines => MoneyPopupPartLines.Count > 0;
+    public System.Boolean HasMoneyPopupRepairOrderLink => MoneyPopupRepairOrderId > 0;
+    partial void OnMoneyPopupRepairOrderIdChanged(int value) => OnPropertyChanged(nameof(HasMoneyPopupRepairOrderLink));
+
+    // Delete confirm popup
+    [ObservableProperty] public partial bool IsDeleteConfirmVisible { get; set; }
+    [ObservableProperty] public partial InvoiceRow? DeleteConfirmRow { get; set; }
 
     [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
     [ObservableProperty] public partial bool HasNextPage { get; set; }
@@ -313,23 +366,80 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
     }
 
     [RelayCommand]
-    private static async System.Threading.Tasks.Task OpenTransactionsAsync(InvoiceRow row)
+    private async System.Threading.Tasks.Task OpenTransactionsAsync(InvoiceRow row)
     {
-        var page = new Views.TransactionsPage();
-        page.Initialize(row.Dto);
-        await Shell.Current.Navigation.PushAsync(page);
+        try
+        {
+            if (row is null)
+            {
+                return;
+            }
+
+            var page = new Views.TransactionsPage();
+            page.Initialize(row.Dto);
+            await PushPageAsync(page);
+        }
+        catch (System.Exception ex)
+        {
+            LogException(ex);
+            HandleError("Không thể mở giao dịch", "Vui lòng thử lại.", ProtocolAdvice.BACKOFF_RETRY);
+        }
     }
 
     [RelayCommand]
-    private static async System.Threading.Tasks.Task PayNowAsync(InvoiceRow row)
+    private async System.Threading.Tasks.Task PayNowAsync(InvoiceRow row)
     {
-        var page = new Views.TransactionsPage();
-        page.Initialize(row.Dto, autoOpenAddForm: true, prefillAmount: row.BalanceDue);
-        await Shell.Current.Navigation.PushAsync(page);
+        try
+        {
+            if (row is null)
+            {
+                return;
+            }
+
+            // If already paid, still allow opening transactions (read-only flow).
+            System.Boolean canQuickPay = row.BalanceDue > 0;
+
+            var page = new Views.TransactionsPage();
+            page.Initialize(row.Dto, autoOpenAddForm: canQuickPay, prefillAmount: canQuickPay ? row.BalanceDue : 0);
+            await PushPageAsync(page);
+        }
+        catch (System.Exception ex)
+        {
+            LogException(ex);
+            HandleError("Không thể thanh toán", "Vui lòng thử lại.", ProtocolAdvice.BACKOFF_RETRY);
+        }
     }
 
     [RelayCommand]
-    private async System.Threading.Tasks.Task DeleteAsync(InvoiceRow row)
+    private void RequestDelete(InvoiceRow row)
+    {
+        DeleteConfirmRow = row;
+        IsDeleteConfirmVisible = true;
+    }
+
+    [RelayCommand]
+    private void CancelDelete()
+    {
+        IsDeleteConfirmVisible = false;
+        DeleteConfirmRow = null;
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task ConfirmDeleteAsync()
+    {
+        if (DeleteConfirmRow is null)
+        {
+            return;
+        }
+
+        InvoiceRow row = DeleteConfirmRow;
+        IsDeleteConfirmVisible = false;
+        DeleteConfirmRow = null;
+
+        await DeleteInternalAsync(row);
+    }
+
+    private async System.Threading.Tasks.Task DeleteInternalAsync(InvoiceRow row)
     {
         IsLoading = true;
         ClearError();
@@ -355,10 +465,16 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
         var cts = System.Threading.Interlocked.Exchange(ref _cts, null);
         var lookupCts = System.Threading.Interlocked.Exchange(ref _lookupCts, null);
+        var moneyCts = System.Threading.Interlocked.Exchange(ref _moneyDetailsCts, null);
         if (lookupCts is not null)
         {
             try { lookupCts.Cancel(); } catch { }
             lookupCts.Dispose();
+        }
+        if (moneyCts is not null)
+        {
+            try { moneyCts.Cancel(); } catch { }
+            moneyCts.Dispose();
         }
         if (cts is null)
         {
@@ -391,20 +507,330 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
         return $"INV-{date}-{rand}";
     }
 
-    [RelayCommand]
-    private void ToggleDetails(InvoiceRow row)
+    private static void LogException(System.Exception ex)
     {
+        try
+        {
+            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+            logger?.Error(ex.ToString());
+            if (ex.InnerException is not null)
+            {
+                logger?.Error("Inner: " + ex.InnerException);
+            }
+        }
+        catch
+        {
+            // Swallow: logging must never crash UI.
+        }
+    }
+
+    [System.Obsolete]
+    private static async System.Threading.Tasks.Task PushPageAsync(Page page)
+    {
+        INavigation? nav = Shell.Current?.Navigation ?? Application.Current?.MainPage?.Navigation;
+        if (nav is null)
+        {
+            try
+            {
+                ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+                logger?.Error("[FE.Invoices] Navigation is null; cannot navigate.");
+            }
+            catch
+            {
+            }
+            return;
+        }
+
+        await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(async () =>
+        {
+            await nav.PushAsync(page);
+        });
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task ToggleDetails(InvoiceRow row)
+    {
+        MoneyPopupRow = row;
+        IsMoneyPopupVisible = true;
+
+        var prev = System.Threading.Interlocked.Exchange(ref _moneyDetailsCts, new System.Threading.CancellationTokenSource());
+        if (prev is not null)
+        {
+            try { prev.Cancel(); } catch { }
+            prev.Dispose();
+        }
+
+        MoneyPopupServiceLines.Clear();
+        MoneyPopupPartLines.Clear();
+        MoneyPopupLineItemsError = null;
+        MoneyPopupRepairOrderId = 0;
+
         if (row is null)
         {
             return;
         }
 
-        bool next = !row.IsExpanded;
-        for (int i = 0; i < Invoices.Count; i++)
+        System.Int32 roId = row.RepairOrderId;
+        if (roId <= 0)
         {
-            Invoices[i].IsExpanded = false;
+            System.Int32 invId = row.InvoiceId ?? 0;
+            if (invId > 0)
+            {
+                RepairOrderListResult roRes = await _repairOrderService.GetListAsync(
+                    page: 1,
+                    pageSize: 5,
+                    filterCustomerId: row.Dto.CustomerId,
+                    filterVehicleId: 0,
+                    searchTerm: null,
+                    sortBy: RepairOrderSortField.OrderDate,
+                    sortDescending: true,
+                    filterInvoiceId: invId,
+                    filterStatus: null,
+                    ct: _moneyDetailsCts!.Token);
+
+                if (roRes.IsSuccess && roRes.RepairOrders is not null)
+                {
+                    RepairOrderDto? found = roRes.RepairOrders.FirstOrDefault(x => (x.RepairOrderId ?? 0) > 0);
+                    roId = found?.RepairOrderId ?? 0;
+                }
+            }
         }
-        row.IsExpanded = next;
+
+        MoneyPopupRepairOrderId = roId;
+
+        if (roId <= 0)
+        {
+            MoneyPopupLineItemsError = "Không xác định được lệnh liên kết của hóa đơn. Bạn có thể bấm 'Xem lệnh' để kiểm tra.";
+            return;
+        }
+
+        await LoadMoneyPopupLineItemsAsync(roId, _moneyDetailsCts!.Token);
+    }
+
+    [RelayCommand]
+    private void CloseMoneyPopup()
+    {
+        try { _moneyDetailsCts?.Cancel(); } catch { }
+
+        IsMoneyPopupVisible = false;
+        MoneyPopupRow = null;
+        MoneyPopupRepairOrderId = 0;
+        MoneyPopupServiceLines.Clear();
+        MoneyPopupPartLines.Clear();
+        MoneyPopupLineItemsError = null;
+    }
+
+    private async System.Threading.Tasks.Task LoadMoneyPopupLineItemsAsync(System.Int32 repairOrderId, System.Threading.CancellationToken ct)
+    {
+        if (repairOrderId <= 0)
+        {
+            return;
+        }
+
+        IsMoneyPopupLineItemsLoading = true;
+        MoneyPopupLineItemsError = null;
+        try
+        {
+            var tasks = new System.Collections.Generic.List<RepairTaskDto>();
+            var items = new System.Collections.Generic.List<RepairOrderItemDto>();
+
+            for (System.Int32 page = 1; ; page++)
+            {
+                RepairTaskListResult res = await _repairTaskService.GetListAsync(
+                    page: page,
+                    pageSize: 200,
+                    filterRepairOrderId: repairOrderId,
+                    sortBy: RepairTaskSortField.Id,
+                    sortDescending: true,
+                    ct: ct);
+
+                if (!res.IsSuccess)
+                {
+                    MoneyPopupLineItemsError = res.ErrorMessage ?? "Không tải được danh sách dịch vụ.";
+                    return;
+                }
+
+                tasks.AddRange(res.RepairTasks);
+                if (!res.HasMore)
+                {
+                    break;
+                }
+            }
+
+            for (System.Int32 page = 1; ; page++)
+            {
+                RepairOrderItemListResult res = await _repairOrderItemService.GetListAsync(
+                    page: page,
+                    pageSize: 200,
+                    filterRepairOrderId: repairOrderId,
+                    sortBy: RepairOrderItemSortField.Id,
+                    sortDescending: true,
+                    ct: ct);
+
+                if (!res.IsSuccess)
+                {
+                    MoneyPopupLineItemsError = res.ErrorMessage ?? "Không tải được danh sách phụ tùng.";
+                    return;
+                }
+
+                items.AddRange(res.RepairOrderItems);
+                if (!res.HasMore)
+                {
+                    break;
+                }
+            }
+
+            System.Collections.Generic.HashSet<System.Int32> serviceItemIds = tasks
+                .Select(t => t.ServiceItemId)
+                .Where(id => id > 0)
+                .ToHashSet();
+
+            System.Collections.Generic.HashSet<System.Int32> partIds = items
+                .Select(i => i.PartId)
+                .Where(id => id > 0)
+                .ToHashSet();
+
+            System.Collections.Generic.Dictionary<System.Int32, ServiceItemDto> serviceItemById =
+                await LoadServiceItemMapAsync(serviceItemIds, ct);
+
+            System.Collections.Generic.Dictionary<System.Int32, PartDto> partById =
+                await LoadPartMapAsync(partIds, ct);
+
+            MoneyPopupServiceLines.Clear();
+            MoneyPopupPartLines.Clear();
+
+            foreach (var grp in tasks.GroupBy(t => t.ServiceItemId).OrderBy(g => g.Key))
+            {
+                System.Int32 id = grp.Key;
+                System.Int32 qty = grp.Count();
+
+                serviceItemById.TryGetValue(id, out ServiceItemDto? svc);
+                System.String title = svc is null
+                    ? $"Dịch vụ #{id}"
+                    : (System.String.IsNullOrWhiteSpace(svc.Description) ? $"Dịch vụ #{id}" : svc.Description);
+
+                System.String? subtitle = svc is null ? null : $"{EnumText.Get(svc.Type)}";
+                System.Decimal? unit = svc?.UnitPrice;
+                System.Decimal? total = unit is null ? null : unit.Value * qty;
+
+                MoneyPopupServiceLines.Add(new MoneyLineItemRow(title, subtitle, qty, unit, total));
+            }
+
+            foreach (var grp in items.GroupBy(i => i.PartId).OrderBy(g => g.Key))
+            {
+                System.Int32 id = grp.Key;
+                System.Int32 qty = grp.Sum(x => x.Quantity);
+
+                partById.TryGetValue(id, out PartDto? part);
+                System.String title = part is null
+                    ? $"Phụ tùng #{id}"
+                    : (System.String.IsNullOrWhiteSpace(part.PartName) ? $"Phụ tùng #{id}" : part.PartName);
+
+                System.String? subtitle = part?.PartCode;
+                System.Decimal? unit = part?.SellingPrice;
+                System.Decimal? total = unit is null ? null : unit.Value * qty;
+
+                MoneyPopupPartLines.Add(new MoneyLineItemRow(title, subtitle, qty, unit, total));
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+        }
+        catch (System.Exception ex)
+        {
+            LogException(ex);
+            MoneyPopupLineItemsError = "Không tải được chi tiết dịch vụ/phụ tùng.";
+        }
+        finally
+        {
+            IsMoneyPopupLineItemsLoading = false;
+        }
+    }
+
+    private async System.Threading.Tasks.Task<System.Collections.Generic.Dictionary<System.Int32, ServiceItemDto>> LoadServiceItemMapAsync(
+        System.Collections.Generic.HashSet<System.Int32> ids,
+        System.Threading.CancellationToken ct)
+    {
+        var map = new System.Collections.Generic.Dictionary<System.Int32, ServiceItemDto>();
+        if (ids.Count == 0)
+        {
+            return map;
+        }
+
+        for (System.Int32 page = 1; page <= 30; page++)
+        {
+            ServiceItemListResult res = await _serviceItemService.GetListAsync(
+                page: page,
+                pageSize: 120,
+                searchTerm: null,
+                sortBy: ServiceItemSortField.Description,
+                sortDescending: false,
+                ct: ct);
+
+            if (!res.IsSuccess)
+            {
+                break;
+            }
+
+            foreach (ServiceItemDto svc in res.ServiceItems)
+            {
+                System.Int32 id = svc.ServiceItemId ?? 0;
+                if (id > 0 && ids.Contains(id))
+                {
+                    map[id] = svc;
+                }
+            }
+
+            if (map.Count >= ids.Count || !res.HasMore)
+            {
+                break;
+            }
+        }
+
+        return map;
+    }
+
+    private async System.Threading.Tasks.Task<System.Collections.Generic.Dictionary<System.Int32, PartDto>> LoadPartMapAsync(
+        System.Collections.Generic.HashSet<System.Int32> ids,
+        System.Threading.CancellationToken ct)
+    {
+        var map = new System.Collections.Generic.Dictionary<System.Int32, PartDto>();
+        if (ids.Count == 0)
+        {
+            return map;
+        }
+
+        for (System.Int32 page = 1; page <= 30; page++)
+        {
+            PartListResult res = await _partService.GetListAsync(
+                page: page,
+                pageSize: 120,
+                searchTerm: null,
+                sortBy: PartSortField.PartName,
+                sortDescending: false,
+                ct: ct);
+
+            if (!res.IsSuccess)
+            {
+                break;
+            }
+
+            foreach (PartDto p in res.Parts)
+            {
+                System.Int32 id = p.PartId ?? 0;
+                if (id > 0 && ids.Contains(id))
+                {
+                    map[id] = p;
+                }
+            }
+
+            if (map.Count >= ids.Count || !res.HasMore)
+            {
+                break;
+            }
+        }
+
+        return map;
     }
 
     [RelayCommand]

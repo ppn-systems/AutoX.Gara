@@ -14,14 +14,14 @@ namespace AutoX.Gara.Frontend.Converters;
 /// </summary>
 public sealed class EnumTextConverter : IValueConverter
 {
-    public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    public System.Object Convert(System.Object? value, System.Type targetType, System.Object? parameter, System.Globalization.CultureInfo culture)
     {
         if (value is null)
         {
-            return string.Empty;
+            return System.String.Empty;
         }
 
-        string prefix = parameter as string ?? string.Empty;
+        System.String prefix = parameter as System.String ?? System.String.Empty;
         if (value is System.Enum e)
         {
             // Same logic as Helpers.EnumText.Get<TEnum>, but works with runtime enum types.
@@ -35,25 +35,20 @@ public sealed class EnumTextConverter : IValueConverter
             DisplayAttribute? display = member.GetCustomAttribute<DisplayAttribute>();
             if (display is not null)
             {
-                string? name = display.GetName();
-                if (!string.IsNullOrWhiteSpace(name))
+                System.String? name = display.GetName();
+                if (!System.String.IsNullOrWhiteSpace(name))
                 {
                     return prefix + name;
                 }
             }
 
             DescriptionAttribute? desc = member.GetCustomAttribute<DescriptionAttribute>();
-            if (desc is not null && !string.IsNullOrWhiteSpace(desc.Description))
-            {
-                return prefix + desc.Description;
-            }
-
-            return prefix + e.ToString();
+            return desc is not null && !System.String.IsNullOrWhiteSpace(desc.Description) ? prefix + desc.Description : prefix + e.ToString();
         }
 
         return prefix + value.ToString();
     }
 
-    public object ConvertBack(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    public System.Object ConvertBack(System.Object? value, System.Type targetType, System.Object? parameter, System.Globalization.CultureInfo culture)
         => throw new System.NotSupportedException();
 }

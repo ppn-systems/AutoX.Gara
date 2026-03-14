@@ -16,6 +16,8 @@
             <conv:InverseBoolConverter x:Key="InverseBool" />
             <conv:DecimalToCurrencyConverter x:Key="ToCurrency" />
             <conv:EnumTextConverter x:Key="EnumText" />
+            <conv:EmployeePositionToColorConverter x:Key="PositionColor" />
+            <conv:EmploymentStatusToColorConverter x:Key="StatusColor" />
 
             <Style x:Key="CardStyle" TargetType="Border">
                 <Setter Property="BackgroundColor" Value="#111118" />
@@ -170,14 +172,22 @@
                                             <Label Text="·" TextColor="#3A3A50" FontSize="12" VerticalOptions="Center" />
                                             <Label Text="{Binding PhoneNumber}" Style="{StaticResource MutedLabel}" />
                                         </HorizontalStackLayout>
-                                        <HorizontalStackLayout Spacing="6">
-                                            <Label Text="Chức vụ:" Style="{StaticResource MutedLabel}" />
-                        <Label Text="{Binding Position, Converter={StaticResource EnumText}}" FontSize="12" TextColor="#6366F1" FontAttributes="Bold" VerticalOptions="Center" />
-                                        </HorizontalStackLayout>
-                                        <HorizontalStackLayout Spacing="6">
-                                            <Label Text="Trạng thái:" Style="{StaticResource MutedLabel}" />
-                        <Label Text="{Binding Status, Converter={StaticResource EnumText}}" FontSize="12" TextColor="#22C55E" FontAttributes="Bold" VerticalOptions="Center" />
-                                        </HorizontalStackLayout>
+                                          <HorizontalStackLayout Spacing="6">
+                                              <Label Text="Chức vụ:" Style="{StaticResource MutedLabel}" />
+                                              <Label Text="{Binding Position, Converter={StaticResource EnumText}}"
+                                                     FontSize="12"
+                                                     TextColor="{Binding Position, Converter={StaticResource PositionColor}}"
+                                                     FontAttributes="Bold"
+                                                     VerticalOptions="Center" />
+                                          </HorizontalStackLayout>
+                                          <HorizontalStackLayout Spacing="6">
+                                              <Label Text="Trạng thái:" Style="{StaticResource MutedLabel}" />
+                                              <Label Text="{Binding Status, Converter={StaticResource EnumText}}"
+                                                     FontSize="12"
+                                                     TextColor="{Binding Status, Converter={StaticResource StatusColor}}"
+                                                     FontAttributes="Bold"
+                                                     VerticalOptions="Center" />
+                                          </HorizontalStackLayout>
                                     </VerticalStackLayout>
 
                                     <!-- Actions -->

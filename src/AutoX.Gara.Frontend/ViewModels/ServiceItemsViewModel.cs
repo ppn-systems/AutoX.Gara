@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace AutoX.Gara.Frontend.ViewModels;
 
@@ -54,7 +55,11 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
 
     // ─── Service Type Names (Enum Display) ─────────────────────────────────────
 
-    public System.Collections.Generic.List<System.String> ServiceTypeNames { get; }
+    public System.Collections.Generic.IReadOnlyList<System.String> ServiceTypeFilterOptions { get; }
+    public System.Collections.Generic.IReadOnlyList<System.String> ServiceTypeFormOptions { get; }
+
+    private readonly ServiceType?[] _serviceTypeFilterValues;
+    private readonly ServiceType[] _serviceTypeFormValues;
 
     public System.Boolean HasActiveFilters
         => FilterType.HasValue || FilterMinPrice.HasValue || FilterMaxPrice.HasValue;
@@ -108,8 +113,25 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
         _service = service ?? throw new ArgumentNullException(nameof(service));
         ServiceItems.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
 
-        // Load service type names from enum
-        ServiceTypeNames = [.. EnumText.GetNames<ServiceType>()];
+        // ServiceType enum values are not contiguous (1..6, 10.., 255), so we must not map SelectedIndex == (int)enum.
+        ServiceType[] all = System.Enum.GetValues<ServiceType>()
+            .Where(v => v != ServiceType.None)
+            .ToArray();
+
+        _serviceTypeFilterValues = new ServiceType?[all.Length + 1];
+        _serviceTypeFilterValues[0] = null;
+        for (int i = 0; i < all.Length; i++)
+        {
+            _serviceTypeFilterValues[i + 1] = all[i];
+        }
+        ServiceTypeFilterOptions = new[] { "Tất cả loại" }
+            .Concat(all.Select(EnumText.Get))
+            .ToArray();
+
+        _serviceTypeFormValues = all;
+        ServiceTypeFormOptions = new[] { "— Chọn loại —" }
+            .Concat(all.Select(EnumText.Get))
+            .ToArray();
     }
 
     // ─── Property Hooks ───────────────────────────────────────────────────────
@@ -174,7 +196,13 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
     }
     partial void OnPickerTypeIndexChanged(int value)
     {
-        FilterType = value == 0 ? null : (ServiceType?)value;
+        if (value < 0 || value >= _serviceTypeFilterValues.Length)
+        {
+            FilterType = null;
+            return;
+        }
+
+        FilterType = _serviceTypeFilterValues[value];
     }
 
     // ─── Commands ──────────────────────────────────────────────────────────────
@@ -259,7 +287,8 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
 
         FormDescription = item.Description ?? System.String.Empty;
         FormUnitPrice = item.UnitPrice.ToString("0.##");
-        FormTypeIndex = (System.Int32)item.Type;
+        int idx = System.Array.IndexOf(_serviceTypeFormValues, item.Type);
+        FormTypeIndex = idx >= 0 ? idx + 1 : 0;
 
         ClearFormError();
         IsFormVisible = true;
@@ -492,12 +521,16 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
     {
         System.Decimal.TryParse(FormUnitPrice, out System.Decimal price);
 
+        ServiceType type = FormTypeIndex <= 0 || FormTypeIndex > _serviceTypeFormValues.Length
+            ? ServiceType.None
+            : _serviceTypeFormValues[FormTypeIndex - 1];
+
         return new ServiceItemDto
         {
             ServiceItemId = IsEditing ? SelectedServiceItem?.ServiceItemId : null,
             Description = FormDescription,
             UnitPrice = price,
-            Type = (ServiceType)FormTypeIndex,
+            Type = type,
             SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
         };
     }

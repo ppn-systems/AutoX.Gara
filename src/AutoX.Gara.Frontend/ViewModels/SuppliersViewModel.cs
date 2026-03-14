@@ -164,11 +164,13 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
         OnPropertyChanged(nameof(HasActiveFilters));
         ResetPageAndLoad();
     }
+
     partial void OnFilterPaymentTermsChanged(PaymentTerms value)
     {
         OnPropertyChanged(nameof(HasActiveFilters));
         ResetPageAndLoad();
     }
+
     partial void OnPickerStatusIndexChanged(int value)
     {
         FilterStatus = (SupplierStatus)value;
