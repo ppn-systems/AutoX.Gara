@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Customers;
 using Microsoft.Maui.Controls;
@@ -8,25 +8,25 @@ using System.Globalization;
 
 namespace AutoX.Gara.Frontend.Converters;
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 1. CustomerTypeToColorConverter  — màu badge Loại KH
-// ═══════════════════════════════════════════════════════════════════════════
+// ---------------------------------------------------------------------------
+// 1. CustomerTypeToColorConverter  � m�u badge Lo?i KH
+// ---------------------------------------------------------------------------
 public sealed class CustomerTypeToColorConverter : IValueConverter
 {
     public Object? Convert(Object? value, Type targetType, Object? parameter, CultureInfo culture)
         => value is CustomerType t ? t switch
         {
-            CustomerType.Individual => Color.FromArgb("#2563EB"), // Xanh dương
-            CustomerType.Business => Color.FromArgb("#7C3AED"), // Tím
-            CustomerType.Government => Color.FromArgb("#0891B2"), // Xanh ngọc
-            CustomerType.Fleet => Color.FromArgb("#059669"), // Xanh lá
+            CustomerType.Individual => Color.FromArgb("#2563EB"), // Xanh duong
+            CustomerType.Business => Color.FromArgb("#7C3AED"), // T�m
+            CustomerType.Government => Color.FromArgb("#0891B2"), // Xanh ng?c
+            CustomerType.Fleet => Color.FromArgb("#059669"), // Xanh l�
             CustomerType.InsuranceCompany => Color.FromArgb("#D97706"), // Cam
-            CustomerType.VIP => Color.FromArgb("#DC2626"), // Đỏ (VIP nổi bật)
-            CustomerType.Potential => Color.FromArgb("#65A30D"), // Vàng xanh
-            CustomerType.Supplier => Color.FromArgb("#9333EA"), // Tím nhạt
-            CustomerType.NonProfit => Color.FromArgb("#EA580C"), // Cam đậm
-            CustomerType.Dealer => Color.FromArgb("#0D9488"), // Xanh đậm
-            CustomerType.Other => Color.FromArgb("#6B7280"), // Xám
+            CustomerType.VIP => Color.FromArgb("#DC2626"), // �? (VIP n?i b?t)
+            CustomerType.Potential => Color.FromArgb("#65A30D"), // V�ng xanh
+            CustomerType.Supplier => Color.FromArgb("#9333EA"), // T�m nh?t
+            CustomerType.NonProfit => Color.FromArgb("#EA580C"), // Cam d?m
+            CustomerType.Dealer => Color.FromArgb("#0D9488"), // Xanh d?m
+            CustomerType.Other => Color.FromArgb("#6B7280"), // X�m
             _ => Color.FromArgb("#9CA3AF")  // None
         } : Color.FromArgb("#9CA3AF");
 
@@ -34,25 +34,25 @@ public sealed class CustomerTypeToColorConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 2. CustomerTypeToLabelConverter  — nhãn ngắn badge Loại KH
-// ═══════════════════════════════════════════════════════════════════════════
+// ---------------------------------------------------------------------------
+// 2. CustomerTypeToLabelConverter  � nh�n ng?n badge Lo?i KH
+// ---------------------------------------------------------------------------
 public sealed class CustomerTypeToLabelConverter : IValueConverter
 {
     public Object? Convert(Object? value, Type targetType, Object? parameter, CultureInfo culture)
         => value is CustomerType t ? t switch
         {
-            CustomerType.Individual => "Cá nhân",
+            CustomerType.Individual => "C� nh�n",
             CustomerType.Business => "DN",
-            CustomerType.Government => "Chính phủ",
+            CustomerType.Government => "Ch�nh ph?",
             CustomerType.Fleet => "Fleet",
             CustomerType.InsuranceCompany => "BH",
             CustomerType.VIP => "VIP",
-            CustomerType.Potential => "Tiềm năng",
+            CustomerType.Potential => "Ti?m nang",
             CustomerType.Supplier => "NCC",
             CustomerType.NonProfit => "NPO",
-            CustomerType.Dealer => "Đại lý",
-            CustomerType.Other => "Khác",
+            CustomerType.Dealer => "�?i l�",
+            CustomerType.Other => "Kh�c",
             _ => String.Empty
         } : String.Empty;
 
@@ -60,20 +60,20 @@ public sealed class CustomerTypeToLabelConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 3. MembershipToColorConverter  — màu badge Hạng thành viên
-// ═══════════════════════════════════════════════════════════════════════════
+// ---------------------------------------------------------------------------
+// 3. MembershipToColorConverter  � m�u badge H?ng th�nh vi�n
+// ---------------------------------------------------------------------------
 public sealed class MembershipToColorConverter : IValueConverter
 {
     public Object? Convert(Object? value, Type targetType, Object? parameter, CultureInfo culture)
         => value is MembershipLevel m ? m switch
         {
-            MembershipLevel.Trial => Color.FromArgb("#6B7280"), // Xám — dùng thử
-            MembershipLevel.Standard => Color.FromArgb("#92400E"), // Nâu — thường
-            MembershipLevel.Silver => Color.FromArgb("#64748B"), // Xám bạc
-            MembershipLevel.Gold => Color.FromArgb("#B45309"), // Vàng
-            MembershipLevel.Platinum => Color.FromArgb("#0891B2"), // Xanh ngọc
-            MembershipLevel.Diamond => Color.FromArgb("#7C3AED"), // Tím kim cương
+            MembershipLevel.Trial => Color.FromArgb("#6B7280"), // X�m � d�ng th?
+            MembershipLevel.Standard => Color.FromArgb("#92400E"), // N�u � thu?ng
+            MembershipLevel.Silver => Color.FromArgb("#64748B"), // X�m b?c
+            MembershipLevel.Gold => Color.FromArgb("#B45309"), // V�ng
+            MembershipLevel.Platinum => Color.FromArgb("#0891B2"), // Xanh ng?c
+            MembershipLevel.Diamond => Color.FromArgb("#7C3AED"), // T�m kim cuong
             _ => Color.FromArgb("#D1D5DB")  // None
         } : Color.FromArgb("#D1D5DB");
 
@@ -81,9 +81,9 @@ public sealed class MembershipToColorConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 4. MembershipToLabelConverter  — nhãn ngắn badge Hạng thành viên
-// ═══════════════════════════════════════════════════════════════════════════
+// ---------------------------------------------------------------------------
+// 4. MembershipToLabelConverter  � nh�n ng?n badge H?ng th�nh vi�n
+// ---------------------------------------------------------------------------
 public sealed class MembershipToLabelConverter : IValueConverter
 {
     public Object? Convert(Object? value, Type targetType, Object? parameter, CultureInfo culture)
@@ -102,9 +102,9 @@ public sealed class MembershipToLabelConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 5. InitialsConverter  — "Nguyễn Văn Phúc" → "NP"
-// ═══════════════════════════════════════════════════════════════════════════
+// ---------------------------------------------------------------------------
+// 5. InitialsConverter  � "Nguy?n Van Ph�c" ? "NP"
+// ---------------------------------------------------------------------------
 public sealed class InitialsConverter : IValueConverter
 {
     public Object? Convert(Object? value, Type targetType, Object? parameter, CultureInfo culture)
@@ -126,9 +126,9 @@ public sealed class InitialsConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 6. InitialsBackgroundConverter  — màu avatar deterministic theo tên
-// ═══════════════════════════════════════════════════════════════════════════
+// ---------------------------------------------------------------------------
+// 6. InitialsBackgroundConverter  � m�u avatar deterministic theo t�n
+// ---------------------------------------------------------------------------
 public sealed class InitialsBackgroundConverter : IValueConverter
 {
     private static readonly Color[] Palette =
@@ -165,9 +165,9 @@ public sealed class InitialsBackgroundConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 7. DateTimeToShortStringConverter  — DateTime → "10/03/2026"
-// ═══════════════════════════════════════════════════════════════════════════
+// ---------------------------------------------------------------------------
+// 7. DateTimeToShortStringConverter  � DateTime ? "10/03/2026"
+// ---------------------------------------------------------------------------
 public sealed class DateTimeToShortStringConverter : IValueConverter
 {
     public Object? Convert(Object? value, Type targetType, Object? parameter, CultureInfo culture)
@@ -184,9 +184,9 @@ public sealed class DateTimeToShortStringConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 8. StringNotEmptyConverter  — string? → bool
-// ═══════════════════════════════════════════════════════════════════════════
+// ---------------------------------------------------------------------------
+// 8. StringNotEmptyConverter  � string? ? bool
+// ---------------------------------------------------------------------------
 public sealed class StringNotEmptyConverter : IValueConverter
 {
     public Object? Convert(Object? value, Type targetType, Object? parameter, CultureInfo culture)
@@ -196,9 +196,9 @@ public sealed class StringNotEmptyConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 9. InverseBoolConverter  — bool → !bool
-// ═══════════════════════════════════════════════════════════════════════════
+// ---------------------------------------------------------------------------
+// 9. InverseBoolConverter  � bool ? !bool
+// ---------------------------------------------------------------------------
 public sealed class InverseBoolConverter : IValueConverter
 {
     public static readonly InverseBoolConverter Instance = new();

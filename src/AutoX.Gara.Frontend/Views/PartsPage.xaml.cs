@@ -1,7 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Services.Inventory;
-using AutoX.Gara.Frontend.ViewModels;
+using AutoX.Gara.Frontend.Controllers;
 using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
 using System;

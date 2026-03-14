@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Views;
 using AutoX.Gara.Shared;
@@ -16,7 +16,7 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
 
-        // Đăng ký logger với custom log file name formatter
+        // �ang k� logger v?i custom log file name formatter
         InstanceManager.Instance.Register<ILogger>(
             new NLogix(cfg =>
                 cfg.RegisterTarget(

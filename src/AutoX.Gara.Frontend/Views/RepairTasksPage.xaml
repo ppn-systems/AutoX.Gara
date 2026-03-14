@@ -4,10 +4,10 @@
     x:Class="AutoX.Gara.Frontend.Views.RepairTasksPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
+    xmlns:ctrl="clr-namespace:AutoX.Gara.Frontend.Controllers.Billings"
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Billings;assembly=AutoX.Gara.Shared"
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
-    x:DataType="vm:RepairTasksViewModel"
+    x:DataType="ctrl:RepairTasksViewModel"
     Title="{Binding PageTitle}"
     BackgroundColor="#0A0A0F">
 
@@ -68,7 +68,7 @@
 
             <CollectionView Grid.Row="1" ItemsSource="{Binding RepairTaskRows}">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:RepairTasksViewModel+RepairTaskRow">
+                    <DataTemplate x:DataType="ctrl:RepairTasksViewModel+RepairTaskRow">
                         <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Padding="12">
                             <VerticalStackLayout Spacing="6">
                                 <Label Text="{Binding Task.RepairTaskId, StringFormat='Task #{0}'}" TextColor="#F1F1F5" FontAttributes="Bold" />
@@ -155,7 +155,7 @@
                     <Entry Placeholder="Tìm theo tên hoặc id..." Text="{Binding EmployeeSearchTerm}" TextColor="#F1F1F5" />
                     <CollectionView ItemsSource="{Binding FilteredEmployeeOptions}">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="vm:RepairTasksViewModel+LookupOption">
+                            <DataTemplate x:DataType="ctrl:RepairTasksViewModel+LookupOption">
                                 <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SelectEmployeeCommand}"
                                         CommandParameter="{Binding .}" />
@@ -175,7 +175,7 @@
                     <Entry Placeholder="Tìm theo mô tả hoặc id..." Text="{Binding ServiceItemSearchTerm}" TextColor="#F1F1F5" />
                     <CollectionView ItemsSource="{Binding FilteredServiceItemOptions}">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="vm:RepairTasksViewModel+LookupOption">
+                            <DataTemplate x:DataType="ctrl:RepairTasksViewModel+LookupOption">
                                 <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SelectServiceItemCommand}"
                                         CommandParameter="{Binding .}" />

@@ -1,8 +1,8 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
-using AutoX.Gara.Frontend.ViewModels.Results;
+using AutoX.Gara.Frontend.Models.Results;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Customers;
 using Nalix.Common.Diagnostics.Abstractions;
@@ -17,13 +17,13 @@ using Nalix.Shared.Frames.Controls;
 namespace AutoX.Gara.Frontend.Services.Customers;
 
 /// <summary>
-/// Real implementation của <see cref="ICustomerService"/>.
+/// Real implementation c?a <see cref="ICustomerService"/>.
 /// <para>
-/// Thay đổi so với version cũ:
+/// Thay d?i so v?i version cu:
 /// <list type="bullet">
-///   <item>Inject <see cref="ICustomerQueryCache"/> → cache 30 giây tránh duplicate request.</item>
-///   <item>Write operations tự động gọi <see cref="ICustomerQueryCache.Invalidate"/> sau khi thành công.</item>
-///   <item>Cache hit hoàn toàn bypass network — trả về ngay từ memory.</item>
+///   <item>Inject <see cref="ICustomerQueryCache"/> ? cache 30 gi�y tr�nh duplicate request.</item>
+///   <item>Write operations t? d?ng g?i <see cref="ICustomerQueryCache.Invalidate"/> sau khi th�nh c�ng.</item>
+///   <item>Cache hit ho�n to�n bypass network � tr? v? ngay t? memory.</item>
 /// </list>
 /// </para>
 /// </summary>
@@ -35,7 +35,7 @@ public sealed class CustomerService : ICustomerService
 
     public CustomerService(ICustomerQueryCache cache) => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
-    // ─── GetListAsync ─────────────────────────────────────────────────────────
+    // --- GetListAsync ---------------------------------------------------------
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerListResult> GetListAsync(
@@ -48,7 +48,7 @@ public sealed class CustomerService : ICustomerService
         MembershipLevel filterMembership = MembershipLevel.None,
         System.Threading.CancellationToken ct = default)
     {
-        // ── Cache hit: trả về ngay, không tốn băng thông ─────────────────
+        // -- Cache hit: tr? v? ngay, kh�ng t?n bang th�ng -----------------
         CustomerCacheKey key = new(
             page, pageSize,
             searchTerm ?? System.String.Empty,
@@ -64,7 +64,7 @@ public sealed class CustomerService : ICustomerService
                 hasMore: hasMore);
         }
 
-        // ── Cache miss: gửi request lên server ────────────────────────────
+        // -- Cache miss: g?i request l�n server ----------------------------
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
@@ -96,7 +96,7 @@ public sealed class CustomerService : ICustomerService
                     sub?.Dispose();
                     errSub?.Dispose();
 
-                    // Lưu kết quả vào cache 30s
+                    // Luu k?t qu? v�o cache 30s
                     _cache.Set(key, resp.Customers, resp.TotalCount);
 
                     System.Boolean hasMore = page * pageSize < resp.TotalCount;
@@ -141,17 +141,17 @@ public sealed class CustomerService : ICustomerService
         }
         catch (System.OperationCanceledException)
         {
-            return CustomerListResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return CustomerListResult.Failure("Y�u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
             return CustomerListResult.Failure(
-                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+                $"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
-    // ─── CreateAsync ──────────────────────────────────────────────────────────
+    // --- CreateAsync ----------------------------------------------------------
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerWriteResult> CreateAsync(
@@ -162,7 +162,7 @@ public sealed class CustomerService : ICustomerService
             (System.UInt16)OpCommand.CUSTOMER_CREATE, data, expectEcho: true, ct)
             .ConfigureAwait(false);
 
-        // Dữ liệu mới → cache cũ không còn chính xác
+        // D? li?u m?i ? cache cu kh�ng c�n ch�nh x�c
         if (result.IsSuccess)
         {
             _cache.Invalidate();
@@ -171,7 +171,7 @@ public sealed class CustomerService : ICustomerService
         return result;
     }
 
-    // ─── UpdateAsync ──────────────────────────────────────────────────────────
+    // --- UpdateAsync ----------------------------------------------------------
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerWriteResult> UpdateAsync(
@@ -190,7 +190,7 @@ public sealed class CustomerService : ICustomerService
         return result;
     }
 
-    // ─── DeleteAsync ──────────────────────────────────────────────────────────
+    // --- DeleteAsync ----------------------------------------------------------
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerWriteResult> DeleteAsync(
@@ -209,7 +209,7 @@ public sealed class CustomerService : ICustomerService
         return result;
     }
 
-    // ─── Private Helpers ─────────────────────────────────────────────────────
+    // --- Private Helpers -----------------------------------------------------
 
     private static async System.Threading.Tasks.Task<CustomerWriteResult> SendWritePacketAsync(
         System.UInt16 opcode,
@@ -287,32 +287,32 @@ public sealed class CustomerService : ICustomerService
         }
         catch (System.OperationCanceledException)
         {
-            return CustomerWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return CustomerWriteResult.Failure("Y�u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
             return CustomerWriteResult.Failure(
-                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+                $"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "Không tìm thấy khách hàng.",
-            ProtocolReason.ALREADY_EXISTS => "Email hoặc số điện thoại đã tồn tại.",
-            ProtocolReason.MALFORMED_PACKET => "Dữ liệu không hợp lệ.",
-            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống. Vui lòng thử lại sau.",
-            ProtocolReason.FORBIDDEN => "Bạn không có quyền thực hiện thao tác này.",
-            ProtocolReason.UNAUTHENTICATED => "Bạn không có quyền thực hiện thao tác này.",
-            ProtocolReason.RATE_LIMITED => "Bạn đang thao tác quá nhanh. Vui lòng chờ một chút rồi thử lại.",
-            ProtocolReason.UNSUPPORTED_PACKET => "Yêu cầu không được hỗ trợ. Vui lòng cập nhật phần mềm nếu có thể.",
-            ProtocolReason.CRYPTO_UNSUPPORTED => "Lỗi mã hóa. Vui lòng cập nhật phần mềm nếu có thể.",
-            ProtocolReason.COMPRESSION_FAILED => "Lỗi nén dữ liệu. Vui lòng cập nhật phần mềm nếu có thể.",
-            ProtocolReason.TRANSFORM_FAILED => "Lỗi xử lý dữ liệu. Vui lòng cập nhật phần mềm nếu có thể.",
-            ProtocolReason.TIMEOUT => "Máy chủ phản hồi hết hạn. Vui lòng thử lại.",
-            _ => "Thao tác thất bại. Vui lòng thử lại."
+            ProtocolReason.NOT_FOUND => "Kh�ng t�m th?y kh�ch h�ng.",
+            ProtocolReason.ALREADY_EXISTS => "Email ho?c s? di?n tho?i d� t?n t?i.",
+            ProtocolReason.MALFORMED_PACKET => "D? li?u kh�ng h?p l?.",
+            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui l�ng th? l?i sau.",
+            ProtocolReason.FORBIDDEN => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.UNAUTHENTICATED => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.RATE_LIMITED => "B?n dang thao t�c qu� nhanh. Vui l�ng ch? m?t ch�t r?i th? l?i.",
+            ProtocolReason.UNSUPPORTED_PACKET => "Y�u c?u kh�ng du?c h? tr?. Vui l�ng c?p nh?t ph?n m?m n?u c� th?.",
+            ProtocolReason.CRYPTO_UNSUPPORTED => "L?i m� h�a. Vui l�ng c?p nh?t ph?n m?m n?u c� th?.",
+            ProtocolReason.COMPRESSION_FAILED => "L?i n�n d? li?u. Vui l�ng c?p nh?t ph?n m?m n?u c� th?.",
+            ProtocolReason.TRANSFORM_FAILED => "L?i x? l� d? li?u. Vui l�ng c?p nh?t ph?n m?m n?u c� th?.",
+            ProtocolReason.TIMEOUT => "M�y ch? ph?n h?i h?t h?n. Vui l�ng th? l?i.",
+            _ => "Thao t�c th?t b?i. Vui l�ng th? l?i."
         };
 
     private static void LogException(System.Exception ex)

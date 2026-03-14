@@ -19,11 +19,11 @@
     x:Class="AutoX.Gara.Frontend.Views.CustomersPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
+    xmlns:ctrl="clr-namespace:AutoX.Gara.Frontend.Controllers"
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Customers;assembly=AutoX.Gara.Shared"
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
-    x:DataType="vm:CustomersViewModel"
+    x:DataType="ctrl:CustomersViewModel"
     Title="Quản lý khách hàng"
     BackgroundColor="#0A0A0F">
 

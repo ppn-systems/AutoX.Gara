@@ -4,9 +4,9 @@
     x:Class="AutoX.Gara.Frontend.Views.InvoicesOverviewPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
+    xmlns:ctrl="clr-namespace:AutoX.Gara.Frontend.Controllers.Billings"
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
-    x:DataType="vm:InvoicesOverviewViewModel"
+    x:DataType="ctrl:InvoicesOverviewViewModel"
     Title="{Binding PageTitle}"
     BackgroundColor="#0A0A0F">
 
@@ -115,7 +115,7 @@
             <ScrollView Grid.Row="1">
                 <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Invoices}">
                     <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="vm:InvoicesOverviewViewModel+InvoiceRow">
+                        <DataTemplate x:DataType="ctrl:InvoicesOverviewViewModel+InvoiceRow">
                             <Border Style="{StaticResource CardStyle}" Padding="12">
                                 <VerticalStackLayout Spacing="10">
                                     <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="4">

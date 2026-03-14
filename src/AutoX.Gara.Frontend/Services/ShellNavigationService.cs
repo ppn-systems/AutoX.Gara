@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
 using Microsoft.Maui.Controls;
@@ -8,23 +8,23 @@ using System.Threading.Tasks;
 namespace AutoX.Gara.Frontend.Services;
 
 /// <summary>
-/// Implementation dùng Shell MAUI. Đây là nơi DUY NHẤT trong UI layer
-/// được phép gọi Shell.Current trực tiếp.
+/// Implementation d�ng Shell MAUI. ��y l� noi DUY NH?T trong UI layer
+/// du?c ph�p g?i Shell.Current tr?c ti?p.
 /// </summary>
 public sealed class ShellNavigationService : INavigationService
 {
     public async Task GoToMainPageAsync()
     {
-        // Xóa LoginPage ra khỏi shell history để back không về được
+        // X�a LoginPage ra kh?i shell history d? back kh�ng v? du?c
         ShellItem? loginItem = Shell.Current.Items
-            .FirstOrDefault(i => i.Title is "Login" or "Đăng nhập");
+            .FirstOrDefault(i => i.Title is "Login" or "�ang nh?p");
 
         if (loginItem is not null)
         {
             Shell.Current.Items.Remove(loginItem);
         }
 
-        // Resize window về kích thước app chính (Windows/Mac)
+        // Resize window v? k�ch thu?c app ch�nh (Windows/Mac)
         if (Application.Current?.Windows[0] is { } window)
         {
             window.Width = 1280;

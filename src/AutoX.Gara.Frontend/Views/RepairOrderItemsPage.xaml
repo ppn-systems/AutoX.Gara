@@ -4,9 +4,9 @@
     x:Class="AutoX.Gara.Frontend.Views.RepairOrderItemsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
+    xmlns:ctrl="clr-namespace:AutoX.Gara.Frontend.Controllers.Billings"
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Billings;assembly=AutoX.Gara.Shared"
-    x:DataType="vm:RepairOrderItemsViewModel"
+    x:DataType="ctrl:RepairOrderItemsViewModel"
     Title="{Binding PageTitle}"
     BackgroundColor="#0A0A0F">
 
@@ -59,7 +59,7 @@
 
             <CollectionView Grid.Row="1" ItemsSource="{Binding ItemRows}">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:RepairOrderItemsViewModel+RepairOrderItemRow">
+                    <DataTemplate x:DataType="ctrl:RepairOrderItemsViewModel+RepairOrderItemRow">
                         <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Padding="12">
                             <VerticalStackLayout Spacing="6">
                                 <Label Text="{Binding Item.RepairOrderItemId, StringFormat='Item #{0}'}" TextColor="#F1F1F5" FontAttributes="Bold" />
@@ -119,7 +119,7 @@
                     </VerticalStackLayout>
                     <CollectionView Grid.Row="3" ItemsSource="{Binding FilteredPartOptions}">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="vm:RepairOrderItemsViewModel+LookupOption">
+                            <DataTemplate x:DataType="ctrl:RepairOrderItemsViewModel+LookupOption">
                                 <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SelectPartCommand}"
                                         CommandParameter="{Binding .}" />

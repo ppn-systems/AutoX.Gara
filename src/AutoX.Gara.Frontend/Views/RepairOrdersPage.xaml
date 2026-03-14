@@ -4,10 +4,10 @@
     x:Class="AutoX.Gara.Frontend.Views.RepairOrdersPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
+    xmlns:ctrl="clr-namespace:AutoX.Gara.Frontend.Controllers.Billings"
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Billings;assembly=AutoX.Gara.Shared"
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
-    x:DataType="vm:RepairOrdersViewModel"
+    x:DataType="ctrl:RepairOrdersViewModel"
     Title="{Binding PageTitle}"
     BackgroundColor="#0A0A0F">
 

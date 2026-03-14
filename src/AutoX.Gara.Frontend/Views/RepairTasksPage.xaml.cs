@@ -2,10 +2,11 @@
 
 using AutoX.Gara.Frontend.Services.Billings;
 using AutoX.Gara.Frontend.Services.Employees;
-using AutoX.Gara.Frontend.ViewModels;
-using AutoX.Gara.Shared.Protocol.Billings;
+using AutoX.Gara.Frontend.Controllers.Billings;
 using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
+using AutoX.Gara.Shared.Protocol.Invoices;
+using AutoX.Gara.Frontend.Services.Invoices;
 
 namespace AutoX.Gara.Frontend.Views;
 

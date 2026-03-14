@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Results.Accounts;
@@ -16,12 +16,12 @@ using Nalix.Shared.Frames.Controls;
 namespace AutoX.Gara.Frontend.Services.Accounts;
 
 /// <summary>
-/// Implementation thực tế: kết nối → handshake → gửi LOGIN packet → đợi phản hồi.
-/// Toàn bộ network I/O nằm ở đây, ViewModel không biết gì về ReliableClient.
+/// Implementation th?c t?: k?t n?i ? handshake ? g?i LOGIN packet ? d?i ph?n h?i.
+/// To�n b? network I/O n?m ? d�y, ViewModel kh�ng bi?t g� v? ReliableClient.
 /// </summary>
 public sealed class AccountService : IAccountService
 {
-    // ─── Cấu hình ────────────────────────────────────────────────────────────
+    // --- C?u h�nh ------------------------------------------------------------
 
     private const System.Int32 ServerPort = 57206;
     private const System.String ServerHost = "127.0.0.1";
@@ -29,7 +29,7 @@ public sealed class AccountService : IAccountService
     private const System.Int32 LoginTimeoutMs = 5_000;
     private const System.Int32 HandshakeTimeoutMs = 5_000;
 
-    // ─── ConnectAsync ─────────────────────────────────────────────────────────
+    // --- ConnectAsync ---------------------------------------------------------
 
     public async System.Threading.Tasks.Task<ConnectionResult> ConnectAsync(System.Threading.CancellationToken ct = default)
     {
@@ -43,7 +43,7 @@ public sealed class AccountService : IAccountService
 
             return ok
                 ? ConnectionResult.Success()
-                : ConnectionResult.Failure("Handshake thất bại, không thiết lập được kênh mã hóa.");
+                : ConnectionResult.Failure("Handshake th?t b?i, kh�ng thi?t l?p du?c k�nh m� h�a.");
         }
         catch (System.Exception ex)
         {
@@ -51,7 +51,7 @@ public sealed class AccountService : IAccountService
         }
     }
 
-    // ─── AuthenticateAsync ────────────────────────────────────────────────────
+    // --- AuthenticateAsync ----------------------------------------------------
 
     public async System.Threading.Tasks.Task<LoginResult> AuthenticateAsync(
         System.String username,
@@ -71,8 +71,8 @@ public sealed class AccountService : IAccountService
             packet.Initialize((System.UInt16)OpCommand.LOGIN, model);
             LoginPacket.Encrypt(packet, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
-            // 2. TaskCompletionSource để "await" callback một lần
-            //    Dùng thay Task.Delay polling — không có race condition
+            // 2. TaskCompletionSource d? "await" callback m?t l?n
+            //    D�ng thay Task.Delay polling � kh�ng c� race condition
             System.Threading.Tasks.TaskCompletionSource<LoginResult> tcs = new(
                 System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -90,10 +90,10 @@ public sealed class AccountService : IAccountService
                     tcs.TrySetResult(result);
                 });
 
-            // 3. Gửi packet
+            // 3. G?i packet
             await client.SendAsync(packet, ct);
 
-            // 4. Đợi kết quả với timeout + cancellation
+            // 4. �?i k?t qu? v?i timeout + cancellation
             using System.Threading.CancellationTokenSource cts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
 
             System.Threading.Tasks.Task timeoutTask = System.Threading.Tasks.Task.Delay(LoginTimeoutMs, cts.Token);
@@ -109,7 +109,7 @@ public sealed class AccountService : IAccountService
         }
         catch (System.OperationCanceledException)
         {
-            return LoginResult.Failure("Đăng nhập bị hủy.", ProtocolAdvice.NONE);
+            return LoginResult.Failure("�ang nh?p b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
@@ -119,23 +119,23 @@ public sealed class AccountService : IAccountService
                 InstanceManager.Instance.GetOrCreateInstance<ILogger>().Error("Inner: " + ex.InnerException);
             }
 
-            return LoginResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return LoginResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
-    // ─── Error mapping ────────────────────────────────────────────────────────
+    // --- Error mapping --------------------------------------------------------
 
     private static LoginResult MapErrorResponse(ProtocolReason reason, ProtocolAdvice advice)
     {
         System.String message = reason switch
         {
-            ProtocolReason.NOT_FOUND => "Tài khoản không tồn tại.",
-            ProtocolReason.MALFORMED_PACKET => "Gói tin không hợp lệ.",
-            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống. Vui lòng thử lại sau.",
-            ProtocolReason.UNAUTHENTICATED => "Sai mật khẩu. Vui lòng kiểm tra lại.",
-            ProtocolReason.FORBIDDEN => "Tài khoản bị cấm hoặc chưa được kích hoạt. Vui lòng liên hệ quản trị viên.",
-            ProtocolReason.ACCOUNT_LOCKED => "Tài khoản tạm bị khóa do nhập sai nhiều lần. Vui lòng thử lại sau 15 phút.",
-            _ => "Đăng nhập thất bại. Vui lòng thử lại."
+            ProtocolReason.NOT_FOUND => "T�i kho?n kh�ng t?n t?i.",
+            ProtocolReason.MALFORMED_PACKET => "G�i tin kh�ng h?p l?.",
+            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui l�ng th? l?i sau.",
+            ProtocolReason.UNAUTHENTICATED => "Sai m?t kh?u. Vui l�ng ki?m tra l?i.",
+            ProtocolReason.FORBIDDEN => "T�i kho?n b? c?m ho?c chua du?c k�ch ho?t. Vui l�ng li�n h? qu?n tr? vi�n.",
+            ProtocolReason.ACCOUNT_LOCKED => "T�i kho?n t?m b? kh�a do nh?p sai nhi?u l?n. Vui l�ng th? l?i sau 15 ph�t.",
+            _ => "�ang nh?p th?t b?i. Vui l�ng th? l?i."
         };
 
         return LoginResult.Failure(message, advice);

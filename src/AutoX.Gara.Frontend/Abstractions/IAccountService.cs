@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Results.Accounts;
 using System.Threading;
@@ -6,14 +6,14 @@ using System.Threading;
 namespace AutoX.Gara.Frontend.Abstractions;
 
 /// <summary>
-/// Abstraction cho toàn bộ luồng login: connect → handshake → authenticate.
-/// Tách khỏi ViewModel để dễ test và thay thế.
+/// Abstraction cho to�n b? lu?ng login: connect ? handshake ? authenticate.
+/// T�ch kh?i ViewModel d? d? test v� thay th?.
 /// </summary>
 public interface IAccountService
 {
-    /// <summary>Kết nối và thực hiện handshake với server.</summary>
+    /// <summary>K?t n?i v� th?c hi?n handshake v?i server.</summary>
     System.Threading.Tasks.Task<ConnectionResult> ConnectAsync(CancellationToken ct = default);
 
-    /// <summary>Gửi thông tin đăng nhập và trả về kết quả xác thực.</summary>
+    /// <summary>G?i th�ng tin dang nh?p v� tr? v? k?t qu? x�c th?c.</summary>
     System.Threading.Tasks.Task<LoginResult> AuthenticateAsync(System.String username, System.String password, CancellationToken ct = default);
 }

@@ -1,21 +1,21 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Customers;
-using AutoX.Gara.Frontend.ViewModels.Results;
+using AutoX.Gara.Frontend.Models.Results;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Customers;
 
 namespace AutoX.Gara.Frontend.Abstractions;
 
 /// <summary>
-/// Abstraction cho tất cả network operations liên quan đến Customer.
-/// ViewModel chỉ phụ thuộc vào interface này — không biết về <c>ReliableClient</c>.
+/// Abstraction cho t?t c? network operations li�n quan d?n Customer.
+/// ViewModel ch? ph? thu?c v�o interface n�y � kh�ng bi?t v? <c>ReliableClient</c>.
 /// </summary>
 public interface ICustomerService
 {
     /// <summary>
-    /// Lấy trang danh sách khách hàng.
-    /// Cache 30 giây — không gửi request nếu đã có kết quả còn hạn.
+    /// L?y trang danh s�ch kh�ch h�ng.
+    /// Cache 30 gi�y � kh�ng g?i request n?u d� c� k?t qu? c�n h?n.
     /// </summary>
     System.Threading.Tasks.Task<CustomerListResult> GetListAsync(
         System.Int32 page,
@@ -27,17 +27,17 @@ public interface ICustomerService
         MembershipLevel filterMembership = MembershipLevel.None,
         System.Threading.CancellationToken ct = default);
 
-    /// <summary>Tạo mới khách hàng. Server echo lại entity đã lưu trong <c>UpdatedEntity</c>.</summary>
+    /// <summary>T?o m?i kh�ch h�ng. Server echo l?i entity d� luu trong <c>UpdatedEntity</c>.</summary>
     System.Threading.Tasks.Task<CustomerWriteResult> CreateAsync(
         CustomerDto data,
         System.Threading.CancellationToken ct = default);
 
-    /// <summary>Cập nhật khách hàng. Server echo lại entity đã lưu trong <c>UpdatedEntity</c>.</summary>
+    /// <summary>C?p nh?t kh�ch h�ng. Server echo l?i entity d� luu trong <c>UpdatedEntity</c>.</summary>
     System.Threading.Tasks.Task<CustomerWriteResult> UpdateAsync(
         CustomerDto data,
         System.Threading.CancellationToken ct = default);
 
-    /// <summary>Xóa mềm khách hàng. Server trả về Directive NONE khi thành công.</summary>
+    /// <summary>X�a m?m kh�ch h�ng. Server tr? v? Directive NONE khi th�nh c�ng.</summary>
     System.Threading.Tasks.Task<CustomerWriteResult> DeleteAsync(
         CustomerDto data,
         System.Threading.CancellationToken ct = default);

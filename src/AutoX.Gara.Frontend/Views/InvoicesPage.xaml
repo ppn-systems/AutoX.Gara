@@ -4,10 +4,10 @@
     x:Class="AutoX.Gara.Frontend.Views.InvoicesPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
+    xmlns:ctrl="clr-namespace:AutoX.Gara.Frontend.Controllers.Billings"
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Billings;assembly=AutoX.Gara.Shared"
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
-    x:DataType="vm:InvoicesViewModel"
+    x:DataType="ctrl:InvoicesViewModel"
     Title="{Binding PageTitle}"
     BackgroundColor="#0A0A0F">
 
@@ -65,7 +65,7 @@
             <ScrollView Grid.Row="1">
                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding Invoices}" Spacing="10">
                     <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="vm:InvoicesViewModel+InvoiceRow">
+                        <DataTemplate x:DataType="ctrl:InvoicesViewModel+InvoiceRow">
                             <Border Style="{StaticResource CardStyle}" Padding="12">
                                 <VerticalStackLayout Spacing="10">
                                 <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="4">
@@ -237,7 +237,7 @@
                                 <Label Text="Dịch vụ trong lệnh" TextColor="#F1F1F5" FontAttributes="Bold" />
                                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding MoneyPopupServiceLines}" Spacing="8">
                                     <BindableLayout.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:InvoicesViewModel+MoneyLineItemRow">
+                                        <DataTemplate x:DataType="ctrl:InvoicesViewModel+MoneyLineItemRow">
                                             <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="2">
                                                 <Label Text="{Binding Title}" TextColor="#F1F1F5" LineBreakMode="TailTruncation" />
                                                 <Label Grid.Column="1" Text="{Binding LineTotal, StringFormat='{0:N0}', TargetNullValue=''}"
@@ -262,7 +262,7 @@
                                 <Label Text="Phụ tùng trong lệnh" TextColor="#F1F1F5" FontAttributes="Bold" />
                                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding MoneyPopupPartLines}" Spacing="8">
                                     <BindableLayout.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:InvoicesViewModel+MoneyLineItemRow">
+                                        <DataTemplate x:DataType="ctrl:InvoicesViewModel+MoneyLineItemRow">
                                             <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="2">
                                                 <Label Text="{Binding Title}" TextColor="#F1F1F5" LineBreakMode="TailTruncation" />
                                                 <Label Grid.Column="1" Text="{Binding LineTotal, StringFormat='{0:N0}', TargetNullValue=''}"
@@ -446,7 +446,7 @@
                     <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsLookupLoading}" IsVisible="{Binding IsLookupLoading}" Color="#6366F1" />
                     <CollectionView Grid.Row="3" ItemsSource="{Binding FilteredRepairOrderOptions}">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="vm:InvoicesViewModel+LookupOption">
+                            <DataTemplate x:DataType="ctrl:InvoicesViewModel+LookupOption">
                                 <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SelectRepairOrderCommand}"
                                         CommandParameter="{Binding .}" />

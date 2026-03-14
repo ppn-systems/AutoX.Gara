@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Results.Vehicles;
 using AutoX.Gara.Shared.Enums;
@@ -15,9 +15,9 @@ using Nalix.Shared.Frames.Controls;
 namespace AutoX.Gara.Frontend.Services.Vehicles;
 
 /// <summary>
-/// Service giao tiếp server cho Vehicle.
-/// Pattern giống hệt <c>CustomerService</c>:
-/// cache → network → result.
+/// Service giao ti?p server cho Vehicle.
+/// Pattern gi?ng h?t <c>CustomerService</c>:
+/// cache ? network ? result.
 /// </summary>
 public sealed class VehicleService
 {
@@ -28,9 +28,9 @@ public sealed class VehicleService
     public VehicleService(VehicleQueryCache cache)
         => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
-    // ─── GetListAsync ─────────────────────────────────────────────────────────
+    // --- GetListAsync ---------------------------------------------------------
 
-    /// <summary>Lấy danh sách xe của một customer (có cache 30s).</summary>
+    /// <summary>L?y danh s�ch xe c?a m?t customer (c� cache 30s).</summary>
     public async System.Threading.Tasks.Task<VehicleListResult> GetListAsync(
         System.Int32 customerId,
         System.Int32 page,
@@ -44,26 +44,26 @@ public sealed class VehicleService
 
         if (_cache.TryGet(key, out VehicleCacheEntry? cached))
         {
-            logger.Info($"[VehicleService.GetListAsync] CACHE HIT — returning {cached!.Vehicles.Count} vehicles, total={cached.TotalCount}");
+            logger.Info($"[VehicleService.GetListAsync] CACHE HIT � returning {cached!.Vehicles.Count} vehicles, total={cached.TotalCount}");
             System.Boolean hasMore = page * pageSize < cached!.TotalCount;
             return VehicleListResult.Success(cached.Vehicles, cached.TotalCount, hasMore);
         }
 
-        logger.Info("[VehicleService.GetListAsync] CACHE MISS — sending request to server");
+        logger.Info("[VehicleService.GetListAsync] CACHE MISS � sending request to server");
 
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
-            // VehicleId == null → server xử lý như list request theo CustomerId
-            // Page được encode vào Year field (xem VehicleOps.GetListByCustomerAsync)
+            // VehicleId == null ? server x? l� nhu list request theo CustomerId
+            // Page du?c encode v�o Year field (xem VehicleOps.GetListByCustomerAsync)
             VehicleDto packet = new()
             {
                 SequenceId = sq,
                 CustomerId = customerId,
                 VehicleId = null,   // null = list mode
-                Year = page,   // encode page number vào Year
+                Year = page,   // encode page number v�o Year
                 OpCode = (System.UInt16)OpCommand.VEHICLE_GET
             };
 
@@ -84,7 +84,7 @@ public sealed class VehicleService
                 },
                 handler: resp =>
                 {
-                    logger.Info($"[VehicleService.GetListAsync] VehiclesQueryResponse MATCHED — vehicles={resp.Vehicles.Count} total={resp.TotalCount}");
+                    logger.Info($"[VehicleService.GetListAsync] VehiclesQueryResponse MATCHED � vehicles={resp.Vehicles.Count} total={resp.TotalCount}");
                     sub?.Dispose();
                     errSub?.Dispose();
                     _cache.Set(key, resp.Vehicles, resp.TotalCount);
@@ -101,7 +101,7 @@ public sealed class VehicleService
                 },
                 handler: resp =>
                 {
-                    logger.Warn($"[VehicleService.GetListAsync] Directive ERROR — Type={resp.Type} Reason={resp.Reason} Action={resp.Action}");
+                    logger.Warn($"[VehicleService.GetListAsync] Directive ERROR � Type={resp.Type} Reason={resp.Reason} Action={resp.Action}");
                     sub?.Dispose();
                     errSub?.Dispose();
                     tcs.TrySetResult(VehicleListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
@@ -123,29 +123,29 @@ public sealed class VehicleService
 
             if (!ReferenceEquals(winner, tcs.Task))
             {
-                logger.Warn($"[VehicleService.GetListAsync] TIMEOUT after {RequestTimeoutMs}ms — SeqId={sq} customerId={customerId} page={page}");
+                logger.Warn($"[VehicleService.GetListAsync] TIMEOUT after {RequestTimeoutMs}ms � SeqId={sq} customerId={customerId} page={page}");
                 sub?.Dispose();
                 errSub?.Dispose();
                 return VehicleListResult.Timeout();
             }
 
             VehicleListResult finalResult = await tcs.Task.ConfigureAwait(false);
-            logger.Info($"[VehicleService.GetListAsync] Done — IsSuccess={finalResult.IsSuccess} count={finalResult.Vehicles.Count} total={finalResult.TotalCount}");
+            logger.Info($"[VehicleService.GetListAsync] Done � IsSuccess={finalResult.IsSuccess} count={finalResult.Vehicles.Count} total={finalResult.TotalCount}");
             return finalResult;
         }
         catch (System.OperationCanceledException)
         {
             logger.Warn("[VehicleService.GetListAsync] Request cancelled by caller.");
-            return VehicleListResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return VehicleListResult.Failure("Y�u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return VehicleListResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return VehicleListResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
-    // ─── CreateAsync ──────────────────────────────────────────────────────────
+    // --- CreateAsync ----------------------------------------------------------
 
     public async System.Threading.Tasks.Task<VehicleWriteResult> CreateAsync(
         VehicleDto data,
@@ -162,7 +162,7 @@ public sealed class VehicleService
         return result;
     }
 
-    // ─── UpdateAsync ──────────────────────────────────────────────────────────
+    // --- UpdateAsync ----------------------------------------------------------
 
     public async System.Threading.Tasks.Task<VehicleWriteResult> UpdateAsync(
         VehicleDto data,
@@ -179,7 +179,7 @@ public sealed class VehicleService
         return result;
     }
 
-    // ─── DeleteAsync ──────────────────────────────────────────────────────────
+    // --- DeleteAsync ----------------------------------------------------------
 
     public async System.Threading.Tasks.Task<VehicleWriteResult> DeleteAsync(
         VehicleDto data,
@@ -196,7 +196,7 @@ public sealed class VehicleService
         return result;
     }
 
-    // ─── Private Helpers ─────────────────────────────────────────────────────
+    // --- Private Helpers -----------------------------------------------------
 
     private static async System.Threading.Tasks.Task<VehicleWriteResult> SendWritePacketAsync(
         System.UInt16 opcode,
@@ -271,27 +271,27 @@ public sealed class VehicleService
         }
         catch (System.OperationCanceledException)
         {
-            return VehicleWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return VehicleWriteResult.Failure("Y�u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return VehicleWriteResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return VehicleWriteResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "Không tìm thấy xe.",
-            ProtocolReason.ALREADY_EXISTS => "Biển số hoặc số khung/máy đã tồn tại.",
-            ProtocolReason.MALFORMED_PACKET => "Dữ liệu không hợp lệ.",
-            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống. Vui lòng thử lại sau.",
-            ProtocolReason.FORBIDDEN => "Bạn không có quyền thực hiện thao tác này.",
-            ProtocolReason.UNAUTHENTICATED => "Bạn không có quyền thực hiện thao tác này.",
-            ProtocolReason.RATE_LIMITED => "Bạn đang thao tác quá nhanh. Vui lòng chờ một chút.",
-            ProtocolReason.TIMEOUT => "Máy chủ phản hồi hết hạn. Vui lòng thử lại.",
-            _ => "Thao tác thất bại. Vui lòng thử lại."
+            ProtocolReason.NOT_FOUND => "Kh�ng t�m th?y xe.",
+            ProtocolReason.ALREADY_EXISTS => "Bi?n s? ho?c s? khung/m�y d� t?n t?i.",
+            ProtocolReason.MALFORMED_PACKET => "D? li?u kh�ng h?p l?.",
+            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui l�ng th? l?i sau.",
+            ProtocolReason.FORBIDDEN => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.UNAUTHENTICATED => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.RATE_LIMITED => "B?n dang thao t�c qu� nhanh. Vui l�ng ch? m?t ch�t.",
+            ProtocolReason.TIMEOUT => "M�y ch? ph?n h?i h?t h?n. Vui l�ng th? l?i.",
+            _ => "Thao t�c th?t b?i. Vui l�ng th? l?i."
         };
 
     private static void LogException(System.Exception ex)

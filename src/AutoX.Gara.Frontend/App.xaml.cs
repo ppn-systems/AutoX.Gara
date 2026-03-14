@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
@@ -23,7 +23,7 @@ public partial class App : Application
     {
         Window window = new(new AppShell())
         {
-            // Chỉ Windows desktop mới đổi size window được
+            // Ch? Windows desktop m?i d?i size window du?c
             Width = 400,
             Height = 520,
         };

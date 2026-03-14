@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Parts;
 using AutoX.Gara.Frontend.Results.Parts;
@@ -30,7 +30,7 @@ public sealed class PartService : IPartService
     public PartService(IPartQueryCache cache)
         => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
-    // ─── GetListAsync ─────────────────────────────────────────────────────────
+    // --- GetListAsync ---------------------------------------------------------
 
     /// <summary>
     /// Retrieves a paginated list of parts with filtering and sorting.
@@ -131,16 +131,16 @@ public sealed class PartService : IPartService
         }
         catch (System.OperationCanceledException)
         {
-            return PartListResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return PartListResult.Failure("Y�u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return PartListResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return PartListResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
-    // ─── CreateAsync ──────────────────────────────────────────────────────────
+    // --- CreateAsync ----------------------------------------------------------
 
     /// <summary>
     /// Creates a new part.
@@ -160,7 +160,7 @@ public sealed class PartService : IPartService
         return result;
     }
 
-    // ─── UpdateAsync ──────────────────────────────────────────────────────────
+    // --- UpdateAsync ----------------------------------------------------------
 
     /// <summary>
     /// Updates an existing part.
@@ -180,7 +180,7 @@ public sealed class PartService : IPartService
         return result;
     }
 
-    // ─── DeleteAsync ──────────────────────────────────────────────────────────
+    // --- DeleteAsync ----------------------------------------------------------
 
     /// <summary>
     /// Deletes or discontinues a part (soft delete via IsDiscontinued flag).
@@ -200,7 +200,7 @@ public sealed class PartService : IPartService
         return result;
     }
 
-    // ─── Private Helpers ─────────────────────────────────────────────────────
+    // --- Private Helpers -----------------------------------------------------
 
     private static async System.Threading.Tasks.Task<PartWriteResult> SendWritePacketAsync(
         System.UInt16 opcode,
@@ -267,27 +267,27 @@ public sealed class PartService : IPartService
         }
         catch (System.OperationCanceledException)
         {
-            return PartWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return PartWriteResult.Failure("Y�u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return PartWriteResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return PartWriteResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "Không tìm thấy phụ tùng.",
-            ProtocolReason.ALREADY_EXISTS => "Mã SKU/phụ tùng đã tồn tại.",
-            ProtocolReason.MALFORMED_PACKET => "Dữ liệu không hợp lệ.",
-            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống. Vui lòng thử lại sau.",
-            ProtocolReason.FORBIDDEN => "Bạn không có quyền thực hiện thao tác này.",
-            ProtocolReason.UNAUTHENTICATED => "Bạn không có quyền thực hiện thao tác này.",
-            ProtocolReason.RATE_LIMITED => "Bạn đang thao tác quá nhanh. Vui lòng chờ một chút rồi thử lại.",
-            ProtocolReason.TIMEOUT => "Máy chủ phản hồi hết hạn. Vui lòng thử lại.",
-            _ => "Thao tác thất bại. Vui lòng thử lại."
+            ProtocolReason.NOT_FOUND => "Kh�ng t�m th?y ph? t�ng.",
+            ProtocolReason.ALREADY_EXISTS => "M� SKU/ph? t�ng d� t?n t?i.",
+            ProtocolReason.MALFORMED_PACKET => "D? li?u kh�ng h?p l?.",
+            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui l�ng th? l?i sau.",
+            ProtocolReason.FORBIDDEN => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.UNAUTHENTICATED => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.RATE_LIMITED => "B?n dang thao t�c qu� nhanh. Vui l�ng ch? m?t ch�t r?i th? l?i.",
+            ProtocolReason.TIMEOUT => "M�y ch? ph?n h?i h?t h?n. Vui l�ng th? l?i.",
+            _ => "Thao t�c th?t b?i. Vui l�ng th? l?i."
         };
 
     private static void LogException(System.Exception ex)
