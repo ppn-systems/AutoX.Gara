@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+Ôªø// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
@@ -10,9 +10,9 @@ using System.Collections.Generic;
 namespace AutoX.Gara.Frontend.Services.Customers;
 
 /// <summary>
-/// Key duy nh?t cho m?t t?p tham s? truy v?n.
-/// C# record t? sinh <c>Equals</c> + <c>GetHashCode</c> d˙ng ó
-/// d˘ng du?c tr?c ti?p l‡m key c?a <see cref="ConcurrentDictionary{TKey,TValue}"/>.
+/// Key duy nh?t cho m?t t?p tham s? truy v·ª•n.
+/// C# record t? sinh <c>Equals</c> + <c>GetHashCode</c> d√∫ng ‚Äî
+/// d√πng du?c tr?c ti?p l√†m key c?a <see cref="ConcurrentDictionary{TKey,TValue}"/>.
 /// </summary>
 public sealed record CustomerCacheKey(
     System.Int32 Page,
@@ -24,7 +24,7 @@ public sealed record CustomerCacheKey(
     MembershipLevel FilterMembership);
 
 /// <summary>
-/// M?t entry trong cache g?m d? li?u v‡ th?i di?m h?t h?n.
+/// M?t entry trong cache g?m d? li?u v√† th?i di?m h?t h?n.
 /// </summary>
 public sealed class CustomerCacheEntry
 {
@@ -33,21 +33,21 @@ public sealed class CustomerCacheEntry
     public required System.DateTime ExpiresAt { get; init; }
 
     /// <summary>
-    /// <c>true</c> khi entry d„ qu· TTL v‡ khÙng cÚn h?p l?.
+    /// <c>true</c> khi entry d√£ qu√° TTL v√† kh√¥ng c√≤n h?p l?.
     /// </summary>
     public System.Boolean IsExpired => System.DateTime.UtcNow >= ExpiresAt;
 }
 
 /// <summary>
-/// In-memory cache thread-safe v?i TTL 30 gi‚y.
+/// In-memory cache thread-safe v·ª•i TTL 30 gi√¢y.
 /// <para>
-/// VÚng d?i cache: m?i (page, pageSize, search, filter, sort) l‡ m?t entry d?c l?p.
-/// Khi user th?c hi?n write operation, to‡n b? cache b? xÛa d? tr·nh stale data.
+/// V√≤ng ƒë·ªïi cache: m·ªõi (page, pageSize, search, filter, sort) l√† m?t entry d?c l?p.
+/// Khi user th?c hi?n write operation, to√†n b? cache b? x√≥a d? tr√°nh stale data.
 /// </para>
 /// </summary>
 public sealed class CustomerQueryCache : ICustomerQueryCache
 {
-    /// <summary>TTL 30 gi‚y ó d? d? tr·nh duplicate request khi navigate, d? ng?n d? data khÙng stale.</summary>
+    /// <summary>TTL 30 gi√¢y ‚Äî d? d? tr√°nh duplicate request khi navigate, d? ng?n d? data kh√¥ng stale.</summary>
     private static readonly System.TimeSpan Ttl = System.TimeSpan.FromSeconds(30);
 
     private readonly ConcurrentDictionary<CustomerCacheKey, CustomerCacheEntry> _store = new();
@@ -60,7 +60,7 @@ public sealed class CustomerQueryCache : ICustomerQueryCache
             return true;
         }
 
-        // Entry t?n t?i nhung d„ h?t h?n ? xÛa luÙn d? tr·nh tÌch luy b? nh?
+        // Entry t?n T·∫£i nhung d√£ h?t h?n ? x√≥a lu√¥n d? tr√°nh t√≠ch luy b? nh?
         if (entry is not null)
         {
             _store.TryRemove(key, out _);

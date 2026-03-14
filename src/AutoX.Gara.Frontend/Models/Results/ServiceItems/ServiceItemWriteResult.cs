@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Billings;
 using Nalix.Common.Networking.Protocols;
@@ -27,7 +27,7 @@ public sealed class ServiceItemWriteResult
         => new()
         {
             IsSuccess = false,
-            ErrorMessage = "Y�u c?u h?t th?i gian ch?. Vui l�ng th? l?i.",
+            ErrorMessage = "Yêu cầu hết thời gian chờ. Vui lòng thử lại.",
             Advice = ProtocolAdvice.BACKOFF_RETRY
         };
 }

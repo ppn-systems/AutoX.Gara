@@ -145,7 +145,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
         try
         {
             logger?.Info(
-                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} emp={packet.EmployeeId} salary={packet.Salary}{(packet.SalaryUnit != 1 ? $" unit={packet.SalaryUnit}" : string.Empty)}");
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} emp={packet.EmployeeId} salary={packet.Salary}{(packet.SalaryUnit != 1 ? $" unit={packet.SalaryUnit}" : System.String.Empty)}");
 
             if (packet.EmployeeId <= 0 || packet.Salary < 0 || packet.SalaryUnit < 0)
             {

@@ -82,9 +82,16 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
                 Customers = payload
             };
 
-            if (!await TrySendPacketAsync(response, connection, logger, nameof(GetAsync), packet.SequenceId).ConfigureAwait(false))
+            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(packet)).ConfigureAwait(false);
+
+            if (!sent)
             {
-                return;
+                logger?.Warn($"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] send-failed seq={packet.SequenceId}");
+
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
 
             logger?.Info(
@@ -156,9 +163,16 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
 
             confirmed = MapToPacket(newCustomer, packet.SequenceId);
 
-            if (!await TrySendPacketAsync(confirmed, connection, logger, nameof(CreateAsync), packet.SequenceId).ConfigureAwait(false))
+            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(packet)).ConfigureAwait(false);
+
+            if (!sent)
             {
-                return;
+                logger?.Warn($"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] send-failed seq={packet.SequenceId}");
+
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
 
             logger?.Info(
@@ -229,9 +243,16 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
 
             confirmed = MapToPacket(existing, packet.SequenceId);
 
-            if (!await TrySendPacketAsync(confirmed, connection, logger, nameof(UpdateAsync), packet.SequenceId).ConfigureAwait(false))
+            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(packet)).ConfigureAwait(false);
+
+            if (!sent)
             {
-                return;
+                logger?.Warn($"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] send-failed seq={packet.SequenceId}");
+
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
 
             logger?.Info(
@@ -378,27 +399,6 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
         }
 
         InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(dto);
-    }
-
-    private static async System.Threading.Tasks.Task<System.Boolean> TrySendPacketAsync(
-        System.Object packet,
-        IConnection connection,
-        ILogger logger,
-        System.String operation,
-        System.UInt32 sequenceId)
-    {
-        System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(packet)).ConfigureAwait(false);
-        if (!sent)
-        {
-            logger?.Warn(
-                $"[APP.{nameof(CustomerOps)}:{operation}] send-failed seq={sequenceId}");
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, sequenceId).ConfigureAwait(false);
-        }
-
-        return sent;
     }
 
     private static async System.Threading.Tasks.Task SendErrorAsync(

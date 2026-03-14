@@ -1,10 +1,10 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+Ôªø// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Helpers;
-using AutoX.Gara.Frontend.Models.Results;
+using AutoX.Gara.Frontend.Models.Results.Customer;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Customers;
 using AutoX.Gara.Shared.Validation;
@@ -21,7 +21,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 {
     private readonly ICustomerService _customerService;
     private System.Threading.CancellationTokenSource? _cts;
-    private System.Threading.CancellationTokenSource? _searchCts; // FIX: d˘ng CTS thay Timer
+    private System.Threading.CancellationTokenSource? _searchCts; // FIX: d√πng CTS thay Timer
 
     private const System.Int32 DefaultPageSize = 5;
     private const System.Int32 SearchDebounceMs = 400;
@@ -43,7 +43,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
     // --- Filter ---------------------------------------------------------------
 
-    // Gi? nguyÍn FilterType/FilterMembership d? logic khÙng d?i
+    // Gi? nguy√™n FilterType/FilterMembership d? logic kh√¥ng ƒë·ªïi
     [ObservableProperty] public partial CustomerType FilterType { get; set; } = CustomerType.None;
     [ObservableProperty] public partial MembershipLevel FilterMembership { get; set; } = MembershipLevel.None;
 
@@ -81,25 +81,20 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         Gender.Female
     ];
 
-    public string[] FilterTypeOptions { get; } =
-        CustomerTypeValues.Select((v, idx) => idx == 0 ? "T?t c? lo?i" : EnumText.Get(v)).ToArray();
+    public System.String[] FilterTypeOptions { get; } = [.. CustomerTypeValues.Select((v, idx) => idx == 0 ? "T·∫•t c·∫£ lo·∫°i" : EnumText.Get(v))];
 
-    public string[] FilterMembershipOptions { get; } =
-        MembershipValues.Select((v, idx) => idx == 0 ? "T?t c? h?ng" : EnumText.Get(v)).ToArray();
+    public System.String[] FilterMembershipOptions { get; } = [.. MembershipValues.Select((v, idx) => idx == 0 ? "T·∫•t c·∫£ h·∫°ng" : EnumText.Get(v))];
 
-    public string[] FormTypeOptions { get; } =
-        CustomerTypeValues.Select((v, idx) => idx == 0 ? "ó ch?n ó" : EnumText.Get(v)).ToArray();
+    public System.String[] FormTypeOptions { get; } = [.. CustomerTypeValues.Select((v, idx) => idx == 0 ? "‚Äî ch·ªçn ‚Äî" : EnumText.Get(v))];
 
-    public string[] FormMembershipOptions { get; } =
-        MembershipValues.Select((v, idx) => idx == 0 ? "ó ch?n ó" : EnumText.Get(v)).ToArray();
+    public System.String[] FormMembershipOptions { get; } = [.. MembershipValues.Select((v, idx) => idx == 0 ? "‚Äî ch·ªçn ‚Äî" : EnumText.Get(v))];
 
-    public string[] FormGenderOptions { get; } =
-        GenderValues.Select((v, idx) => idx == 0 ? "ó ch?n ó" : EnumText.Get(v)).ToArray();
+    public System.String[] FormGenderOptions { get; } = [.. GenderValues.Select((v, idx) => idx == 0 ? "‚Äî ch·ªçn ‚Äî" : EnumText.Get(v))];
 
-    // FIX PICKER: Picker.SelectedIndex (int) thay vÏ SelectedItem (string?enum khÙng match)
-    // 0=T?t c?, 1=C· nh‚n, 2=Doanh nghi?p
+    // FIX PICKER: Picker.SelectedIndex (int) thay v√¨ SelectedItem (string?enum kh√¥ng match)
+    // 0=T·∫•t c·∫£, 1=C√° nh√¢n, 2=Doanh nghi?p
     [ObservableProperty] public partial System.Int32 PickerFilterTypeIndex { get; set; } = 0;
-    // 0=T?t c?, 1=Bronze, 2=Silver, 3=Gold, 4=Platinum
+    // 0=T·∫•t c·∫£, 1=Bronze, 2=Silver, 3=Gold, 4=Platinum
     [ObservableProperty] public partial System.Int32 PickerMembershipIndex { get; set; } = 0;
 
     public System.String SelectedFilterTypeText =>
@@ -134,9 +129,9 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
     [ObservableProperty] public partial CustomerDto? SelectedCustomer { get; set; }
 
-    // FIX: thay StringFormat bool khÙng ho?t d?ng ó d˘ng computed property
-    public System.String FormTitle => IsEditing ? "S?a kh·ch h‡ng" : "ThÍm kh·ch h‡ng";
-    public System.String FormSaveText => IsEditing ? "Luu thay d?i" : "ThÍm kh·ch h‡ng";
+    // FIX: thay StringFormat bool kh√¥ng ho?t d?ng ‚Äî d√πng computed property
+    public System.String FormTitle => IsEditing ? "S·ª≠a kh√°ch h√†ng" : "Th√™m kh√°ch h√†ng";
+    public System.String FormSaveText => IsEditing ? "Luu thay ƒë·ªïi" : "Th√™m kh√°ch h√†ng";
 
     [ObservableProperty] public partial System.String FormName { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormEmail { get; set; } = System.String.Empty;
@@ -214,7 +209,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         _ = LoadAsync();
     }
 
-    // FIX: CancellationTokenSource debounce ó khÙng leak, cancel ngay l?p t?c
+    // FIX: CancellationTokenSource debounce ‚Äî kh√¥ng leak, cancel ngay l?p t?c
     partial void OnSearchTermChanged(string value)
     {
         _searchCts?.Cancel();
@@ -334,7 +329,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
             }
             else
             {
-                HandleWriteError("T?i danh s·ch th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleWriteError("T·∫£i danh s√°ch th·∫•t b·∫°i", result.ErrorMessage!, result.Advice);
             }
         }
         finally
@@ -393,13 +388,22 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         FormDateOfBirth = customer.DateOfBirth == default ? null : customer.DateOfBirth;
 
         FormPickerTypeIndex = System.Array.IndexOf(CustomerTypeValues, customer.Type ?? CustomerType.None);
-        if (FormPickerTypeIndex < 0) FormPickerTypeIndex = 0;
+        if (FormPickerTypeIndex < 0)
+        {
+            FormPickerTypeIndex = 0;
+        }
 
         FormPickerMembershipIndex = System.Array.IndexOf(MembershipValues, customer.Membership ?? MembershipLevel.None);
-        if (FormPickerMembershipIndex < 0) FormPickerMembershipIndex = 0;
+        if (FormPickerMembershipIndex < 0)
+        {
+            FormPickerMembershipIndex = 0;
+        }
 
         FormPickerGenderIndex = System.Array.IndexOf(GenderValues, customer.Gender ?? Gender.None);
-        if (FormPickerGenderIndex < 0) FormPickerGenderIndex = 0;
+        if (FormPickerGenderIndex < 0)
+        {
+            FormPickerGenderIndex = 0;
+        }
 
         ClearFormError();
         IsFormVisible = true;
@@ -468,7 +472,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
             }
             else
             {
-                SetFormError(result.ErrorMessage ?? "Thao t·c th?t b?i.");
+                SetFormError(result.ErrorMessage ?? "Thao t√°c th·∫•t b·∫°i.");
             }
         }
         finally
@@ -480,11 +484,11 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     [RelayCommand]
     private static async System.Threading.Tasks.Task OpenVehiclesAsync(CustomerDto customer)
     {
-        // T?o page m?i, truy?n customer context v‡o tru?c khi navigate
+        // T?o page m·ªõi, truy?n customer context v√†o tru?c khi navigate
         var page = new Views.VehiclesPage();
         page.Initialize(customer);
 
-        // Push page lÍn navigation stack c?a Shell
+        // Push page l√™n navigation stack c?a Shell
         await Shell.Current.Navigation.PushAsync(page);
     }
 
@@ -543,7 +547,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
             }
             else
             {
-                HandleWriteError("XÛa th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleWriteError("X√≥a th·∫•t b·∫°i", result.ErrorMessage!, result.Advice);
             }
         }
         finally
@@ -632,31 +636,31 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     private System.Boolean ValidateForm()
     {
         if (System.String.IsNullOrWhiteSpace(FormName))
-        { SetFormError("TÍn kh·ch h‡ng khÙng du?c d? tr?ng."); return false; }
+        { SetFormError("T√™n kh√°ch h√†ng kh√¥ng du?c d? tr?ng."); return false; }
 
         if (FormName.Length > 100)
-        { SetFormError("TÍn khÙng du?c vu?t qu· 100 k˝ t?."); return false; }
+        { SetFormError("T√™n kh√¥ng du?c vu?t qu√° 100 k√Ω t?."); return false; }
 
         if (!AccountValidation.IsValidEmail(FormEmail))
-        { SetFormError("Email khÙng h?p l?."); return false; }
+        { SetFormError("Email kh√¥ng h?p l?."); return false; }
 
         if (!AccountValidation.IsValidVietnamPhoneNumber(FormPhone))
-        { SetFormError("S? di?n tho?i khÙng h?p l? (VD: 0901234567)."); return false; }
+        { SetFormError("S? di?n tho?i kh√¥ng h?p l? (VD: 0901234567)."); return false; }
 
         if (FormDateOfBirth.HasValue)
         {
             if (FormDateOfBirth.Value > System.DateTime.Today)
-            { SetFormError("Ng‡y sinh khÙng du?c l‡ ng‡y trong tuong lai."); return false; }
+            { SetFormError("Ng√†y sinh kh√¥ng du?c l√† ng√†y trong tuong lai."); return false; }
 
             if (FormDateOfBirth.Value < System.DateTime.Today.AddYears(-120))
-            { SetFormError("Ng‡y sinh khÙng h?p l?."); return false; }
+            { SetFormError("Ng√†y sinh kh√¥ng h?p l?."); return false; }
         }
 
         if (FormType == CustomerType.Business && System.String.IsNullOrWhiteSpace(FormTaxCode))
-        { SetFormError("M„ s? thu? b?t bu?c d?i v?i kh·ch h‡ng doanh nghi?p."); return false; }
+        { SetFormError("M√£ s? thu? b?t bu?c ƒë·ªïi v·ª•i kh√°ch h√†ng doanh nghi?p."); return false; }
 
         if (FormNotes.Length > 500)
-        { SetFormError("Ghi ch˙ khÙng du?c vu?t qu· 500 k˝ t?."); return false; }
+        { SetFormError("Ghi ch√∫ kh√¥ng du?c vu?t qu√° 500 k√Ω t?."); return false; }
 
         return true;
     }
@@ -716,7 +720,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         PopupTitle = title;
         PopupMessage = message;
         IsPopupRetry = isRetry;
-        PopupButtonText = isRetry ? "Th? l?i" : "OK";
+        PopupButtonText = isRetry ? "Th·ª≠ l·∫°i" : "OK";
         IsPopupVisible = true;
     }
 }

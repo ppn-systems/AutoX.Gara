@@ -1,13 +1,13 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+Ôªø// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 namespace AutoX.Gara.Frontend.Abstractions;
 
 /// <summary>
-/// Abstraction cho navigation, gi˙p ViewModel khÙng ph? thu?c tr?c ti?p v‡o Shell.
-/// D? mock khi vi?t unit test sau n‡y.
+/// Abstraction cho navigation, gi√∫p ViewModel kh√¥ng ph·ª• thu?c tr?c ti?p v√†o Shell.
+/// D? mock khi vi?t unit test sau n√†y.
 /// </summary>
 public interface INavigationService
 {
-    /// <summary>Chuy?n sang m‡n hÏnh chÌnh sau khi dang nh?p th‡nh cÙng.</summary>
+    /// <summary>Chuy?n sang m√†n h√¨nh ch√≠nh sau khi dang nh?p th√†nh c√¥ng.</summary>
     System.Threading.Tasks.Task GoToMainPageAsync();
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+Ôªø// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Protocols;
@@ -6,7 +6,7 @@ using Nalix.Common.Networking.Protocols;
 namespace AutoX.Gara.Frontend.Results.Vehicles;
 
 /// <summary>
-/// Represents the result of a vehicle list query operation (l?y danh s·ch xe theo customer).
+/// Represents the result of a vehicle list query operation (l?y danh s√°ch xe theo customer).
 /// </summary>
 public sealed class VehicleListResult
 {
@@ -23,12 +23,12 @@ public sealed class VehicleListResult
     public System.Collections.Generic.List<VehicleDto> Vehicles { get; private init; } = [];
 
     /// <summary>
-    /// T?ng s? xe c?a customer trÍn server (d˘ng d? tÌnh t?ng trang).
-    /// -1 nghia l‡ server khÙng tr? v?.
+    /// T?ng s? xe c?a customer tr√™n server (d√πng d? t√≠nh t?ng trang).
+    /// -1 nghia l√† server kh√¥ng tr? v·ª•.
     /// </summary>
     public System.Int32 TotalCount { get; private init; } = -1;
 
-    /// <summary>Server cÚn page ti?p theo khÙng (khi TotalCount khÙng cÛ).</summary>
+    /// <summary>Server c√≤n page ti?p theo kh√¥ng (khi TotalCount kh√¥ng c√≥).</summary>
     public System.Boolean HasMore { get; private init; }
 
     // --- Factory Methods -----------------------------------------------------
@@ -54,7 +54,7 @@ public sealed class VehicleListResult
         => new()
         {
             IsSuccess = false,
-            ErrorMessage = "YÍu c?u h?t th?i gian ch?. Vui lÚng th? l?i.",
+            ErrorMessage = "Y√™u c·∫ßu h·∫øt th·ªùi gian ch·ªù. Vui l√≤ng th·ª≠ l·∫°i.",
             Advice = ProtocolAdvice.BACKOFF_RETRY
         };
 }

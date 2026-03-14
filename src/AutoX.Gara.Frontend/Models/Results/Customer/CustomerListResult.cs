@@ -1,9 +1,9 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Customers;
 using Nalix.Common.Networking.Protocols;
 
-namespace AutoX.Gara.Frontend.Models.Results;
+namespace AutoX.Gara.Frontend.Models.Results.Customer;
 
 /// <summary>
 /// Represents the result of a customer list query operation.
@@ -60,7 +60,7 @@ public sealed class CustomerListResult
         => new()
         {
             IsSuccess = false,
-            ErrorMessage = "Y�u c?u h?t th?i gian ch?. Vui l�ng th? l?i.",
+            ErrorMessage = "Yêu cầu hết thời gian chờ. Vui lòng thử lại.",
             Advice = ProtocolAdvice.BACKOFF_RETRY
         };
 }

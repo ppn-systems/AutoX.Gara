@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+Ôªø// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ namespace AutoX.Gara.Frontend.Services.Vehicles;
 // --- Cache Entry -------------------------------------------------------------
 
 /// <summary>
-/// M?t entry trong cache xe g?m d? li?u v‡ th?i di?m h?t h?n.
+/// M?t entry trong cache xe g?m d? li?u v√† th?i di?m h?t h?n.
 /// </summary>
 public sealed class VehicleCacheEntry
 {
@@ -16,15 +16,15 @@ public sealed class VehicleCacheEntry
     public required System.Int32 TotalCount { get; init; }
     public required System.DateTime ExpiresAt { get; init; }
 
-    /// <summary>true khi entry d„ qu· TTL v‡ khÙng cÚn h?p l?.</summary>
+    /// <summary>true khi entry d√£ qu√° TTL v√† kh√¥ng c√≤n h?p l?.</summary>
     public System.Boolean IsExpired => System.DateTime.UtcNow >= ExpiresAt;
 }
 
 // --- Cache Key ----------------------------------------------------------------
 
 /// <summary>
-/// Key duy nh?t cho m?t t?p tham s? truy v?n danh s·ch xe.
-/// Record t? sinh Equals + GetHashCode ó d˘ng du?c v?i ConcurrentDictionary.
+/// Key duy nh?t cho m?t t?p tham s? truy v·ª•n danh s√°ch xe.
+/// Record t? sinh Equals + GetHashCode ‚Äî d√πng du?c v·ª•i ConcurrentDictionary.
 /// </summary>
 public sealed record VehicleCacheKey(
     System.Int32 CustomerId,
@@ -34,8 +34,8 @@ public sealed record VehicleCacheKey(
 // --- Cache --------------------------------------------------------------------
 
 /// <summary>
-/// In-memory cache thread-safe v?i TTL 30 gi‚y cho danh s·ch xe.
-/// Write operations ph?i g?i <see cref="Invalidate(System.Int32)"/> d? xÛa cache c?a customer dÛ.
+/// In-memory cache thread-safe v·ª•i TTL 30 gi√¢y cho danh s√°ch xe.
+/// Write operations ph·ª•i g?i <see cref="Invalidate(System.Int32)"/> d? x√≥a cache c?a customer d√≥.
 /// </summary>
 public sealed class VehicleQueryCache
 {
@@ -69,7 +69,7 @@ public sealed class VehicleQueryCache
         };
     }
 
-    /// <summary>XÛa cache c?a m?t customer c? th? (sau write operation).</summary>
+    /// <summary>X√≥a cache c?a m?t customer c? th? (sau write operation).</summary>
     public void Invalidate(System.Int32 customerId)
     {
         foreach (VehicleCacheKey key in _store.Keys)
@@ -81,6 +81,6 @@ public sealed class VehicleQueryCache
         }
     }
 
-    /// <summary>XÛa to‡n b? cache (d˘ng khi khÙng bi?t customerId).</summary>
+    /// <summary>X√≥a to√†n b? cache (d√πng khi kh√¥ng bi?t customerId).</summary>
     public void InvalidateAll() => _store.Clear();
 }

@@ -91,8 +91,8 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
     [ObservableProperty] public partial ServiceItemDto? SelectedServiceItem { get; set; }
 
-    public System.String FormTitle => IsEditing ? "S?a d?ch v?" : "Th�m d?ch v?";
-    public System.String FormSaveText => IsEditing ? "Luu thay d?i" : "Th�m d?ch v?";
+    public System.String FormTitle => IsEditing ? "Sửa dịch vụ" : "Thêm dịch vụ";
+    public System.String FormSaveText => IsEditing ? "Luu thay đổi" : "Thêm dịch vụ";
 
     [ObservableProperty] public partial System.String FormDescription { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormUnitPrice { get; set; } = System.String.Empty;
@@ -126,11 +126,11 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
 
         _serviceTypeFilterValues = new ServiceType?[all.Length + 1];
         _serviceTypeFilterValues[0] = null;
-        for (int i = 0; i < all.Length; i++)
+        for (Int32 i = 0; i < all.Length; i++)
         {
             _serviceTypeFilterValues[i + 1] = all[i];
         }
-        ServiceTypeFilterOptions = new[] { "T?t c? lo?i" }
+        ServiceTypeFilterOptions = new[] { "Tất cả loại" }
             .Concat(all.Select(EnumText.Get))
             .ToArray();
 
@@ -271,7 +271,7 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
             }
             else
             {
-                HandleError("T?i danh s�ch th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError("Tải danh s�ch thất bại", result.ErrorMessage!, result.Advice);
             }
         }
         finally
@@ -305,7 +305,7 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
 
         FormDescription = item.Description ?? System.String.Empty;
         FormUnitPrice = item.UnitPrice.ToString("0.##");
-        int idx = System.Array.IndexOf(_serviceTypeFormValues, item.Type);
+        Int32 idx = System.Array.IndexOf(_serviceTypeFormValues, item.Type);
         FormTypeIndex = idx >= 0 ? idx + 1 : 0;
 
         ClearFormError();
@@ -375,7 +375,7 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
             }
             else
             {
-                SetFormError(result.ErrorMessage ?? "Thao t�c th?t b?i.");
+                SetFormError(result.ErrorMessage ?? "Thao t�c thất bại.");
             }
         }
         finally
@@ -431,7 +431,7 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
             }
             else
             {
-                HandleError("X�a th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError("Xóa thất bại", result.ErrorMessage!, result.Advice);
             }
         }
         finally
@@ -521,16 +521,16 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
     private System.Boolean ValidateForm()
     {
         if (System.String.IsNullOrWhiteSpace(FormDescription))
-        { SetFormError("M� t? d?ch v? kh�ng du?c d? tr?ng."); return false; }
+        { SetFormError("M� t? dịch vụ kh�ng du?c d? tr?ng."); return false; }
 
         if (FormDescription.Length > 255)
         { SetFormError("M� t? kh�ng du?c vu?t qu� 255 k� t?."); return false; }
 
         if (!System.Decimal.TryParse(FormUnitPrice, out System.Decimal price) || price <= 0)
-        { SetFormError("�on gi� kh�ng h?p l? (ph?i l� s? duong)."); return false; }
+        { SetFormError("�on gi� kh�ng h?p l? (phụi l� s? duong)."); return false; }
 
         if (FormTypeIndex == 0)
-        { SetFormError("Vui l�ng ch?n lo?i d?ch v?."); return false; }
+        { SetFormError("Vui l�ng ch?n lo?i dịch vụ."); return false; }
 
         return true;
     }
@@ -593,7 +593,7 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
         PopupTitle = title;
         PopupMessage = message;
         IsPopupRetry = isRetry;
-        PopupButtonText = isRetry ? "Th? l?i" : "OK";
+        PopupButtonText = isRetry ? "Thử lại" : "OK";
         IsPopupVisible = true;
     }
 }

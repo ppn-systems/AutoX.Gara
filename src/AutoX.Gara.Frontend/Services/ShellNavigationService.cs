@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+Ôªø// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
 using Microsoft.Maui.Controls;
@@ -8,23 +8,23 @@ using System.Threading.Tasks;
 namespace AutoX.Gara.Frontend.Services;
 
 /// <summary>
-/// Implementation d˘ng Shell MAUI. –‚y l‡ noi DUY NH?T trong UI layer
-/// du?c phÈp g?i Shell.Current tr?c ti?p.
+/// Implementation d√πng Shell MAUI. √ê√¢y l√† noi DUY NH?T trong UI layer
+/// du?c ph√©p g?i Shell.Current tr?c ti?p.
 /// </summary>
 public sealed class ShellNavigationService : INavigationService
 {
     public async Task GoToMainPageAsync()
     {
-        // XÛa LoginPage ra kh?i shell history d? back khÙng v? du?c
+        // X√≥a LoginPage ra kh?i shell history d? back kh√¥ng v·ª• du?c
         ShellItem? loginItem = Shell.Current.Items
-            .FirstOrDefault(i => i.Title is "Login" or "–ang nh?p");
+            .FirstOrDefault(i => i.Title is "Login" or "√êang nh·∫≠p");
 
         if (loginItem is not null)
         {
             Shell.Current.Items.Remove(loginItem);
         }
 
-        // Resize window v? kÌch thu?c app chÌnh (Windows/Mac)
+        // Resize window v·ª• k√≠ch thu?c app ch√≠nh (Windows/Mac)
         if (Application.Current?.Windows[0] is { } window)
         {
             window.Width = 1280;

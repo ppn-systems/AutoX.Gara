@@ -1,5 +1,6 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Frontend.Results.Billings;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Billings;

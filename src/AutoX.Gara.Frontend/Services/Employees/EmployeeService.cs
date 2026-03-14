@@ -1,7 +1,8 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+Ôªø// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
+using AutoX.Gara.Frontend.Models.Results.Employees;
 using AutoX.Gara.Frontend.Results.Employees;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Employees;
@@ -115,12 +116,12 @@ public sealed class EmployeeService : IEmployeeService
         }
         catch (System.OperationCanceledException)
         {
-            return EmployeeListResult.Failure("YÍu c?u b? h?y.", ProtocolAdvice.NONE);
+            return EmployeeListResult.Failure("Y√™u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return EmployeeListResult.Failure($"L?i khÙng x·c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return EmployeeListResult.Failure($"L?i kh√¥ng x√°c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
@@ -234,27 +235,27 @@ public sealed class EmployeeService : IEmployeeService
         }
         catch (System.OperationCanceledException)
         {
-            return EmployeeWriteResult.Failure("YÍu c?u b? h?y.", ProtocolAdvice.NONE);
+            return EmployeeWriteResult.Failure("Y√™u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return EmployeeWriteResult.Failure($"L?i khÙng x·c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return EmployeeWriteResult.Failure($"L?i kh√¥ng x√°c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "KhÙng tÏm th?y nh‚n viÍn.",
-            ProtocolReason.ALREADY_EXISTS => "Email ho?c s? di?n tho?i d„ t?n t?i.",
-            ProtocolReason.MALFORMED_PACKET => "D? li?u khÙng h?p l?.",
-            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui lÚng th? l?i sau.",
-            ProtocolReason.FORBIDDEN => "B?n khÙng cÛ quy?n th?c hi?n thao t·c n‡y.",
-            ProtocolReason.UNAUTHENTICATED => "B?n khÙng cÛ quy?n th?c hi?n thao t·c n‡y.",
-            ProtocolReason.RATE_LIMITED => "B?n dang thao t·c qu· nhanh. Vui lÚng ch? m?t ch˙t r?i th? l?i.",
-            ProtocolReason.TIMEOUT => "M·y ch? ph?n h?i h?t h?n. Vui lÚng th? l?i.",
-            _ => "Thao t·c th?t b?i. Vui lÚng th? l?i."
+            ProtocolReason.NOT_FOUND => "Kh√¥ng t√¨m th?y nh√¢n vi√™n.",
+            ProtocolReason.ALREADY_EXISTS => "Email ho?c s? di?n tho?i d√£ t?n T·∫£i.",
+            ProtocolReason.MALFORMED_PACKET => "D? li?u kh√¥ng h?p l?.",
+            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui l√≤ng Th·ª≠ l·∫°i sau.",
+            ProtocolReason.FORBIDDEN => "B?n kh√¥ng c√≥ quy?n th?c hi?n thao t√°c n√†y.",
+            ProtocolReason.UNAUTHENTICATED => "B?n kh√¥ng c√≥ quy?n th?c hi?n thao t√°c n√†y.",
+            ProtocolReason.RATE_LIMITED => "B?n dang thao t√°c qu√° nhanh. Vui l√≤ng ch? m?t ch√∫t r?i Th·ª≠ l·∫°i.",
+            ProtocolReason.TIMEOUT => "M√°y ch? ph·ª•n h?i h?t h?n. Vui l√≤ng Th·ª≠ l·∫°i.",
+            _ => "Thao t√°c th·∫•t b·∫°i. Vui l√≤ng Th·ª≠ l·∫°i."
         };
 
     private static void LogException(System.Exception ex)

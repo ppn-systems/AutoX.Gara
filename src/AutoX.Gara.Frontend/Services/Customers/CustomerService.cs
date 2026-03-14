@@ -1,8 +1,8 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+Ôªø// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
-using AutoX.Gara.Frontend.Models.Results;
+using AutoX.Gara.Frontend.Models.Results.Customer;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Customers;
 using Nalix.Common.Diagnostics.Abstractions;
@@ -19,11 +19,11 @@ namespace AutoX.Gara.Frontend.Services.Customers;
 /// <summary>
 /// Real implementation c?a <see cref="ICustomerService"/>.
 /// <para>
-/// Thay d?i so v?i version cu:
+/// Thay ƒë·ªïi so v·ª•i version cu:
 /// <list type="bullet">
-///   <item>Inject <see cref="ICustomerQueryCache"/> ? cache 30 gi‚y tr·nh duplicate request.</item>
-///   <item>Write operations t? d?ng g?i <see cref="ICustomerQueryCache.Invalidate"/> sau khi th‡nh cÙng.</item>
-///   <item>Cache hit ho‡n to‡n bypass network ó tr? v? ngay t? memory.</item>
+///   <item>Inject <see cref="ICustomerQueryCache"/> ? cache 30 gi√¢y tr√°nh duplicate request.</item>
+///   <item>Write operations t? d?ng g?i <see cref="ICustomerQueryCache.Invalidate"/> sau khi th√†nh c√¥ng.</item>
+///   <item>Cache hit ho√†n to√†n bypass network ‚Äî tr? v·ª• ngay t? memory.</item>
 /// </list>
 /// </para>
 /// </summary>
@@ -48,7 +48,7 @@ public sealed class CustomerService : ICustomerService
         MembershipLevel filterMembership = MembershipLevel.None,
         System.Threading.CancellationToken ct = default)
     {
-        // -- Cache hit: tr? v? ngay, khÙng t?n bang thÙng -----------------
+        // -- Cache hit: tr? v·ª• ngay, kh√¥ng t?n bang th√¥ng -----------------
         CustomerCacheKey key = new(
             page, pageSize,
             searchTerm ?? System.String.Empty,
@@ -64,7 +64,7 @@ public sealed class CustomerService : ICustomerService
                 hasMore: hasMore);
         }
 
-        // -- Cache miss: g?i request lÍn server ----------------------------
+        // -- Cache miss: g?i request l√™n server ----------------------------
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
@@ -96,7 +96,7 @@ public sealed class CustomerService : ICustomerService
                     sub?.Dispose();
                     errSub?.Dispose();
 
-                    // Luu k?t qu? v‡o cache 30s
+                    // Luu k?t qu? v√†o cache 30s
                     _cache.Set(key, resp.Customers, resp.TotalCount);
 
                     System.Boolean hasMore = page * pageSize < resp.TotalCount;
@@ -141,13 +141,13 @@ public sealed class CustomerService : ICustomerService
         }
         catch (System.OperationCanceledException)
         {
-            return CustomerListResult.Failure("YÍu c?u b? h?y.", ProtocolAdvice.NONE);
+            return CustomerListResult.Failure("Y√™u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
             return CustomerListResult.Failure(
-                $"L?i khÙng x·c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+                $"L?i kh√¥ng x√°c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
@@ -162,7 +162,7 @@ public sealed class CustomerService : ICustomerService
             (System.UInt16)OpCommand.CUSTOMER_CREATE, data, expectEcho: true, ct)
             .ConfigureAwait(false);
 
-        // D? li?u m?i ? cache cu khÙng cÚn chÌnh x·c
+        // D? li?u m·ªõi ? cache cu kh√¥ng c√≤n ch√≠nh x√°c
         if (result.IsSuccess)
         {
             _cache.Invalidate();
@@ -287,32 +287,32 @@ public sealed class CustomerService : ICustomerService
         }
         catch (System.OperationCanceledException)
         {
-            return CustomerWriteResult.Failure("YÍu c?u b? h?y.", ProtocolAdvice.NONE);
+            return CustomerWriteResult.Failure("Y√™u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
             return CustomerWriteResult.Failure(
-                $"L?i khÙng x·c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+                $"L?i kh√¥ng x√°c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "KhÙng tÏm th?y kh·ch h‡ng.",
-            ProtocolReason.ALREADY_EXISTS => "Email ho?c s? di?n tho?i d„ t?n t?i.",
-            ProtocolReason.MALFORMED_PACKET => "D? li?u khÙng h?p l?.",
-            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui lÚng th? l?i sau.",
-            ProtocolReason.FORBIDDEN => "B?n khÙng cÛ quy?n th?c hi?n thao t·c n‡y.",
-            ProtocolReason.UNAUTHENTICATED => "B?n khÙng cÛ quy?n th?c hi?n thao t·c n‡y.",
-            ProtocolReason.RATE_LIMITED => "B?n dang thao t·c qu· nhanh. Vui lÚng ch? m?t ch˙t r?i th? l?i.",
-            ProtocolReason.UNSUPPORTED_PACKET => "YÍu c?u khÙng du?c h? tr?. Vui lÚng c?p nh?t ph?n m?m n?u cÛ th?.",
-            ProtocolReason.CRYPTO_UNSUPPORTED => "L?i m„ hÛa. Vui lÚng c?p nh?t ph?n m?m n?u cÛ th?.",
-            ProtocolReason.COMPRESSION_FAILED => "L?i nÈn d? li?u. Vui lÚng c?p nh?t ph?n m?m n?u cÛ th?.",
-            ProtocolReason.TRANSFORM_FAILED => "L?i x? l˝ d? li?u. Vui lÚng c?p nh?t ph?n m?m n?u cÛ th?.",
-            ProtocolReason.TIMEOUT => "M·y ch? ph?n h?i h?t h?n. Vui lÚng th? l?i.",
-            _ => "Thao t·c th?t b?i. Vui lÚng th? l?i."
+            ProtocolReason.NOT_FOUND => "Kh√¥ng t√¨m th?y kh√°ch h√†ng.",
+            ProtocolReason.ALREADY_EXISTS => "Email ho?c s? di?n tho?i d√£ t?n T·∫£i.",
+            ProtocolReason.MALFORMED_PACKET => "D? li?u kh√¥ng h?p l?.",
+            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui l√≤ng Th·ª≠ l·∫°i sau.",
+            ProtocolReason.FORBIDDEN => "B?n kh√¥ng c√≥ quy?n th?c hi?n thao t√°c n√†y.",
+            ProtocolReason.UNAUTHENTICATED => "B?n kh√¥ng c√≥ quy?n th?c hi?n thao t√°c n√†y.",
+            ProtocolReason.RATE_LIMITED => "B?n dang thao t√°c qu√° nhanh. Vui l√≤ng ch? m?t ch√∫t r?i Th·ª≠ l·∫°i.",
+            ProtocolReason.UNSUPPORTED_PACKET => "Y√™u c?u kh√¥ng du?c h? tr?. Vui l√≤ng c?p nh?t ph·ª•n m?m n?u c√≥ th?.",
+            ProtocolReason.CRYPTO_UNSUPPORTED => "L?i m√£ h√≥a. Vui l√≤ng c?p nh?t ph·ª•n m?m n?u c√≥ th?.",
+            ProtocolReason.COMPRESSION_FAILED => "L?i n√©n d? li?u. Vui l√≤ng c?p nh?t ph·ª•n m?m n?u c√≥ th?.",
+            ProtocolReason.TRANSFORM_FAILED => "L?i x? l√Ω d? li?u. Vui l√≤ng c?p nh?t ph·ª•n m?m n?u c√≥ th?.",
+            ProtocolReason.TIMEOUT => "M√°y ch? ph·ª•n h?i h?t h?n. Vui l√≤ng Th·ª≠ l·∫°i.",
+            _ => "Thao t√°c th·∫•t b·∫°i. Vui l√≤ng Th·ª≠ l·∫°i."
         };
 
     private static void LogException(System.Exception ex)

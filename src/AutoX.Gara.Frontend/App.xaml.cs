@@ -23,7 +23,7 @@ public partial class App : Application
     {
         Window window = new(new AppShell())
         {
-            // Ch? Windows desktop m?i d?i size window du?c
+            // Ch? Windows desktop mới đổi size window du?c
             Width = 400,
             Height = 520,
         };

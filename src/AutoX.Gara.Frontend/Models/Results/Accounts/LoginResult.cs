@@ -1,11 +1,11 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using Nalix.Common.Networking.Protocols;
 
-namespace AutoX.Gara.Frontend.Results.Accounts;
+namespace AutoX.Gara.Frontend.Models.Results.Accounts;
 
 /// <summary>
-/// K?t qu? dang nh?p, g?m th�nh c�ng ho?c l?i k�m reason + advice t? server.
+/// K?t qu? dang nh?p, g?m thành công ho?c l?i kèm reason + advice t? server.
 /// </summary>
 public sealed class LoginResult
 {
@@ -14,7 +14,7 @@ public sealed class LoginResult
 
     /// <summary>
     /// Advice t? server: FIX_AND_RETRY, DO_NOT_RETRY, BACKOFF_RETRY...
-    /// Null n?u th�nh c�ng.
+    /// Null n?u thành công.
     /// </summary>
     public ProtocolAdvice? Advice { get; private init; }
 
@@ -32,7 +32,7 @@ public sealed class LoginResult
     public static LoginResult Timeout() => new()
     {
         IsSuccess = false,
-        ErrorMessage = "Kh�ng nh?n du?c ph?n h?i t? server. Vui l�ng th? l?i.",
+        ErrorMessage = "Không nhân được phản hồi từ server. Vui lòng thử lại.",
         Advice = ProtocolAdvice.BACKOFF_RETRY
     };
 }

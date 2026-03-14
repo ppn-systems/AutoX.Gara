@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Protocols;
@@ -20,8 +20,8 @@ public sealed class VehicleWriteResult
     public ProtocolAdvice Advice { get; private init; }
 
     /// <summary>
-    /// Entity du?c server echo l?i sau khi create/update th�nh c�ng.
-    /// null khi delete ho?c server kh�ng echo.
+    /// Entity du?c server echo l?i sau khi create/update thành công.
+    /// null khi delete ho?c server không echo.
     /// </summary>
     public VehicleDto? UpdatedEntity { get; private init; }
 
@@ -39,7 +39,7 @@ public sealed class VehicleWriteResult
         => new()
         {
             IsSuccess = false,
-            ErrorMessage = "Y�u c?u h?t th?i gian ch?. Vui l�ng th? l?i.",
+            ErrorMessage = "Yêu cầu hết thời gian chờ. Vui lòng thử lại.",
             Advice = ProtocolAdvice.BACKOFF_RETRY
         };
 }

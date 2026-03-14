@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+Ôªø// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Services.Customers;
 using AutoX.Gara.Shared.Protocol.Customers;
@@ -6,26 +6,26 @@ using AutoX.Gara.Shared.Protocol.Customers;
 namespace AutoX.Gara.Frontend.Abstractions;
 
 /// <summary>
-/// Cache danh s·ch kh·ch h‡ng phÌa client (TTL = 30 gi‚y).
-/// Tr·nh g?i request l?p l?i khi user navigate qua l?i gi?a trang/tab.
+/// Cache danh s√°ch kh√°ch h√†ng ph√≠a client (TTL = 30 gi√¢y).
+/// Tr√°nh g?i request l?p l?i khi user navigate qua l?i gi?a trang/tab.
 /// </summary>
 public interface ICustomerQueryCache
 {
     /// <summary>
-    /// Th? l?y k?t qu? d„ cache.
-    /// Tr? v? <c>false</c> n?u khÙng tÏm th?y ho?c entry d„ h?t h?n.
+    /// Th? l?y k?t qu? d√£ cache.
+    /// Tr? v·ª• <c>false</c> n?u kh√¥ng t√¨m th?y ho?c entry d√£ h?t h?n.
     /// </summary>
     System.Boolean TryGet(CustomerCacheKey key, out CustomerCacheEntry? entry);
 
     /// <summary>
-    /// Luu k?t qu? m?i v‡o cache.
+    /// Luu k?t qu? m·ªõi v√†o cache.
     /// </summary>
     void Set(CustomerCacheKey key, System.Collections.Generic.List<CustomerDto> customers, System.Int32 totalCount);
 
     /// <summary>
-    /// XÛa to‡n b? cache.
-    /// G?i sau m?i Create / Update / Delete th‡nh cÙng d? d?m b?o
-    /// l?n load ti?p theo l?y d? li?u m?i nh?t t? server.
+    /// X√≥a to√†n b? cache.
+    /// G?i sau m·ªõi Create / Update / Delete th√†nh c√¥ng d? d?m b?o
+    /// l?n load ti?p theo l?y d? li?u m·ªõi nh?t t? server.
     /// </summary>
     void Invalidate();
 }

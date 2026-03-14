@@ -42,6 +42,7 @@ public static class DataSeeder
         await SeedAccountsAsync(context);
         await SeedCustomersAsync(context);
         await SeedEmployeesAsync(context);
+        await SeedEmployeeSalariesAsync(context);
         await SeedVehiclesAsync(context);
         await SeedSuppliersAsync(context);
         await SeedPartsAsync(context);
@@ -423,6 +424,73 @@ public static class DataSeeder
     };
 
         context.Employees.AddRange(employees);
+        await context.SaveChangesAsync();
+    }
+
+    // =========================================================================
+    // EMPLOYEE SALARY — mỗi nhân viên ít nhất một mức lương mẫu
+    // =========================================================================
+
+    private static async System.Threading.Tasks.Task SeedEmployeeSalariesAsync(AutoXDbContext context)
+    {
+        if (await context.EmployeeSalaries.AnyAsync())
+        {
+            return;
+        }
+
+        var employees = await context.Employees
+            .Where(e => e.Status == EmploymentStatus.Active)
+            .OrderBy(e => e.Id)
+            .Take(4)
+            .ToListAsync();
+
+        if (employees.Count == 0)
+        {
+            return;
+        }
+
+        var salaries = new List<EmployeeSalary>
+        {
+            new()
+            {
+                EmployeeId = employees[0].Id,
+                Salary = 13_000_000m,
+                SalaryType = SalaryType.Monthly,
+                SalaryUnit = 1,
+                EffectiveFrom = DateTime.UtcNow.AddMonths(-6),
+                Note = "Cố vấn cấp cao, lương ổn định."
+            },
+            new()
+            {
+                EmployeeId = employees[1].Id,
+                Salary = 120_000m,
+                SalaryType = SalaryType.Daily,
+                SalaryUnit = 22,
+                EffectiveFrom = DateTime.UtcNow.AddMonths(-3),
+                Note = "Kỹ thuật viên thay thế mỗi ngày."
+            },
+            new()
+            {
+                EmployeeId = employees[2].Id,
+                Salary = 80_000m,
+                SalaryType = SalaryType.Hourly,
+                SalaryUnit = 8,
+                EffectiveFrom = DateTime.UtcNow.AddMonths(-1),
+                EffectiveTo = DateTime.UtcNow.AddMonths(2),
+                Note = "Thực tập sinh bảo dưỡng."
+            },
+            new()
+            {
+                EmployeeId = employees.Count > 3 ? employees[3].Id : employees[0].Id,
+                Salary = 15_000_000m,
+                SalaryType = SalaryType.Monthly,
+                SalaryUnit = 1,
+                EffectiveFrom = DateTime.UtcNow.AddYears(-1),
+                Note = "Trưởng ca kỹ thuật."
+            },
+        };
+
+        await context.EmployeeSalaries.AddRangeAsync(salaries);
         await context.SaveChangesAsync();
     }
 

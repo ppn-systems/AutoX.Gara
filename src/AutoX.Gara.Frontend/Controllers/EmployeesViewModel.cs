@@ -1,8 +1,9 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+Ôªø// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Frontend.Helpers;
+using AutoX.Gara.Frontend.Models.Results.Employees;
 using AutoX.Gara.Frontend.Results.Employees;
 using AutoX.Gara.Frontend.Services.Employees;
 using AutoX.Gara.Shared.Enums;
@@ -75,26 +76,19 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     private static readonly Gender[] GenderValues = System.Enum.GetValues<Gender>();
     private static readonly Position[] FormPositionValues = System.Enum.GetValues<Position>();
 
-    public String[] FilterPositionOptions { get; } =
-        FilterPositionValues.Select((v, idx) => idx == 0 ? "T?t c? ch?c v?" : EnumText.Get(v)).ToArray();
+    public String[] FilterPositionOptions { get; } = [.. FilterPositionValues.Select((v, idx) => idx == 0 ? "T·∫•t c·∫£ ch·ª©c v·ª•" : EnumText.Get(v))];
 
-    public String[] FilterStatusOptions { get; } =
-        StatusValues.Select((v, idx) => idx == 0 ? "T?t c? tr?ng th·i" : EnumText.Get(v)).ToArray();
+    public String[] FilterStatusOptions { get; } = [.. StatusValues.Select((v, idx) => idx == 0 ? "T·∫•t c·∫£ tr·∫°ng th√°i" : EnumText.Get(v))];
 
-    public String[] FilterGenderOptions { get; } =
-        GenderValues.Select((v, idx) => idx == 0 ? "T?t c?" : EnumText.Get(v)).ToArray();
+    public String[] FilterGenderOptions { get; } = [.. GenderValues.Select((v, idx) => idx == 0 ? "T·∫•t c·∫£" : EnumText.Get(v))];
 
-    public String[] FormGenderOptions { get; } =
-        GenderValues.Select(EnumText.Get).ToArray();
+    public String[] FormGenderOptions { get; } = [.. GenderValues.Select(EnumText.Get)];
 
-    public String[] FormPositionOptions { get; } =
-        FormPositionValues.Select(EnumText.Get).ToArray();
+    public String[] FormPositionOptions { get; } = [.. FormPositionValues.Select(EnumText.Get)];
 
-    public String[] FormStatusOptions { get; } =
-        StatusValues.Select(EnumText.Get).ToArray();
+    public String[] FormStatusOptions { get; } = [.. StatusValues.Select(EnumText.Get)];
 
-    public String[] ChangeStatusOptions { get; } =
-        StatusValues.Select(EnumText.Get).ToArray();
+    public String[] ChangeStatusOptions { get; } = [.. StatusValues.Select(EnumText.Get)];
 
     [ObservableProperty] public partial System.Int32 PickerPositionIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 PickerStatusIndex { get; set; } = 0;
@@ -103,11 +97,11 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     public String[] SalaryFilterOptions { get; } =
     [
-        "T?t c? luong",
-        "CÛ luong",
-        "Chua cÛ luong",
-        "Theo th·ng",
-        "Theo ng‡y",
+        "T·∫•t c·∫£ luong",
+        "C√≥ luong",
+        "Chua c√≥ luong",
+        "Theo th√°ng",
+        "Theo ng√†y",
         "Theo gi?",
     ];
 
@@ -156,8 +150,8 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
     [ObservableProperty] public partial EmployeeRow? SelectedEmployee { get; set; }
 
-    public System.String FormTitle => IsEditing ? "S?a nh‚n viÍn" : "ThÍm nh‚n viÍn";
-    public System.String FormSaveText => IsEditing ? "Luu thay d?i" : "ThÍm nh‚n viÍn";
+    public System.String FormTitle => IsEditing ? "S·ª≠a nh√¢n vi√™n" : "Th√™m nh√¢n vi√™n";
+    public System.String FormSaveText => IsEditing ? "Luu thay ƒë·ªïi" : "Th√™m nh√¢n vi√™n";
 
     [ObservableProperty] public partial System.String FormName { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormEmail { get; set; } = System.String.Empty;
@@ -198,7 +192,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     {
         public EmployeeDto Dto { get; }
 
-        private System.String _salaryText = "Chua cÛ";
+        private System.String _salaryText = "Chua c√≥";
         public System.String SalaryText
         {
             get => _salaryText;
@@ -245,7 +239,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean HasSalaryFormError { get; set; }
     [ObservableProperty] public partial System.String? SalaryFormErrorMessage { get; set; }
 
-    public System.String SalaryFormTitle => IsSalaryEditing ? "Ch?nh s?a luong" : "Thi?t l?p luong";
+    public System.String SalaryFormTitle => IsSalaryEditing ? "Ch?nh S·ª≠a luong" : "Thi?t l?p luong";
     public System.String SalaryFormSaveText => IsSalaryEditing ? "Luu" : "T?o";
 
     public System.String SelectedSalaryFormTypeText =>
@@ -447,7 +441,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                 {
                     var row = new EmployeeRow(e)
                     {
-                        SalaryText = "Chua cÛ",
+                        SalaryText = "Chua c√≥",
                         HasSalary = false,
                         LatestSalaryType = SalaryType.None
                     };
@@ -463,7 +457,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             }
             else
             {
-                HandleError("T?i danh s·ch th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError("T·∫£i danh s√°ch th·∫•t b·∫°i", result.ErrorMessage!, result.Advice);
             }
         }
         finally
@@ -492,7 +486,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             return;
         }
 
-        String pick = await page.DisplayActionSheetAsync("Ch?n ch?c v?", "H?y", null, FilterPositionOptions);
+        String pick = await page.DisplayActionSheetAsync("Ch?n ch?c v·ª•", "H?y", null, FilterPositionOptions);
         if (pick == "H?y" || String.IsNullOrWhiteSpace(pick))
         {
             return;
@@ -511,7 +505,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             return;
         }
 
-        String pick = await page.DisplayActionSheetAsync("Ch?n tr?ng th·i", "H?y", null, FilterStatusOptions);
+        String pick = await page.DisplayActionSheetAsync("Ch?n tr?ng th√°i", "H?y", null, FilterStatusOptions);
         if (pick == "H?y" || String.IsNullOrWhiteSpace(pick))
         {
             return;
@@ -530,7 +524,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             return;
         }
 
-        String pick = await page.DisplayActionSheetAsync("Ch?n gi?i tÌnh", "H?y", null, FilterGenderOptions);
+        String pick = await page.DisplayActionSheetAsync("Ch?n gi?i t√≠nh", "H?y", null, FilterGenderOptions);
         if (pick == "H?y" || String.IsNullOrWhiteSpace(pick))
         {
             return;
@@ -673,7 +667,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             }
             else
             {
-                SetFormError(result.ErrorMessage ?? "Thao t·c th?t b?i.");
+                SetFormError(result.ErrorMessage ?? "Thao t√°c th·∫•t b·∫°i.");
             }
         }
         finally
@@ -738,7 +732,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             }
             else
             {
-                HandleError("–?i tr?ng th·i th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError("√ê?i tr?ng th√°i th·∫•t b·∫°i", result.ErrorMessage!, result.Advice);
             }
         }
         finally
@@ -851,19 +845,19 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
         if (SalaryEmployeeId <= 0)
         {
-            SetSalaryFormError("Chua ch?n nh‚n viÍn.");
+            SetSalaryFormError("Chua ch?n nh√¢n vi√™n.");
             return;
         }
 
         if (SalaryFormSalary < 0)
         {
-            SetSalaryFormError("M?c luong ph?i >= 0.");
+            SetSalaryFormError("M?c luong ph·ª•i >= 0.");
             return;
         }
 
         if (SalaryFormUnit < 0)
         {
-            SetSalaryFormError("S? don v? ph?i >= 0.");
+            SetSalaryFormError("S? don v·ª• ph·ª•i >= 0.");
             return;
         }
 
@@ -889,7 +883,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         if (!result.IsSuccess)
         {
             await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
-                SetSalaryFormError(result.ErrorMessage ?? "Luu th?t b?i."));
+                SetSalaryFormError(result.ErrorMessage ?? "Luu th·∫•t b·∫°i."));
             return;
         }
 
@@ -897,7 +891,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         EmployeeSalaryDto? saved = result.Salary;
         if (SalaryEmployee is not null)
         {
-            String text = saved is null ? "Chua cÛ" : FormatSalaryText(saved);
+            String text = saved is null ? "Chua c√≥" : FormatSalaryText(saved);
             Boolean has = saved is not null;
             await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
             {
@@ -941,7 +935,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                 return;
             }
 
-            String text = latest is null ? "Chua cÛ" : FormatSalaryText(latest);
+            String text = latest is null ? "Chua c√≥" : FormatSalaryText(latest);
             Boolean has = latest is not null;
 
             await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
@@ -1065,25 +1059,25 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     private System.Boolean ValidateForm()
     {
         if (System.String.IsNullOrWhiteSpace(FormName))
-        { SetFormError("TÍn nh‚n viÍn khÙng du?c d? tr?ng."); return false; }
+        { SetFormError("T√™n nh√¢n vi√™n kh√¥ng du?c d? tr?ng."); return false; }
 
         if (FormName.Length > 50)
-        { SetFormError("TÍn khÙng du?c vu?t qu· 50 k˝ t?."); return false; }
+        { SetFormError("T√™n kh√¥ng du?c vu?t qu√° 50 k√Ω t?."); return false; }
 
         if (!IsValidEmail(FormEmail))
-        { SetFormError("Email khÙng h?p l?."); return false; }
+        { SetFormError("Email kh√¥ng h?p l?."); return false; }
 
         if (!System.String.IsNullOrWhiteSpace(FormPhoneNumber))
         {
             if (!IsValidPhone(FormPhoneNumber))
-            { SetFormError("S? di?n tho?i khÙng h?p l? (10-14 ch? s?)."); return false; }
+            { SetFormError("S? di?n tho?i kh√¥ng h?p l? (10-14 ch? s?)."); return false; }
         }
 
         if (FormDateOfBirth >= System.DateTime.Today)
-        { SetFormError("Ng‡y sinh ph?i trong qu· kh?."); return false; }
+        { SetFormError("Ng√†y sinh ph·ª•i trong qu√° kh?."); return false; }
 
         if (FormEndDate.HasValue && FormEndDate <= FormStartDate)
-        { SetFormError("Ng‡y k?t th˙c ph?i sau ng‡y b?t d?u."); return false; }
+        { SetFormError("Ng√†y k?t th√∫c ph·ª•i sau ng√†y b?t d?u."); return false; }
 
         return true;
     }
@@ -1147,7 +1141,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         PopupTitle = title;
         PopupMessage = message;
         IsPopupRetry = isRetry;
-        PopupButtonText = isRetry ? "Th? l?i" : "OK";
+        PopupButtonText = isRetry ? "Th·ª≠ l·∫°i" : "OK";
         IsPopupVisible = true;
     }
 

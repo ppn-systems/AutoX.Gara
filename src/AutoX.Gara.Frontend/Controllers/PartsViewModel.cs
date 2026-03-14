@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+ï»¿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Parts;
 using AutoX.Gara.Frontend.Helpers;
@@ -62,10 +62,10 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
     [ObservableProperty] public partial System.Int32 PickerExpiredIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 PickerDiscontinuedIndex { get; set; } = 0;
 
-    public System.String[] InStockFilterOptions { get; } = ["T?t c?", "Còn hàng", "H?t hàng"];
-    public System.String[] DefectiveFilterOptions { get; } = ["T?t c?", "Bình thu?ng", "B? l?i"];
-    public System.String[] ExpiredFilterOptions { get; } = ["T?t c?", "Còn h?n", "H?t h?n"];
-    public System.String[] DiscontinuedFilterOptions { get; } = ["T?t c?", "Ðang bán", "Ng?ng bán"];
+    public System.String[] InStockFilterOptions { get; } = ["Táº¥t cáº£", "CÃ²n hÃ ng", "H?t hÃ ng"];
+    public System.String[] DefectiveFilterOptions { get; } = ["Táº¥t cáº£", "BÃ¬nh thuá»ng", "Bá»‹ lá»—i"];
+    public System.String[] ExpiredFilterOptions { get; } = ["Táº¥t cáº£", "CÃ²n hÃ ng", "Háº¿t hÃ ng"];
+    public System.String[] DiscontinuedFilterOptions { get; } = ["Táº¥t cáº£", "Ãang bÃ¡n", "Ngá»«ng bÃ¡n"];
 
     public System.String SelectedCategoryText =>
         PartCategoryFilterOptions[System.Math.Clamp(PickerCategoryIndex, 0, PartCategoryFilterOptions.Count - 1)];
@@ -120,8 +120,8 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
     [ObservableProperty] public partial PartDto? SelectedPart { get; set; }
 
-    public System.String FormTitle => IsEditing ? "S?a ph? tùng" : "Thêm ph? tùng";
-    public System.String FormSaveText => IsEditing ? "Luu thay d?i" : "Thêm ph? tùng";
+    public System.String FormTitle => IsEditing ? "Sá»­a phá»¥ tÃ¹ng" : "ThÃªm phá»¥ tÃ¹ng";
+    public System.String FormSaveText => IsEditing ? "Luu thay Ä‘á»•i" : "ThÃªm phá»¥ tÃ¹ng";
 
     [ObservableProperty] public partial System.String FormPartCode { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormPartName { get; set; } = System.String.Empty;
@@ -157,14 +157,14 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
         // Build category pickers from enum so UI stays in sync when enum grows.
         PartCategory[] allCategories = [.. System.Enum.GetValues<PartCategory>().Where(c => c != PartCategory.None)];
 
-        // Filter: "T?t c? lo?i" + all enum values (excluding None)
+        // Filter: "Táº¥t cáº£ loáº¡i" + all enum values (excluding None)
         _partCategoryFilterValues = new PartCategory?[allCategories.Length + 1];
         _partCategoryFilterValues[0] = null;
         for (Int32 i = 0; i < allCategories.Length; i++)
         {
             _partCategoryFilterValues[i + 1] = allCategories[i];
         }
-        PartCategoryFilterOptions = ["T?t c? lo?i", .. allCategories.Select(EnumText.Get)];
+        PartCategoryFilterOptions = ["Táº¥t cáº£ loáº¡i", .. allCategories.Select(EnumText.Get)];
 
         // Form: put "Other" first for convenience, then remaining values (excluding None/Other).
         PartCategory[] rest = [.. allCategories.Where(c => c != PartCategory.Other)];
@@ -355,7 +355,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
             }
             else
             {
-                HandleError("T?i danh sách th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError("Táº£i danh sÃ¡ch tháº¥t báº¡i", result.ErrorMessage!, result.Advice);
             }
         }
         finally
@@ -473,7 +473,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
             }
             else
             {
-                SetFormError(result.ErrorMessage ?? "Thao tác th?t b?i.");
+                SetFormError(result.ErrorMessage ?? "Thao tÃ¡c tháº¥t báº¡i.");
             }
         }
         finally
@@ -529,7 +529,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
             }
             else
             {
-                HandleError("Xóa th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError("XÃ³a tháº¥t báº¡i", result.ErrorMessage!, result.Advice);
             }
         }
         finally
@@ -629,40 +629,40 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
     private System.Boolean ValidateForm()
     {
         if (IsEditing && System.String.IsNullOrWhiteSpace(FormPartCode))
-        { SetFormError("Mã SKU không du?c d? tr?ng."); return false; }
+        { SetFormError("MÃ£ SKU khÃ´ng du?c d? tr?ng."); return false; }
 
         if (!IsEditing)
         {
             if (System.String.IsNullOrWhiteSpace(FormPartCode))
-            { SetFormError("Mã SKU không du?c d? tr?ng."); return false; }
+            { SetFormError("MÃ£ SKU khÃ´ng du?c d? tr?ng."); return false; }
 
             if (FormPartCode.Length > 12 || !System.Text.RegularExpressions.Regex.IsMatch(FormPartCode, @"^[A-Za-z0-9]+$"))
-            { SetFormError("Mã SKU t?i da 12 ký t?, ch? g?m ch? và s?."); return false; }
+            { SetFormError("MÃ£ SKU Táº£i da 12 kÃ½ t?, ch? g?m ch? vÃ  s?."); return false; }
         }
 
         if (System.String.IsNullOrWhiteSpace(FormPartName))
-        { SetFormError("Tên ph? tùng không du?c d? tr?ng."); return false; }
+        { SetFormError("TÃªn phá»¥ tÃ¹ng khÃ´ng du?c d? tr?ng."); return false; }
 
         if (FormPartName.Length > 100)
-        { SetFormError("Tên không du?c vu?t quá 100 ký t?."); return false; }
+        { SetFormError("TÃªn khÃ´ng du?c vu?t quÃ¡ 100 kÃ½ t?."); return false; }
 
         if (!System.Decimal.TryParse(FormPurchasePrice, out System.Decimal purchase) || purchase <= 0)
-        { SetFormError("Giá nh?p không h?p l?."); return false; }
+        { SetFormError("GiÃ¡ nh?p khÃ´ng h?p l?."); return false; }
 
         if (!System.Decimal.TryParse(FormSellingPrice, out System.Decimal selling) || selling <= 0)
-        { SetFormError("Giá bán không h?p l?."); return false; }
+        { SetFormError("GiÃ¡ bÃ¡n khÃ´ng h?p l?."); return false; }
 
         if (selling < purchase)
-        { SetFormError("Giá bán không du?c th?p hon giá nh?p."); return false; }
+        { SetFormError("GiÃ¡ bÃ¡n khÃ´ng du?c th?p hon giÃ¡ nh?p."); return false; }
 
         if (!System.Int32.TryParse(FormInventoryQuantity, out System.Int32 qty) || qty < 0)
-        { SetFormError("S? lu?ng ph?i là s? nguyên không âm."); return false; }
+        { SetFormError("S? lu?ng phá»¥i lÃ  s? nguyÃªn khÃ´ng Ã¢m."); return false; }
 
         if (FormSupplierId <= 0)
-        { SetFormError("Vui lòng ch?n nhà cung c?p."); return false; }
+        { SetFormError("Vui lÃ²ng ch?n nhÃ  cung c?p."); return false; }
 
         if (FormExpiryDate.HasValue && FormExpiryDate.Value.Date < FormDateAdded.Date)
-        { SetFormError("Ngày h?t h?n ph?i sau ngày nh?p kho."); return false; }
+        { SetFormError("NgÃ y h?t h?n phá»¥i sau ngÃ y nh?p kho."); return false; }
 
         return true;
     }
@@ -733,7 +733,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
         PopupTitle = title;
         PopupMessage = message;
         IsPopupRetry = isRetry;
-        PopupButtonText = isRetry ? "Th? l?i" : "OK";
+        PopupButtonText = isRetry ? "Thá»­ láº¡i" : "OK";
         IsPopupVisible = true;
     }
 }

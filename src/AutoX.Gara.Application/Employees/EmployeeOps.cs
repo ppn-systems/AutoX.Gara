@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
@@ -69,9 +70,16 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
                 Employees = payload
             };
 
-            if (!await TrySendPacketAsync(response, connection, logger, nameof(GetAsync), packet.SequenceId).ConfigureAwait(false))
+            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(packet)).ConfigureAwait(false);
+
+            if (!sent)
             {
-                return;
+                logger?.Warn($"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] send-failed seq={packet.SequenceId}");
+
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
 
             logger?.Info(
@@ -427,9 +435,9 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
             SearchTerm: request.SearchTerm,
             SortBy: request.SortBy,
             SortDescending: request.SortDescending,
-            FilterGender: request.FilterGender,
             FilterPosition: request.FilterPosition,
-            FilterStatus: request.FilterStatus);
+            FilterStatus: request.FilterStatus,
+            FilterGender: request.FilterGender);
 
     private static void ReturnDtos(System.Collections.Generic.IEnumerable<EmployeeDto> dtos)
     {
@@ -443,27 +451,6 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
         {
             pool.Return(dto);
         }
-    }
-
-    private static async System.Threading.Tasks.Task<System.Boolean> TrySendPacketAsync(
-        System.Object packet,
-        IConnection connection,
-        ILogger logger,
-        System.String operation,
-        System.UInt32 sequenceId)
-    {
-        System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(packet)).ConfigureAwait(false);
-        if (!sent)
-        {
-            logger?.Warn(
-                $"[APP.{nameof(EmployeeOps)}:{operation}] send-failed seq={sequenceId}");
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, sequenceId).ConfigureAwait(false);
-        }
-
-        return sent;
     }
 
     private static async System.Threading.Tasks.Task SendErrorAsync(

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+Ôªø// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Cars;
 using AutoX.Gara.Frontend.Helpers;
@@ -16,9 +16,9 @@ using System.Linq;
 namespace AutoX.Gara.Frontend.Controllers;
 
 /// <summary>
-/// ViewModel cho VehiclesPage ó hi?n th? danh s·ch xe + form thÍm/s?a/xÛa
+/// ViewModel cho VehiclesPage ‚Äî hi?n th? danh s√°ch xe + form th√™m/S·ª≠a/x√≥a
 /// c?a m?t customer c? th?. Nh?n <see cref="CustomerDto"/> t? CustomersViewModel
-/// thÙng qua Shell query parameter.
+/// th√¥ng qua Shell query parameter.
 /// </summary>
 public sealed partial class VehiclesViewModel : ObservableObject, System.IDisposable
 {
@@ -29,10 +29,10 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
 
     // --- Customer context -----------------------------------------------------
 
-    /// <summary>Customer dang du?c xem xe ó set t? Shell navigation parameter.</summary>
+    /// <summary>Customer dang du?c xem xe ‚Äî set t? Shell navigation parameter.</summary>
     [ObservableProperty] public partial CustomerDto? Owner { get; set; }
 
-    public System.String PageTitle => Owner is not null ? $"Xe c?a {Owner.Name}" : "Danh s·ch xe";
+    public System.String PageTitle => Owner is not null ? $"Xe c?a {Owner.Name}" : "Danh s√°ch xe";
 
     // --- Pagination -----------------------------------------------------------
 
@@ -69,8 +69,8 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
     [ObservableProperty] public partial VehicleDto? SelectedVehicle { get; set; }
 
-    public System.String FormTitle => IsEditing ? "S?a xe" : "ThÍm xe m?i";
-    public System.String FormSaveText => IsEditing ? "Luu thay d?i" : "ThÍm xe";
+    public System.String FormTitle => IsEditing ? "S·ª≠a xe" : "Th√™m xe m·ªõi";
+    public System.String FormSaveText => IsEditing ? "Luu thay ƒë·ªïi" : "Th√™m xe";
 
     // Form fields
     [ObservableProperty] public partial System.String FormLicensePlate { get; set; } = System.String.Empty;
@@ -82,7 +82,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     [ObservableProperty] public partial System.DateTime FormRegistrationDate { get; set; } = System.DateTime.Today;
     [ObservableProperty] public partial System.DateTime? FormInsuranceExpiryDate { get; set; }
 
-    // Enum values tuong ?ng v?i picker
+    // Enum values tuong ?ng v·ª•i picker
     [ObservableProperty] public partial CarType FormType { get; set; } = CarType.None;
     [ObservableProperty] public partial CarColor FormColor { get; set; } = CarColor.None;
     [ObservableProperty] public partial CarBrand FormBrand { get; set; } = CarBrand.None;
@@ -160,12 +160,9 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
         CarColor.Other
     ];
 
-    public string[] FormBrandOptions { get; } =
-        BrandValues.Select((v, idx) => idx == 0 ? "ó ch?n ó" : EnumText.Get(v)).ToArray();
-    public string[] FormTypeOptions { get; } =
-        TypeValues.Select((v, idx) => idx == 0 ? "ó ch?n ó" : EnumText.Get(v)).ToArray();
-    public string[] FormColorOptions { get; } =
-        ColorValues.Select((v, idx) => idx == 0 ? "ó ch?n ó" : EnumText.Get(v)).ToArray();
+    public System.String[] FormTypeOptions { get; } = [.. TypeValues.Select((v, idx) => idx == 0 ? "‚Äî ch·ªçn ‚Äî" : EnumText.Get(v))];
+    public System.String[] FormBrandOptions { get; } = [.. BrandValues.Select((v, idx) => idx == 0 ? "‚Äî ch·ªçn ‚Äî" : EnumText.Get(v))];
+    public System.String[] FormColorOptions { get; } = [.. ColorValues.Select((v, idx) => idx == 0 ? "‚Äî ch·ªçn ‚Äî" : EnumText.Get(v))];
 
     // Picker index cho form
     [ObservableProperty] public partial System.Int32 FormPickerBrandIndex { get; set; } = 0;
@@ -208,7 +205,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     }
 
     /// <summary>
-    /// –u?c g?i t? VehiclesPage.OnNavigatedTo sau khi Owner du?c set.
+    /// √êu?c g?i t? VehiclesPage.OnNavigatedTo sau khi Owner du?c set.
     /// </summary>
     public void Initialize(CustomerDto owner)
     {
@@ -304,7 +301,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
             }
             else
             {
-                HandleError("T?i danh s·ch th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError("T·∫£i danh s√°ch th·∫•t b·∫°i", result.ErrorMessage!, result.Advice);
             }
         }
         catch (System.OperationCanceledException) when (ct.IsCancellationRequested)
@@ -342,13 +339,22 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
         FormInsuranceExpiryDate = vehicle.InsuranceExpiryDate;
 
         FormPickerBrandIndex = System.Array.IndexOf(BrandValues, vehicle.Brand);
-        if (FormPickerBrandIndex < 0) FormPickerBrandIndex = 0;
+        if (FormPickerBrandIndex < 0)
+        {
+            FormPickerBrandIndex = 0;
+        }
 
         FormPickerTypeIndex = System.Array.IndexOf(TypeValues, vehicle.Type);
-        if (FormPickerTypeIndex < 0) FormPickerTypeIndex = 0;
+        if (FormPickerTypeIndex < 0)
+        {
+            FormPickerTypeIndex = 0;
+        }
 
         FormPickerColorIndex = System.Array.IndexOf(ColorValues, vehicle.Color);
-        if (FormPickerColorIndex < 0) FormPickerColorIndex = 0;
+        if (FormPickerColorIndex < 0)
+        {
+            FormPickerColorIndex = 0;
+        }
 
         ClearFormError();
         IsFormVisible = true;
@@ -417,7 +423,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
             }
             else
             {
-                SetFormError(result.ErrorMessage ?? "Thao t·c th?t b?i.");
+                SetFormError(result.ErrorMessage ?? "Thao t√°c th·∫•t b·∫°i.");
             }
         }
         catch (System.OperationCanceledException) when (ct.IsCancellationRequested)
@@ -476,7 +482,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
             }
             else
             {
-                HandleError("XÛa th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError("X√≥a th·∫•t b·∫°i", result.ErrorMessage!, result.Advice);
             }
         }
         catch (System.OperationCanceledException) when (ct.IsCancellationRequested)
@@ -564,16 +570,16 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     private System.Boolean ValidateForm()
     {
         if (System.String.IsNullOrWhiteSpace(FormLicensePlate))
-        { SetFormError("Bi?n s? xe khÙng du?c d? tr?ng."); return false; }
+        { SetFormError("Bi?n s? xe kh√¥ng du?c d? tr?ng."); return false; }
 
         if (FormLicensePlate.Length > 20)
-        { SetFormError("Bi?n s? xe khÙng du?c vu?t qu· 20 k˝ t?."); return false; }
+        { SetFormError("Bi?n s? xe kh√¥ng du?c vu?t qu√° 20 k√Ω t?."); return false; }
 
         if (FormYear < 1900 || FormYear > System.DateTime.Now.Year + 1)
-        { SetFormError($"Nam s?n xu?t khÙng h?p l? (1900 ñ {System.DateTime.Now.Year + 1})."); return false; }
+        { SetFormError($"Nam s?n xu?t kh√¥ng h?p l? (1900 ‚Äì {System.DateTime.Now.Year + 1})."); return false; }
 
         if (FormMileage < 0)
-        { SetFormError("S? km khÙng du?c ‚m."); return false; }
+        { SetFormError("S? km kh√¥ng du?c √¢m."); return false; }
 
         return true;
     }
@@ -644,7 +650,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
         PopupTitle = title;
         PopupMessage = message;
         IsPopupRetry = isRetry;
-        PopupButtonText = isRetry ? "Th? l?i" : "OK";
+        PopupButtonText = isRetry ? "Th·ª≠ l·∫°i" : "OK";
         IsPopupVisible = true;
     }
 }
