@@ -102,6 +102,12 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     // 0=Tất cả, 1=Bronze, 2=Silver, 3=Gold, 4=Platinum
     [ObservableProperty] public partial System.Int32 PickerMembershipIndex { get; set; } = 0;
 
+    public System.String SelectedFilterTypeText =>
+        FilterTypeOptions[System.Math.Clamp(PickerFilterTypeIndex, 0, FilterTypeOptions.Length - 1)];
+
+    public System.String SelectedMembershipText =>
+        FilterMembershipOptions[System.Math.Clamp(PickerMembershipIndex, 0, FilterMembershipOptions.Length - 1)];
+
     public System.Boolean HasActiveFilters => FilterType != CustomerType.None || FilterMembership != MembershipLevel.None;
 
     // ─── State ────────────────────────────────────────────────────────────────
@@ -231,12 +237,14 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     partial void OnPickerFilterTypeIndexChanged(int value)
     {
         FilterType = CustomerTypeValues[System.Math.Clamp(value, 0, CustomerTypeValues.Length - 1)];
+        OnPropertyChanged(nameof(SelectedFilterTypeText));
     }
 
     // MembershipLevel: 0=None,1=Trial,2=Standard,3=Silver,4=Gold,5=Platinum,6=Diamond
     partial void OnPickerMembershipIndexChanged(int value)
     {
         FilterMembership = MembershipValues[System.Math.Clamp(value, 0, MembershipValues.Length - 1)];
+        OnPropertyChanged(nameof(SelectedMembershipText));
     }
 
     // Picker index → enum (form)

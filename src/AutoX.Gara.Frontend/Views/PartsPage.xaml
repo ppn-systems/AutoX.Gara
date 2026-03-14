@@ -151,62 +151,57 @@
 
                     <!-- Loại phụ tùng -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="148">
-                        <Picker SelectedIndex="{Binding PickerCategoryIndex}"
-                                ItemsSource="{Binding PartCategoryFilterOptions}"
-                                TextColor="#C4C4D4" BackgroundColor="Transparent"
-                                VerticalOptions="Center" HeightRequest="44" />
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedCategoryText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnCategoryFilterTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Tồn kho -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="130">
-                        <Picker SelectedIndex="{Binding PickerInStockIndex}"
-                                TextColor="#C4C4D4" BackgroundColor="Transparent"
-                                VerticalOptions="Center" HeightRequest="44">
-                            <Picker.Items>
-                                <x:String>Tất cả</x:String>
-                                <x:String>Còn hàng</x:String>
-                                <x:String>Hết hàng</x:String>
-                            </Picker.Items>
-                        </Picker>
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedInStockText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnInStockFilterTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Lỗi -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="130">
-                        <Picker SelectedIndex="{Binding PickerDefectiveIndex}"
-                                TextColor="#C4C4D4" BackgroundColor="Transparent"
-                                VerticalOptions="Center" HeightRequest="44">
-                            <Picker.Items>
-                                <x:String>Tất cả</x:String>
-                                <x:String>Bình thường</x:String>
-                                <x:String>Bị lỗi</x:String>
-                            </Picker.Items>
-                        </Picker>
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedDefectiveText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDefectiveFilterTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Hạn -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="130">
-                        <Picker SelectedIndex="{Binding PickerExpiredIndex}"
-                                TextColor="#C4C4D4" BackgroundColor="Transparent"
-                                VerticalOptions="Center" HeightRequest="44">
-                            <Picker.Items>
-                                <x:String>Tất cả</x:String>
-                                <x:String>Còn hạn</x:String>
-                                <x:String>Hết hạn</x:String>
-                            </Picker.Items>
-                        </Picker>
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedExpiredText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnExpiredFilterTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Trạng thái bán -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="130">
-                        <Picker SelectedIndex="{Binding PickerDiscontinuedIndex}"
-                                TextColor="#C4C4D4" BackgroundColor="Transparent"
-                                VerticalOptions="Center" HeightRequest="44">
-                            <Picker.Items>
-                                <x:String>Tất cả</x:String>
-                                <x:String>Đang bán</x:String>
-                                <x:String>Ngừng bán</x:String>
-                            </Picker.Items>
-                        </Picker>
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedDiscontinuedText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDiscontinuedFilterTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <Button Text="✕" IsVisible="{Binding HasActiveFilters}"

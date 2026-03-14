@@ -99,9 +99,35 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Int32 PickerPositionIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 PickerStatusIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 PickerGenderIndex { get; set; } = 0;
+    [ObservableProperty] public partial System.Int32 PickerSalaryIndex { get; set; } = 0;
+
+    public string[] SalaryFilterOptions { get; } =
+    [
+        "Tất cả lương",
+        "Có lương",
+        "Chưa có lương",
+        "Theo tháng",
+        "Theo ngày",
+        "Theo giờ",
+    ];
+
+    public System.String SelectedPositionText
+        => FilterPositionOptions[System.Math.Clamp(PickerPositionIndex, 0, FilterPositionOptions.Length - 1)];
+
+    public System.String SelectedStatusText
+        => FilterStatusOptions[System.Math.Clamp(PickerStatusIndex, 0, FilterStatusOptions.Length - 1)];
+
+    public System.String SelectedGenderText
+        => FilterGenderOptions[System.Math.Clamp(PickerGenderIndex, 0, FilterGenderOptions.Length - 1)];
+
+    public System.String SelectedSalaryText
+        => SalaryFilterOptions[System.Math.Clamp(PickerSalaryIndex, 0, SalaryFilterOptions.Length - 1)];
 
     public System.Boolean HasActiveFilters
-        => FilterPosition != Position.None || FilterStatus != EmploymentStatus.None || FilterGender != Gender.None;
+        => FilterPosition != Position.None
+        || FilterStatus != EmploymentStatus.None
+        || FilterGender != Gender.None
+        || PickerSalaryIndex != 0;
 
     // ─── State ────────────────────────────────────────────────────────────────
 
@@ -109,7 +135,10 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean HasError { get; set; }
     [ObservableProperty] public partial System.String? ErrorMessage { get; set; }
 
-    public System.Boolean IsEmpty => !IsLoading && Employees.Count == 0;
+    public System.Collections.Generic.IEnumerable<EmployeeRow> FilteredEmployees
+        => ApplySalaryFilter(Employees);
+
+    public System.Boolean IsEmpty => !IsLoading && !FilteredEmployees.Any();
 
     // ─── Popup ────────────────────────────────────────────────────────────────
 
@@ -171,6 +200,13 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             set => SetProperty(ref _hasSalary, value);
         }
 
+        private SalaryType _latestSalaryType = SalaryType.None;
+        public SalaryType LatestSalaryType
+        {
+            get => _latestSalaryType;
+            set => SetProperty(ref _latestSalaryType, value);
+        }
+
         public EmployeeRow(EmployeeDto dto) => Dto = dto;
     }
 
@@ -205,7 +241,11 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _salaryService = salaryService ?? throw new ArgumentNullException(nameof(salaryService));
-        Employees.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
+        Employees.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(IsEmpty));
+            OnPropertyChanged(nameof(FilteredEmployees));
+        };
     }
 
     // ─── Property Hooks ───────────────────────────────────────────────────────
@@ -214,6 +254,19 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(TotalPages));
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmpty));
     partial void OnSelectedEmployeeChanged(EmployeeRow? value) => OnPropertyChanged(nameof(StatusConfirmName));
+    partial void OnPickerSalaryIndexChanged(int value)
+    {
+        if (value < 0)
+        {
+            PickerSalaryIndex = 0;
+            return;
+        }
+
+        OnPropertyChanged(nameof(SelectedSalaryText));
+        OnPropertyChanged(nameof(FilteredEmployees));
+        OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(HasActiveFilters));
+    }
     partial void OnIsEditingChanged(bool value)
     {
         OnPropertyChanged(nameof(FormTitle));
@@ -276,15 +329,42 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     }
     partial void OnPickerPositionIndexChanged(int value)
     {
+        if (value < 0)
+        {
+            PickerPositionIndex = 0;
+            return;
+        }
+
         FilterPosition = FilterPositionValues[System.Math.Clamp(value, 0, FilterPositionValues.Length - 1)];
+        OnPropertyChanged(nameof(SelectedPositionText));
+        OnPropertyChanged(nameof(FilteredEmployees));
+        OnPropertyChanged(nameof(IsEmpty));
     }
     partial void OnPickerStatusIndexChanged(int value)
     {
+        if (value < 0)
+        {
+            PickerStatusIndex = 0;
+            return;
+        }
+
         FilterStatus = StatusValues[System.Math.Clamp(value, 0, StatusValues.Length - 1)];
+        OnPropertyChanged(nameof(SelectedStatusText));
+        OnPropertyChanged(nameof(FilteredEmployees));
+        OnPropertyChanged(nameof(IsEmpty));
     }
     partial void OnPickerGenderIndexChanged(int value)
     {
+        if (value < 0)
+        {
+            PickerGenderIndex = 0;
+            return;
+        }
+
         FilterGender = GenderValues[System.Math.Clamp(value, 0, GenderValues.Length - 1)];
+        OnPropertyChanged(nameof(SelectedGenderText));
+        OnPropertyChanged(nameof(FilteredEmployees));
+        OnPropertyChanged(nameof(IsEmpty));
     }
 
     // ─── Commands ──────────────────────────────────────────────────────────────
@@ -330,6 +410,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                     var row = new EmployeeRow(e);
                     row.SalaryText = "Chưa có";
                     row.HasSalary = false;
+                    row.LatestSalaryType = SalaryType.None;
                     Employees.Add(row);
                     rows.Add(row);
                 }
@@ -357,6 +438,53 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         PickerPositionIndex = 0;
         PickerStatusIndex = 0;
         PickerGenderIndex = 0;
+        PickerSalaryIndex = 0;
+    }
+
+    // ─── Filter Pickers (ActionSheet) ─────────────────────────────────────────
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task PickPositionAsync()
+    {
+        var page = Microsoft.Maui.Controls.Application.Current?.MainPage;
+        if (page is null) return;
+        string pick = await page.DisplayActionSheet("Chọn chức vụ", "Hủy", null, FilterPositionOptions);
+        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
+        int idx = System.Array.IndexOf(FilterPositionOptions, pick);
+        PickerPositionIndex = idx >= 0 ? idx : 0;
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task PickStatusAsync()
+    {
+        var page = Microsoft.Maui.Controls.Application.Current?.MainPage;
+        if (page is null) return;
+        string pick = await page.DisplayActionSheet("Chọn trạng thái", "Hủy", null, FilterStatusOptions);
+        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
+        int idx = System.Array.IndexOf(FilterStatusOptions, pick);
+        PickerStatusIndex = idx >= 0 ? idx : 0;
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task PickGenderAsync()
+    {
+        var page = Microsoft.Maui.Controls.Application.Current?.MainPage;
+        if (page is null) return;
+        string pick = await page.DisplayActionSheet("Chọn giới tính", "Hủy", null, FilterGenderOptions);
+        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
+        int idx = System.Array.IndexOf(FilterGenderOptions, pick);
+        PickerGenderIndex = idx >= 0 ? idx : 0;
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task PickSalaryAsync()
+    {
+        var page = Microsoft.Maui.Controls.Application.Current?.MainPage;
+        if (page is null) return;
+        string pick = await page.DisplayActionSheet("Lọc theo lương", "Hủy", null, SalaryFilterOptions);
+        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
+        int idx = System.Array.IndexOf(SalaryFilterOptions, pick);
+        PickerSalaryIndex = idx >= 0 ? idx : 0;
     }
 
     [RelayCommand]
@@ -685,6 +813,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             {
                 SalaryEmployee.SalaryText = text;
                 SalaryEmployee.HasSalary = has;
+                SalaryEmployee.LatestSalaryType = saved?.SalaryType ?? SalaryType.None;
             });
         }
 
@@ -729,6 +858,13 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             {
                 row.SalaryText = text;
                 row.HasSalary = has;
+                row.LatestSalaryType = latest?.SalaryType ?? SalaryType.None;
+
+                if (PickerSalaryIndex != 0)
+                {
+                    OnPropertyChanged(nameof(FilteredEmployees));
+                    OnPropertyChanged(nameof(IsEmpty));
+                }
             });
         }
     }
@@ -767,6 +903,19 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         decimal unit = dto.SalaryUnit <= 0 ? 1 : dto.SalaryUnit;
         decimal total = dto.Salary * unit;
         return $"{dto.Salary:N0} x {unit:N0} = {total:N0} ({typeText})";
+    }
+
+    private System.Collections.Generic.IEnumerable<EmployeeRow> ApplySalaryFilter(System.Collections.Generic.IEnumerable<EmployeeRow> src)
+    {
+        return PickerSalaryIndex switch
+        {
+            1 => src.Where(r => r.HasSalary),
+            2 => src.Where(r => !r.HasSalary),
+            3 => src.Where(r => r.HasSalary && r.LatestSalaryType == SalaryType.Monthly),
+            4 => src.Where(r => r.HasSalary && r.LatestSalaryType == SalaryType.Daily),
+            5 => src.Where(r => r.HasSalary && r.LatestSalaryType == SalaryType.Hourly),
+            _ => src
+        };
     }
 
     // ─── Private Helpers ───────────────────────────────────────────────────────

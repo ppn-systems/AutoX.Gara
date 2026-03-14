@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoX.Gara.Infrastructure.Migrations
 {
     [DbContext(typeof(AutoXDbContext))]
-    [Migration("20260313181634_UpdateNewStructs")]
-    partial class UpdateNewStructs
+    [Migration("20260314100758_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -355,6 +355,49 @@ namespace AutoX.Gara.Infrastructure.Migrations
                     b.ToTable("Employee");
                 });
 
+            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Identity.EmployeeSalary", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Salary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<byte>("SalaryType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("SalaryUnit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EffectiveFrom");
+
+                    b.HasIndex("EffectiveTo");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("SalaryType");
+
+                    b.ToTable("EmployeeSalary");
+                });
+
             modelBuilder.Entity("AutoX.Gara.Domain.Entities.Inventory.Part", b =>
                 {
                     b.Property<int>("Id")
@@ -449,7 +492,8 @@ namespace AutoX.Gara.Infrastructure.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("InvoiceId");
+                    b.HasIndex("InvoiceId")
+                        .IsUnique();
 
                     b.HasIndex("VehicleId");
 
@@ -661,6 +705,17 @@ namespace AutoX.Gara.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("AutoX.Gara.Domain.Entities.Identity.EmployeeSalary", b =>
+                {
+                    b.HasOne("AutoX.Gara.Domain.Entities.Identity.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("AutoX.Gara.Domain.Entities.Inventory.Part", b =>

@@ -112,32 +112,46 @@
 
                     <!-- Picker Position -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="150">
-                        <Picker SelectedIndex="{Binding PickerPositionIndex}"
-                                ItemsSource="{Binding FilterPositionOptions}"
-                                TextColor="#C4C4D4"
-                                BackgroundColor="Transparent"
-                                VerticalOptions="Center"
-                                HeightRequest="44" />
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedPositionText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPositionFilterTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Picker Status -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="160">
-                        <Picker SelectedIndex="{Binding PickerStatusIndex}"
-                                ItemsSource="{Binding FilterStatusOptions}"
-                                TextColor="#C4C4D4"
-                                BackgroundColor="Transparent"
-                                VerticalOptions="Center"
-                                HeightRequest="44" />
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedStatusText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnStatusFilterTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Picker Gender -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="120">
-                        <Picker SelectedIndex="{Binding PickerGenderIndex}"
-                                ItemsSource="{Binding FilterGenderOptions}"
-                                TextColor="#C4C4D4"
-                                BackgroundColor="Transparent"
-                                VerticalOptions="Center"
-                                HeightRequest="44" />
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedGenderText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnGenderFilterTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </Border>
+
+                    <!-- Picker Salary -->
+                    <Border Style="{StaticResource PickerBorder}" WidthRequest="150">
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedSalaryText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSalaryFilterTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Clear Filter Button -->
@@ -159,7 +173,7 @@
 
             <!-- ROW 2: LIST -->
             <Grid Grid.Row="2">
-                <CollectionView ItemsSource="{Binding Employees}" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}" Margin="16,0" VerticalOptions="Fill">
+                <CollectionView ItemsSource="{Binding FilteredEmployees}" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}" Margin="16,0" VerticalOptions="Fill">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="vm:EmployeesViewModel+EmployeeRow">
                             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="14,12">
@@ -206,9 +220,31 @@
 
                                     <!-- Actions -->
                                     <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
-                                        <Button Text="✏ Sửa" Style="{StaticResource RowEdit}" Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}" CommandParameter="{Binding .}" />
-                                        <Button Text="⚙ Trạng thái" BackgroundColor="#1E1E2E" TextColor="#818CF8" FontSize="12" CornerRadius="8" HeightRequest="32" WidthRequest="110" Padding="0" Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RequestChangeStatusCommand}" CommandParameter="{Binding .}" />
-                                        <Button Text="💰 Lương" BackgroundColor="#122018" TextColor="#34D399" FontSize="12" CornerRadius="8" HeightRequest="32" WidthRequest="90" Padding="0" BorderColor="#1F3A2A" BorderWidth="1" Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenSalaryCommand}" CommandParameter="{Binding .}" />
+                                        <Button Text="✏ Sửa" 
+                                                Style="{StaticResource RowEdit}" 
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}" 
+                                                CommandParameter="{Binding .}" />
+                                        <Button Text="💰 Sửa Lương" 
+                                                BackgroundColor="#122018" 
+                                                TextColor="#34D399" 
+                                                FontSize="12" CornerRadius="8" 
+                                                HeightRequest="32" 
+                                                WidthRequest="100" 
+                                                Padding="0" 
+                                                BorderColor="#1F3A2A" 
+                                                BorderWidth="1" 
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenSalaryCommand}" 
+                                                CommandParameter="{Binding .}" />
+                                        <Button Text="⚙ Trạng thái" 
+                                                BackgroundColor="#1E1E2E" 
+                                                TextColor="#818CF8" 
+                                                FontSize="12" 
+                                                CornerRadius="8"
+                                                HeightRequest="32" 
+                                                WidthRequest="110" 
+                                                Padding="0" 
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RequestChangeStatusCommand}" 
+                                                CommandParameter="{Binding .}" />
                                     </HorizontalStackLayout>
                                 </Grid>
                             </Border>
@@ -438,33 +474,43 @@
                         <Label Text="{Binding SalaryEmployeeName}" FontSize="13" TextColor="#6B6B80" HorizontalOptions="Center" />
 
                         <Label Text="Mức lương" Style="{StaticResource FieldLabel}" />
-                        <Border Style="{StaticResource InputBorder}" Padding="12,0">
+                        <Border Style="{StaticResource InputBorder}" Padding="0,0">
                             <Entry Text="{Binding SalaryFormSalary}" Keyboard="Numeric" Style="{StaticResource FormEntry}" Placeholder="0" />
                         </Border>
 
-                        <Label Text="Loại lương" Style="{StaticResource FieldLabel}" />
-                        <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                            <Picker SelectedIndex="{Binding SalaryFormTypeIndex}"
-                                    ItemsSource="{Binding SalaryFormTypeOptions}"
-                                    TextColor="#C4C4D4"
-                                    BackgroundColor="Transparent"
-                                    VerticalOptions="Center"
-                                    HeightRequest="44"
-                                    Margin="10,0" />
-                        </Border>
-
                         <Label Text="Số đơn vị (ngày/giờ)" Style="{StaticResource FieldLabel}" />
-                        <Border Style="{StaticResource InputBorder}" Padding="12,0">
+                        <Border Style="{StaticResource InputBorder}" Padding="0,0">
                             <Entry Text="{Binding SalaryFormUnit}" Keyboard="Numeric" Style="{StaticResource FormEntry}" Placeholder="1" />
                         </Border>
 
-                        <Label Text="Hiệu lực từ" Style="{StaticResource FieldLabel}" />
-                        <Border Style="{StaticResource InputBorder}" Padding="12,0">
-                            <DatePicker Date="{Binding SalaryFormEffectiveFrom}" Format="dd/MM/yyyy" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" />
-                        </Border>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <VerticalStackLayout Grid.Column="0" Spacing="6">
+                                <Label Text="Loại lương" Style="{StaticResource FieldLabel}" Margin="0,0,0,5" />
+                                <Border Style="{StaticResource PickerBorder}" Padding="0,0">
+                                    <Picker SelectedIndex="{Binding SalaryFormTypeIndex}"
+                                            ItemsSource="{Binding SalaryFormTypeOptions}"
+                                            TextColor="#C4C4D4"
+                                            BackgroundColor="Transparent"
+                                            VerticalOptions="Center"
+                                            HeightRequest="44"
+                                            Margin="0,0" />
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="6">
+                                <Label Text="Hiệu lực từ" Style="{StaticResource FieldLabel}" Margin="0,0,0,5" />
+                                <Border Style="{StaticResource InputBorder}" Padding="0,0">
+                                    <DatePicker Date="{Binding SalaryFormEffectiveFrom}"
+                                                Format="dd/MM/yyyy"
+                                                TextColor="#C4C4D4"
+                                                BackgroundColor="Transparent"
+                                                VerticalOptions="Center"
+                                                MinimumWidthRequest="230" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
 
                         <Label Text="Ghi chú" Style="{StaticResource FieldLabel}" />
-                        <Border Style="{StaticResource InputBorder}" Padding="12,0" HeightRequest="88">
+                        <Border Style="{StaticResource InputBorder}" Padding="0,0" HeightRequest="88">
                             <Editor Text="{Binding SalaryFormNote}" TextColor="#F1F1F5" BackgroundColor="Transparent" AutoSize="TextChanges" />
                         </Border>
 

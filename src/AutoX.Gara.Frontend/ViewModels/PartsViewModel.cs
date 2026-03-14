@@ -62,6 +62,26 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
     [ObservableProperty] public partial System.Int32 PickerExpiredIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 PickerDiscontinuedIndex { get; set; } = 0;
 
+    public System.String[] InStockFilterOptions { get; } = ["Tất cả", "Còn hàng", "Hết hàng"];
+    public System.String[] DefectiveFilterOptions { get; } = ["Tất cả", "Bình thường", "Bị lỗi"];
+    public System.String[] ExpiredFilterOptions { get; } = ["Tất cả", "Còn hạn", "Hết hạn"];
+    public System.String[] DiscontinuedFilterOptions { get; } = ["Tất cả", "Đang bán", "Ngừng bán"];
+
+    public System.String SelectedCategoryText =>
+        PartCategoryFilterOptions[System.Math.Clamp(PickerCategoryIndex, 0, PartCategoryFilterOptions.Count - 1)];
+
+    public System.String SelectedInStockText =>
+        InStockFilterOptions[System.Math.Clamp(PickerInStockIndex, 0, InStockFilterOptions.Length - 1)];
+
+    public System.String SelectedDefectiveText =>
+        DefectiveFilterOptions[System.Math.Clamp(PickerDefectiveIndex, 0, DefectiveFilterOptions.Length - 1)];
+
+    public System.String SelectedExpiredText =>
+        ExpiredFilterOptions[System.Math.Clamp(PickerExpiredIndex, 0, ExpiredFilterOptions.Length - 1)];
+
+    public System.String SelectedDiscontinuedText =>
+        DiscontinuedFilterOptions[System.Math.Clamp(PickerDiscontinuedIndex, 0, DiscontinuedFilterOptions.Length - 1)];
+
     // Picker options (auto from enum Display attributes)
     public System.Collections.Generic.IReadOnlyList<System.String> PartCategoryFilterOptions { get; }
     public System.Collections.Generic.IReadOnlyList<System.String> PartCategoryFormOptions { get; }
@@ -235,22 +255,27 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
         }
 
         FilterCategory = _partCategoryFilterValues[value];
+        OnPropertyChanged(nameof(SelectedCategoryText));
     }
     partial void OnPickerInStockIndexChanged(int value)
     {
         FilterInStock = value switch { 1 => true, 2 => false, _ => null };
+        OnPropertyChanged(nameof(SelectedInStockText));
     }
     partial void OnPickerDefectiveIndexChanged(int value)
     {
         FilterDefective = value switch { 1 => false, 2 => true, _ => null };
+        OnPropertyChanged(nameof(SelectedDefectiveText));
     }
     partial void OnPickerExpiredIndexChanged(int value)
     {
         FilterExpired = value switch { 1 => false, 2 => true, _ => null };
+        OnPropertyChanged(nameof(SelectedExpiredText));
     }
     partial void OnPickerDiscontinuedIndexChanged(int value)
     {
         FilterDiscontinued = value switch { 1 => false, 2 => true, _ => null };
+        OnPropertyChanged(nameof(SelectedDiscontinuedText));
     }
     partial void OnFormPickerCategoryIndexChanged(int value)
     {

@@ -225,24 +225,24 @@
 
                     <!-- Picker Loại KH -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="148">
-                        <Picker SelectedIndex="{Binding PickerFilterTypeIndex}"
-                                ItemsSource="{Binding FilterTypeOptions}"
-                                TextColor="#C4C4D4"
-                                BackgroundColor="Transparent"
-                                VerticalOptions="Center"
-                                HeightRequest="44" Margin="0,0">
-                        </Picker>
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedFilterTypeText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnFilterTypeTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Picker Hạng -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="148">
-                        <Picker SelectedIndex="{Binding PickerMembershipIndex}"
-                                ItemsSource="{Binding FilterMembershipOptions}"
-                                TextColor="#C4C4D4"
-                                BackgroundColor="Transparent"
-                                VerticalOptions="Center"
-                                HeightRequest="44" Margin="0,0">
-                        </Picker>
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedMembershipText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnMembershipTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Bỏ lọc -->
