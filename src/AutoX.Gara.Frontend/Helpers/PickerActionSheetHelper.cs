@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace AutoX.Gara.Frontend.Views;
+namespace AutoX.Gara.Frontend.Helpers;
 
 internal static class PickerActionSheetHelper
 {

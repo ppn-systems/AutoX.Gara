@@ -8,7 +8,7 @@ using Microsoft.Maui.Controls;
 using System;
 using System.Collections.Generic;
 
-namespace AutoX.Gara.Frontend.Views;
+namespace AutoX.Gara.Frontend.Helpers;
 
 internal static class PickerFlyoutHelper
 {

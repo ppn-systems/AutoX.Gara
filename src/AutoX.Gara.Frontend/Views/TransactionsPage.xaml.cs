@@ -6,6 +6,7 @@ using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
 using System;
 using AutoX.Gara.Frontend.Services.Invoices;
+using AutoX.Gara.Frontend.Helpers;
 
 namespace AutoX.Gara.Frontend.Views;
 
