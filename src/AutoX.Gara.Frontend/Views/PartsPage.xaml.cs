@@ -65,6 +65,31 @@ public partial class PartsPage : ContentPage
         if (idx2 >= 0) vm.PickerCategoryIndex = idx2;
     }
 
+    private async void OnFormCategoryTapped(object? sender, TappedEventArgs e)
+    {
+        if (BindingContext is not PartsViewModel vm) return;
+
+#if WINDOWS
+        if (TryShowFlyout(sender as VisualElement, "Loại phụ tùng", vm.PartCategoryFormOptions, idx => vm.FormPickerCategoryIndex = idx))
+            return;
+#endif
+
+        var page = Application.Current?.MainPage;
+        if (page is null) return;
+
+        string[] opts = new string[vm.PartCategoryFormOptions.Count];
+        for (int i = 0; i < opts.Length; i++)
+        {
+            opts[i] = vm.PartCategoryFormOptions[i];
+        }
+
+        string pick = await page.DisplayActionSheet("Loại phụ tùng", "Hủy", null, opts);
+        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
+
+        int idx2 = Array.IndexOf(opts, pick);
+        if (idx2 >= 0) vm.FormPickerCategoryIndex = idx2;
+    }
+
     private async void OnInStockFilterTapped(object? sender, TappedEventArgs e)
     {
         if (BindingContext is not PartsViewModel vm) return;

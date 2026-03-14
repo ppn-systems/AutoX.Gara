@@ -121,12 +121,19 @@
 
                     <!-- Picker Type (Dynamic từ enum) -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="180">
-                        <Picker SelectedIndex="{Binding PickerTypeIndex}"
-                                ItemsSource="{Binding ServiceTypeFilterOptions}"
-                                TextColor="#C4C4D4"
-                                BackgroundColor="Transparent"
-                                VerticalOptions="Center"
-                                HeightRequest="44" />
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedFilterTypeText}"
+                                   TextColor="#F1F1F5"
+                                   VerticalOptions="Center"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾"
+                                   TextColor="#6B6B80"
+                                   VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnFilterTypeTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Min Price -->
@@ -165,7 +172,7 @@
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                     <!-- Info -->
                                     <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center" InputTransparent="True">
-                                        <Label Text="{Binding Description}" FontSize="16" FontAttributes="Bold" TextColor="#F1F1F5" LineBreakMode="TailTruncation" MaxLines="2" />
+                                        <Label Text="{Binding Description}" FontSize="14" FontAttributes="Bold" TextColor="#F1F1F5" LineBreakMode="TailTruncation" MaxLines="2" />
                                         <HorizontalStackLayout Spacing="10">
                                             <Label Style="{StaticResource MutedLabel}">
                                                 <Label.FormattedText>
@@ -177,7 +184,7 @@
                                                           </FormattedString>
                                                       </Label.FormattedText>
                                                   </Label>
-                                            <Label Text="·" TextColor="#3A3A50" FontSize="12" VerticalOptions="Center" />
+                                            <Label Text="·" TextColor="#3A3A50" FontSize="14" VerticalOptions="Center" />
                                             <Label Style="{StaticResource MutedLabel}">
                                                 <Label.FormattedText>
                                                     <FormattedString>
@@ -256,8 +263,8 @@
 
                         <!-- Description -->
                         <Label Text="MÔ TẢ DỊCH VỤ *" Style="{StaticResource FieldLabel}" />
-                        <Border Style="{StaticResource InputBorder}" Padding="0">
-                            <Editor Text="{Binding FormDescription}" 
+                        <Border Style="{StaticResource InputBorder}" Padding="0,0,0,0" HeightRequest="70">
+                            <Editor Text="{Binding FormDescription}"
                                     Placeholder="Nhập mô tả dịch vụ..." 
                                     BackgroundColor="Transparent" 
                                     TextColor="#F1F1F5" 
@@ -267,14 +274,20 @@
 
                         <!-- Type Picker in Form (Dynamic) -->
                         <Label Text="LOẠI DỊCH VỤ *" Style="{StaticResource FieldLabel}" />
-                        <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                            <Picker SelectedIndex="{Binding FormTypeIndex}"
-                                    ItemsSource="{Binding ServiceTypeFormOptions}"
-                                    TextColor="#C4C4D4"
-                                    BackgroundColor="Transparent"
-                                    VerticalOptions="Center"
-                                    HeightRequest="44"
-                                    Margin="10,0" />
+                        <Border Style="{StaticResource PickerBorder}">
+                            <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                                <Label Text="{Binding SelectedFormTypeText}"
+                                       TextColor="#F1F1F5"
+                                       VerticalOptions="Center"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="1" />
+                                <Label Grid.Column="1" Text="▾"
+                                       TextColor="#6B6B80"
+                                       VerticalOptions="Center" />
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnFormTypeTapped" />
+                                </Grid.GestureRecognizers>
+                            </Grid>
                         </Border>
 
                         <!-- Unit Price -->
@@ -289,7 +302,7 @@
                         </Border>
 
                         <!-- Buttons -->
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,50,0,0">
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,40,0,0">
                             <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CloseFormCommand}" />
                             <Button Grid.Column="1" Text="{Binding FormSaveText}" Style="{StaticResource AccentBtn}" Command="{Binding SaveFormCommand}" />
                         </Grid>

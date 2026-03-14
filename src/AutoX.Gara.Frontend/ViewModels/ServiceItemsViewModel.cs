@@ -64,6 +64,9 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
     public System.Boolean HasActiveFilters
         => FilterType.HasValue || FilterMinPrice.HasValue || FilterMaxPrice.HasValue;
 
+    public System.String SelectedFilterTypeText =>
+        ServiceTypeFilterOptions[System.Math.Clamp(PickerTypeIndex, 0, ServiceTypeFilterOptions.Count - 1)];
+
     // ─── State ────────────────────────────────────────────────────────────────
 
     [ObservableProperty] public partial System.Boolean IsLoading { get; set; }
@@ -96,6 +99,9 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
     [ObservableProperty] public partial System.Int32 FormTypeIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Boolean HasFormError { get; set; }
     [ObservableProperty] public partial System.String? FormErrorMessage { get; set; }
+
+    public System.String SelectedFormTypeText =>
+        ServiceTypeFormOptions[System.Math.Clamp(FormTypeIndex, 0, ServiceTypeFormOptions.Count - 1)];
 
     // ─── Delete Confirm ───────────────────────────────────────────────────────
 
@@ -132,6 +138,12 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
         ServiceTypeFormOptions = new[] { "— Chọn loại —" }
             .Concat(all.Select(EnumText.Get))
             .ToArray();
+
+        Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+        {
+            OnPropertyChanged(nameof(SelectedFilterTypeText));
+            OnPropertyChanged(nameof(SelectedFormTypeText));
+        });
     }
 
     // ─── Property Hooks ───────────────────────────────────────────────────────
@@ -203,6 +215,12 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
         }
 
         FilterType = _serviceTypeFilterValues[value];
+        OnPropertyChanged(nameof(SelectedFilterTypeText));
+    }
+
+    partial void OnFormTypeIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(SelectedFormTypeText));
     }
 
     // ─── Commands ──────────────────────────────────────────────────────────────

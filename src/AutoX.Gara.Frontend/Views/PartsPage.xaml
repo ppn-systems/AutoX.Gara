@@ -477,11 +477,20 @@
 
                         <!-- Loại phụ tùng -->
                         <Label Text="LOẠI PHỤ TÙNG" Style="{StaticResource FieldLabel}" />
-                        <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                            <Picker SelectedIndex="{Binding FormPickerCategoryIndex}"
-                                    ItemsSource="{Binding PartCategoryFormOptions}"
-                                    TextColor="#C4C4D4" BackgroundColor="Transparent"
-                                    VerticalOptions="Center" HeightRequest="44" Margin="10,0" />
+                        <Border Style="{StaticResource PickerBorder}">
+                            <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                                <Label Text="{Binding SelectedFormCategoryText}"
+                                       TextColor="#F1F1F5"
+                                       VerticalOptions="Center"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="1" />
+                                <Label Grid.Column="1" Text="▾"
+                                       TextColor="#6B6B80"
+                                       VerticalOptions="Center" />
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnFormCategoryTapped" />
+                                </Grid.GestureRecognizers>
+                            </Grid>
                         </Border>
 
                         <!-- Giá nhập + Giá bán -->

@@ -82,6 +82,9 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
     public System.String SelectedDiscontinuedText =>
         DiscontinuedFilterOptions[System.Math.Clamp(PickerDiscontinuedIndex, 0, DiscontinuedFilterOptions.Length - 1)];
 
+    public System.String SelectedFormCategoryText =>
+        PartCategoryFormOptions[System.Math.Clamp(FormPickerCategoryIndex, 0, PartCategoryFormOptions.Count - 1)];
+
     // Picker options (auto from enum Display attributes)
     public System.Collections.Generic.IReadOnlyList<System.String> PartCategoryFilterOptions { get; }
     public System.Collections.Generic.IReadOnlyList<System.String> PartCategoryFormOptions { get; }
@@ -176,6 +179,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
             OnPropertyChanged(nameof(SelectedDefectiveText));
             OnPropertyChanged(nameof(SelectedExpiredText));
             OnPropertyChanged(nameof(SelectedDiscontinuedText));
+            OnPropertyChanged(nameof(SelectedFormCategoryText));
         });
     }
 
@@ -296,6 +300,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
         }
 
         FormCategory = _partCategoryFormValues[value];
+        OnPropertyChanged(nameof(SelectedFormCategoryText));
     }
     private PartCategory FormCategory { get; set; } = PartCategory.Other;
 

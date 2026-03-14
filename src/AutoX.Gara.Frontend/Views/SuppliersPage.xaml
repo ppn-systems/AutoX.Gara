@@ -110,32 +110,36 @@
 
                     <!-- Picker Status -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="180">
-                        <Picker SelectedIndex="{Binding PickerStatusIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44">
-                            <Picker.Items>
-                                <x:String>Tất cả trạng thái</x:String>
-                                <x:String>Đang hợp tác</x:String>
-                                <x:String>Ngừng hợp tác</x:String>
-                                <x:String>Tiềm năng</x:String>
-                                <x:String>Tạm dừng</x:String>
-                                <x:String>Đang xem xét</x:String>
-                                <x:String>Ký hợp đồng</x:String>
-                                <x:String>Bị loại</x:String>
-                            </Picker.Items>
-                        </Picker>
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedFilterStatusText}"
+                                   TextColor="#F1F1F5"
+                                   VerticalOptions="Center"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾"
+                                   TextColor="#6B6B80"
+                                   VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnFilterStatusTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Picker Payment Terms -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="180">
-                        <Picker SelectedIndex="{Binding PickerPaymentTermsIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44">
-                            <Picker.Items>
-                                <x:String>Tất cả thanh toán</x:String>
-                                <x:String>Thanh toán ngay</x:String>
-                                <x:String>Net 7</x:String>
-                                <x:String>Net 15</x:String>
-                                <x:String>Net 30</x:String>
-                                <x:String>Thỏa thuận</x:String>
-                            </Picker.Items>
-                        </Picker>
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedFilterPaymentTermsText}"
+                                   TextColor="#F1F1F5"
+                                   VerticalOptions="Center"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾"
+                                   TextColor="#6B6B80"
+                                   VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnFilterPaymentTermsTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
 
                     <!-- Clear Filter Button -->
@@ -176,7 +180,11 @@
                                         </HorizontalStackLayout>
                                         <HorizontalStackLayout Spacing="6">
                                             <Label Text="Trạng thái:" Style="{StaticResource MutedLabel}" />
-                                            <Label Text="{Binding Status}" FontSize="12" TextColor="#6366F1" FontAttributes="Bold" VerticalOptions="Center" />
+                                            <Label Text="{Binding Status, Converter={StaticResource EnumText}}"
+                                                   FontSize="12"
+                                                   TextColor="#6366F1"
+                                                   FontAttributes="Bold"
+                                                   VerticalOptions="Center" />
                                         </HorizontalStackLayout>
                                     </VerticalStackLayout>
 
@@ -301,34 +309,38 @@
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="TRẠNG THÁI" Style="{StaticResource FieldLabel}" />
-                                <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                                    <Picker SelectedIndex="{Binding FormStatusIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44" Margin="10,0">
-                                        <Picker.Items>
-                                            <x:String>Không xác định</x:String>
-                                            <x:String>Đang hợp tác</x:String>
-                                            <x:String>Ngừng hợp tác</x:String>
-                                            <x:String>Tiềm năng</x:String>
-                                            <x:String>Tạm dừng</x:String>
-                                            <x:String>Đang xem xét</x:String>
-                                            <x:String>Ký hợp đồng</x:String>
-                                            <x:String>Bị loại</x:String>
-                                        </Picker.Items>
-                                    </Picker>
+                                <Border Style="{StaticResource PickerBorder}">
+                                    <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                                        <Label Text="{Binding SelectedFormStatusText}"
+                                               TextColor="#F1F1F5"
+                                               VerticalOptions="Center"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="1" />
+                                        <Label Grid.Column="1" Text="▾"
+                                               TextColor="#6B6B80"
+                                               VerticalOptions="Center" />
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnFormStatusTapped" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
                                 <Label Text="ĐIỀU KHOẢN THANH TOÁN" Style="{StaticResource FieldLabel}" />
-                                <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                                    <Picker SelectedIndex="{Binding FormPaymentTermsIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44" Margin="10,0">
-                                        <Picker.Items>
-                                            <x:String>Không xác định</x:String>
-                                            <x:String>Thanh toán ngay</x:String>
-                                            <x:String>Net 7</x:String>
-                                            <x:String>Net 15</x:String>
-                                            <x:String>Net 30</x:String>
-                                            <x:String>Thỏa thuận</x:String>
-                                        </Picker.Items>
-                                    </Picker>
+                                <Border Style="{StaticResource PickerBorder}">
+                                    <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                                        <Label Text="{Binding SelectedFormPaymentTermsText}"
+                                               TextColor="#F1F1F5"
+                                               VerticalOptions="Center"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="1" />
+                                        <Label Grid.Column="1" Text="▾"
+                                               TextColor="#6B6B80"
+                                               VerticalOptions="Center" />
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnFormPaymentTermsTapped" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>
@@ -388,19 +400,20 @@
                 <VerticalStackLayout Spacing="14">
                     <Label Text="Thay đổi trạng thái" FontSize="18" FontAttributes="Bold" TextColor="#F1F1F5" HorizontalOptions="Center" />
                     <Label Text="{Binding StatusConfirmName}" FontSize="14" TextColor="#6B6B80" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
-                    <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                        <Picker SelectedIndex="{Binding NewStatusIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44" Margin="10,0">
-                            <Picker.Items>
-                                <x:String>Không xác định</x:String>
-                                <x:String>Đang hợp tác</x:String>
-                                <x:String>Ngừng hợp tác</x:String>
-                                <x:String>Tiềm năng</x:String>
-                                <x:String>Tạm dừng</x:String>
-                                <x:String>Đang xem xét</x:String>
-                                <x:String>Ký hợp đồng</x:String>
-                                <x:String>Bị loại</x:String>
-                            </Picker.Items>
-                        </Picker>
+                    <Border Style="{StaticResource PickerBorder}">
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedNewStatusText}"
+                                   TextColor="#F1F1F5"
+                                   VerticalOptions="Center"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾"
+                                   TextColor="#6B6B80"
+                                   VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnNewStatusTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
                     </Border>
                     <BoxView HeightRequest="1" BackgroundColor="#2A2A38" Margin="0,4,0,4" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">

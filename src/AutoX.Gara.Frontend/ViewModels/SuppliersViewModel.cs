@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
+using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Results.Suppliers;
 using AutoX.Gara.Frontend.Services.Suppliers;
 using AutoX.Gara.Shared.Enums;
@@ -11,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace AutoX.Gara.Frontend.ViewModels;
 
@@ -52,8 +54,62 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Int32 PickerStatusIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 PickerPaymentTermsIndex { get; set; } = 0;
 
+    private static readonly SupplierStatus[] StatusValues =
+    [
+        SupplierStatus.None,
+        SupplierStatus.Active,
+        SupplierStatus.Inactive,
+        SupplierStatus.Potential,
+        SupplierStatus.Suspended,
+        SupplierStatus.UnderReview,
+        SupplierStatus.ContractSigned,
+        SupplierStatus.Blacklisted
+    ];
+
+    private static readonly PaymentTerms[] PaymentTermsValues =
+    [
+        PaymentTerms.None,
+        PaymentTerms.DueOnReceipt,
+        PaymentTerms.Net7,
+        PaymentTerms.Net15,
+        PaymentTerms.Net30,
+        PaymentTerms.Custom
+    ];
+
+    private readonly SupplierStatus?[] _statusFilterValues =
+    [
+        null,
+        SupplierStatus.Active,
+        SupplierStatus.Inactive,
+        SupplierStatus.Potential,
+        SupplierStatus.Suspended,
+        SupplierStatus.UnderReview,
+        SupplierStatus.ContractSigned,
+        SupplierStatus.Blacklisted
+    ];
+
+    private readonly PaymentTerms?[] _paymentTermsFilterValues =
+    [
+        null,
+        PaymentTerms.DueOnReceipt,
+        PaymentTerms.Net7,
+        PaymentTerms.Net15,
+        PaymentTerms.Net30,
+        PaymentTerms.Custom
+    ];
+
+    public string[] FilterStatusOptions { get; } =
+        new[] { "Tất cả trạng thái" }.Concat(StatusValues.Where(v => v != SupplierStatus.None).Select(EnumText.Get)).ToArray();
+    public string[] FilterPaymentTermsOptions { get; } =
+        new[] { "Tất cả thanh toán" }.Concat(PaymentTermsValues.Where(v => v != PaymentTerms.None).Select(EnumText.Get)).ToArray();
+
     public System.Boolean HasActiveFilters
         => FilterStatus != SupplierStatus.None || FilterPaymentTerms != PaymentTerms.None;
+
+    public System.String SelectedFilterStatusText =>
+        FilterStatusOptions[System.Math.Clamp(PickerStatusIndex, 0, FilterStatusOptions.Length - 1)];
+    public System.String SelectedFilterPaymentTermsText =>
+        FilterPaymentTermsOptions[System.Math.Clamp(PickerPaymentTermsIndex, 0, FilterPaymentTermsOptions.Length - 1)];
 
     // ─── State ────────────────────────────────────────────────────────────────
 
@@ -96,11 +152,24 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean HasFormError { get; set; }
     [ObservableProperty] public partial System.String? FormErrorMessage { get; set; }
 
+    public string[] FormStatusOptions { get; } =
+        StatusValues.Select(EnumText.Get).ToArray();
+    public string[] FormPaymentTermsOptions { get; } =
+        PaymentTermsValues.Select(EnumText.Get).ToArray();
+
+    public System.String SelectedFormStatusText =>
+        FormStatusOptions[System.Math.Clamp(FormStatusIndex, 0, FormStatusOptions.Length - 1)];
+    public System.String SelectedFormPaymentTermsText =>
+        FormPaymentTermsOptions[System.Math.Clamp(FormPaymentTermsIndex, 0, FormPaymentTermsOptions.Length - 1)];
+
     // ─── Status Confirm ───────────────────────────────────────────────────────
 
     [ObservableProperty] public partial System.Boolean IsStatusConfirmVisible { get; set; }
     [ObservableProperty] public partial System.Int32 NewStatusIndex { get; set; } = 1;
     public System.String StatusConfirmName => SelectedSupplier?.Name ?? System.String.Empty;
+
+    public System.String SelectedNewStatusText =>
+        FormStatusOptions[System.Math.Clamp(NewStatusIndex, 0, FormStatusOptions.Length - 1)];
 
     // ─── Collection ───────────────────────────────────────────────────────────
 
@@ -112,6 +181,15 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         Suppliers.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
+
+        Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+        {
+            OnPropertyChanged(nameof(SelectedFilterStatusText));
+            OnPropertyChanged(nameof(SelectedFilterPaymentTermsText));
+            OnPropertyChanged(nameof(SelectedFormStatusText));
+            OnPropertyChanged(nameof(SelectedFormPaymentTermsText));
+            OnPropertyChanged(nameof(SelectedNewStatusText));
+        });
     }
 
     // ─── Property Hooks ───────────────────────────────────────────────────────
@@ -173,12 +251,30 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
     partial void OnPickerStatusIndexChanged(int value)
     {
-        FilterStatus = (SupplierStatus)value;
+        if (value < 0 || value >= _statusFilterValues.Length)
+        {
+            FilterStatus = SupplierStatus.None;
+            return;
+        }
+
+        FilterStatus = _statusFilterValues[value] ?? SupplierStatus.None;
+        OnPropertyChanged(nameof(SelectedFilterStatusText));
     }
     partial void OnPickerPaymentTermsIndexChanged(int value)
     {
-        FilterPaymentTerms = (PaymentTerms)value;
+        if (value < 0 || value >= _paymentTermsFilterValues.Length)
+        {
+            FilterPaymentTerms = PaymentTerms.None;
+            return;
+        }
+
+        FilterPaymentTerms = _paymentTermsFilterValues[value] ?? PaymentTerms.None;
+        OnPropertyChanged(nameof(SelectedFilterPaymentTermsText));
     }
+
+    partial void OnFormStatusIndexChanged(int value) => OnPropertyChanged(nameof(SelectedFormStatusText));
+    partial void OnFormPaymentTermsIndexChanged(int value) => OnPropertyChanged(nameof(SelectedFormPaymentTermsText));
+    partial void OnNewStatusIndexChanged(int value) => OnPropertyChanged(nameof(SelectedNewStatusText));
 
     // ─── Commands ──────────────────────────────────────────────────────────────
 
@@ -265,8 +361,11 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
         FormBankAccount = supplier.BankAccount ?? System.String.Empty;
         FormPhoneNumbers = supplier.PhoneNumbers ?? System.String.Empty;
         FormNotes = supplier.Notes ?? System.String.Empty;
-        FormStatusIndex = (System.Int32)(supplier.Status ?? SupplierStatus.None);
-        FormPaymentTermsIndex = (System.Int32)(supplier.PaymentTerms ?? PaymentTerms.None);
+        FormStatusIndex = System.Array.IndexOf(StatusValues, supplier.Status ?? SupplierStatus.None);
+        if (FormStatusIndex < 0) FormStatusIndex = 0;
+
+        FormPaymentTermsIndex = System.Array.IndexOf(PaymentTermsValues, supplier.PaymentTerms ?? PaymentTerms.None);
+        if (FormPaymentTermsIndex < 0) FormPaymentTermsIndex = 0;
         FormContractStartDate = supplier.ContractStartDate ?? System.DateTime.Today;
         FormContractEndDate = supplier.ContractEndDate;
 
@@ -350,7 +449,8 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     private void RequestChangeStatus(SupplierDto supplier)
     {
         SelectedSupplier = supplier;
-        NewStatusIndex = (System.Int32)(supplier.Status ?? SupplierStatus.None);
+        NewStatusIndex = System.Array.IndexOf(StatusValues, supplier.Status ?? SupplierStatus.None);
+        if (NewStatusIndex < 0) NewStatusIndex = 0;
         IsStatusConfirmVisible = true;
     }
 
@@ -378,7 +478,9 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
             SupplierDto data = new()
             {
                 SupplierId = SelectedSupplier.SupplierId,
-                Status = (SupplierStatus)NewStatusIndex,
+                Status = NewStatusIndex >= 0 && NewStatusIndex < StatusValues.Length
+                    ? StatusValues[NewStatusIndex]
+                    : SupplierStatus.None,
                 SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
             };
 
@@ -390,7 +492,9 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
                 if (idx >= 0)
                 {
                     SupplierDto updated = Suppliers[idx];
-                    updated.Status = (SupplierStatus)NewStatusIndex;
+                    updated.Status = NewStatusIndex >= 0 && NewStatusIndex < StatusValues.Length
+                        ? StatusValues[NewStatusIndex]
+                        : SupplierStatus.None;
                     Suppliers[idx] = updated;
                 }
                 SelectedSupplier = null;
@@ -533,8 +637,12 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
             BankAccount = FormBankAccount,
             PhoneNumbers = FormPhoneNumbers,
             Notes = FormNotes,
-            Status = (SupplierStatus)FormStatusIndex,
-            PaymentTerms = (PaymentTerms)FormPaymentTermsIndex,
+            Status = FormStatusIndex >= 0 && FormStatusIndex < StatusValues.Length
+                ? StatusValues[FormStatusIndex]
+                : SupplierStatus.None,
+            PaymentTerms = FormPaymentTermsIndex >= 0 && FormPaymentTermsIndex < PaymentTermsValues.Length
+                ? PaymentTermsValues[FormPaymentTermsIndex]
+                : PaymentTerms.None,
             ContractStartDate = FormContractStartDate,
             ContractEndDate = FormContractEndDate,
             SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
