@@ -8,6 +8,7 @@ using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Employees;
+using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Attributes;
@@ -17,6 +18,7 @@ using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
 using Nalix.Shared.Memory.Pooling;
 using Nalix.Shared.Serialization;
+using System.Diagnostics;
 
 namespace AutoX.Gara.Application.Employees;
 
@@ -46,61 +48,44 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
             return;
         }
 
+        ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
+        Stopwatch sw = Stopwatch.StartNew();
         EmployeeQueryResponse response = null;
 
         try
         {
-            EmployeeListQuery query = new(
-                Page: packet.Page,
-                PageSize: packet.PageSize,
-                SearchTerm: packet.SearchTerm,
-                SortBy: packet.SortBy,
-                SortDescending: packet.SortDescending,
-                FilterPosition: packet.FilterPosition,
-                FilterStatus: packet.FilterStatus,
-                FilterGender: packet.FilterGender);
-
+            EmployeeListQuery query = BuildListQuery(packet);
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
             var employees = new EmployeeRepository(db);
 
             (System.Collections.Generic.List<Employee> items, System.Int32 totalCount)
                 = await employees.GetPageAsync(query).ConfigureAwait(false);
 
+            var payload = items.ConvertAll(e => MapToPacket(e, sequenceId: 0));
             response = new()
             {
                 TotalCount = totalCount,
                 SequenceId = packet.SequenceId,
-                Employees = items.ConvertAll(e => MapToPacket(e, sequenceId: 0))
+                Employees = payload
             };
 
-            System.Boolean sent = await connection.TCP
-                .SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
-
-            if (!sent)
+            if (!await TrySendPacketAsync(response, connection, logger, nameof(GetAsync), packet.SequenceId).ConfigureAwait(false))
             {
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                return;
             }
+
+            logger?.Info(
+                $"[APP.{nameof(EmployeeOps)}:{nameof(GetAsync)}] ok seq={packet.SequenceId} count={payload.Count} total={totalCount} ms={sw.ElapsedMilliseconds}");
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+            logger?.Error(
+                $"[APP.{nameof(EmployeeOps)}:{nameof(GetAsync)}] failed seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+            await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR, ProtocolAdvice.RETRY, logger, nameof(GetAsync), packet.SequenceId).ConfigureAwait(false);
         }
         finally
         {
-            if (response is not null)
-            {
-                var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
-                foreach (EmployeeDto dto in response.Employees)
-                {
-                    pool.Return(dto);
-                }
-            }
+            ReturnDtos(response?.Employees);
         }
     }
 
@@ -433,5 +418,67 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
         data.EndDate = e.EndDate;
 
         return data;
+    }
+
+    private static EmployeeListQuery BuildListQuery(EmployeeQueryRequest request)
+        => new(
+            Page: request.Page,
+            PageSize: request.PageSize,
+            SearchTerm: request.SearchTerm,
+            SortBy: request.SortBy,
+            SortDescending: request.SortDescending,
+            FilterGender: request.FilterGender,
+            FilterPosition: request.FilterPosition,
+            FilterStatus: request.FilterStatus);
+
+    private static void ReturnDtos(System.Collections.Generic.IEnumerable<EmployeeDto> dtos)
+    {
+        if (dtos is null)
+        {
+            return;
+        }
+
+        var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
+        foreach (EmployeeDto dto in dtos)
+        {
+            pool.Return(dto);
+        }
+    }
+
+    private static async System.Threading.Tasks.Task<System.Boolean> TrySendPacketAsync(
+        System.Object packet,
+        IConnection connection,
+        ILogger logger,
+        System.String operation,
+        System.UInt32 sequenceId)
+    {
+        System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(packet)).ConfigureAwait(false);
+        if (!sent)
+        {
+            logger?.Warn(
+                $"[APP.{nameof(EmployeeOps)}:{operation}] send-failed seq={sequenceId}");
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.INTERNAL_ERROR,
+                ProtocolAdvice.DO_NOT_RETRY, sequenceId).ConfigureAwait(false);
+        }
+
+        return sent;
+    }
+
+    private static async System.Threading.Tasks.Task SendErrorAsync(
+        IConnection connection,
+        ProtocolReason reason,
+        ProtocolAdvice advice,
+        ILogger logger,
+        System.String operation,
+        System.UInt32 sequenceId)
+    {
+        logger?.Warn(
+            $"[APP.{nameof(EmployeeOps)}:{operation}] reason={reason} seq={sequenceId}");
+        await connection.SendAsync(
+            ControlType.ERROR,
+            reason,
+            advice, sequenceId).ConfigureAwait(false);
     }
 }

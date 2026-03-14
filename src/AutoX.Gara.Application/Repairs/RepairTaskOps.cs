@@ -1,14 +1,12 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Billings;
-using AutoX.Gara.Domain.Entities.Invoices;
+using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Protocol.Billings;
-using Microsoft.EntityFrameworkCore;
-using Nalix.Common.Diagnostics.Abstractions;
+using AutoX.Gara.Shared.Protocol.Repairs;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Attributes;
@@ -18,22 +16,21 @@ using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
 using Nalix.Shared.Memory.Pooling;
 using Nalix.Shared.Serialization;
-using System.Diagnostics;
 
-namespace AutoX.Gara.Application.Billings;
+namespace AutoX.Gara.Application.Repairs;
 
 [PacketController]
-public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
+public sealed class RepairTaskOps(AutoXDbContextFactory dbContextFactory)
 {
     private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
         ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((System.UInt16)OpCommand.TRANSACTION_GET)]
+    [PacketOpcode((System.UInt16)OpCommand.REPAIR_TASK_GET)]
     public async System.Threading.Tasks.Task GetAsync(IPacket p, IConnection connection)
     {
-        if (p is not TransactionQueryRequest packet)
+        if (p is not RepairTaskQueryRequest packet)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             await connection.SendAsync(
@@ -43,36 +40,34 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
             return;
         }
 
-        TransactionQueryResponse response = null;
+        RepairTaskQueryResponse response = null;
 
         try
         {
-            TransactionListQuery query = new(
+            RepairTaskListQuery query = new(
                 Page: packet.Page,
                 PageSize: packet.PageSize,
                 SearchTerm: packet.SearchTerm,
                 SortBy: packet.SortBy,
                 SortDescending: packet.SortDescending,
-                FilterInvoiceId: packet.FilterInvoiceId <= 0 ? null : packet.FilterInvoiceId,
-                FilterType: packet.FilterType,
+                FilterRepairOrderId: packet.FilterRepairOrderId <= 0 ? null : packet.FilterRepairOrderId,
+                FilterEmployeeId: packet.FilterEmployeeId <= 0 ? null : packet.FilterEmployeeId,
+                FilterServiceItemId: packet.FilterServiceItemId <= 0 ? null : packet.FilterServiceItemId,
                 FilterStatus: packet.FilterStatus,
-                FilterPaymentMethod: packet.FilterPaymentMethod,
-                FilterMinAmount: packet.FilterMinAmount,
-                FilterMaxAmount: packet.FilterMaxAmount,
                 FilterFromDate: packet.FilterFromDate,
                 FilterToDate: packet.FilterToDate);
 
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new TransactionRepository(db);
+            var repo = new RepairTaskRepository(db);
 
-            (System.Collections.Generic.List<Transaction> items, System.Int32 totalCount) =
+            (System.Collections.Generic.List<RepairTask> items, System.Int32 totalCount) =
                 await repo.GetPageAsync(query).ConfigureAwait(false);
 
             response = new()
             {
                 TotalCount = totalCount,
                 SequenceId = packet.SequenceId,
-                Transactions = items.ConvertAll(t => MapToPacket(t, sequenceId: 0))
+                RepairTasks = items.ConvertAll(t => MapToPacket(t, sequenceId: 0))
             };
 
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
@@ -100,10 +95,10 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         }
         finally
         {
-            if (response?.Transactions != null)
+            if (response?.RepairTasks != null)
             {
                 var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
-                foreach (TransactionDto dto in response.Transactions)
+                foreach (RepairTaskDto dto in response.RepairTasks)
                 {
                     pool.Return(dto);
                 }
@@ -113,13 +108,10 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((System.UInt16)OpCommand.TRANSACTION_CREATE)]
+    [PacketOpcode((System.UInt16)OpCommand.REPAIR_TASK_CREATE)]
     public async System.Threading.Tasks.Task CreateAsync(IPacket p, IConnection connection)
     {
-        ILogger logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
-        Stopwatch sw = Stopwatch.StartNew();
-
-        if (!TryParseTransactionPacket(p, out TransactionDto packet, out System.UInt32 fallbackSeq) || packet.TransactionId is not null)
+        if (!TryParseRepairTaskPacket(p, out RepairTaskDto packet, out System.UInt32 fallbackSeq) || packet.RepairTaskId is not null)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
@@ -128,59 +120,49 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
             return;
         }
 
-        TransactionDto confirmed = null;
+        RepairTaskDto confirmed = null;
         try
         {
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new TransactionRepository(db);
+            var repo = new RepairTaskRepository(db);
+            var repairOrders = new RepairOrderRepository(db);
             var invoices = new InvoiceRepository(db);
 
-            // Validate invoice exists (lightweight query).
-            if (await invoices.GetByIdAsync(packet.InvoiceId).ConfigureAwait(false) is null)
+            RepairTask entity = new()
             {
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.NOT_FOUND,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-                return;
-            }
-
-            Transaction entity = new()
-            {
-                InvoiceId = packet.InvoiceId,
-                Type = packet.Type,
-                PaymentMethod = packet.PaymentMethod,
+                RepairOrderId = packet.RepairOrderId,
+                EmployeeId = packet.EmployeeId,
+                ServiceItemId = packet.ServiceItemId,
                 Status = packet.Status,
-                Amount = packet.Amount,
-                TransactionDate = packet.TransactionDate,
-                CreatedBy = packet.CreatedBy,
-                ModifiedBy = packet.ModifiedBy,
-                UpdatedAt = packet.UpdatedAt,
-                IsReversed = packet.IsReversed,
-                Description = packet.Description?.Trim() ?? System.String.Empty,
+                StartDate = packet.StartDate,
+                EstimatedDuration = packet.EstimatedDuration,
+                CompletionDate = packet.CompletionDate,
             };
 
             await repo.AddAsync(entity).ConfigureAwait(false);
             await repo.SaveChangesAsync().ConfigureAwait(false);
 
-            // Recalculate invoice totals after adding a transaction.
-            await RecalculateInvoiceAsync(db, invoices, packet.InvoiceId).ConfigureAwait(false);
+            // Recalculate invoice totals if this repair order is attached to an invoice.
+            var ro = await repairOrders.GetByIdAsync(entity.RepairOrderId).ConfigureAwait(false);
+            if (ro?.InvoiceId is not null)
+            {
+                Invoice inv = await invoices.GetByIdWithDetailsAsync(ro.InvoiceId.Value).ConfigureAwait(false);
+                if (inv is not null)
+                {
+                    inv.Recalculate();
+                    invoices.Update(inv);
+                    await invoices.SaveChangesAsync().ConfigureAwait(false);
+                }
+            }
 
             confirmed = MapToPacket(entity, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
             if (!sent)
             {
-                logger?.Warn(
-                    $"[APP.{nameof(TransactionOps)}:{nameof(CreateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={entity.Id} invoiceId={packet.InvoiceId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
-            else
-            {
-                logger?.Info(
-                    $"[APP.{nameof(TransactionOps)}:{nameof(CreateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={entity.Id} invoiceId={packet.InvoiceId} amt={packet.Amount} type={packet.Type} status={packet.Status}");
             }
         }
         catch (System.ArgumentException)
@@ -190,10 +172,8 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
                 ProtocolReason.VALIDATION_FAILED,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
-        catch (System.Exception ex)
+        catch (System.Exception)
         {
-            logger?.Error(
-                $"[APP.{nameof(TransactionOps)}:{nameof(CreateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -210,13 +190,10 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((System.UInt16)OpCommand.TRANSACTION_UPDATE)]
+    [PacketOpcode((System.UInt16)OpCommand.REPAIR_TASK_UPDATE)]
     public async System.Threading.Tasks.Task UpdateAsync(IPacket p, IConnection connection)
     {
-        ILogger logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
-        Stopwatch sw = Stopwatch.StartNew();
-
-        if (!TryParseTransactionPacket(p, out TransactionDto packet, out System.UInt32 fallbackSeq) || packet.TransactionId is null)
+        if (!TryParseRepairTaskPacket(p, out RepairTaskDto packet, out System.UInt32 fallbackSeq) || packet.RepairTaskId is null)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
@@ -225,14 +202,15 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
             return;
         }
 
-        TransactionDto confirmed = null;
+        RepairTaskDto confirmed = null;
         try
         {
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new TransactionRepository(db);
+            var repo = new RepairTaskRepository(db);
+            var repairOrders = new RepairOrderRepository(db);
             var invoices = new InvoiceRepository(db);
 
-            Transaction existing = await repo.GetByIdAsync(packet.TransactionId.Value).ConfigureAwait(false);
+            RepairTask existing = await repo.GetByIdAsync(packet.RepairTaskId.Value).ConfigureAwait(false);
             if (existing is null)
             {
                 await connection.SendAsync(
@@ -242,43 +220,54 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
                 return;
             }
 
-            System.Int32 oldInvoiceId = existing.InvoiceId;
+            System.Int32 oldRepairOrderId = existing.RepairOrderId;
 
-            existing.InvoiceId = packet.InvoiceId;
-            existing.Type = packet.Type;
-            existing.PaymentMethod = packet.PaymentMethod;
+            existing.RepairOrderId = packet.RepairOrderId;
+            existing.EmployeeId = packet.EmployeeId;
+            existing.ServiceItemId = packet.ServiceItemId;
             existing.Status = packet.Status;
-            existing.Amount = packet.Amount;
-            existing.TransactionDate = packet.TransactionDate;
-            existing.CreatedBy = packet.CreatedBy;
-            existing.ModifiedBy = packet.ModifiedBy;
-            existing.UpdatedAt = packet.UpdatedAt;
-            existing.IsReversed = packet.IsReversed;
-            existing.Description = packet.Description?.Trim() ?? System.String.Empty;
+            existing.StartDate = packet.StartDate;
+            existing.EstimatedDuration = packet.EstimatedDuration;
+            existing.CompletionDate = packet.CompletionDate;
 
             repo.Update(existing);
             await repo.SaveChangesAsync().ConfigureAwait(false);
 
-            if (oldInvoiceId != existing.InvoiceId)
-                await RecalculateInvoiceAsync(db, invoices, oldInvoiceId).ConfigureAwait(false);
+            if (oldRepairOrderId != existing.RepairOrderId)
+            {
+                var roOld = await repairOrders.GetByIdAsync(oldRepairOrderId).ConfigureAwait(false);
+                if (roOld?.InvoiceId is not null)
+                {
+                    Invoice invOld = await invoices.GetByIdWithDetailsAsync(roOld.InvoiceId.Value).ConfigureAwait(false);
+                    if (invOld is not null)
+                    {
+                        invOld.Recalculate();
+                        invoices.Update(invOld);
+                        await invoices.SaveChangesAsync().ConfigureAwait(false);
+                    }
+                }
+            }
 
-            await RecalculateInvoiceAsync(db, invoices, existing.InvoiceId).ConfigureAwait(false);
+            var ro = await repairOrders.GetByIdAsync(existing.RepairOrderId).ConfigureAwait(false);
+            if (ro?.InvoiceId is not null)
+            {
+                Invoice inv = await invoices.GetByIdWithDetailsAsync(ro.InvoiceId.Value).ConfigureAwait(false);
+                if (inv is not null)
+                {
+                    inv.Recalculate();
+                    invoices.Update(inv);
+                    await invoices.SaveChangesAsync().ConfigureAwait(false);
+                }
+            }
 
             confirmed = MapToPacket(existing, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
             if (!sent)
             {
-                logger?.Warn(
-                    $"[APP.{nameof(TransactionOps)}:{nameof(UpdateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={existing.Id} invoiceId={existing.InvoiceId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
-            else
-            {
-                logger?.Info(
-                    $"[APP.{nameof(TransactionOps)}:{nameof(UpdateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={existing.Id} invoiceId={existing.InvoiceId} amt={existing.Amount} type={existing.Type} status={existing.Status}");
             }
         }
         catch (System.ArgumentException)
@@ -288,10 +277,8 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
                 ProtocolReason.VALIDATION_FAILED,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
-        catch (System.Exception ex)
+        catch (System.Exception)
         {
-            logger?.Error(
-                $"[APP.{nameof(TransactionOps)}:{nameof(UpdateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -308,13 +295,10 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
-    [PacketOpcode((System.UInt16)OpCommand.TRANSACTION_DELETE)]
+    [PacketOpcode((System.UInt16)OpCommand.REPAIR_TASK_DELETE)]
     public async System.Threading.Tasks.Task DeleteAsync(IPacket p, IConnection connection)
     {
-        ILogger logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
-        Stopwatch sw = Stopwatch.StartNew();
-
-        if (p is not TransactionDto packet || packet.TransactionId is null)
+        if (p is not RepairTaskDto packet || packet.RepairTaskId is null)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             await connection.SendAsync(
@@ -327,10 +311,11 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         try
         {
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new TransactionRepository(db);
+            var repo = new RepairTaskRepository(db);
+            var repairOrders = new RepairOrderRepository(db);
             var invoices = new InvoiceRepository(db);
 
-            Transaction existing = await repo.GetByIdAsync(packet.TransactionId.Value).ConfigureAwait(false);
+            RepairTask existing = await repo.GetByIdAsync(packet.RepairTaskId.Value).ConfigureAwait(false);
             if (existing is null)
             {
                 await connection.SendAsync(
@@ -340,22 +325,30 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
                 return;
             }
 
-            System.Int32 invoiceId = existing.InvoiceId;
+            System.Int32 repairOrderId = existing.RepairOrderId;
 
             repo.Delete(existing);
             await repo.SaveChangesAsync().ConfigureAwait(false);
 
-            await RecalculateInvoiceAsync(db, invoices, invoiceId).ConfigureAwait(false);
+            var ro = await repairOrders.GetByIdAsync(repairOrderId).ConfigureAwait(false);
+            if (ro?.InvoiceId is not null)
+            {
+                Invoice inv = await invoices.GetByIdWithDetailsAsync(ro.InvoiceId.Value).ConfigureAwait(false);
+                if (inv is not null)
+                {
+                    inv.Recalculate();
+                    invoices.Update(inv);
+                    await invoices.SaveChangesAsync().ConfigureAwait(false);
+                }
+            }
 
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
                 ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
         }
-        catch (System.Exception ex)
+        catch (System.Exception)
         {
-            logger?.Error(
-                $"[APP.{nameof(TransactionOps)}:{nameof(DeleteAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -363,51 +356,35 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         }
     }
 
-    private static async System.Threading.Tasks.Task RecalculateInvoiceAsync(
-        AutoXDbContext db,
-        InvoiceRepository invoices,
-        System.Int32 invoiceId)
-    {
-        // AutoXDbContextFactory configures QueryTrackingBehavior.NoTracking.
-        // For recalculation we must use a tracked (identity-resolved) graph,
-        // otherwise calling Update() on an untracked graph can throw duplicate key tracking exceptions.
-        db.ChangeTracker.Clear();
-        Invoice invTracked = await invoices.GetInvoiceWithFullGraphTrackedAsync(invoiceId).ConfigureAwait(false);
-        if (invTracked is null)
-        {
-            return;
-        }
-
-        invTracked.Recalculate();
-        await db.SaveChangesAsync().ConfigureAwait(false);
-    }
-
-    private static System.Boolean TryParseTransactionPacket(
-        IPacket p,
-        out TransactionDto packet,
-        out System.UInt32 fallbackSeqId)
+    private static System.Boolean TryParseRepairTaskPacket(IPacket p, out RepairTaskDto packet, out System.UInt32 fallbackSeqId)
     {
         fallbackSeqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
 
-        if (p is not TransactionDto dto)
+        if (p is not RepairTaskDto dto)
         {
             packet = null;
             return false;
         }
 
-        if (dto.InvoiceId <= 0)
+        if (dto.RepairOrderId <= 0 || dto.EmployeeId <= 0 || dto.ServiceItemId <= 0)
         {
             packet = null;
             return false;
         }
 
-        if (dto.Amount <= 0)
+        if (dto.EstimatedDuration < 0 || dto.EstimatedDuration > 1000)
         {
             packet = null;
             return false;
         }
 
-        if (dto.Description != null && dto.Description.Length > 255)
+        if (dto.StartDate.HasValue && dto.StartDate.Value > System.DateTime.UtcNow)
+        {
+            packet = null;
+            return false;
+        }
+
+        if (dto.CompletionDate.HasValue && dto.StartDate.HasValue && dto.CompletionDate.Value < dto.StartDate.Value)
         {
             packet = null;
             return false;
@@ -417,23 +394,20 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         return true;
     }
 
-    private static TransactionDto MapToPacket(Transaction transaction, System.UInt32 sequenceId)
+    private static RepairTaskDto MapToPacket(RepairTask task, System.UInt32 sequenceId)
     {
-        TransactionDto dto = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<TransactionDto>();
+        RepairTaskDto dto = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<RepairTaskDto>();
 
         dto.SequenceId = sequenceId;
-        dto.TransactionId = transaction.Id;
-        dto.InvoiceId = transaction.InvoiceId;
-        dto.Type = transaction.Type;
-        dto.PaymentMethod = transaction.PaymentMethod;
-        dto.Status = transaction.Status;
-        dto.Amount = transaction.Amount;
-        dto.TransactionDate = transaction.TransactionDate;
-        dto.CreatedBy = transaction.CreatedBy;
-        dto.ModifiedBy = transaction.ModifiedBy;
-        dto.UpdatedAt = transaction.UpdatedAt;
-        dto.IsReversed = transaction.IsReversed;
-        dto.Description = transaction.Description ?? System.String.Empty;
+        dto.RepairTaskId = task.Id;
+        dto.RepairOrderId = task.RepairOrderId;
+        dto.EmployeeId = task.EmployeeId;
+        dto.ServiceItemId = task.ServiceItemId;
+        dto.Status = task.Status;
+        dto.StartDate = task.StartDate;
+        dto.EstimatedDuration = task.EstimatedDuration;
+        dto.CompletionDate = task.CompletionDate;
+        dto.IsCompleted = task.IsCompleted;
 
         return dto;
     }

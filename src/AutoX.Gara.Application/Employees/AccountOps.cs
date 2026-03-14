@@ -1,5 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Communication;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
@@ -16,7 +17,7 @@ using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
 using Nalix.Shared.Security.Credentials;
 
-namespace AutoX.Gara.Application.Communication;
+namespace AutoX.Gara.Application.Employees;
 
 /// <summary>
 /// Dịch vụ quản lý tài khoản người dùng, bao gồm đăng ký, đăng nhập, xóa tài khoản và cập nhật mật khẩu.

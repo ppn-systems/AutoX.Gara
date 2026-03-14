@@ -6,6 +6,8 @@ using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Employees;
+using Microsoft.EntityFrameworkCore;
+using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Attributes;
@@ -15,6 +17,7 @@ using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
 using Nalix.Shared.Memory.Pooling;
 using Nalix.Shared.Serialization;
+using System.Diagnostics;
 
 namespace AutoX.Gara.Application.Employees;
 
@@ -31,9 +34,14 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
     [PacketOpcode((System.UInt16)OpCommand.EMPLOYEE_SALARY_GET)]
     public async System.Threading.Tasks.Task GetAsync(IPacket p, IConnection connection)
     {
+        ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
+        Stopwatch sw = Stopwatch.StartNew();
+
         if (p is not EmployeeSalaryQueryRequest packet)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
+            logger?.Warn(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(GetAsync)}] malformed-packet ep={connection.RemoteEndPoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
@@ -45,6 +53,9 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
+            logger?.Info(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(GetAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} emp={packet.FilterEmployeeId} filterType={packet.FilterSalaryType}");
+
             EmployeeSalaryListQuery query = new(
                 Page: packet.Page,
                 PageSize: packet.PageSize,
@@ -66,7 +77,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             {
                 TotalCount = totalCount,
                 SequenceId = packet.SequenceId,
-                Salaries = items.ConvertAll(es => MapToPacket(es, sequenceId: 0))
+                Salaries = items.ConvertAll(es => MapToPacket(es, sequenceId: packet.SequenceId))
             };
 
             System.Boolean sent = await connection.TCP
@@ -74,14 +85,23 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
 
             if (!sent)
             {
+                logger?.Warn(
+                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(GetAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} items={response.Salaries.Count} total={totalCount} ms={sw.ElapsedMilliseconds}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
+            else
+            {
+                logger?.Info(
+                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(GetAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} items={response.Salaries.Count} total={totalCount} ms={sw.ElapsedMilliseconds}");
+            }
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
+            logger?.Error(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(GetAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -107,8 +127,13 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
     [PacketOpcode((System.UInt16)OpCommand.EMPLOYEE_SALARY_CREATE)]
     public async System.Threading.Tasks.Task CreateAsync(IPacket p, IConnection connection)
     {
+        ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
+        Stopwatch sw = Stopwatch.StartNew();
+
         if (!TryParseSalaryPacket(p, out EmployeeSalaryDto packet, out System.UInt32 fallbackSeq))
         {
+            logger?.Warn(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] malformed-packet ep={connection.RemoteEndPoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
@@ -119,7 +144,10 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
         EmployeeSalaryDto confirmed = null;
         try
         {
-            if (packet!.EmployeeId <= 0 || packet.Salary < 0 || packet.SalaryUnit < 0)
+            logger?.Info(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} emp={packet.EmployeeId} salary={packet.Salary}{(packet.SalaryUnit != 1 ? $" unit={packet.SalaryUnit}" : string.Empty)}");
+
+            if (packet.EmployeeId <= 0 || packet.Salary < 0 || packet.SalaryUnit < 0)
             {
                 await connection.SendAsync(
                     ControlType.ERROR,
@@ -138,6 +166,17 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             }
 
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            if (!await db.Employees.AsNoTracking().AnyAsync(e => e.Id == packet.EmployeeId).ConfigureAwait(false))
+            {
+                logger?.Warn(
+                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] employee-not-found ep={connection.RemoteEndPoint} seq={packet.SequenceId} emp={packet.EmployeeId}");
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.NOT_FOUND,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                return;
+            }
+
             var repo = new EmployeeSalaryRepository(db);
 
             EmployeeSalary entity = new()
@@ -162,18 +201,27 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
 
             if (!sent)
             {
+                logger?.Warn(
+                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} emp={packet.EmployeeId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
+            else
+            {
+                logger?.Info(
+                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} salaryId={entity.Id} ms={sw.ElapsedMilliseconds}");
+            }
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
+            logger?.Error(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet!.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
         finally
         {
@@ -191,9 +239,14 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
     [PacketOpcode((System.UInt16)OpCommand.EMPLOYEE_SALARY_UPDATE)]
     public async System.Threading.Tasks.Task UpdateAsync(IPacket p, IConnection connection)
     {
+        ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
+        Stopwatch sw = Stopwatch.StartNew();
+
         if (!TryParseSalaryPacket(p, out EmployeeSalaryDto packet, out System.UInt32 fallbackSeq)
             || packet!.EmployeeSalaryId is null)
         {
+            logger?.Warn(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] malformed-packet ep={connection.RemoteEndPoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
@@ -204,6 +257,9 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
         EmployeeSalaryDto confirmed = null;
         try
         {
+            logger?.Info(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId} emp={packet.EmployeeId}");
+
             if (packet.EmployeeId <= 0 || packet.Salary < 0 || packet.SalaryUnit < 0)
             {
                 await connection.SendAsync(
@@ -223,6 +279,17 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             }
 
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            if (!await db.Employees.AsNoTracking().AnyAsync(e => e.Id == packet.EmployeeId).ConfigureAwait(false))
+            {
+                logger?.Warn(
+                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] employee-not-found ep={connection.RemoteEndPoint} seq={packet.SequenceId} emp={packet.EmployeeId}");
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.NOT_FOUND,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                return;
+            }
+
             var repo = new EmployeeSalaryRepository(db);
 
             EmployeeSalary existing = await repo
@@ -230,6 +297,8 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
 
             if (existing is null)
             {
+                logger?.Warn(
+                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] not-found ep={connection.RemoteEndPoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
@@ -256,18 +325,27 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
 
             if (!sent)
             {
+                logger?.Warn(
+                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
+            else
+            {
+                logger?.Info(
+                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId} ms={sw.ElapsedMilliseconds}");
+            }
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
+            logger?.Error(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet!.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
         finally
         {
@@ -285,10 +363,15 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
     [PacketOpcode((System.UInt16)OpCommand.EMPLOYEE_SALARY_DELETE)]
     public async System.Threading.Tasks.Task DeleteAsync(IPacket p, IConnection connection)
     {
+        ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
+        Stopwatch sw = Stopwatch.StartNew();
+
         if (p is not EmployeeSalaryDto packet
             || packet.EmployeeSalaryId is null)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
+            logger?.Warn(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(DeleteAsync)}] malformed-packet ep={connection.RemoteEndPoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
@@ -298,6 +381,9 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
+            logger?.Info(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(DeleteAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId}");
+
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
             var repo = new EmployeeSalaryRepository(db);
 
@@ -306,6 +392,8 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
 
             if (existing is null)
             {
+                logger?.Warn(
+                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(DeleteAsync)}] not-found ep={connection.RemoteEndPoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
@@ -320,9 +408,14 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 ControlType.NONE,
                 ProtocolReason.NONE,
                 ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
+
+            logger?.Info(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(DeleteAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId} ms={sw.ElapsedMilliseconds}");
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
+            logger?.Error(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(DeleteAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -368,4 +461,3 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
-

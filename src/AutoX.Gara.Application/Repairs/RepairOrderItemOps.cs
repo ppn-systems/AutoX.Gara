@@ -1,15 +1,13 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Billings;
-using AutoX.Gara.Domain.Entities.Invoices;
-using AutoX.Gara.Domain.Enums.Repairs;
+using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Billings;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
+using AutoX.Gara.Shared.Protocol.Repairs;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Attributes;
@@ -20,20 +18,20 @@ using Nalix.Network.Connections;
 using Nalix.Shared.Memory.Pooling;
 using Nalix.Shared.Serialization;
 
-namespace AutoX.Gara.Application.Billings;
+namespace AutoX.Gara.Application.Repairs;
 
 [PacketController]
-public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
+public sealed class RepairOrderItemOps(AutoXDbContextFactory dbContextFactory)
 {
     private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
         ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((System.UInt16)OpCommand.REPAIR_ORDER_GET)]
+    [PacketOpcode((System.UInt16)OpCommand.REPAIR_ORDER_ITEM_GET)]
     public async System.Threading.Tasks.Task GetAsync(IPacket p, IConnection connection)
     {
-        if (p is not RepairOrderQueryRequest packet)
+        if (p is not RepairOrderItemQueryRequest packet)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             await connection.SendAsync(
@@ -43,34 +41,30 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             return;
         }
 
-        RepairOrderQueryResponse response = null;
+        RepairOrderItemQueryResponse response = null;
 
         try
         {
-            RepairOrderListQuery query = new(
+            RepairOrderItemListQuery query = new(
                 Page: packet.Page,
                 PageSize: packet.PageSize,
                 SearchTerm: packet.SearchTerm,
                 SortBy: packet.SortBy,
                 SortDescending: packet.SortDescending,
-                FilterCustomerId: packet.FilterCustomerId <= 0 ? null : packet.FilterCustomerId,
-                FilterVehicleId: packet.FilterVehicleId <= 0 ? null : packet.FilterVehicleId,
-                FilterInvoiceId: packet.FilterInvoiceId <= 0 ? null : packet.FilterInvoiceId,
-                FilterStatus: packet.FilterStatus,
-                FilterFromDate: packet.FilterFromDate,
-                FilterToDate: packet.FilterToDate);
+                FilterRepairOrderId: packet.FilterRepairOrderId <= 0 ? null : packet.FilterRepairOrderId,
+                FilterPartId: packet.FilterPartId <= 0 ? null : packet.FilterPartId);
 
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderRepository(db);
+            var repo = new RepairOrderItemRepository(db);
 
-            (System.Collections.Generic.List<RepairOrder> items, System.Int32 totalCount) =
+            (System.Collections.Generic.List<RepairOrderItem> items, System.Int32 totalCount) =
                 await repo.GetPageAsync(query).ConfigureAwait(false);
 
             response = new()
             {
                 TotalCount = totalCount,
                 SequenceId = packet.SequenceId,
-                RepairOrders = items.ConvertAll(ro => MapToPacket(ro, sequenceId: 0))
+                RepairOrderItems = items.ConvertAll(i => MapToPacket(i, sequenceId: 0))
             };
 
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
@@ -82,6 +76,13 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
         }
+        catch (System.ArgumentException)
+        {
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.VALIDATION_FAILED,
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+        }
         catch (System.Exception)
         {
             await connection.SendAsync(
@@ -91,10 +92,10 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
         }
         finally
         {
-            if (response?.RepairOrders != null)
+            if (response?.RepairOrderItems != null)
             {
                 var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
-                foreach (RepairOrderDto dto in response.RepairOrders)
+                foreach (RepairOrderItemDto dto in response.RepairOrderItems)
                 {
                     pool.Return(dto);
                 }
@@ -104,10 +105,10 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((System.UInt16)OpCommand.REPAIR_ORDER_CREATE)]
+    [PacketOpcode((System.UInt16)OpCommand.REPAIR_ORDER_ITEM_CREATE)]
     public async System.Threading.Tasks.Task CreateAsync(IPacket p, IConnection connection)
     {
-        if (!TryParseRepairOrderPacket(p, out RepairOrderDto packet, out System.UInt32 fallbackSeq) || packet.RepairOrderId is not null)
+        if (!TryParseRepairOrderItemPacket(p, out RepairOrderItemDto packet, out System.UInt32 fallbackSeq) || packet.RepairOrderItemId is not null)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
@@ -116,50 +117,37 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             return;
         }
 
-        RepairOrderDto confirmed = null;
+        RepairOrderItemDto confirmed = null;
         try
         {
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderRepository(db);
+            var repo = new RepairOrderItemRepository(db);
+            var repairOrders = new RepairOrderRepository(db);
             var invoices = new InvoiceRepository(db);
-            await using var tx = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
 
-            RepairOrder ro = new()
+            RepairOrderItem entity = new()
             {
-                CustomerId = packet.CustomerId,
-                VehicleId = packet.VehicleId,
-                InvoiceId = packet.InvoiceId,
-                OrderDate = packet.OrderDate,
-                CompletionDate = packet.CompletionDate,
-                Status = packet.Status == RepairOrderStatus.None ? RepairOrderStatus.Pending : packet.Status,
+                RepairOrderId = packet.RepairOrderId,
+                PartId = packet.PartId,
+                Quantity = packet.Quantity
             };
 
-            await repo.AddAsync(ro).ConfigureAwait(false);
-            await db.SaveChangesAsync().ConfigureAwait(false);
+            await repo.AddAsync(entity).ConfigureAwait(false);
+            await repo.SaveChangesAsync().ConfigureAwait(false);
 
-            if (ro.InvoiceId.HasValue)
+            var ro = await repairOrders.GetByIdAsync(entity.RepairOrderId).ConfigureAwait(false);
+            if (ro?.InvoiceId is not null)
             {
                 Invoice inv = await invoices.GetByIdWithDetailsAsync(ro.InvoiceId.Value).ConfigureAwait(false);
                 if (inv is not null)
                 {
-                    if (inv.CustomerId != ro.CustomerId)
-                    {
-                        await connection.SendAsync(
-                            ControlType.ERROR,
-                            ProtocolReason.VALIDATION_FAILED,
-                            ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-                        return;
-                    }
-
                     inv.Recalculate();
                     invoices.Update(inv);
-                    await db.SaveChangesAsync().ConfigureAwait(false);
+                    await invoices.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
 
-            await tx.CommitAsync().ConfigureAwait(false);
-
-            confirmed = MapToPacket(ro, packet.SequenceId);
+            confirmed = MapToPacket(entity, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
             if (!sent)
             {
@@ -168,6 +156,13 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
+        }
+        catch (System.ArgumentException)
+        {
+            await connection.SendAsync(
+                ControlType.ERROR,
+                ProtocolReason.VALIDATION_FAILED,
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
@@ -187,10 +182,10 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((System.UInt16)OpCommand.REPAIR_ORDER_UPDATE)]
+    [PacketOpcode((System.UInt16)OpCommand.REPAIR_ORDER_ITEM_UPDATE)]
     public async System.Threading.Tasks.Task UpdateAsync(IPacket p, IConnection connection)
     {
-        if (!TryParseRepairOrderPacket(p, out RepairOrderDto packet, out System.UInt32 fallbackSeq) || packet.RepairOrderId is null)
+        if (!TryParseRepairOrderItemPacket(p, out RepairOrderItemDto packet, out System.UInt32 fallbackSeq) || packet.RepairOrderItemId is null)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
@@ -199,15 +194,15 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             return;
         }
 
-        RepairOrderDto confirmed = null;
+        RepairOrderItemDto confirmed = null;
         try
         {
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderRepository(db);
+            var repo = new RepairOrderItemRepository(db);
+            var repairOrders = new RepairOrderRepository(db);
             var invoices = new InvoiceRepository(db);
-            await using var tx = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
 
-            RepairOrder existing = await repo.GetByIdAsync(packet.RepairOrderId.Value).ConfigureAwait(false);
+            RepairOrderItem existing = await repo.GetByIdAsync(packet.RepairOrderItemId.Value).ConfigureAwait(false);
             if (existing is null)
             {
                 await connection.SendAsync(
@@ -217,59 +212,41 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                 return;
             }
 
-            if (existing.CustomerId != packet.CustomerId)
-            {
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.VALIDATION_FAILED,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-                return;
-            }
+            System.Int32 oldRepairOrderId = existing.RepairOrderId;
 
-            System.Int32? oldInvoiceId = existing.InvoiceId;
-
-            existing.CustomerId = packet.CustomerId;
-            existing.VehicleId = packet.VehicleId;
-            existing.InvoiceId = packet.InvoiceId;
-            existing.OrderDate = packet.OrderDate;
-            existing.CompletionDate = packet.CompletionDate;
-            existing.Status = packet.Status;
+            existing.RepairOrderId = packet.RepairOrderId;
+            existing.PartId = packet.PartId;
+            existing.Quantity = packet.Quantity;
 
             repo.Update(existing);
-            await db.SaveChangesAsync().ConfigureAwait(false);
+            await repo.SaveChangesAsync().ConfigureAwait(false);
 
-            if (oldInvoiceId.HasValue && (!existing.InvoiceId.HasValue || existing.InvoiceId.Value != oldInvoiceId.Value))
+            if (oldRepairOrderId != existing.RepairOrderId)
             {
-                Invoice invOld = await invoices.GetByIdWithDetailsAsync(oldInvoiceId.Value).ConfigureAwait(false);
-                if (invOld is not null)
+                var roOld = await repairOrders.GetByIdAsync(oldRepairOrderId).ConfigureAwait(false);
+                if (roOld?.InvoiceId is not null)
                 {
-                    invOld.Recalculate();
-                    invoices.Update(invOld);
-                    await db.SaveChangesAsync().ConfigureAwait(false);
+                    Invoice invOld = await invoices.GetByIdWithDetailsAsync(roOld.InvoiceId.Value).ConfigureAwait(false);
+                    if (invOld is not null)
+                    {
+                        invOld.Recalculate();
+                        invoices.Update(invOld);
+                        await invoices.SaveChangesAsync().ConfigureAwait(false);
+                    }
                 }
             }
 
-            if (existing.InvoiceId.HasValue)
+            var ro = await repairOrders.GetByIdAsync(existing.RepairOrderId).ConfigureAwait(false);
+            if (ro?.InvoiceId is not null)
             {
-                Invoice inv = await invoices.GetByIdWithDetailsAsync(existing.InvoiceId.Value).ConfigureAwait(false);
+                Invoice inv = await invoices.GetByIdWithDetailsAsync(ro.InvoiceId.Value).ConfigureAwait(false);
                 if (inv is not null)
                 {
-                    if (inv.CustomerId != existing.CustomerId)
-                    {
-                        await connection.SendAsync(
-                            ControlType.ERROR,
-                            ProtocolReason.VALIDATION_FAILED,
-                            ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-                        return;
-                    }
-
                     inv.Recalculate();
                     invoices.Update(inv);
-                    await db.SaveChangesAsync().ConfigureAwait(false);
+                    await invoices.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
-
-            await tx.CommitAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(existing, packet.SequenceId);
             System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
@@ -281,13 +258,12 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
         }
-        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        catch (System.ArgumentException)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.VALIDATION_FAILED,
-                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
-            return;
+                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
@@ -307,10 +283,10 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
-    [PacketOpcode((System.UInt16)OpCommand.REPAIR_ORDER_DELETE)]
+    [PacketOpcode((System.UInt16)OpCommand.REPAIR_ORDER_ITEM_DELETE)]
     public async System.Threading.Tasks.Task DeleteAsync(IPacket p, IConnection connection)
     {
-        if (p is not RepairOrderDto packet || packet.RepairOrderId is null)
+        if (p is not RepairOrderItemDto packet || packet.RepairOrderItemId is null)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             await connection.SendAsync(
@@ -323,11 +299,11 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
         try
         {
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderRepository(db);
+            var repo = new RepairOrderItemRepository(db);
+            var repairOrders = new RepairOrderRepository(db);
             var invoices = new InvoiceRepository(db);
-            await using var tx = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
 
-            RepairOrder existing = await repo.GetByIdAsync(packet.RepairOrderId.Value).ConfigureAwait(false);
+            RepairOrderItem existing = await repo.GetByIdAsync(packet.RepairOrderItemId.Value).ConfigureAwait(false);
             if (existing is null)
             {
                 await connection.SendAsync(
@@ -337,35 +313,27 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                 return;
             }
 
-            System.Int32? invoiceId = existing.InvoiceId;
+            System.Int32 repairOrderId = existing.RepairOrderId;
 
             repo.Delete(existing);
-            await db.SaveChangesAsync().ConfigureAwait(false);
+            await repo.SaveChangesAsync().ConfigureAwait(false);
 
-            if (invoiceId.HasValue)
+            var ro = await repairOrders.GetByIdAsync(repairOrderId).ConfigureAwait(false);
+            if (ro?.InvoiceId is not null)
             {
-                Invoice inv = await invoices.GetByIdWithDetailsAsync(invoiceId.Value).ConfigureAwait(false);
+                Invoice inv = await invoices.GetByIdWithDetailsAsync(ro.InvoiceId.Value).ConfigureAwait(false);
                 if (inv is not null)
                 {
                     inv.Recalculate();
                     invoices.Update(inv);
-                    await db.SaveChangesAsync().ConfigureAwait(false);
+                    await invoices.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
-
-            await tx.CommitAsync().ConfigureAwait(false);
 
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
                 ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
-        }
-        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
-        {
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.VALIDATION_FAILED,
-                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
@@ -376,17 +344,17 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
         }
     }
 
-    private static System.Boolean TryParseRepairOrderPacket(IPacket p, out RepairOrderDto packet, out System.UInt32 fallbackSeqId)
+    private static System.Boolean TryParseRepairOrderItemPacket(IPacket p, out RepairOrderItemDto packet, out System.UInt32 fallbackSeqId)
     {
         fallbackSeqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
 
-        if (p is not RepairOrderDto dto)
+        if (p is not RepairOrderItemDto dto)
         {
             packet = null;
             return false;
         }
 
-        if (dto.CustomerId <= 0)
+        if (dto.RepairOrderId <= 0 || dto.PartId <= 0 || dto.Quantity <= 0)
         {
             packet = null;
             return false;
@@ -396,20 +364,15 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
         return true;
     }
 
-    private static RepairOrderDto MapToPacket(RepairOrder ro, System.UInt32 sequenceId)
+    private static RepairOrderItemDto MapToPacket(RepairOrderItem item, System.UInt32 sequenceId)
     {
-        RepairOrderDto dto = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<RepairOrderDto>();
+        RepairOrderItemDto dto = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<RepairOrderItemDto>();
 
         dto.SequenceId = sequenceId;
-        dto.RepairOrderId = ro.Id;
-        dto.CustomerId = ro.CustomerId;
-        dto.VehicleId = ro.VehicleId;
-        dto.InvoiceId = ro.InvoiceId;
-        dto.OrderDate = ro.OrderDate;
-        dto.CompletionDate = ro.CompletionDate;
-        dto.Status = ro.Status;
-        dto.TotalRepairCost = ro.TotalRepairCost;
-        dto.IsCompleted = ro.IsCompleted;
+        dto.RepairOrderItemId = item.Id;
+        dto.RepairOrderId = item.RepairOrderId;
+        dto.PartId = item.PartId;
+        dto.Quantity = item.Quantity;
 
         return dto;
     }
