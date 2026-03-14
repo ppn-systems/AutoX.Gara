@@ -47,7 +47,7 @@ public partial class VehiclesPage : ContentPage
         await Shell.Current.Navigation.PopAsync();
     }
 
-    private async void OnFormBrandTapped(object? sender, TappedEventArgs e)
+    private async void OnFormBrandTapped(Object? sender, TappedEventArgs e)
     {
         if (BindingContext is not VehiclesViewModel vm)
         {
@@ -56,18 +56,31 @@ public partial class VehiclesPage : ContentPage
 
 #if WINDOWS
         if (TryShowFlyout(sender as VisualElement, "Hãng xe", vm.FormBrandOptions, idx => vm.FormPickerBrandIndex = idx))
+        {
             return;
+        }
 #endif
 
-        var page = Application.Current?.MainPage;
-        if (page is null) return;
-        string pick = await page.DisplayActionSheet("Hãng xe", "Hủy", null, vm.FormBrandOptions);
-        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
-        int idx2 = Array.IndexOf(vm.FormBrandOptions, pick);
-        if (idx2 >= 0) vm.FormPickerBrandIndex = idx2;
+        var page = Application.Current?.Windows[0].Page;
+        if (page is null)
+        {
+            return;
+        }
+
+        String pick = await page.DisplayActionSheetAsync("Hãng xe", "Hủy", null, vm.FormBrandOptions);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
+
+        Int32 idx2 = Array.IndexOf(vm.FormBrandOptions, pick);
+        if (idx2 >= 0)
+        {
+            vm.FormPickerBrandIndex = idx2;
+        }
     }
 
-    private async void OnFormTypeTapped(object? sender, TappedEventArgs e)
+    private async void OnFormTypeTapped(Object? sender, TappedEventArgs e)
     {
         if (BindingContext is not VehiclesViewModel vm)
         {
@@ -76,18 +89,31 @@ public partial class VehiclesPage : ContentPage
 
 #if WINDOWS
         if (TryShowFlyout(sender as VisualElement, "Loại xe", vm.FormTypeOptions, idx => vm.FormPickerTypeIndex = idx))
+        {
             return;
+        }
 #endif
 
-        var page = Application.Current?.MainPage;
-        if (page is null) return;
-        string pick = await page.DisplayActionSheet("Loại xe", "Hủy", null, vm.FormTypeOptions);
-        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
-        int idx2 = Array.IndexOf(vm.FormTypeOptions, pick);
-        if (idx2 >= 0) vm.FormPickerTypeIndex = idx2;
+        var page = Application.Current?.Windows[0].Page;
+        if (page is null)
+        {
+            return;
+        }
+
+        String pick = await page.DisplayActionSheetAsync("Loại xe", "Hủy", null, vm.FormTypeOptions);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
+
+        Int32 idx2 = Array.IndexOf(vm.FormTypeOptions, pick);
+        if (idx2 >= 0)
+        {
+            vm.FormPickerTypeIndex = idx2;
+        }
     }
 
-    private async void OnFormColorTapped(object? sender, TappedEventArgs e)
+    private async void OnFormColorTapped(Object? sender, TappedEventArgs e)
     {
         if (BindingContext is not VehiclesViewModel vm)
         {
@@ -96,24 +122,39 @@ public partial class VehiclesPage : ContentPage
 
 #if WINDOWS
         if (TryShowFlyout(sender as VisualElement, "Màu sắc", vm.FormColorOptions, idx => vm.FormPickerColorIndex = idx))
+        {
             return;
+        }
 #endif
 
-        var page = Application.Current?.MainPage;
-        if (page is null) return;
-        string pick = await page.DisplayActionSheet("Màu sắc", "Hủy", null, vm.FormColorOptions);
-        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
-        int idx2 = Array.IndexOf(vm.FormColorOptions, pick);
-        if (idx2 >= 0) vm.FormPickerColorIndex = idx2;
+        var page = Application.Current?.Windows[0].Page;
+        if (page is null)
+        {
+            return;
+        }
+
+        String pick = await page.DisplayActionSheetAsync("Màu sắc", "Hủy", null, vm.FormColorOptions);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
+
+        Int32 idx2 = Array.IndexOf(vm.FormColorOptions, pick);
+        if (idx2 >= 0)
+        {
+            vm.FormPickerColorIndex = idx2;
+        }
     }
 
 #if WINDOWS
-    private static bool TryShowFlyout(VisualElement? anchor, string title, System.Collections.Generic.IReadOnlyList<string> options, Action<int> onSelected)
+    private static Boolean TryShowFlyout(VisualElement? anchor, String title, System.Collections.Generic.IReadOnlyList<String> options, Action<Int32> onSelected)
     {
         try
         {
             if (anchor?.Handler?.PlatformView is not Microsoft.UI.Xaml.FrameworkElement fe)
+            {
                 return false;
+            }
 
             var flyout = new Microsoft.UI.Xaml.Controls.MenuFlyout
             {
@@ -123,9 +164,9 @@ public partial class VehiclesPage : ContentPage
             flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutItem { Text = title, IsEnabled = false });
             flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutSeparator());
 
-            for (int i = 0; i < options.Count; i++)
+            for (Int32 i = 0; i < options.Count; i++)
             {
-                int idx = i;
+                Int32 idx = i;
                 flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutItem
                 {
                     Text = options[i],

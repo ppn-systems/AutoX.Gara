@@ -6,8 +6,8 @@ using AutoX.Gara.Shared.Protocol.Billings;
 using AutoX.Gara.Shared.Protocol.Customers;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Microsoft.Maui.Controls;
-using System;
 using Nalix.Framework.Injection;
+using System;
 
 namespace AutoX.Gara.Frontend.Views;
 
@@ -38,7 +38,7 @@ public partial class RepairOrdersPage : ContentPage
         await Shell.Current.Navigation.PopAsync();
     }
 
-    private async void OnStatusFilterTapped(object? sender, TappedEventArgs e)
+    private async void OnStatusFilterTapped(Object? sender, TappedEventArgs e)
     {
         if (BindingContext is not RepairOrdersViewModel vm)
         {
@@ -52,20 +52,20 @@ public partial class RepairOrdersPage : ContentPage
         }
 #endif
 
-        var page = Application.Current?.MainPage;
+        var page = Application.Current?.Windows[0].Page;
         if (page is null)
         {
             return;
         }
 
-        string[] options = vm.StatusOptions;
-        string pick = await page.DisplayActionSheet("Trạng thái", "Hủy", null, options);
-        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick))
+        String[] options = vm.StatusOptions;
+        String pick = await page.DisplayActionSheetAsync("Trạng thái", "Hủy", null, options);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
         {
             return;
         }
 
-        int idx2 = Array.IndexOf(options, pick);
+        Int32 idx2 = Array.IndexOf(options, pick);
         if (idx2 >= 0)
         {
             vm.PickerStatusIndex = idx2;
@@ -73,7 +73,7 @@ public partial class RepairOrdersPage : ContentPage
     }
 
 #if WINDOWS
-    private static bool TryShowFlyout(VisualElement? anchor, string title, System.Collections.Generic.IReadOnlyList<string> options, Action<int> onSelected)
+    private static Boolean TryShowFlyout(VisualElement? anchor, String title, System.Collections.Generic.IReadOnlyList<String> options, Action<Int32> onSelected)
     {
         try
         {
@@ -90,9 +90,9 @@ public partial class RepairOrdersPage : ContentPage
             flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutItem { Text = title, IsEnabled = false });
             flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutSeparator());
 
-            for (int i = 0; i < options.Count; i++)
+            for (Int32 i = 0; i < options.Count; i++)
             {
-                int idx = i;
+                Int32 idx = i;
                 flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutItem
                 {
                     Text = options[i],

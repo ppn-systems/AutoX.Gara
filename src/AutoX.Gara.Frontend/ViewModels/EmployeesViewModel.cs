@@ -75,25 +75,25 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     private static readonly Gender[] GenderValues = System.Enum.GetValues<Gender>();
     private static readonly Position[] FormPositionValues = System.Enum.GetValues<Position>();
 
-    public string[] FilterPositionOptions { get; } =
+    public String[] FilterPositionOptions { get; } =
         FilterPositionValues.Select((v, idx) => idx == 0 ? "Tất cả chức vụ" : EnumText.Get(v)).ToArray();
 
-    public string[] FilterStatusOptions { get; } =
+    public String[] FilterStatusOptions { get; } =
         StatusValues.Select((v, idx) => idx == 0 ? "Tất cả trạng thái" : EnumText.Get(v)).ToArray();
 
-    public string[] FilterGenderOptions { get; } =
+    public String[] FilterGenderOptions { get; } =
         GenderValues.Select((v, idx) => idx == 0 ? "Tất cả" : EnumText.Get(v)).ToArray();
 
-    public string[] FormGenderOptions { get; } =
+    public String[] FormGenderOptions { get; } =
         GenderValues.Select(EnumText.Get).ToArray();
 
-    public string[] FormPositionOptions { get; } =
+    public String[] FormPositionOptions { get; } =
         FormPositionValues.Select(EnumText.Get).ToArray();
 
-    public string[] FormStatusOptions { get; } =
+    public String[] FormStatusOptions { get; } =
         StatusValues.Select(EnumText.Get).ToArray();
 
-    public string[] ChangeStatusOptions { get; } =
+    public String[] ChangeStatusOptions { get; } =
         StatusValues.Select(EnumText.Get).ToArray();
 
     [ObservableProperty] public partial System.Int32 PickerPositionIndex { get; set; } = 0;
@@ -101,7 +101,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Int32 PickerGenderIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 PickerSalaryIndex { get; set; } = 0;
 
-    public string[] SalaryFilterOptions { get; } =
+    public String[] SalaryFilterOptions { get; } =
     [
         "Tất cả lương",
         "Có lương",
@@ -233,10 +233,11 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     public System.String SalaryEmployeeName => SalaryEmployee?.Dto?.Name ?? System.String.Empty;
 
     private static readonly SalaryType[] SalaryTypeValues = System.Enum.GetValues<SalaryType>();
-    public string[] SalaryFormTypeOptions { get; } = SalaryTypeValues.Select(EnumText.Get).ToArray();
+    public String[] SalaryFormTypeOptions { get; } = SalaryTypeValues.Select(EnumText.Get).ToArray();
 
     [ObservableProperty] public partial System.Decimal SalaryFormSalary { get; set; }
-    [ObservableProperty] public partial System.Int32 SalaryFormTypeIndex { get; set; } =
+    [ObservableProperty]
+    public partial System.Int32 SalaryFormTypeIndex { get; set; } =
         System.Array.IndexOf(SalaryTypeValues, SalaryType.Monthly);
     [ObservableProperty] public partial System.Decimal SalaryFormUnit { get; set; } = 1;
     [ObservableProperty] public partial System.DateTime SalaryFormEffectiveFrom { get; set; } = System.DateTime.Today;
@@ -441,13 +442,15 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             if (result.IsSuccess)
             {
                 Employees.Clear();
-                System.Collections.Generic.List<EmployeeRow> rows = new();
+                System.Collections.Generic.List<EmployeeRow> rows = [];
                 foreach (EmployeeDto e in result.Employees)
                 {
-                    var row = new EmployeeRow(e);
-                    row.SalaryText = "Chưa có";
-                    row.HasSalary = false;
-                    row.LatestSalaryType = SalaryType.None;
+                    var row = new EmployeeRow(e)
+                    {
+                        SalaryText = "Chưa có",
+                        HasSalary = false,
+                        LatestSalaryType = SalaryType.None
+                    };
                     Employees.Add(row);
                     rows.Add(row);
                 }
@@ -483,44 +486,76 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [RelayCommand]
     private async System.Threading.Tasks.Task PickPositionAsync()
     {
-        var page = Microsoft.Maui.Controls.Application.Current?.MainPage;
-        if (page is null) return;
-        string pick = await page.DisplayActionSheet("Chọn chức vụ", "Hủy", null, FilterPositionOptions);
-        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
-        int idx = System.Array.IndexOf(FilterPositionOptions, pick);
+        var page = Microsoft.Maui.Controls.Application.Current?.Windows[0].Page;
+        if (page is null)
+        {
+            return;
+        }
+
+        String pick = await page.DisplayActionSheetAsync("Chọn chức vụ", "Hủy", null, FilterPositionOptions);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
+
+        Int32 idx = System.Array.IndexOf(FilterPositionOptions, pick);
         PickerPositionIndex = idx >= 0 ? idx : 0;
     }
 
     [RelayCommand]
     private async System.Threading.Tasks.Task PickStatusAsync()
     {
-        var page = Microsoft.Maui.Controls.Application.Current?.MainPage;
-        if (page is null) return;
-        string pick = await page.DisplayActionSheet("Chọn trạng thái", "Hủy", null, FilterStatusOptions);
-        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
-        int idx = System.Array.IndexOf(FilterStatusOptions, pick);
+        var page = Microsoft.Maui.Controls.Application.Current?.Windows[0].Page;
+        if (page is null)
+        {
+            return;
+        }
+
+        String pick = await page.DisplayActionSheetAsync("Chọn trạng thái", "Hủy", null, FilterStatusOptions);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
+
+        Int32 idx = System.Array.IndexOf(FilterStatusOptions, pick);
         PickerStatusIndex = idx >= 0 ? idx : 0;
     }
 
     [RelayCommand]
     private async System.Threading.Tasks.Task PickGenderAsync()
     {
-        var page = Microsoft.Maui.Controls.Application.Current?.MainPage;
-        if (page is null) return;
-        string pick = await page.DisplayActionSheet("Chọn giới tính", "Hủy", null, FilterGenderOptions);
-        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
-        int idx = System.Array.IndexOf(FilterGenderOptions, pick);
+        var page = Microsoft.Maui.Controls.Application.Current?.Windows[0].Page;
+        if (page is null)
+        {
+            return;
+        }
+
+        String pick = await page.DisplayActionSheetAsync("Chọn giới tính", "Hủy", null, FilterGenderOptions);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
+
+        Int32 idx = System.Array.IndexOf(FilterGenderOptions, pick);
         PickerGenderIndex = idx >= 0 ? idx : 0;
     }
 
     [RelayCommand]
     private async System.Threading.Tasks.Task PickSalaryAsync()
     {
-        var page = Microsoft.Maui.Controls.Application.Current?.MainPage;
-        if (page is null) return;
-        string pick = await page.DisplayActionSheet("Lọc theo lương", "Hủy", null, SalaryFilterOptions);
-        if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
-        int idx = System.Array.IndexOf(SalaryFilterOptions, pick);
+        var page = Microsoft.Maui.Controls.Application.Current?.Windows[0].Page;
+        if (page is null)
+        {
+            return;
+        }
+
+        String pick = await page.DisplayActionSheetAsync("Lọc theo lương", "Hủy", null, SalaryFilterOptions);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
+
+        Int32 idx = System.Array.IndexOf(SalaryFilterOptions, pick);
         PickerSalaryIndex = idx >= 0 ? idx : 0;
     }
 
@@ -546,13 +581,23 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         FormAddress = dto.Address ?? System.String.Empty;
         FormPhoneNumber = dto.PhoneNumber ?? System.String.Empty;
         FormGenderIndex = System.Array.IndexOf(GenderValues, dto.Gender ?? Gender.None);
-        if (FormGenderIndex < 0) FormGenderIndex = 0;
+        if (FormGenderIndex < 0)
+        {
+            FormGenderIndex = 0;
+        }
 
         FormPositionIndex = System.Array.IndexOf(FormPositionValues, dto.Position ?? Position.None);
-        if (FormPositionIndex < 0) FormPositionIndex = 0;
+        if (FormPositionIndex < 0)
+        {
+            FormPositionIndex = 0;
+        }
 
         FormStatusIndex = System.Array.IndexOf(StatusValues, dto.Status ?? EmploymentStatus.None);
-        if (FormStatusIndex < 0) FormStatusIndex = 0;
+        if (FormStatusIndex < 0)
+        {
+            FormStatusIndex = 0;
+        }
+
         FormDateOfBirth = dto.DateOfBirth ?? System.DateTime.Today.AddYears(-20);
         FormStartDate = dto.StartDate ?? System.DateTime.Today;
         FormEndDate = dto.EndDate;
@@ -642,7 +687,11 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     {
         SelectedEmployee = employee;
         NewStatusIndex = System.Array.IndexOf(StatusValues, employee.Dto.Status ?? EmploymentStatus.None);
-        if (NewStatusIndex < 0) NewStatusIndex = 0;
+        if (NewStatusIndex < 0)
+        {
+            NewStatusIndex = 0;
+        }
+
         IsStatusConfirmVisible = true;
     }
 
@@ -775,7 +824,11 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             SelectedSalary = latest;
             SalaryFormSalary = latest.Salary;
             SalaryFormTypeIndex = System.Array.IndexOf(SalaryTypeValues, latest.SalaryType);
-            if (SalaryFormTypeIndex < 0) SalaryFormTypeIndex = 0;
+            if (SalaryFormTypeIndex < 0)
+            {
+                SalaryFormTypeIndex = 0;
+            }
+
             SalaryFormUnit = latest.SalaryUnit <= 0 ? 1 : latest.SalaryUnit;
             SalaryFormEffectiveFrom = latest.EffectiveFrom.ToLocalTime().Date;
             SalaryFormNote = latest.Note ?? System.String.Empty;
@@ -844,8 +897,8 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         EmployeeSalaryDto? saved = result.Salary;
         if (SalaryEmployee is not null)
         {
-            string text = saved is null ? "Chưa có" : FormatSalaryText(saved);
-            bool has = saved is not null;
+            String text = saved is null ? "Chưa có" : FormatSalaryText(saved);
+            Boolean has = saved is not null;
             await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
             {
                 SalaryEmployee.SalaryText = text;
@@ -888,8 +941,8 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                 return;
             }
 
-            string text = latest is null ? "Chưa có" : FormatSalaryText(latest);
-            bool has = latest is not null;
+            String text = latest is null ? "Chưa có" : FormatSalaryText(latest);
+            Boolean has = latest is not null;
 
             await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
             {
@@ -920,25 +973,20 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             filterToDate: null,
             ct: ct).ConfigureAwait(false);
 
-        if (!result.IsSuccess || result.Salaries.Count == 0)
-        {
-            return null;
-        }
-
-        return result.Salaries[0];
+        return !result.IsSuccess || result.Salaries.Count == 0 ? null : result.Salaries[0];
     }
 
     private static System.String FormatSalaryText(EmployeeSalaryDto dto)
     {
-        string typeText = EnumText.Get(dto.SalaryType);
+        String typeText = EnumText.Get(dto.SalaryType);
 
         if (dto.SalaryType == SalaryType.Monthly)
         {
             return $"{dto.Salary:N0} ({typeText})";
         }
 
-        decimal unit = dto.SalaryUnit <= 0 ? 1 : dto.SalaryUnit;
-        decimal total = dto.Salary * unit;
+        Decimal unit = dto.SalaryUnit <= 0 ? 1 : dto.SalaryUnit;
+        Decimal total = dto.Salary * unit;
         return $"{dto.Salary:N0} x {unit:N0} = {total:N0} ({typeText})";
     }
 

@@ -16,7 +16,7 @@ public partial class InvoicesPage : ContentPage
 {
     private readonly InvoicesViewModel _vm;
     private CancellationTokenSource? _deleteHoldCts;
-    private const int DeleteHoldMs = 1200;
+    private const Int32 DeleteHoldMs = 1200;
 
     public InvoicesPage()
     {
@@ -54,7 +54,7 @@ public partial class InvoicesPage : ContentPage
         await Shell.Current.Navigation.PopAsync();
     }
 
-    private async void OnDeletePressed(object sender, EventArgs e)
+    private async void OnDeletePressed(Object sender, EventArgs e)
     {
         if (sender is not Button btn)
         {
@@ -101,7 +101,7 @@ public partial class InvoicesPage : ContentPage
         }
     }
 
-    private void OnDeleteReleased(object sender, EventArgs e)
+    private void OnDeleteReleased(Object sender, EventArgs e)
     {
         try { _deleteHoldCts?.Cancel(); } catch { }
 
@@ -111,4 +111,84 @@ public partial class InvoicesPage : ContentPage
             btn.Opacity = 1;
         }
     }
+
+    private async void OnTaxRateTapped(Object? sender, TappedEventArgs e)
+        => await ShowPickerAsync(sender, "Thuế", _vm.TaxRateOptions, idx => _vm.PickerTaxRateIndex = idx);
+
+    private async void OnDiscountTypeTapped(Object? sender, TappedEventArgs e)
+        => await ShowPickerAsync(sender, "Loại giảm giá", _vm.DiscountTypeOptions, idx => _vm.PickerDiscountTypeIndex = idx);
+
+    private async void OnPaymentStatusTapped(Object? sender, TappedEventArgs e)
+        => await ShowPickerAsync(sender, "Trạng thái thanh toán", _vm.PaymentStatusOptions, idx => _vm.PickerPaymentStatusIndex = idx);
+
+    private async Task ShowPickerAsync(Object? anchorElement, String title, String[] options, Action<Int32> applyIndex)
+    {
+        if (options is null || options.Length == 0)
+        {
+            return;
+        }
+
+#if WINDOWS
+        if (TryShowFlyout(anchorElement as VisualElement, title, options, applyIndex))
+        {
+            return;
+        }
+#endif
+
+        var page = Application.Current?.Windows[0].Page;
+        if (page is null)
+        {
+            return;
+        }
+
+        String pick = await page.DisplayActionSheetAsync(title, "Hủy", null, options);
+        if (String.IsNullOrWhiteSpace(pick) || pick == "Hủy")
+        {
+            return;
+        }
+
+        Int32 idx = Array.IndexOf(options, pick);
+        if (idx >= 0)
+        {
+            applyIndex(idx);
+        }
+    }
+
+#if WINDOWS
+    private static Boolean TryShowFlyout(VisualElement? anchor, String title, System.Collections.Generic.IReadOnlyList<String> options, Action<Int32> onSelected)
+    {
+        try
+        {
+            if (anchor?.Handler?.PlatformView is not Microsoft.UI.Xaml.FrameworkElement fe)
+            {
+                return false;
+            }
+
+            var flyout = new Microsoft.UI.Xaml.Controls.MenuFlyout
+            {
+                Placement = Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.BottomEdgeAlignedLeft
+            };
+
+            flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutItem { Text = title, IsEnabled = false });
+            flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutSeparator());
+
+            for (Int32 i = 0; i < options.Count; i++)
+            {
+                Int32 idx = i;
+                flyout.Items.Add(new Microsoft.UI.Xaml.Controls.MenuFlyoutItem
+                {
+                    Text = options[i],
+                    Command = new Command(() => onSelected(idx))
+                });
+            }
+
+            flyout.ShowAt(fe);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+#endif
 }

@@ -180,6 +180,14 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
     public System.String[] DiscountTypeOptions { get; } = EnumText.GetNames<DiscountType>();
     public System.String[] PaymentStatusOptions { get; } = EnumText.GetNames<PaymentStatus>();
 
+    public System.String SelectedTaxRateText =>
+        TaxRateOptions[System.Math.Clamp(PickerTaxRateIndex, 0, TaxRateOptions.Length - 1)];
+    public System.String SelectedDiscountTypeText =>
+        DiscountTypeOptions[System.Math.Clamp(PickerDiscountTypeIndex, 0, DiscountTypeOptions.Length - 1)];
+    public System.String SelectedPaymentStatusText =>
+        PaymentStatusOptions[System.Math.Clamp(PickerPaymentStatusIndex, 0, PaymentStatusOptions.Length - 1)];
+
+
     public void Initialize(CustomerDto owner)
     {
         Owner = owner;
@@ -524,10 +532,9 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
         }
     }
 
-    [System.Obsolete]
     private static async System.Threading.Tasks.Task PushPageAsync(Page page)
     {
-        INavigation? nav = Shell.Current?.Navigation ?? Application.Current?.MainPage?.Navigation;
+        INavigation? nav = Shell.Current?.Navigation ?? Application.Current?.Windows[0].Page?.Navigation;
         if (nav is null)
         {
             try
@@ -541,10 +548,7 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
             return;
         }
 
-        await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(async () =>
-        {
-            await nav.PushAsync(page);
-        });
+        await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(async () => await nav.PushAsync(page));
     }
 
     [RelayCommand]
@@ -886,6 +890,7 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
         {
             ApplyDiscountAndTaxToPreview();
         }
+        OnPropertyChanged(nameof(SelectedTaxRateText));
     }
 
     partial void OnPickerDiscountTypeIndexChanged(int value)
@@ -894,6 +899,7 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
         {
             ApplyDiscountAndTaxToPreview();
         }
+        OnPropertyChanged(nameof(SelectedDiscountTypeText));
     }
 
     partial void OnFormDiscountChanged(decimal value)
@@ -903,6 +909,8 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
             ApplyDiscountAndTaxToPreview();
         }
     }
+    partial void OnPickerPaymentStatusIndexChanged(int value)
+        => OnPropertyChanged(nameof(SelectedPaymentStatusText));
 
     [RelayCommand]
     private void OpenRepairOrderSelector()

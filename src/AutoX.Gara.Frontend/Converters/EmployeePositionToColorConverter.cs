@@ -8,7 +8,7 @@ namespace AutoX.Gara.Frontend.Converters;
 
 public sealed class EmployeePositionToColorConverter : IValueConverter
 {
-    public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    public System.Object Convert(System.Object? value, System.Type targetType, System.Object? parameter, System.Globalization.CultureInfo culture)
     {
         if (value is null)
         {
@@ -67,7 +67,7 @@ public sealed class EmployeePositionToColorConverter : IValueConverter
         };
     }
 
-    public object ConvertBack(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    public System.Object ConvertBack(System.Object? value, System.Type targetType, System.Object? parameter, System.Globalization.CultureInfo culture)
         => throw new System.NotSupportedException();
 }
 

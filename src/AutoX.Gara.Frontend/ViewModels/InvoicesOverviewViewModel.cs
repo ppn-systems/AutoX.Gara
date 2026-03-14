@@ -21,20 +21,20 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
     private readonly InvoiceService _service;
     private CancellationTokenSource? _cts;
 
-    private const int DefaultPageSize = 20;
+    private const Int32 DefaultPageSize = 20;
 
     private static readonly PaymentStatus[] PaymentStatusValues = Enum.GetValues<PaymentStatus>();
 
     public InvoicesOverviewViewModel(InvoiceService service)
         => _service = service ?? throw new ArgumentNullException(nameof(service));
 
-    public string PageTitle => "Hóa đơn (tổng)";
+    public String PageTitle => "Hóa đơn (tổng)";
 
     public ObservableCollection<InvoiceRow> Invoices { get; } = [];
 
     [ObservableProperty] public partial int CurrentPage { get; set; } = 1;
     [ObservableProperty] public partial int TotalCount { get; set; }
-    public int TotalPages => TotalCount > 0 ? (int)Math.Ceiling((double)TotalCount / DefaultPageSize) : 0;
+    public Int32 TotalPages => TotalCount > 0 ? (Int32)Math.Ceiling((Double)TotalCount / DefaultPageSize) : 0;
 
     [ObservableProperty] public partial bool HasError { get; set; }
     [ObservableProperty] public partial string? ErrorMessage { get; set; }
@@ -43,7 +43,7 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
     // Filters
     [ObservableProperty] public partial string SearchTerm { get; set; } = string.Empty;
 
-    public string[] PaymentStatusOptions { get; } =
+    public String[] PaymentStatusOptions { get; } =
         ["Tất cả", .. PaymentStatusValues.Select(EnumText.Get)];
 
     [ObservableProperty] public partial int PickerPaymentStatusIndex { get; set; } = 0;
@@ -135,7 +135,11 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
     [RelayCommand]
     private async System.Threading.Tasks.Task PrevPageAsync()
     {
-        if (CurrentPage <= 1) return;
+        if (CurrentPage <= 1)
+        {
+            return;
+        }
+
         CurrentPage--;
         await System.Threading.Tasks.Task.CompletedTask;
     }
@@ -143,7 +147,11 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
     [RelayCommand]
     private async System.Threading.Tasks.Task NextPageAsync()
     {
-        if (TotalPages > 0 && CurrentPage >= TotalPages) return;
+        if (TotalPages > 0 && CurrentPage >= TotalPages)
+        {
+            return;
+        }
+
         CurrentPage++;
         await System.Threading.Tasks.Task.CompletedTask;
     }
@@ -156,7 +164,7 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
             return;
         }
 
-        INavigation? nav = Shell.Current?.Navigation ?? Application.Current?.MainPage?.Navigation;
+        INavigation? nav = Shell.Current?.Navigation ?? Application.Current?.Windows[0].Page?.Navigation;
         if (nav is null)
         {
             return;
@@ -170,7 +178,10 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
     public void Dispose()
     {
         var cts = System.Threading.Interlocked.Exchange(ref _cts, null);
-        if (cts is null) return;
+        if (cts is null)
+        {
+            return;
+        }
 
         try { cts.Cancel(); } catch (ObjectDisposedException) { }
         cts.Dispose();
@@ -178,7 +189,7 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
 
     private void ClearError() { HasError = false; ErrorMessage = null; }
 
-    private void HandleError(string title, string message, ProtocolAdvice advice)
+    private void HandleError(String title, String message, ProtocolAdvice advice)
     {
         HasError = true;
         ErrorMessage = message;
@@ -189,17 +200,17 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
         public InvoiceDto Dto { get; }
         public InvoiceRow(InvoiceDto dto) => Dto = dto;
 
-        public string InvoiceNumber => Dto.InvoiceNumber ?? string.Empty;
+        public String InvoiceNumber => Dto.InvoiceNumber ?? String.Empty;
         public DateTime InvoiceDate => Dto.InvoiceDate;
         public PaymentStatus PaymentStatus => Dto.PaymentStatus;
-        public string PaymentStatusText => EnumText.Get(Dto.PaymentStatus);
+        public String PaymentStatusText => EnumText.Get(Dto.PaymentStatus);
 
-        public decimal TotalAmount => Dto.TotalAmount;
-        public decimal BalanceDue => Dto.BalanceDue;
-        public decimal Subtotal => Dto.Subtotal;
-        public decimal ServiceSubtotal => Dto.ServiceSubtotal;
-        public decimal PartsSubtotal => Dto.PartsSubtotal;
+        public Decimal TotalAmount => Dto.TotalAmount;
+        public Decimal BalanceDue => Dto.BalanceDue;
+        public Decimal Subtotal => Dto.Subtotal;
+        public Decimal ServiceSubtotal => Dto.ServiceSubtotal;
+        public Decimal PartsSubtotal => Dto.PartsSubtotal;
 
-        public bool IsFullyPaid => Dto.IsFullyPaid || Dto.PaymentStatus == PaymentStatus.Paid;
+        public Boolean IsFullyPaid => Dto.IsFullyPaid || Dto.PaymentStatus == PaymentStatus.Paid;
     }
 }

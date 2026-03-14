@@ -93,7 +93,7 @@ public sealed class RepairOrderService
                     System.Boolean hasMore = page * pageSize < resp.TotalCount;
                     logger?.Info(
                         $"[FE.{nameof(RepairOrderService)}:{nameof(GetListAsync)}] ok seq={sq} ms={sw.ElapsedMilliseconds} items={resp.RepairOrders?.Count ?? 0} total={resp.TotalCount}");
-                    tcs.TrySetResult(RepairOrderListResult.Success(resp.RepairOrders, resp.TotalCount, hasMore));
+                    tcs.TrySetResult(RepairOrderListResult.Success(resp.RepairOrders!, resp.TotalCount, hasMore));
                 });
 
             errSub = client.OnOnce<Directive>(

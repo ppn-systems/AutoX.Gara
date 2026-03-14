@@ -18,20 +18,20 @@ namespace AutoX.Gara.Frontend.Services.Billings;
 
 public sealed class InvoiceService
 {
-    private const int QueryTimeoutMs = 10_000;
-    private const int WriteTimeoutMs = 30_000;
+    private const System.Int32 QueryTimeoutMs = 10_000;
+    private const System.Int32 WriteTimeoutMs = 30_000;
     private readonly InvoiceQueryCache _cache;
 
     public InvoiceService(InvoiceQueryCache cache)
         => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
     public async System.Threading.Tasks.Task<InvoiceListResult> GetListAsync(
-        int page,
-        int pageSize,
-        int filterCustomerId,
-        string? searchTerm = null,
+        System.Int32 page,
+        System.Int32 pageSize,
+        System.Int32 filterCustomerId,
+        System.String? searchTerm = null,
         InvoiceSortField sortBy = InvoiceSortField.InvoiceDate,
-        bool sortDescending = true,
+        System.Boolean sortDescending = true,
         PaymentStatus? filterPaymentStatus = null,
         System.DateTime? filterFromDate = null,
         System.DateTime? filterToDate = null,
@@ -39,14 +39,14 @@ public sealed class InvoiceService
     {
         InvoiceCacheKey key = new(
             page, pageSize,
-            searchTerm ?? string.Empty,
+            searchTerm ?? System.String.Empty,
             sortBy, sortDescending,
             filterCustomerId, filterPaymentStatus,
             filterFromDate, filterToDate);
 
         if (_cache.TryGet(key, out InvoiceCacheEntry? cached))
         {
-            bool hasMore = page * pageSize < cached!.TotalCount;
+            System.Boolean hasMore = page * pageSize < cached!.TotalCount;
             return InvoiceListResult.Success(cached.Invoices, cached.TotalCount, hasMore);
         }
 
@@ -55,7 +55,7 @@ public sealed class InvoiceService
             ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
             Stopwatch sw = Stopwatch.StartNew();
 
-            uint sq = Csprng.NextUInt32();
+            System.UInt32 sq = Csprng.NextUInt32();
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
             InvoiceQueryRequest packet = new()
@@ -63,18 +63,18 @@ public sealed class InvoiceService
                 SequenceId = sq,
                 Page = page,
                 PageSize = pageSize,
-                SearchTerm = searchTerm ?? string.Empty,
+                SearchTerm = searchTerm ?? System.String.Empty,
                 SortBy = sortBy,
                 SortDescending = sortDescending,
                 FilterCustomerId = filterCustomerId,
                 FilterPaymentStatus = filterPaymentStatus,
                 FilterFromDate = filterFromDate,
                 FilterToDate = filterToDate,
-                OpCode = (ushort)OpCommand.INVOICE_GET
+                OpCode = (System.UInt16)OpCommand.INVOICE_GET
             };
 
             logger?.Info(
-                $"[FE.{nameof(InvoiceService)}:{nameof(GetListAsync)}] send seq={sq} op={(ushort)OpCommand.INVOICE_GET} page={page} size={pageSize} cust={filterCustomerId} sort={sortBy} desc={sortDescending} pay={filterPaymentStatus} from={filterFromDate:yyyy-MM-dd} to={filterToDate:yyyy-MM-dd} term='{packet.SearchTerm}'");
+                $"[FE.{nameof(InvoiceService)}:{nameof(GetListAsync)}] send seq={sq} op={(System.UInt16)OpCommand.INVOICE_GET} page={page} size={pageSize} cust={filterCustomerId} sort={sortBy} desc={sortDescending} pay={filterPaymentStatus} from={filterFromDate:yyyy-MM-dd} to={filterToDate:yyyy-MM-dd} term='{packet.SearchTerm}'");
 
             System.Threading.Tasks.TaskCompletionSource<InvoiceListResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
@@ -89,10 +89,10 @@ public sealed class InvoiceService
                     sub?.Dispose();
                     errSub?.Dispose();
                     _cache.Set(key, resp.Invoices, resp.TotalCount);
-                    bool hasMore = page * pageSize < resp.TotalCount;
+                    System.Boolean hasMore = page * pageSize < resp.TotalCount;
                     logger?.Info(
                         $"[FE.{nameof(InvoiceService)}:{nameof(GetListAsync)}] ok seq={sq} ms={sw.ElapsedMilliseconds} items={resp.Invoices?.Count ?? 0} total={resp.TotalCount}");
-                    tcs.TrySetResult(InvoiceListResult.Success(resp.Invoices, resp.TotalCount, hasMore));
+                    tcs.TrySetResult(InvoiceListResult.Success(resp.Invoices!, resp.TotalCount, hasMore));
                 });
 
             errSub = client.OnOnce<Directive>(
@@ -138,18 +138,18 @@ public sealed class InvoiceService
     }
 
     public async System.Threading.Tasks.Task<InvoiceWriteResult> CreateAsync(InvoiceDto data, System.Threading.CancellationToken ct = default)
-        => await SendWritePacketAsync((ushort)OpCommand.INVOICE_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
+        => await SendWritePacketAsync((System.UInt16)OpCommand.INVOICE_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
 
     public async System.Threading.Tasks.Task<InvoiceWriteResult> UpdateAsync(InvoiceDto data, System.Threading.CancellationToken ct = default)
-        => await SendWritePacketAsync((ushort)OpCommand.INVOICE_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
+        => await SendWritePacketAsync((System.UInt16)OpCommand.INVOICE_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
 
     public async System.Threading.Tasks.Task<InvoiceWriteResult> DeleteAsync(InvoiceDto data, System.Threading.CancellationToken ct = default)
-        => await SendWritePacketAsync((ushort)OpCommand.INVOICE_DELETE, data, expectEcho: false, ct).ConfigureAwait(false);
+        => await SendWritePacketAsync((System.UInt16)OpCommand.INVOICE_DELETE, data, expectEcho: false, ct).ConfigureAwait(false);
 
     private async System.Threading.Tasks.Task<InvoiceWriteResult> SendWritePacketAsync(
-        ushort opcode,
+        System.UInt16 opcode,
         InvoiceDto data,
-        bool expectEcho,
+        System.Boolean expectEcho,
         System.Threading.CancellationToken ct)
     {
         try
@@ -157,7 +157,7 @@ public sealed class InvoiceService
             ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
             Stopwatch sw = Stopwatch.StartNew();
 
-            uint sq = Csprng.NextUInt32();
+            System.UInt32 sq = Csprng.NextUInt32();
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
             data.OpCode = opcode;
@@ -237,7 +237,7 @@ public sealed class InvoiceService
         }
     }
 
-    private static string MapErrorReason(ProtocolReason reason)
+    private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
             ProtocolReason.NOT_FOUND => "Không tìm thấy hóa đơn.",

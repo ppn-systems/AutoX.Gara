@@ -21,7 +21,7 @@ public sealed class PaymentStatusBadgeColorConverter : IValueConverter
             return Color.FromArgb("#6B7280");
         }
 
-        string mode = parameter as string ?? "bg";
+        String mode = parameter as String ?? "bg";
 
         // Palette tuned for dark UI.
         return (s, mode) switch
@@ -54,6 +54,7 @@ public sealed class PaymentStatusBadgeColorConverter : IValueConverter
             (_, "bg") => Color.FromArgb("#0E0E16"),
             (_, "stroke") => Color.FromArgb("#2A2A38"),
             (_, "text") => Color.FromArgb("#F1F1F5"),
+            _ => Color.FromArgb("#0E0E16"),
         };
     }
 

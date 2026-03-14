@@ -435,11 +435,11 @@ public sealed partial class RepairOrderItemsViewModel : ObservableObject, System
         // Keep logging consistent with global crash logging setup.
         try
         {
-            ILogger logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
-            logger.Error(ex.ToString());
+            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+            logger?.Error(ex.ToString());
             if (ex.InnerException is not null)
             {
-                logger.Error("Inner: " + ex.InnerException);
+                logger?.Error("Inner: " + ex.InnerException);
             }
         }
         catch

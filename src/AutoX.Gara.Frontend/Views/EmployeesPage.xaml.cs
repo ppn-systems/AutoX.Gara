@@ -61,9 +61,9 @@ public partial class EmployeesPage : ContentPage
             return;
 #endif
 
-        var page = Application.Current?.MainPage;
+        var page = Application.Current?.Windows[0].Page;
         if (page is null) return;
-        string pick = await page.DisplayActionSheet("Thay đổi trạng thái", "Hủy", null, vm.ChangeStatusOptions);
+        string pick = await page.DisplayActionSheetAsync("Thay đổi trạng thái", "Hủy", null, vm.ChangeStatusOptions);
         if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
         int idx2 = Array.IndexOf(vm.ChangeStatusOptions, pick);
         if (idx2 >= 0) vm.NewStatusIndex = idx2;
@@ -79,9 +79,9 @@ public partial class EmployeesPage : ContentPage
             return;
 #endif
 
-        var page = Application.Current?.MainPage;
+        var page = Application.Current?.Windows[0].Page;
         if (page is null) return;
-        string pick = await page.DisplayActionSheet("Loại lương", "Hủy", null, vm.SalaryFormTypeOptions);
+        string pick = await page.DisplayActionSheetAsync("Loại lương", "Hủy", null, vm.SalaryFormTypeOptions);
         if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
         int idx2 = Array.IndexOf(vm.SalaryFormTypeOptions, pick);
         if (idx2 >= 0) vm.SalaryFormTypeIndex = idx2;
@@ -97,9 +97,9 @@ public partial class EmployeesPage : ContentPage
             return;
 #endif
 
-        var page = Application.Current?.MainPage;
+        var page = Application.Current?.Windows[0].Page;
         if (page is null) return;
-        string pick = await page.DisplayActionSheet("Giới tính", "Hủy", null, vm.FormGenderOptions);
+        string pick = await page.DisplayActionSheetAsync("Giới tính", "Hủy", null, vm.FormGenderOptions);
         if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
         int idx2 = Array.IndexOf(vm.FormGenderOptions, pick);
         if (idx2 >= 0) vm.FormGenderIndex = idx2;
@@ -115,9 +115,9 @@ public partial class EmployeesPage : ContentPage
             return;
 #endif
 
-        var page = Application.Current?.MainPage;
+        var page = Application.Current?.Windows[0].Page;
         if (page is null) return;
-        string pick = await page.DisplayActionSheet("Chức vụ", "Hủy", null, vm.FormPositionOptions);
+        string pick = await page.DisplayActionSheetAsync("Chức vụ", "Hủy", null, vm.FormPositionOptions);
         if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
         int idx2 = Array.IndexOf(vm.FormPositionOptions, pick);
         if (idx2 >= 0) vm.FormPositionIndex = idx2;
@@ -133,9 +133,9 @@ public partial class EmployeesPage : ContentPage
             return;
 #endif
 
-        var page = Application.Current?.MainPage;
+        var page = Application.Current?.Windows[0].Page;
         if (page is null) return;
-        string pick = await page.DisplayActionSheet("Trạng thái", "Hủy", null, vm.FormStatusOptions);
+        string pick = await page.DisplayActionSheetAsync("Trạng thái", "Hủy", null, vm.FormStatusOptions);
         if (pick == "Hủy" || string.IsNullOrWhiteSpace(pick)) return;
         int idx2 = Array.IndexOf(vm.FormStatusOptions, pick);
         if (idx2 >= 0) vm.FormStatusIndex = idx2;

@@ -342,11 +342,39 @@
                             <DatePicker Date="{Binding FormInvoiceDate}" TextColor="#F1F1F5" HeightRequest="44" />
 
                             <Label Text="Thuế" Style="{StaticResource MutedLabel}" />
-                            <Picker ItemsSource="{Binding TaxRateOptions}" SelectedIndex="{Binding PickerTaxRateIndex}" HeightRequest="48" />
+                            <Border Style="{StaticResource PickerBorder}">
+                                <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                                    <Label Text="{Binding SelectedTaxRateText}"
+                                           TextColor="#F1F1F5"
+                                           VerticalOptions="Center"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1" />
+                                    <Label Grid.Column="1" Text="▾"
+                                           TextColor="#6B6B80"
+                                           VerticalOptions="Center" />
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnTaxRateTapped" />
+                                    </Grid.GestureRecognizers>
+                                </Grid>
+                            </Border>
 
                             <Label Text="Giảm giá" Style="{StaticResource MutedLabel}" />
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                                <Picker ItemsSource="{Binding DiscountTypeOptions}" SelectedIndex="{Binding PickerDiscountTypeIndex}" HeightRequest="48" />
+                                <Border Style="{StaticResource PickerBorder}">
+                                    <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                                        <Label Text="{Binding SelectedDiscountTypeText}"
+                                               TextColor="#F1F1F5"
+                                               VerticalOptions="Center"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="1" />
+                                        <Label Grid.Column="1" Text="▾"
+                                               TextColor="#6B6B80"
+                                               VerticalOptions="Center" />
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnDiscountTypeTapped" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
+                                </Border>
                                 <Entry Grid.Column="1" WidthRequest="120" Text="{Binding FormDiscount}" Keyboard="Numeric" TextColor="#F1F1F5" HeightRequest="44" HorizontalTextAlignment="End" />
                             </Grid>
 
@@ -364,7 +392,21 @@
                             </Grid>
 
                             <Label Text="Trạng thái thanh toán" Style="{StaticResource MutedLabel}" />
-                            <Picker ItemsSource="{Binding PaymentStatusOptions}" SelectedIndex="{Binding PickerPaymentStatusIndex}" HeightRequest="48" />
+                            <Border Style="{StaticResource PickerBorder}">
+                                <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                                    <Label Text="{Binding SelectedPaymentStatusText}"
+                                           TextColor="#F1F1F5"
+                                           VerticalOptions="Center"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1" />
+                                    <Label Grid.Column="1" Text="▾"
+                                           TextColor="#6B6B80"
+                                           VerticalOptions="Center" />
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnPaymentStatusTapped" />
+                                    </Grid.GestureRecognizers>
+                                </Grid>
+                            </Border>
                         </VerticalStackLayout>
                     </ScrollView>
 
