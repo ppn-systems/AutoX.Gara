@@ -475,7 +475,7 @@
 
                         <Label Text="Mức lương" Style="{StaticResource FieldLabel}" />
                         <Border Style="{StaticResource InputBorder}" Padding="0,0">
-                            <Entry Text="{Binding SalaryFormSalary}" Keyboard="Numeric" Style="{StaticResource FormEntry}" Placeholder="0" />
+                            <Entry Text="{Binding SalaryFormSalary, StringFormat='{0:N0}'}" Keyboard="Numeric" Style="{StaticResource FormEntry}" Placeholder="0" />
                         </Border>
 
                         <Label Text="Số đơn vị (ngày/giờ)" Style="{StaticResource FieldLabel}" />

@@ -25,8 +25,8 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
     private System.Threading.CancellationTokenSource? _cts;
     private System.Threading.CancellationTokenSource? _lookupCts;
 
-    private readonly System.Collections.Generic.Dictionary<System.Int32, System.String> _employeeNameById = [];
     private readonly System.Collections.Generic.Dictionary<System.Int32, System.String> _serviceDescById = [];
+    private readonly System.Collections.Generic.Dictionary<System.Int32, System.String> _employeeNameById = [];
     private System.Collections.Generic.List<RepairTaskDto> _rawTasks = [];
 
     private const System.Int32 DefaultPageSize = 10;

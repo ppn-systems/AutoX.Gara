@@ -118,8 +118,21 @@
                     <DatePicker Date="{Binding FormOrderDate}" TextColor="#F1F1F5" />
 
                     <Label Text="Trạng thái" Style="{StaticResource MutedLabel}" />
-                    <Picker ItemsSource="{Binding StatusOptions}"
-                            SelectedIndex="{Binding PickerStatusIndex}" />
+                    <Border Style="{StaticResource PickerBorder}">
+                        <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                            <Label Text="{Binding SelectedStatusText}"
+                                   TextColor="#F1F1F5"
+                                   VerticalOptions="Center"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1" />
+                            <Label Grid.Column="1" Text="▾"
+                                   TextColor="#6B6B80"
+                                   VerticalOptions="Center" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnStatusFilterTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </Border>
 
                     <HorizontalStackLayout Spacing="10">
                         <Label Text="Có ngày hoàn thành" Style="{StaticResource MutedLabel}" VerticalOptions="Center" />

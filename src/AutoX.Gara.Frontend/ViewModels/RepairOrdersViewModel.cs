@@ -80,6 +80,9 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
 
     public System.String[] StatusOptions { get; } = EnumText.GetNames<RepairOrderStatus>();
 
+    public System.String SelectedStatusText =>
+        StatusOptions[System.Math.Clamp(PickerStatusIndex, 0, StatusOptions.Length - 1)];
+
     public RepairOrderStatus FormStatus
     {
         get
@@ -184,6 +187,9 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
     }
 
     partial void OnCurrentPageChanged(int value) => _ = LoadAsync();
+
+    partial void OnPickerStatusIndexChanged(int value)
+        => OnPropertyChanged(nameof(SelectedStatusText));
 
     [RelayCommand]
     private void NextPage()
