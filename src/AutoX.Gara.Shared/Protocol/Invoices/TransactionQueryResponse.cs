@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
+using AutoX.Gara.Shared.Protocol.Billings;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
@@ -13,10 +14,10 @@ using Nalix.Shared.Frames;
 using Nalix.Shared.Memory.Pooling;
 using System.Collections.Generic;
 
-namespace AutoX.Gara.Shared.Protocol.Billings;
+namespace AutoX.Gara.Shared.Protocol.Invoices;
 
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class RepairOrderQueryResponse : PacketBase<RepairOrderQueryResponse>, IPacketTransformer<RepairOrderQueryResponse>, IPacketSequenced
+public sealed class TransactionQueryResponse : PacketBase<TransactionQueryResponse>, IPacketTransformer<TransactionQueryResponse>, IPacketSequenced
 {
     [SerializeIgnore]
     public override System.UInt16 Length
@@ -28,9 +29,9 @@ public sealed class RepairOrderQueryResponse : PacketBase<RepairOrderQueryRespon
                 + sizeof(System.Int32)  // TotalCount
                 + sizeof(System.Int32); // list item-count prefix
 
-            for (System.Int32 i = 0; i < RepairOrders.Count; i++)
+            for (System.Int32 i = 0; i < Transactions.Count; i++)
             {
-                total += RepairOrders[i].Length;
+                total += Transactions[i].Length;
             }
 
             return (System.UInt16)total;
@@ -44,39 +45,39 @@ public sealed class RepairOrderQueryResponse : PacketBase<RepairOrderQueryRespon
     public System.Int32 TotalCount { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
-    public List<RepairOrderDto> RepairOrders { get; set; } = [];
+    public List<TransactionDto> Transactions { get; set; } = [];
 
-    public RepairOrderQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();
+    public TransactionQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();
 
     public override void ResetForPool()
     {
-        if (RepairOrders?.Count > 0)
+        if (Transactions?.Count > 0)
         {
             var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
-            for (System.Int32 i = 0; i < RepairOrders.Count; i++)
+            for (System.Int32 i = 0; i < Transactions.Count; i++)
             {
-                if (RepairOrders[i] is not null)
+                if (Transactions[i] is not null)
                 {
-                    pool.Return(RepairOrders[i]);
+                    pool.Return(Transactions[i]);
                 }
             }
         }
 
-        RepairOrders.Clear();
+        Transactions.Clear();
         SequenceId = 0;
         TotalCount = 0;
         OpCode = OpCommand.NONE.AsUInt16();
         base.ResetForPool();
     }
 
-    public static RepairOrderQueryResponse Compress(RepairOrderQueryResponse packet)
+    public static TransactionQueryResponse Compress(TransactionQueryResponse packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
         packet.Flags.AddFlag(PacketFlags.COMPRESSED);
         return packet;
     }
 
-    public static RepairOrderQueryResponse Decompress(RepairOrderQueryResponse packet)
+    public static TransactionQueryResponse Decompress(TransactionQueryResponse packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
         packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);

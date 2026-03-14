@@ -5,6 +5,8 @@ using AutoX.Gara.Shared.Protocol.Billings;
 using AutoX.Gara.Shared.Protocol.Customers;
 using AutoX.Gara.Shared.Protocol.Employees;
 using AutoX.Gara.Shared.Protocol.Inventory;
+using AutoX.Gara.Shared.Protocol.Invoices;
+using AutoX.Gara.Shared.Protocol.Repairs;
 using AutoX.Gara.Shared.Protocol.Suppliers;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Packets.Abstractions;

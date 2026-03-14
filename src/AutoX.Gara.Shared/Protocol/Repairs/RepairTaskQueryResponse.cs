@@ -13,10 +13,10 @@ using Nalix.Shared.Frames;
 using Nalix.Shared.Memory.Pooling;
 using System.Collections.Generic;
 
-namespace AutoX.Gara.Shared.Protocol.Billings;
+namespace AutoX.Gara.Shared.Protocol.Repairs;
 
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class TransactionQueryResponse : PacketBase<TransactionQueryResponse>, IPacketTransformer<TransactionQueryResponse>, IPacketSequenced
+public sealed class RepairTaskQueryResponse : PacketBase<RepairTaskQueryResponse>, IPacketTransformer<RepairTaskQueryResponse>, IPacketSequenced
 {
     [SerializeIgnore]
     public override System.UInt16 Length
@@ -28,9 +28,9 @@ public sealed class TransactionQueryResponse : PacketBase<TransactionQueryRespon
                 + sizeof(System.Int32)  // TotalCount
                 + sizeof(System.Int32); // list item-count prefix
 
-            for (System.Int32 i = 0; i < Transactions.Count; i++)
+            for (System.Int32 i = 0; i < RepairTasks.Count; i++)
             {
-                total += Transactions[i].Length;
+                total += RepairTasks[i].Length;
             }
 
             return (System.UInt16)total;
@@ -44,43 +44,42 @@ public sealed class TransactionQueryResponse : PacketBase<TransactionQueryRespon
     public System.Int32 TotalCount { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
-    public List<TransactionDto> Transactions { get; set; } = [];
+    public List<RepairTaskDto> RepairTasks { get; set; } = [];
 
-    public TransactionQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();
+    public RepairTaskQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();
 
     public override void ResetForPool()
     {
-        if (Transactions?.Count > 0)
+        if (RepairTasks?.Count > 0)
         {
             var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
-            for (System.Int32 i = 0; i < Transactions.Count; i++)
+            for (System.Int32 i = 0; i < RepairTasks.Count; i++)
             {
-                if (Transactions[i] is not null)
+                if (RepairTasks[i] is not null)
                 {
-                    pool.Return(Transactions[i]);
+                    pool.Return(RepairTasks[i]);
                 }
             }
         }
 
-        Transactions.Clear();
+        RepairTasks.Clear();
         SequenceId = 0;
         TotalCount = 0;
         OpCode = OpCommand.NONE.AsUInt16();
         base.ResetForPool();
     }
 
-    public static TransactionQueryResponse Compress(TransactionQueryResponse packet)
+    public static RepairTaskQueryResponse Compress(RepairTaskQueryResponse packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
         packet.Flags.AddFlag(PacketFlags.COMPRESSED);
         return packet;
     }
 
-    public static TransactionQueryResponse Decompress(TransactionQueryResponse packet)
+    public static RepairTaskQueryResponse Decompress(RepairTaskQueryResponse packet)
     {
         System.ArgumentNullException.ThrowIfNull(packet);
         packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
         return packet;
     }
 }
-

@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
+using AutoX.Gara.Shared.Protocol.Billings;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
@@ -13,7 +14,7 @@ using Nalix.Shared.Frames;
 using Nalix.Shared.Memory.Pooling;
 using System.Collections.Generic;
 
-namespace AutoX.Gara.Shared.Protocol.Billings;
+namespace AutoX.Gara.Shared.Protocol.Repairs;
 
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class RepairOrderItemQueryResponse : PacketBase<RepairOrderItemQueryResponse>, IPacketTransformer<RepairOrderItemQueryResponse>, IPacketSequenced

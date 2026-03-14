@@ -9,7 +9,7 @@ using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
 using Nalix.Shared.Frames;
 
-namespace AutoX.Gara.Shared.Protocol.Billings;
+namespace AutoX.Gara.Shared.Protocol.Repairs;
 
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class RepairTaskDto : PacketBase<RepairTaskDto>, IPacketTransformer<RepairTaskDto>, IPacketSequenced
