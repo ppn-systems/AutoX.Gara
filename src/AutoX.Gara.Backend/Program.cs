@@ -238,6 +238,11 @@ public static class Program
                 )
             );
             dispatchOptions.WithHandler(() =>
+                new EmployeeSalaryOps(
+                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                )
+            );
+            dispatchOptions.WithHandler(() =>
                 new CustomerOps(
                     InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
                 )

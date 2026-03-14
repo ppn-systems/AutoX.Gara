@@ -33,13 +33,16 @@ public sealed class InvoiceService
         InvoiceSortField sortBy = InvoiceSortField.InvoiceDate,
         bool sortDescending = true,
         PaymentStatus? filterPaymentStatus = null,
+        System.DateTime? filterFromDate = null,
+        System.DateTime? filterToDate = null,
         System.Threading.CancellationToken ct = default)
     {
         InvoiceCacheKey key = new(
             page, pageSize,
             searchTerm ?? string.Empty,
             sortBy, sortDescending,
-            filterCustomerId, filterPaymentStatus);
+            filterCustomerId, filterPaymentStatus,
+            filterFromDate, filterToDate);
 
         if (_cache.TryGet(key, out InvoiceCacheEntry? cached))
         {
@@ -65,11 +68,13 @@ public sealed class InvoiceService
                 SortDescending = sortDescending,
                 FilterCustomerId = filterCustomerId,
                 FilterPaymentStatus = filterPaymentStatus,
+                FilterFromDate = filterFromDate,
+                FilterToDate = filterToDate,
                 OpCode = (ushort)OpCommand.INVOICE_GET
             };
 
             logger?.Info(
-                $"[FE.{nameof(InvoiceService)}:{nameof(GetListAsync)}] send seq={sq} op={(ushort)OpCommand.INVOICE_GET} page={page} size={pageSize} cust={filterCustomerId} sort={sortBy} desc={sortDescending} pay={filterPaymentStatus} term='{packet.SearchTerm}'");
+                $"[FE.{nameof(InvoiceService)}:{nameof(GetListAsync)}] send seq={sq} op={(ushort)OpCommand.INVOICE_GET} page={page} size={pageSize} cust={filterCustomerId} sort={sortBy} desc={sortDescending} pay={filterPaymentStatus} from={filterFromDate:yyyy-MM-dd} to={filterToDate:yyyy-MM-dd} term='{packet.SearchTerm}'");
 
             System.Threading.Tasks.TaskCompletionSource<InvoiceListResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);

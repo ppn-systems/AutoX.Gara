@@ -23,9 +23,11 @@ namespace AutoX.Gara.Frontend.ViewModels;
 public sealed partial class EmployeesViewModel : ObservableObject, System.IDisposable
 {
     private readonly EmployeeService _service;
+    private readonly EmployeeSalaryService _salaryService;
     private System.Threading.CancellationTokenSource? _loadCts;
     private System.Threading.CancellationTokenSource? _writeCts;
     private System.Threading.CancellationTokenSource? _searchCts;
+    private System.Threading.CancellationTokenSource? _salaryCts;
 
     private const System.Int32 DefaultPageSize = 20;
     private const System.Int32 SearchDebounceMs = 400;
@@ -123,7 +125,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     [ObservableProperty] public partial System.Boolean IsFormVisible { get; set; }
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
-    [ObservableProperty] public partial EmployeeDto? SelectedEmployee { get; set; }
+    [ObservableProperty] public partial EmployeeRow? SelectedEmployee { get; set; }
 
     public System.String FormTitle => IsEditing ? "Sửa nhân viên" : "Thêm nhân viên";
     public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm nhân viên";
@@ -145,17 +147,64 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     [ObservableProperty] public partial System.Boolean IsStatusConfirmVisible { get; set; }
     [ObservableProperty] public partial System.Int32 NewStatusIndex { get; set; } = 1;
-    public System.String StatusConfirmName => SelectedEmployee?.Name ?? System.String.Empty;
+    public System.String StatusConfirmName => SelectedEmployee?.Dto?.Name ?? System.String.Empty;
 
     // ─── Collection ───────────────────────────────────────────────────────────
 
-    public System.Collections.ObjectModel.ObservableCollection<EmployeeDto> Employees { get; } = [];
+    public System.Collections.ObjectModel.ObservableCollection<EmployeeRow> Employees { get; } = [];
+
+    public sealed class EmployeeRow : ObservableObject
+    {
+        public EmployeeDto Dto { get; }
+
+        private System.String _salaryText = "Chưa có";
+        public System.String SalaryText
+        {
+            get => _salaryText;
+            set => SetProperty(ref _salaryText, value);
+        }
+
+        private System.Boolean _hasSalary;
+        public System.Boolean HasSalary
+        {
+            get => _hasSalary;
+            set => SetProperty(ref _hasSalary, value);
+        }
+
+        public EmployeeRow(EmployeeDto dto) => Dto = dto;
+    }
+
+    // ─── Salary Form (per-employee) ───────────────────────────────────────────
+
+    [ObservableProperty] public partial System.Boolean IsSalaryFormVisible { get; set; }
+    [ObservableProperty] public partial System.Boolean IsSalaryEditing { get; set; }
+    [ObservableProperty] public partial EmployeeRow? SalaryEmployee { get; set; }
+    [ObservableProperty] public partial EmployeeSalaryDto? SelectedSalary { get; set; }
+
+    public System.Int32 SalaryEmployeeId => SalaryEmployee?.Dto?.EmployeeId ?? 0;
+    public System.String SalaryEmployeeName => SalaryEmployee?.Dto?.Name ?? System.String.Empty;
+
+    private static readonly SalaryType[] SalaryTypeValues = System.Enum.GetValues<SalaryType>();
+    public string[] SalaryFormTypeOptions { get; } = SalaryTypeValues.Select(EnumText.Get).ToArray();
+
+    [ObservableProperty] public partial System.Decimal SalaryFormSalary { get; set; }
+    [ObservableProperty] public partial System.Int32 SalaryFormTypeIndex { get; set; } =
+        System.Array.IndexOf(SalaryTypeValues, SalaryType.Monthly);
+    [ObservableProperty] public partial System.Decimal SalaryFormUnit { get; set; } = 1;
+    [ObservableProperty] public partial System.DateTime SalaryFormEffectiveFrom { get; set; } = System.DateTime.Today;
+    [ObservableProperty] public partial System.String SalaryFormNote { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.Boolean HasSalaryFormError { get; set; }
+    [ObservableProperty] public partial System.String? SalaryFormErrorMessage { get; set; }
+
+    public System.String SalaryFormTitle => IsSalaryEditing ? "Chỉnh sửa lương" : "Thiết lập lương";
+    public System.String SalaryFormSaveText => IsSalaryEditing ? "Lưu" : "Tạo";
 
     // ─── Constructor ───────────────────────────────────────────────────────────
 
-    public EmployeesViewModel(EmployeeService service)
+    public EmployeesViewModel(EmployeeService service, EmployeeSalaryService salaryService)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
+        _salaryService = salaryService ?? throw new ArgumentNullException(nameof(salaryService));
         Employees.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
     }
 
@@ -164,11 +213,17 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(TotalPages));
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmpty));
-    partial void OnSelectedEmployeeChanged(EmployeeDto? value) => OnPropertyChanged(nameof(StatusConfirmName));
+    partial void OnSelectedEmployeeChanged(EmployeeRow? value) => OnPropertyChanged(nameof(StatusConfirmName));
     partial void OnIsEditingChanged(bool value)
     {
         OnPropertyChanged(nameof(FormTitle));
         OnPropertyChanged(nameof(FormSaveText));
+    }
+
+    partial void OnIsSalaryEditingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(SalaryFormTitle));
+        OnPropertyChanged(nameof(SalaryFormSaveText));
     }
     partial void OnCurrentPageChanged(int value)
     {
@@ -269,13 +324,21 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             if (result.IsSuccess)
             {
                 Employees.Clear();
+                System.Collections.Generic.List<EmployeeRow> rows = new();
                 foreach (EmployeeDto e in result.Employees)
                 {
-                    Employees.Add(e);
+                    var row = new EmployeeRow(e);
+                    row.SalaryText = "Chưa có";
+                    row.HasSalary = false;
+                    Employees.Add(row);
+                    rows.Add(row);
                 }
 
                 TotalCount = result.TotalCount >= 0 ? result.TotalCount : TotalCount;
                 HasNextPage = result.TotalCount >= 0 ? CurrentPage < TotalPages : result.HasMore;
+
+                // Warmup salary text in the background (doesn't block list rendering).
+                _ = WarmupSalarySummariesAsync(rows);
             }
             else
             {
@@ -306,26 +369,28 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     }
 
     [RelayCommand]
-    private void OpenEditForm(EmployeeDto employee)
+    private void OpenEditForm(EmployeeRow employee)
     {
         IsEditing = true;
         SelectedEmployee = employee;
 
-        FormName = employee.Name ?? System.String.Empty;
-        FormEmail = employee.Email ?? System.String.Empty;
-        FormAddress = employee.Address ?? System.String.Empty;
-        FormPhoneNumber = employee.PhoneNumber ?? System.String.Empty;
-        FormGenderIndex = System.Array.IndexOf(GenderValues, employee.Gender ?? Gender.None);
+        EmployeeDto dto = employee.Dto;
+
+        FormName = dto.Name ?? System.String.Empty;
+        FormEmail = dto.Email ?? System.String.Empty;
+        FormAddress = dto.Address ?? System.String.Empty;
+        FormPhoneNumber = dto.PhoneNumber ?? System.String.Empty;
+        FormGenderIndex = System.Array.IndexOf(GenderValues, dto.Gender ?? Gender.None);
         if (FormGenderIndex < 0) FormGenderIndex = 0;
 
-        FormPositionIndex = System.Array.IndexOf(FormPositionValues, employee.Position ?? Position.None);
+        FormPositionIndex = System.Array.IndexOf(FormPositionValues, dto.Position ?? Position.None);
         if (FormPositionIndex < 0) FormPositionIndex = 0;
 
-        FormStatusIndex = System.Array.IndexOf(StatusValues, employee.Status ?? EmploymentStatus.None);
+        FormStatusIndex = System.Array.IndexOf(StatusValues, dto.Status ?? EmploymentStatus.None);
         if (FormStatusIndex < 0) FormStatusIndex = 0;
-        FormDateOfBirth = employee.DateOfBirth ?? System.DateTime.Today.AddYears(-20);
-        FormStartDate = employee.StartDate ?? System.DateTime.Today;
-        FormEndDate = employee.EndDate;
+        FormDateOfBirth = dto.DateOfBirth ?? System.DateTime.Today.AddYears(-20);
+        FormStartDate = dto.StartDate ?? System.DateTime.Today;
+        FormEndDate = dto.EndDate;
 
         ClearFormError();
         IsFormVisible = true;
@@ -372,7 +437,11 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                         System.Int32 idx = IndexOfEmployee(result.UpdatedEntity.EmployeeId);
                         if (idx >= 0)
                         {
-                            Employees[idx] = result.UpdatedEntity;
+                            Employees[idx] = new EmployeeRow(result.UpdatedEntity)
+                            {
+                                SalaryText = Employees[idx].SalaryText,
+                                HasSalary = Employees[idx].HasSalary
+                            };
                         }
                         else
                         {
@@ -381,7 +450,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                     }
                     else
                     {
-                        Employees.Insert(0, result.UpdatedEntity);
+                        Employees.Insert(0, new EmployeeRow(result.UpdatedEntity));
                         TotalCount++;
                         OnPropertyChanged(nameof(TotalPages));
                         HasNextPage = CurrentPage < TotalPages;
@@ -404,10 +473,10 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     }
 
     [RelayCommand]
-    private void RequestChangeStatus(EmployeeDto employee)
+    private void RequestChangeStatus(EmployeeRow employee)
     {
         SelectedEmployee = employee;
-        NewStatusIndex = System.Array.IndexOf(StatusValues, employee.Status ?? EmploymentStatus.None);
+        NewStatusIndex = System.Array.IndexOf(StatusValues, employee.Dto.Status ?? EmploymentStatus.None);
         if (NewStatusIndex < 0) NewStatusIndex = 0;
         IsStatusConfirmVisible = true;
     }
@@ -435,7 +504,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         {
             EmployeeDto data = new()
             {
-                EmployeeId = SelectedEmployee.EmployeeId,
+                EmployeeId = SelectedEmployee.Dto.EmployeeId,
                 Status = StatusValues[System.Math.Clamp(NewStatusIndex, 0, StatusValues.Length - 1)],
                 SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
             };
@@ -444,11 +513,11 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
             if (result.IsSuccess)
             {
-                System.Int32 idx = IndexOfEmployee(SelectedEmployee.EmployeeId);
+                System.Int32 idx = IndexOfEmployee(SelectedEmployee.Dto.EmployeeId);
                 if (idx >= 0)
                 {
-                    EmployeeDto updated = Employees[idx];
-                    updated.Status = StatusValues[System.Math.Clamp(NewStatusIndex, 0, StatusValues.Length - 1)];
+                    EmployeeRow updated = Employees[idx];
+                    updated.Dto.Status = StatusValues[System.Math.Clamp(NewStatusIndex, 0, StatusValues.Length - 1)];
                     Employees[idx] = updated;
                 }
                 SelectedEmployee = null;
@@ -500,6 +569,204 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         _writeCts?.Dispose();
         _searchCts?.Cancel();
         _searchCts?.Dispose();
+        _salaryCts?.Cancel();
+        _salaryCts?.Dispose();
+    }
+
+    // ─── Salary Commands (per-employee) ──────────────────────────────────────
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task OpenSalaryAsync(EmployeeRow row)
+    {
+        if (row?.Dto?.EmployeeId is null)
+        {
+            return;
+        }
+
+        SalaryEmployee = row;
+        ClearSalaryFormError();
+
+        // Default form state.
+        IsSalaryEditing = false;
+        SelectedSalary = null;
+        SalaryFormSalary = 0;
+        SalaryFormTypeIndex = System.Array.IndexOf(SalaryTypeValues, SalaryType.Monthly);
+        SalaryFormUnit = 1;
+        SalaryFormEffectiveFrom = System.DateTime.Today;
+        SalaryFormNote = System.String.Empty;
+
+        IsSalaryFormVisible = true;
+
+        // Prefill by latest salary (if any).
+        EmployeeSalaryDto? latest = await GetLatestSalaryAsync(row.Dto.EmployeeId.Value).ConfigureAwait(false);
+        if (latest is null)
+        {
+            return;
+        }
+
+        await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            IsSalaryEditing = true;
+            SelectedSalary = latest;
+            SalaryFormSalary = latest.Salary;
+            SalaryFormTypeIndex = System.Array.IndexOf(SalaryTypeValues, latest.SalaryType);
+            if (SalaryFormTypeIndex < 0) SalaryFormTypeIndex = 0;
+            SalaryFormUnit = latest.SalaryUnit <= 0 ? 1 : latest.SalaryUnit;
+            SalaryFormEffectiveFrom = latest.EffectiveFrom.ToLocalTime().Date;
+            SalaryFormNote = latest.Note ?? System.String.Empty;
+        });
+    }
+
+    [RelayCommand]
+    private void CloseSalaryForm()
+    {
+        IsSalaryFormVisible = false;
+        SalaryEmployee = null;
+        SelectedSalary = null;
+        ClearSalaryFormError();
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task SaveSalaryFormAsync()
+    {
+        ClearSalaryFormError();
+
+        if (SalaryEmployeeId <= 0)
+        {
+            SetSalaryFormError("Chưa chọn nhân viên.");
+            return;
+        }
+
+        if (SalaryFormSalary < 0)
+        {
+            SetSalaryFormError("Mức lương phải >= 0.");
+            return;
+        }
+
+        if (SalaryFormUnit < 0)
+        {
+            SetSalaryFormError("Số đơn vị phải >= 0.");
+            return;
+        }
+
+        SalaryType type = SalaryTypeValues[System.Math.Clamp(SalaryFormTypeIndex, 0, SalaryTypeValues.Length - 1)];
+
+        EmployeeSalaryDto packet = new()
+        {
+            EmployeeSalaryId = IsSalaryEditing ? SelectedSalary?.EmployeeSalaryId : null,
+            EmployeeId = SalaryEmployeeId,
+            Salary = SalaryFormSalary,
+            SalaryType = type,
+            SalaryUnit = SalaryFormUnit <= 0 ? 1 : SalaryFormUnit,
+            EffectiveFrom = SalaryFormEffectiveFrom.Date.ToUniversalTime(),
+            EffectiveTo = null,
+            Note = SalaryFormNote ?? System.String.Empty,
+            SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
+        };
+
+        EmployeeSalaryWriteResult result = IsSalaryEditing
+            ? await _salaryService.UpdateAsync(packet).ConfigureAwait(false)
+            : await _salaryService.CreateAsync(packet).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
+                SetSalaryFormError(result.ErrorMessage ?? "Lưu thất bại."));
+            return;
+        }
+
+        // Update row display.
+        EmployeeSalaryDto? saved = result.Salary;
+        if (SalaryEmployee is not null)
+        {
+            string text = saved is null ? "Chưa có" : FormatSalaryText(saved);
+            bool has = saved is not null;
+            await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                SalaryEmployee.SalaryText = text;
+                SalaryEmployee.HasSalary = has;
+            });
+        }
+
+        await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            IsSalaryFormVisible = false;
+            SalaryEmployee = null;
+            SelectedSalary = null;
+        });
+    }
+
+    private async System.Threading.Tasks.Task WarmupSalarySummariesAsync(System.Collections.Generic.List<EmployeeRow> rows)
+    {
+        try { _salaryCts?.Cancel(); } catch { }
+        _salaryCts?.Dispose();
+        _salaryCts = new System.Threading.CancellationTokenSource();
+        var ct = _salaryCts.Token;
+
+        for (System.Int32 i = 0; i < rows.Count; i++)
+        {
+            if (ct.IsCancellationRequested)
+            {
+                return;
+            }
+
+            EmployeeRow row = rows[i];
+            if (row?.Dto?.EmployeeId is null)
+            {
+                continue;
+            }
+
+            EmployeeSalaryDto? latest = await GetLatestSalaryAsync(row.Dto.EmployeeId.Value, ct).ConfigureAwait(false);
+            if (ct.IsCancellationRequested)
+            {
+                return;
+            }
+
+            string text = latest is null ? "Chưa có" : FormatSalaryText(latest);
+            bool has = latest is not null;
+
+            await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                row.SalaryText = text;
+                row.HasSalary = has;
+            });
+        }
+    }
+
+    private async System.Threading.Tasks.Task<EmployeeSalaryDto?> GetLatestSalaryAsync(System.Int32 employeeId, System.Threading.CancellationToken ct = default)
+    {
+        EmployeeSalaryListResult result = await _salaryService.GetListAsync(
+            page: 1,
+            pageSize: 1,
+            filterEmployeeId: employeeId,
+            searchTerm: null,
+            sortBy: EmployeeSalarySortField.EffectiveFrom,
+            sortDescending: true,
+            filterSalaryType: null,
+            filterFromDate: null,
+            filterToDate: null,
+            ct: ct).ConfigureAwait(false);
+
+        if (!result.IsSuccess || result.Salaries.Count == 0)
+        {
+            return null;
+        }
+
+        return result.Salaries[0];
+    }
+
+    private static System.String FormatSalaryText(EmployeeSalaryDto dto)
+    {
+        string typeText = EnumText.Get(dto.SalaryType);
+
+        if (dto.SalaryType == SalaryType.Monthly)
+        {
+            return $"{dto.Salary:N0} ({typeText})";
+        }
+
+        decimal unit = dto.SalaryUnit <= 0 ? 1 : dto.SalaryUnit;
+        decimal total = dto.Salary * unit;
+        return $"{dto.Salary:N0} x {unit:N0} = {total:N0} ({typeText})";
     }
 
     // ─── Private Helpers ───────────────────────────────────────────────────────
@@ -520,6 +787,18 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     {
         HasError = false;
         ErrorMessage = null;
+    }
+
+    private void ClearSalaryFormError()
+    {
+        HasSalaryFormError = false;
+        SalaryFormErrorMessage = null;
+    }
+
+    private void SetSalaryFormError(System.String message)
+    {
+        SalaryFormErrorMessage = message;
+        HasSalaryFormError = true;
     }
 
     private void ClearForm()
@@ -579,7 +858,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     {
         return new EmployeeDto
         {
-            EmployeeId = IsEditing ? SelectedEmployee?.EmployeeId : null,
+            EmployeeId = IsEditing ? SelectedEmployee?.Dto?.EmployeeId : null,
             Name = FormName,
             Email = FormEmail,
             Address = FormAddress,
@@ -603,7 +882,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
         for (System.Int32 i = 0; i < Employees.Count; i++)
         {
-            if (Employees[i].EmployeeId is System.Object employeeId && employeeId.Equals(id))
+            if (Employees[i].Dto.EmployeeId is System.Object employeeId && employeeId.Equals(id))
             {
                 return i;
             }

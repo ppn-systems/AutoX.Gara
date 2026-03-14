@@ -42,6 +42,11 @@ public interface IAutoXDbContext
     DbSet<Employee> Employees { get; set; }
 
     /// <summary>
+    /// Tập hợp lịch sử lương của nhân viên.
+    /// </summary>
+    DbSet<EmployeeSalary> EmployeeSalaries { get; set; }
+
+    /// <summary>
     /// Tập hợp nhà cung cấp phụ tùng / dịch vụ.
     /// </summary>
     DbSet<Supplier> Suppliers { get; set; }

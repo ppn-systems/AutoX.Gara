@@ -15,7 +15,9 @@ public sealed record InvoiceCacheKey(
     InvoiceSortField SortBy,
     System.Boolean SortDescending,
     System.Int32 FilterCustomerId,
-    PaymentStatus? FilterPaymentStatus);
+    PaymentStatus? FilterPaymentStatus,
+    System.DateTime? FilterFromDate,
+    System.DateTime? FilterToDate);
 
 public sealed class InvoiceCacheEntry
 {
@@ -58,4 +60,3 @@ public sealed class InvoiceQueryCache
 
     public void Invalidate() => _store.Clear();
 }
-

@@ -39,6 +39,9 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
     public DbSet<Employee> Employees { get; set; }
 
     /// <inheritdoc/>
+    public DbSet<EmployeeSalary> EmployeeSalaries { get; set; }
+
+    /// <inheritdoc/>
     public DbSet<Supplier> Suppliers { get; set; }
 
     /// <inheritdoc/>
@@ -81,6 +84,7 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
         CONFIGURE_INVOICE(modelBuilder);
         CONFIGURE_CUSTOMER(modelBuilder);
         CONFIGURE_EMPLOYEE(modelBuilder);
+        CONFIGURE_EMPLOYEE_SALARY(modelBuilder);
         CONFIGURE_SUPPLIER(modelBuilder);
         CONFIGURE_PART(modelBuilder);
         CONFIGURE_REPAIR_TASK(modelBuilder);
@@ -391,6 +395,32 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
         // Multiple NULLs are allowed by most providers (including SQLite/SQL Server).
         modelBuilder.Entity<RepairOrder>().HasIndex(ro => ro.InvoiceId).IsUnique();
         modelBuilder.Entity<RepairOrder>().HasIndex(ro => ro.CustomerId);
+    }
+
+    private static void CONFIGURE_EMPLOYEE_SALARY(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EmployeeSalary>()
+            .HasOne(es => es.Employee)
+            .WithMany()
+            .HasForeignKey(es => es.EmployeeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<EmployeeSalary>()
+            .Property(es => es.Salary)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<EmployeeSalary>()
+            .Property(es => es.SalaryUnit)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<EmployeeSalary>()
+            .Property(es => es.SalaryType)
+            .HasConversion<System.Byte>();
+
+        modelBuilder.Entity<EmployeeSalary>().HasIndex(es => es.EmployeeId);
+        modelBuilder.Entity<EmployeeSalary>().HasIndex(es => es.SalaryType);
+        modelBuilder.Entity<EmployeeSalary>().HasIndex(es => es.EffectiveFrom);
+        modelBuilder.Entity<EmployeeSalary>().HasIndex(es => es.EffectiveTo);
     }
 
     private static void CONFIGURE_TRANSACTION(ModelBuilder modelBuilder)

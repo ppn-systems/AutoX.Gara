@@ -117,4 +117,24 @@ public enum OpCommand : System.UInt16
     /// Change employee status.
     /// </summary>
     EMPLOYEE_CHANGE_STATUS = 6004,
+
+    /// <summary>
+    /// Get list of employee salaries.
+    /// </summary>
+    EMPLOYEE_SALARY_GET = 6010,
+
+    /// <summary>
+    /// Create a new employee salary record.
+    /// </summary>
+    EMPLOYEE_SALARY_CREATE = 6011,
+
+    /// <summary>
+    /// Update an employee salary record.
+    /// </summary>
+    EMPLOYEE_SALARY_UPDATE = 6012,
+
+    /// <summary>
+    /// Delete an employee salary record.
+    /// </summary>
+    EMPLOYEE_SALARY_DELETE = 6013,
 }

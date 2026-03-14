@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Name="PageRoot"
+    x:Class="AutoX.Gara.Frontend.Views.InvoicesOverviewPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
+    xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
+    x:DataType="vm:InvoicesOverviewViewModel"
+    Title="{Binding PageTitle}"
+    BackgroundColor="#0A0A0F">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:EnumTextConverter x:Key="EnumText" />
+            <conv:PaymentStatusBadgeColorConverter x:Key="PayBadgeColor" />
+            <Style x:Key="CardStyle" TargetType="Border">
+                <Setter Property="BackgroundColor" Value="#111118" />
+                <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+                <Setter Property="Stroke" Value="#2A2A38" />
+                <Setter Property="StrokeThickness" Value="1" />
+            </Style>
+            <Style x:Key="AccentBtn" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#6366F1" />
+                <Setter Property="TextColor" Value="White" />
+                <Setter Property="FontAttributes" Value="Bold" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="HeightRequest" Value="44" />
+            </Style>
+            <Style x:Key="GhostBtn" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#1A1A24" />
+                <Setter Property="TextColor" Value="#F1F1F5" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="HeightRequest" Value="44" />
+                <Setter Property="BorderColor" Value="#2A2A38" />
+                <Setter Property="BorderWidth" Value="1" />
+            </Style>
+            <Style x:Key="MutedLabel" TargetType="Label">
+                <Setter Property="TextColor" Value="#6B6B80" />
+                <Setter Property="FontSize" Value="12" />
+            </Style>
+            <Style x:Key="FieldEntry" TargetType="Entry">
+                <Setter Property="TextColor" Value="#F1F1F5" />
+                <Setter Property="PlaceholderColor" Value="#6B6B80" />
+                <Setter Property="BackgroundColor" Value="#0F0F18" />
+                <Setter Property="HeightRequest" Value="46" />
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="14" RowSpacing="12">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <Label Text="{Binding PageTitle}" TextColor="#F1F1F5" FontAttributes="Bold" FontSize="18" VerticalOptions="Center" />
+            <Button Grid.Column="1" Text="Tải lại" Style="{StaticResource GhostBtn}" Command="{Binding LoadCommand}" />
+        </Grid>
+
+        <!-- Filters -->
+        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="12">
+            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*" ColumnSpacing="10" RowSpacing="10">
+                <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <Entry Placeholder="Tìm theo số hóa đơn..." Style="{StaticResource FieldEntry}" Text="{Binding SearchTerm}" />
+                    <Button Grid.Column="1" Text="Lọc" Style="{StaticResource AccentBtn}" Command="{Binding ApplyFilterCommand}" WidthRequest="92" />
+                </Grid>
+
+                <VerticalStackLayout Grid.Row="1" Spacing="6">
+                    <Label Text="Trạng thái" Style="{StaticResource MutedLabel}" />
+                    <Picker ItemsSource="{Binding PaymentStatusOptions}" SelectedIndex="{Binding PickerPaymentStatusIndex}" HeightRequest="46" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="6">
+                    <Label Text="Lọc theo ngày" Style="{StaticResource MutedLabel}" />
+                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                        <Switch IsToggled="{Binding UseDateFilter}" />
+                        <Label Text="{Binding UseDateFilter, StringFormat='Bật: {0}'}" Style="{StaticResource MutedLabel}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Row="2" Spacing="6" IsVisible="{Binding UseDateFilter}">
+                    <Label Text="Từ ngày" Style="{StaticResource MutedLabel}" />
+                    <DatePicker Date="{Binding FromDate}" HeightRequest="46" TextColor="#F1F1F5" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="6" IsVisible="{Binding UseDateFilter}">
+                    <Label Text="Đến ngày" Style="{StaticResource MutedLabel}" />
+                    <DatePicker Date="{Binding ToDate}" HeightRequest="46" TextColor="#F1F1F5" />
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <!-- List -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,*" RowSpacing="10">
+            <Label Text="{Binding ErrorMessage}" TextColor="#EF4444" IsVisible="{Binding HasError}" />
+
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Invoices}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:InvoicesOverviewViewModel+InvoiceRow">
+                            <Border Style="{StaticResource CardStyle}" Padding="12">
+                                <VerticalStackLayout Spacing="10">
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="4">
+                                        <Label Text="{Binding InvoiceNumber}" TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
+                                        <Border Grid.Column="1"
+                                                Padding="10,4"
+                                                Stroke="{Binding PaymentStatus, Converter={StaticResource PayBadgeColor}, ConverterParameter=stroke}"
+                                                StrokeThickness="1"
+                                                StrokeShape="RoundRectangle 20"
+                                                BackgroundColor="{Binding PaymentStatus, Converter={StaticResource PayBadgeColor}, ConverterParameter=bg}">
+                                            <Label Text="{Binding PaymentStatusText}"
+                                                   TextColor="{Binding PaymentStatus, Converter={StaticResource PayBadgeColor}, ConverterParameter=fg}"
+                                                   FontAttributes="Bold" FontSize="12" />
+                                        </Border>
+                                        <Label Grid.Row="1" Text="{Binding InvoiceDate, StringFormat='Ngày: {0:dd-MM-yyyy}'}" Style="{StaticResource MutedLabel}" />
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                        <Border Style="{StaticResource CardStyle}" Padding="10">
+                                            <VerticalStackLayout Spacing="4">
+                                                <Label Text="Tổng" Style="{StaticResource MutedLabel}" />
+                                                <Label Text="{Binding TotalAmount, StringFormat='{0:N0}'}" TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
+                                            </VerticalStackLayout>
+                                        </Border>
+                                        <Border Grid.Column="1" Style="{StaticResource CardStyle}" Padding="10">
+                                            <VerticalStackLayout Spacing="4">
+                                                <Label Text="Còn nợ" Style="{StaticResource MutedLabel}" />
+                                                <Label Text="{Binding BalanceDue, StringFormat='{0:N0}'}" TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
+                                            </VerticalStackLayout>
+                                        </Border>
+                                    </Grid>
+
+                                    <Grid ColumnDefinitions="*" ColumnSpacing="10">
+                                        <Button Text="Giao dịch"
+                                                Style="{StaticResource AccentBtn}"
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenTransactionsCommand}"
+                                                CommandParameter="{Binding .}" />
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+    </Grid>
+</ContentPage>
+

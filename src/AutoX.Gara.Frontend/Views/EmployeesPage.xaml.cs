@@ -20,7 +20,9 @@ public partial class EmployeesPage : ContentPage
         InitializeComponent();
         BindingContext = new EmployeesViewModel(
             new EmployeeService(
-                InstanceManager.Instance.GetOrCreateInstance<EmployeeQueryCache>()));
+                InstanceManager.Instance.GetOrCreateInstance<EmployeeQueryCache>()),
+            new EmployeeSalaryService(
+                InstanceManager.Instance.GetOrCreateInstance<EmployeeSalaryQueryCache>()));
     }
 
     /// <summary>

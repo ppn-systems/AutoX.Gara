@@ -27,6 +27,11 @@
         Route="CustomersPage" />
 
     <ShellContent
+        Title="Hóa đơn"
+        ContentTemplate="{DataTemplate views:InvoicesOverviewPage}"
+        Route="InvoicesOverviewPage" />
+
+    <ShellContent
         Title="Dịch vụ"
         ContentTemplate="{DataTemplate views:ServiceItemsPage}"
         Route="ServiceItemsPage" />

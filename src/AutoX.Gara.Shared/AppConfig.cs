@@ -69,6 +69,10 @@ public static class AppConfig
         _ = factory.RegisterPacket<TransactionQueryRequest>();
         _ = factory.RegisterPacket<TransactionQueryResponse>();
 
+        _ = factory.RegisterPacket<EmployeeSalaryDto>();
+        _ = factory.RegisterPacket<EmployeeSalaryQueryRequest>();
+        _ = factory.RegisterPacket<EmployeeSalaryQueryResponse>();
+
         PacketRegistry catalog = factory.CreateCatalog();
 
         // 2) Expose catalog through your current service locator.

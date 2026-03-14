@@ -161,32 +161,46 @@
             <Grid Grid.Row="2">
                 <CollectionView ItemsSource="{Binding Employees}" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}" Margin="16,0" VerticalOptions="Fill">
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="pkt:EmployeeDto">
+                        <DataTemplate x:DataType="vm:EmployeesViewModel+EmployeeRow">
                             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="14,12">
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                                     <!-- Info -->
                                     <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center" InputTransparent="True">
-                                        <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" TextColor="#F1F1F5" LineBreakMode="TailTruncation" MaxLines="1" />
+                                        <Label Text="{Binding Dto.Name}" FontSize="16" FontAttributes="Bold" TextColor="#F1F1F5" LineBreakMode="TailTruncation" MaxLines="1" />
                                         <HorizontalStackLayout Spacing="10">
-                                            <Label Text="{Binding Email}" Style="{StaticResource MutedLabel}" />
+                                            <Label Text="{Binding Dto.Email}" Style="{StaticResource MutedLabel}" />
                                             <Label Text="·" TextColor="#3A3A50" FontSize="12" VerticalOptions="Center" />
-                                            <Label Text="{Binding PhoneNumber}" Style="{StaticResource MutedLabel}" />
+                                            <Label Text="{Binding Dto.PhoneNumber}" Style="{StaticResource MutedLabel}" />
                                         </HorizontalStackLayout>
                                           <HorizontalStackLayout Spacing="6">
                                               <Label Text="Chức vụ:" Style="{StaticResource MutedLabel}" />
-                                              <Label Text="{Binding Position, Converter={StaticResource EnumText}}"
+                                              <Label Text="{Binding Dto.Position, Converter={StaticResource EnumText}}"
                                                      FontSize="12"
-                                                     TextColor="{Binding Position, Converter={StaticResource PositionColor}}"
+                                                     TextColor="{Binding Dto.Position, Converter={StaticResource PositionColor}}"
                                                      FontAttributes="Bold"
                                                      VerticalOptions="Center" />
                                           </HorizontalStackLayout>
                                           <HorizontalStackLayout Spacing="6">
                                               <Label Text="Trạng thái:" Style="{StaticResource MutedLabel}" />
-                                              <Label Text="{Binding Status, Converter={StaticResource EnumText}}"
+                                              <Label Text="{Binding Dto.Status, Converter={StaticResource EnumText}}"
                                                      FontSize="12"
-                                                     TextColor="{Binding Status, Converter={StaticResource StatusColor}}"
+                                                     TextColor="{Binding Dto.Status, Converter={StaticResource StatusColor}}"
                                                      FontAttributes="Bold"
                                                      VerticalOptions="Center" />
+                                          </HorizontalStackLayout>
+                                          <HorizontalStackLayout Spacing="6">
+                                              <Label Text="Lương:" Style="{StaticResource MutedLabel}" />
+                                              <Label Text="{Binding SalaryText}"
+                                                     FontSize="12"
+                                                     TextColor="#34D399"
+                                                     FontAttributes="Bold"
+                                                     VerticalOptions="Center">
+                                                  <Label.Triggers>
+                                                      <DataTrigger TargetType="Label" Binding="{Binding HasSalary}" Value="False">
+                                                          <Setter Property="TextColor" Value="#6B6B80" />
+                                                      </DataTrigger>
+                                                  </Label.Triggers>
+                                              </Label>
                                           </HorizontalStackLayout>
                                     </VerticalStackLayout>
 
@@ -194,6 +208,7 @@
                                     <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
                                         <Button Text="✏ Sửa" Style="{StaticResource RowEdit}" Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}" CommandParameter="{Binding .}" />
                                         <Button Text="⚙ Trạng thái" BackgroundColor="#1E1E2E" TextColor="#818CF8" FontSize="12" CornerRadius="8" HeightRequest="32" WidthRequest="110" Padding="0" Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RequestChangeStatusCommand}" CommandParameter="{Binding .}" />
+                                        <Button Text="💰 Lương" BackgroundColor="#122018" TextColor="#34D399" FontSize="12" CornerRadius="8" HeightRequest="32" WidthRequest="90" Padding="0" BorderColor="#1F3A2A" BorderWidth="1" Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenSalaryCommand}" CommandParameter="{Binding .}" />
                                     </HorizontalStackLayout>
                                 </Grid>
                             </Border>
@@ -410,6 +425,59 @@
                     <Button Text="{Binding PopupButtonText}" IsVisible="{Binding IsPopupRetry}" Command="{Binding RetryLoadCommand}" Style="{StaticResource AccentBtn}" />
                     <Button Text="Đóng" IsVisible="{Binding IsPopupNotRetry}" Command="{Binding ClosePopupCommand}" Style="{StaticResource GhostBtn}" />
                 </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- ══ OVERLAY: SALARY FORM ══ -->
+        <Grid IsVisible="{Binding IsSalaryFormVisible}" ZIndex="26">
+            <BoxView BackgroundColor="#70000010" />
+            <Border BackgroundColor="#111118" StrokeShape="RoundRectangle 14" Stroke="#2A2A38" StrokeThickness="1" Margin="48,0" WidthRequest="520" VerticalOptions="Center" HorizontalOptions="Center" Padding="24,18">
+                <ScrollView>
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{Binding SalaryFormTitle}" FontSize="18" FontAttributes="Bold" TextColor="#F1F1F5" HorizontalOptions="Center" />
+                        <Label Text="{Binding SalaryEmployeeName}" FontSize="13" TextColor="#6B6B80" HorizontalOptions="Center" />
+
+                        <Label Text="Mức lương" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource InputBorder}" Padding="12,0">
+                            <Entry Text="{Binding SalaryFormSalary}" Keyboard="Numeric" Style="{StaticResource FormEntry}" Placeholder="0" />
+                        </Border>
+
+                        <Label Text="Loại lương" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
+                            <Picker SelectedIndex="{Binding SalaryFormTypeIndex}"
+                                    ItemsSource="{Binding SalaryFormTypeOptions}"
+                                    TextColor="#C4C4D4"
+                                    BackgroundColor="Transparent"
+                                    VerticalOptions="Center"
+                                    HeightRequest="44"
+                                    Margin="10,0" />
+                        </Border>
+
+                        <Label Text="Số đơn vị (ngày/giờ)" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource InputBorder}" Padding="12,0">
+                            <Entry Text="{Binding SalaryFormUnit}" Keyboard="Numeric" Style="{StaticResource FormEntry}" Placeholder="1" />
+                        </Border>
+
+                        <Label Text="Hiệu lực từ" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource InputBorder}" Padding="12,0">
+                            <DatePicker Date="{Binding SalaryFormEffectiveFrom}" Format="dd/MM/yyyy" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" />
+                        </Border>
+
+                        <Label Text="Ghi chú" Style="{StaticResource FieldLabel}" />
+                        <Border Style="{StaticResource InputBorder}" Padding="12,0" HeightRequest="88">
+                            <Editor Text="{Binding SalaryFormNote}" TextColor="#F1F1F5" BackgroundColor="Transparent" AutoSize="TextChanges" />
+                        </Border>
+
+                        <Border IsVisible="{Binding HasSalaryFormError}" BackgroundColor="#1E1014" StrokeShape="RoundRectangle 8" StrokeThickness="1" Stroke="#3A1A1A" Padding="12,8" Margin="0,12,0,0">
+                            <Label Text="{Binding SalaryFormErrorMessage}" TextColor="#EF4444" FontSize="13" />
+                        </Border>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,16,0,0">
+                            <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CloseSalaryFormCommand}" />
+                            <Button Grid.Column="1" Text="{Binding SalaryFormSaveText}" Style="{StaticResource AccentBtn}" Command="{Binding SaveSalaryFormCommand}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </ScrollView>
             </Border>
         </Grid>
     </Grid>
