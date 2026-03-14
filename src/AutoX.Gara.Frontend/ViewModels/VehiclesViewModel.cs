@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Cars;
+using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Results.Vehicles;
 using AutoX.Gara.Frontend.Services.Vehicles;
 using AutoX.Gara.Shared.Protocol.Customers;
@@ -86,12 +87,97 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     [ObservableProperty] public partial CarColor FormColor { get; set; } = CarColor.None;
     [ObservableProperty] public partial CarBrand FormBrand { get; set; } = CarBrand.None;
 
-    public System.Collections.Generic.IReadOnlyList<CarBrand> BrandOptions { get; }
-        = System.Enum.GetValues<CarBrand>().ToList();
-    public System.Collections.Generic.IReadOnlyList<CarType> TypeOptions { get; }
-        = System.Enum.GetValues<CarType>().ToList();
-    public System.Collections.Generic.IReadOnlyList<CarColor> ColorOptions { get; }
-        = System.Enum.GetValues<CarColor>().ToList();
+    private static readonly CarBrand[] BrandValues =
+    [
+        CarBrand.None,
+        CarBrand.Audi,
+        CarBrand.Bentley,
+        CarBrand.BMW,
+        CarBrand.BYD,
+        CarBrand.Bugatti,
+        CarBrand.Buick,
+        CarBrand.Cadillac,
+        CarBrand.Chevrolet,
+        CarBrand.Ford,
+        CarBrand.Ferrari,
+        CarBrand.Honda,
+        CarBrand.Hyundai,
+        CarBrand.Jaguar,
+        CarBrand.Jeep,
+        CarBrand.KIA,
+        CarBrand.Lamborghini,
+        CarBrand.LandRover,
+        CarBrand.Lexus,
+        CarBrand.Mazda,
+        CarBrand.McLaren,
+        CarBrand.MercedesBenz,
+        CarBrand.Mitsubishi,
+        CarBrand.Nissan,
+        CarBrand.Porsche,
+        CarBrand.RollsRoyce,
+        CarBrand.Subaru,
+        CarBrand.Suzuki,
+        CarBrand.Tesla,
+        CarBrand.Toyota,
+        CarBrand.VinFast,
+        CarBrand.Volvo,
+        CarBrand.Volkswagen,
+        CarBrand.Other
+    ];
+
+    private static readonly CarType[] TypeValues =
+    [
+        CarType.None,
+        CarType.Sedan,
+        CarType.SUV,
+        CarType.Hatchback,
+        CarType.Coupe,
+        CarType.Convertible,
+        CarType.Pickup,
+        CarType.Minivan,
+        CarType.Truck,
+        CarType.Bus,
+        CarType.Motorcycle,
+        CarType.Other
+    ];
+
+    private static readonly CarColor[] ColorValues =
+    [
+        CarColor.None,
+        CarColor.Black,
+        CarColor.White,
+        CarColor.Gray,
+        CarColor.Silver,
+        CarColor.Red,
+        CarColor.Blue,
+        CarColor.Green,
+        CarColor.Yellow,
+        CarColor.Brown,
+        CarColor.Orange,
+        CarColor.Purple,
+        CarColor.Pink,
+        CarColor.Cyan,
+        CarColor.Other
+    ];
+
+    public string[] FormBrandOptions { get; } =
+        BrandValues.Select((v, idx) => idx == 0 ? "— chọn —" : EnumText.Get(v)).ToArray();
+    public string[] FormTypeOptions { get; } =
+        TypeValues.Select((v, idx) => idx == 0 ? "— chọn —" : EnumText.Get(v)).ToArray();
+    public string[] FormColorOptions { get; } =
+        ColorValues.Select((v, idx) => idx == 0 ? "— chọn —" : EnumText.Get(v)).ToArray();
+
+    // Picker index cho form
+    [ObservableProperty] public partial System.Int32 FormPickerBrandIndex { get; set; } = 0;
+    [ObservableProperty] public partial System.Int32 FormPickerTypeIndex { get; set; } = 0;
+    [ObservableProperty] public partial System.Int32 FormPickerColorIndex { get; set; } = 0;
+
+    public System.String SelectedFormBrandText =>
+        FormBrandOptions[System.Math.Clamp(FormPickerBrandIndex, 0, FormBrandOptions.Length - 1)];
+    public System.String SelectedFormTypeText =>
+        FormTypeOptions[System.Math.Clamp(FormPickerTypeIndex, 0, FormTypeOptions.Length - 1)];
+    public System.String SelectedFormColorText =>
+        FormColorOptions[System.Math.Clamp(FormPickerColorIndex, 0, FormColorOptions.Length - 1)];
 
     // Form error
     [ObservableProperty] public partial System.Boolean HasFormError { get; set; }
@@ -112,6 +198,13 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     {
         _vehicleService = vehicleService;
         Vehicles.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
+
+        Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+        {
+            OnPropertyChanged(nameof(SelectedFormBrandText));
+            OnPropertyChanged(nameof(SelectedFormTypeText));
+            OnPropertyChanged(nameof(SelectedFormColorText));
+        });
     }
 
     /// <summary>
@@ -142,6 +235,25 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     {
         HasPreviousPage = value > 1;
         _ = LoadAsync();
+    }
+
+    // Picker index → enum (form)
+    partial void OnFormPickerBrandIndexChanged(int value)
+    {
+        FormBrand = BrandValues[System.Math.Clamp(value, 0, BrandValues.Length - 1)];
+        OnPropertyChanged(nameof(SelectedFormBrandText));
+    }
+
+    partial void OnFormPickerTypeIndexChanged(int value)
+    {
+        FormType = TypeValues[System.Math.Clamp(value, 0, TypeValues.Length - 1)];
+        OnPropertyChanged(nameof(SelectedFormTypeText));
+    }
+
+    partial void OnFormPickerColorIndexChanged(int value)
+    {
+        FormColor = ColorValues[System.Math.Clamp(value, 0, ColorValues.Length - 1)];
+        OnPropertyChanged(nameof(SelectedFormColorText));
     }
 
     // ─── Commands ─────────────────────────────────────────────────────────────
@@ -229,9 +341,14 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
         FormRegistrationDate = vehicle.RegistrationDate == default ? System.DateTime.Today : vehicle.RegistrationDate;
         FormInsuranceExpiryDate = vehicle.InsuranceExpiryDate;
 
-        FormType = vehicle.Type;
-        FormColor = vehicle.Color;
-        FormBrand = vehicle.Brand;
+        FormPickerBrandIndex = System.Array.IndexOf(BrandValues, vehicle.Brand);
+        if (FormPickerBrandIndex < 0) FormPickerBrandIndex = 0;
+
+        FormPickerTypeIndex = System.Array.IndexOf(TypeValues, vehicle.Type);
+        if (FormPickerTypeIndex < 0) FormPickerTypeIndex = 0;
+
+        FormPickerColorIndex = System.Array.IndexOf(ColorValues, vehicle.Color);
+        if (FormPickerColorIndex < 0) FormPickerColorIndex = 0;
 
         ClearFormError();
         IsFormVisible = true;
@@ -434,9 +551,9 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
         FormMileage = 0;
         FormRegistrationDate = System.DateTime.Today;
         FormInsuranceExpiryDate = null;
-        FormType = CarType.None;
-        FormColor = CarColor.None;
-        FormBrand = CarBrand.None;
+        FormPickerBrandIndex = 0;
+        FormPickerTypeIndex = 0;
+        FormPickerColorIndex = 0;
         ClearFormError();
     }
 

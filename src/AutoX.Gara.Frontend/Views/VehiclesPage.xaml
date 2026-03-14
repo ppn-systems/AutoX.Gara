@@ -408,12 +408,19 @@
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="HÃNG XE" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}">
-                                    <Picker SelectedItem="{Binding FormBrand}"
-                                            ItemsSource="{Binding BrandOptions}"
-                                            ItemDisplayBinding="{Binding ., Converter={StaticResource EnumText}}"
-                                            TextColor="#C4C4D4" BackgroundColor="Transparent"
-                                            VerticalOptions="Center" HeightRequest="44">
-                                    </Picker>
+                                    <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                                        <Label Text="{Binding SelectedFormBrandText}"
+                                               TextColor="#F1F1F5"
+                                               VerticalOptions="Center"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="1" />
+                                        <Label Grid.Column="1" Text="▾"
+                                               TextColor="#6B6B80"
+                                               VerticalOptions="Center" />
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnFormBrandTapped" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
@@ -431,23 +438,37 @@
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="LOẠI XE" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}">
-                                    <Picker SelectedItem="{Binding FormType}"
-                                            ItemsSource="{Binding TypeOptions}"
-                                            ItemDisplayBinding="{Binding ., Converter={StaticResource EnumText}}"
-                                            TextColor="#C4C4D4" BackgroundColor="Transparent"
-                                            VerticalOptions="Center" HeightRequest="44">
-                                    </Picker>
+                                    <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                                        <Label Text="{Binding SelectedFormTypeText}"
+                                               TextColor="#F1F1F5"
+                                               VerticalOptions="Center"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="1" />
+                                        <Label Grid.Column="1" Text="▾"
+                                               TextColor="#6B6B80"
+                                               VerticalOptions="Center" />
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnFormTypeTapped" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
                                 <Label Text="MÀU SẮC" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}">
-                                    <Picker SelectedItem="{Binding FormColor}"
-                                            ItemsSource="{Binding ColorOptions}"
-                                            ItemDisplayBinding="{Binding ., Converter={StaticResource EnumText}}"
-                                            TextColor="#C4C4D4" BackgroundColor="Transparent"
-                                            VerticalOptions="Center" HeightRequest="44">
-                                    </Picker>
+                                    <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+                                        <Label Text="{Binding SelectedFormColorText}"
+                                               TextColor="#F1F1F5"
+                                               VerticalOptions="Center"
+                                               LineBreakMode="TailTruncation"
+                                               MaxLines="1" />
+                                        <Label Grid.Column="1" Text="▾"
+                                               TextColor="#6B6B80"
+                                               VerticalOptions="Center" />
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnFormColorTapped" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>
