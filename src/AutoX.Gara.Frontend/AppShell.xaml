@@ -26,6 +26,11 @@
         ContentTemplate="{DataTemplate views:CustomersPage}"
         Route="CustomersPage" />
 
+    <ShellContent
+        Title="Dịch vụ"
+        ContentTemplate="{DataTemplate views:ServiceItemsPage}"
+        Route="ServiceItemsPage" />
+
     <ShellContent 
         Title="Nhà cung cấp"
         ContentTemplate="{DataTemplate views:SuppliersPage}"

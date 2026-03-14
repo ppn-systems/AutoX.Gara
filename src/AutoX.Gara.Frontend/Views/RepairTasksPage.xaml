@@ -61,7 +61,7 @@
 
             <CollectionView Grid.Row="1" ItemsSource="{Binding RepairTaskRows}">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:RepairTasksViewModel.RepairTaskRow">
+                    <DataTemplate x:DataType="vm:RepairTasksViewModel+RepairTaskRow">
                         <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Padding="12">
                             <VerticalStackLayout Spacing="6">
                                 <Label Text="{Binding Task.RepairTaskId, StringFormat='Task #{0}'}" TextColor="#F1F1F5" FontAttributes="Bold" />
@@ -134,7 +134,7 @@
                     <Entry Placeholder="Tìm theo tên hoặc id..." Text="{Binding EmployeeSearchTerm}" TextColor="#F1F1F5" />
                     <CollectionView ItemsSource="{Binding FilteredEmployeeOptions}">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="vm:RepairTasksViewModel.LookupOption">
+                            <DataTemplate x:DataType="vm:RepairTasksViewModel+LookupOption">
                                 <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SelectEmployeeCommand}"
                                         CommandParameter="{Binding .}" />
@@ -154,7 +154,7 @@
                     <Entry Placeholder="Tìm theo mô tả hoặc id..." Text="{Binding ServiceItemSearchTerm}" TextColor="#F1F1F5" />
                     <CollectionView ItemsSource="{Binding FilteredServiceItemOptions}">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="vm:RepairTasksViewModel.LookupOption">
+                            <DataTemplate x:DataType="vm:RepairTasksViewModel+LookupOption">
                                 <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SelectServiceItemCommand}"
                                         CommandParameter="{Binding .}" />

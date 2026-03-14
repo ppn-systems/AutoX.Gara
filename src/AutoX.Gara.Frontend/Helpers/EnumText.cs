@@ -9,7 +9,7 @@ namespace AutoX.Gara.Frontend.Helpers;
 
 public static class EnumText
 {
-    public static string Get<TEnum>(TEnum value) where TEnum : struct, System.Enum
+    public static System.String Get<TEnum>(TEnum value) where TEnum : struct, System.Enum
     {
         MemberInfo? member = typeof(TEnum).GetMember(value.ToString()).FirstOrDefault();
         if (member is null)
@@ -21,8 +21,8 @@ public static class EnumText
         DisplayAttribute? display = member.GetCustomAttribute<DisplayAttribute>();
         if (display is not null)
         {
-            string? name = display.GetName();
-            if (!string.IsNullOrWhiteSpace(name))
+            System.String? name = display.GetName();
+            if (!System.String.IsNullOrWhiteSpace(name))
             {
                 return name!;
             }
@@ -30,15 +30,9 @@ public static class EnumText
 
         // Fallback to DescriptionAttribute
         DescriptionAttribute? desc = member.GetCustomAttribute<DescriptionAttribute>();
-        if (desc is not null && !string.IsNullOrWhiteSpace(desc.Description))
-        {
-            return desc.Description;
-        }
-
-        return value.ToString();
+        return desc is not null && !System.String.IsNullOrWhiteSpace(desc.Description) ? desc.Description : value.ToString();
     }
 
-    public static string[] GetNames<TEnum>() where TEnum : struct, System.Enum
-        => System.Enum.GetValues<TEnum>().Select(Get).ToArray();
+    public static System.String[] GetNames<TEnum>() where TEnum : struct, System.Enum => [.. System.Enum.GetValues<TEnum>().Select(Get)];
 }
 

@@ -6,12 +6,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Billings;assembly=AutoX.Gara.Shared"
+    xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
     x:DataType="vm:InvoicesViewModel"
     Title="{Binding PageTitle}"
     BackgroundColor="#0A0A0F">
 
     <ContentPage.Resources>
         <ResourceDictionary>
+            <conv:InverseBoolConverter x:Key="InverseBool" />
             <Style x:Key="CardStyle" TargetType="Border">
                 <Setter Property="BackgroundColor" Value="#111118" />
                 <Setter Property="StrokeShape" Value="RoundRectangle 10" />
@@ -85,33 +87,114 @@
 
         <!-- Form overlay -->
         <Grid IsVisible="{Binding IsFormVisible}" BackgroundColor="#70000010" RowSpan="2">
-            <Border Style="{StaticResource CardStyle}" VerticalOptions="Center" HorizontalOptions="Center" Padding="16" WidthRequest="340">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="Hóa đơn" TextColor="#F1F1F5" FontAttributes="Bold" />
-
-                    <Label Text="Số hóa đơn" Style="{StaticResource MutedLabel}" />
-                    <Entry Text="{Binding FormInvoiceNumber}" TextColor="#F1F1F5" />
-
-                    <Label Text="Ngày" Style="{StaticResource MutedLabel}" />
-                    <DatePicker Date="{Binding FormInvoiceDate}" TextColor="#F1F1F5" />
-
-                    <Label Text="Thuế" Style="{StaticResource MutedLabel}" />
-                    <Picker ItemsSource="{Binding TaxRateOptions}" SelectedIndex="{Binding PickerTaxRateIndex}" />
-
-                    <Label Text="Giảm giá" Style="{StaticResource MutedLabel}" />
-                    <Picker ItemsSource="{Binding DiscountTypeOptions}" SelectedIndex="{Binding PickerDiscountTypeIndex}" />
-                    <Entry Text="{Binding FormDiscount}" Keyboard="Numeric" TextColor="#F1F1F5" />
-
-                    <Label Text="Trạng thái thanh toán" Style="{StaticResource MutedLabel}" />
-                    <Picker ItemsSource="{Binding PaymentStatusOptions}" SelectedIndex="{Binding PickerPaymentStatusIndex}" />
-
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
-                        <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CancelFormCommand}" />
-                        <Button Grid.Column="1" Text="Lưu" Style="{StaticResource AccentBtn}" Command="{Binding SaveCommand}" />
+            <Border Style="{StaticResource CardStyle}"
+                    VerticalOptions="Center" HorizontalOptions="Center"
+                    Padding="16" WidthRequest="420" HeightRequest="640">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
+                    <Grid RowDefinitions="Auto,Auto" RowSpacing="6">
+                        <Label Text="Hóa đơn" TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
+                        <Label Grid.Row="1" Text="{Binding ErrorMessage}" TextColor="#EF4444" IsVisible="{Binding HasError}" />
                     </Grid>
-                </VerticalStackLayout>
+
+                    <ScrollView Grid.Row="1">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="Lệnh sửa chữa" Style="{StaticResource MutedLabel}" />
+                            <Button Text="{Binding SelectedRepairOrderOption.Display, FallbackValue='Chọn lệnh sửa chữa'}"
+                                    Style="{StaticResource GhostBtn}"
+                                    HeightRequest="48"
+                                    Command="{Binding OpenRepairOrderSelectorCommand}" />
+
+                            <Border Style="{StaticResource CardStyle}" Padding="12" BackgroundColor="#0E0E16">
+                                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*" ColumnSpacing="10" RowSpacing="6">
+                                    <Label Text="Dịch vụ" Style="{StaticResource MutedLabel}" />
+                                    <Label Grid.Column="1" Text="{Binding PreviewServiceSubtotal, StringFormat='{0:N0}'}" TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                                    <Label Grid.Row="1" Text="Phụ tùng" Style="{StaticResource MutedLabel}" />
+                                    <Label Grid.Row="1" Grid.Column="1" Text="{Binding PreviewPartsSubtotal, StringFormat='{0:N0}'}" TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                                    <Label Grid.Row="2" Text="Tổng" TextColor="#F1F1F5" FontAttributes="Bold" />
+                                    <Label Grid.Row="2" Grid.Column="1" Text="{Binding PreviewTotalAmount, StringFormat='{0:N0}'}" TextColor="#F1F1F5" FontAttributes="Bold" HorizontalTextAlignment="End" />
+                                </Grid>
+                            </Border>
+
+                            <Label Text="Số hóa đơn" Style="{StaticResource MutedLabel}" />
+                            <Entry Text="{Binding FormInvoiceNumber}" TextColor="#F1F1F5" HeightRequest="44" />
+
+                            <Label Text="Ngày" Style="{StaticResource MutedLabel}" />
+                            <DatePicker Date="{Binding FormInvoiceDate}" TextColor="#F1F1F5" HeightRequest="44" />
+
+                            <Label Text="Thuế" Style="{StaticResource MutedLabel}" />
+                            <Picker ItemsSource="{Binding TaxRateOptions}" SelectedIndex="{Binding PickerTaxRateIndex}" HeightRequest="48" />
+
+                            <Label Text="Giảm giá" Style="{StaticResource MutedLabel}" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <Picker ItemsSource="{Binding DiscountTypeOptions}" SelectedIndex="{Binding PickerDiscountTypeIndex}" HeightRequest="48" />
+                                <Entry Grid.Column="1" WidthRequest="120" Text="{Binding FormDiscount}" Keyboard="Numeric" TextColor="#F1F1F5" HeightRequest="44" HorizontalTextAlignment="End" />
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <Label Text="Thuế (ước tính)" Style="{StaticResource MutedLabel}" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding PreviewTaxAmount, StringFormat='{0:N0}'}" TextColor="#F1F1F5" HorizontalTextAlignment="End" VerticalOptions="Center" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <Label Text="Giảm giá (ước tính)" Style="{StaticResource MutedLabel}" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding PreviewDiscountAmount, StringFormat='{0:N0}'}" TextColor="#F1F1F5" HorizontalTextAlignment="End" VerticalOptions="Center" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <Label Text="Tạm tính" Style="{StaticResource MutedLabel}" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding PreviewSubtotal, StringFormat='{0:N0}'}" TextColor="#F1F1F5" HorizontalTextAlignment="End" VerticalOptions="Center" />
+                            </Grid>
+
+                            <Label Text="Trạng thái thanh toán" Style="{StaticResource MutedLabel}" />
+                            <Picker ItemsSource="{Binding PaymentStatusOptions}" SelectedIndex="{Binding PickerPaymentStatusIndex}" HeightRequest="48" />
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Grid.Column="0"
+                                Text="Hủy"
+                                Style="{StaticResource GhostBtn}"
+                                HeightRequest="48"
+                                IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBool}}"
+                                Command="{Binding CancelFormCommand}" />
+                        <Grid Grid.Column="1" ColumnDefinitions="Auto,*" ColumnSpacing="10" VerticalOptions="Center">
+                            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" Color="#F1F1F5" />
+                            <Button Grid.Column="1"
+                                    Text="Lưu"
+                                    Style="{StaticResource AccentBtn}"
+                                    HeightRequest="48"
+                                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBool}}"
+                                    Command="{Binding SaveCommand}" />
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- RepairOrder selector overlay -->
+        <Grid IsVisible="{Binding IsRepairOrderSelectorVisible}" BackgroundColor="#70000010" RowSpan="2">
+            <Border Style="{StaticResource CardStyle}"
+                    VerticalOptions="Center" HorizontalOptions="Center"
+                    Padding="18" WidthRequest="380" HeightRequest="520">
+                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="12">
+                    <Label Text="Chọn lệnh sửa chữa" TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
+                    <Entry Grid.Row="1" Placeholder="Tìm theo id, ngày, trạng thái..." Text="{Binding RepairOrderSearchTerm}" TextColor="#F1F1F5" HeightRequest="44" />
+                    <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsLookupLoading}" IsVisible="{Binding IsLookupLoading}" Color="#6366F1" />
+                    <CollectionView Grid.Row="3" ItemsSource="{Binding FilteredRepairOrderOptions}" VerticalOptions="FillAndExpand">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:InvoicesViewModel+LookupOption">
+                                <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"
+                                        Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SelectRepairOrderCommand}"
+                                        CommandParameter="{Binding .}" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                    <Grid Grid.Row="4" ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button Grid.Column="0" Text="Tải lại" Style="{StaticResource GhostBtn}" Command="{Binding LoadRepairOrdersCommand}" />
+                        <Button Grid.Column="1" Text="Đóng" Style="{StaticResource GhostBtn}" Command="{Binding CloseRepairOrderSelectorCommand}" />
+                    </Grid>
+                </Grid>
             </Border>
         </Grid>
     </Grid>
 </ContentPage>
-

@@ -3,7 +3,7 @@
 using AutoX.Gara.Shared.Protocol.Billings;
 using Nalix.Common.Networking.Protocols;
 
-namespace AutoX.Gara.Frontend.Results.Billings;
+namespace AutoX.Gara.Frontend.Results.ServiceItems;
 
 public sealed class ServiceItemListResult
 {

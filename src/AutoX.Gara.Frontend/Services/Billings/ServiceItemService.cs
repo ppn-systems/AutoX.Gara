@@ -1,7 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Frontend.Results.Billings;
+using AutoX.Gara.Frontend.Results.ServiceItems;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Billings;
 using Nalix.Common.Diagnostics.Abstractions;
@@ -144,6 +144,125 @@ public sealed class ServiceItemService
         if (ex.InnerException is not null)
         {
             logger.Error("Inner: " + ex.InnerException);
+        }
+    }
+
+    public async System.Threading.Tasks.Task<ServiceItemWriteResult> CreateAsync(
+        ServiceItemDto data,
+        System.Threading.CancellationToken ct = default)
+    {
+        ServiceItemWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.SERVICE_ITEM_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
+
+        if (result.IsSuccess)
+        {
+            _cache.Invalidate();
+        }
+
+        return result;
+    }
+
+    public async System.Threading.Tasks.Task<ServiceItemWriteResult> UpdateAsync(
+        ServiceItemDto data,
+        System.Threading.CancellationToken ct = default)
+    {
+        ServiceItemWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.SERVICE_ITEM_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
+
+        if (result.IsSuccess)
+        {
+            _cache.Invalidate();
+        }
+
+        return result;
+    }
+
+    public async System.Threading.Tasks.Task<ServiceItemWriteResult> DeleteAsync(
+        ServiceItemDto data,
+        System.Threading.CancellationToken ct = default)
+    {
+        ServiceItemWriteResult result = await SendWritePacketAsync(
+            (System.UInt16)OpCommand.SERVICE_ITEM_DELETE, data, expectEcho: false, ct).ConfigureAwait(false);
+
+        if (result.IsSuccess)
+        {
+            _cache.Invalidate();
+        }
+
+        return result;
+    }
+
+    private static async System.Threading.Tasks.Task<ServiceItemWriteResult> SendWritePacketAsync(
+        System.UInt16 opcode,
+        ServiceItemDto data,
+        System.Boolean expectEcho,
+        System.Threading.CancellationToken ct)
+    {
+        try
+        {
+            System.UInt32 sq = Csprng.NextUInt32();
+            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+
+            data.OpCode = opcode;
+            data.SequenceId = sq;
+
+            System.Threading.Tasks.TaskCompletionSource<ServiceItemWriteResult> tcs =
+                new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+
+            System.IDisposable? echoSub = null;
+            System.IDisposable? errSub = null;
+
+            if (expectEcho)
+            {
+                echoSub = client.OnOnce<ServiceItemDto>(
+                    predicate: p => p.SequenceId == sq,
+                    handler: confirmed =>
+                    {
+                        echoSub?.Dispose();
+                        errSub?.Dispose();
+                        tcs.TrySetResult(ServiceItemWriteResult.Success(confirmed));
+                    });
+            }
+
+            errSub = client.OnOnce<Directive>(
+                predicate: p => p.SequenceId == sq,
+                handler: resp =>
+                {
+                    echoSub?.Dispose();
+                    errSub?.Dispose();
+                    ServiceItemWriteResult result = resp.Type == ControlType.NONE
+                        ? ServiceItemWriteResult.Success()
+                        : ServiceItemWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
+                    tcs.TrySetResult(result);
+                });
+
+            await client.SendAsync(data, ct).ConfigureAwait(false);
+
+            using System.Threading.CancellationTokenSource cts =
+                System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
+            System.Threading.Tasks.Task timeoutTask =
+                System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
+            System.Threading.Tasks.Task winner =
+                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
+            cts.Cancel();
+
+            if (!ReferenceEquals(winner, tcs.Task))
+            {
+                echoSub?.Dispose();
+                errSub?.Dispose();
+                return ServiceItemWriteResult.Timeout();
+            }
+
+            return await tcs.Task.ConfigureAwait(false);
+        }
+        catch (System.OperationCanceledException)
+        {
+            return ServiceItemWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+        }
+        catch (System.Exception ex)
+        {
+            LogException(ex);
+            return ServiceItemWriteResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 }

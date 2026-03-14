@@ -1,11 +1,12 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Repairs;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Results.Billings;
 using AutoX.Gara.Frontend.Services.Billings;
-using AutoX.Gara.Shared.Protocol.Billings;
 using AutoX.Gara.Frontend.Services.Employees;
+using AutoX.Gara.Shared.Protocol.Billings;
 using AutoX.Gara.Shared.Protocol.Employees;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,16 +19,17 @@ namespace AutoX.Gara.Frontend.ViewModels;
 public sealed partial class RepairTasksViewModel : ObservableObject, System.IDisposable
 {
     private readonly RepairTaskService _service;
-    private System.Threading.CancellationTokenSource? _cts;
     private readonly EmployeeService _employeeService;
     private readonly ServiceItemService _serviceItemService;
+
+    private System.Threading.CancellationTokenSource? _cts;
     private System.Threading.CancellationTokenSource? _lookupCts;
 
-    private readonly System.Collections.Generic.Dictionary<System.Int32, System.String> _employeeNameById = new();
-    private readonly System.Collections.Generic.Dictionary<System.Int32, System.String> _serviceDescById = new();
+    private readonly System.Collections.Generic.Dictionary<System.Int32, System.String> _employeeNameById = [];
+    private readonly System.Collections.Generic.Dictionary<System.Int32, System.String> _serviceDescById = [];
     private System.Collections.Generic.List<RepairTaskDto> _rawTasks = [];
 
-    private const int DefaultPageSize = 10;
+    private const System.Int32 DefaultPageSize = 10;
 
     public RepairTasksViewModel(
         RepairTaskService service,
@@ -50,7 +52,7 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
 
     [ObservableProperty] public partial RepairOrderDto? RepairOrder { get; set; }
 
-    public string PageTitle => RepairOrder?.RepairOrderId is null
+    public System.String PageTitle => RepairOrder?.RepairOrderId is null
         ? "Task sửa chữa"
         : $"Task lệnh #{RepairOrder.RepairOrderId}";
 
@@ -60,8 +62,8 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
     [ObservableProperty] public partial bool HasNextPage { get; set; }
     [ObservableProperty] public partial bool HasPreviousPage { get; set; }
     [ObservableProperty] public partial int TotalCount { get; set; }
-    public int TotalPages => TotalCount > 0
-        ? (int)System.Math.Ceiling((double)TotalCount / DefaultPageSize)
+    public System.Int32 TotalPages => TotalCount > 0
+        ? (System.Int32)System.Math.Ceiling((System.Double)TotalCount / DefaultPageSize)
         : 0;
 
     [ObservableProperty] public partial bool IsLoading { get; set; }
@@ -73,7 +75,7 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
     [ObservableProperty] public partial string PopupTitle { get; set; } = string.Empty;
     [ObservableProperty] public partial string PopupMessage { get; set; } = string.Empty;
     [ObservableProperty] public partial string PopupButtonText { get; set; } = "OK";
-    public bool IsPopupNotRetry => !IsPopupRetry;
+    public System.Boolean IsPopupNotRetry => !IsPopupRetry;
 
     // Lookups (for pickers)
     public ObservableCollection<LookupOption> EmployeeOptions { get; } = [];
@@ -97,25 +99,21 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
     [ObservableProperty] public partial bool IsEditing { get; set; }
     [ObservableProperty] public partial RepairTaskDto? SelectedRepairTask { get; set; }
 
-    public string FormTitle => IsEditing ? "Sửa task" : "Thêm task";
+    public System.String FormTitle => IsEditing ? "Sửa task" : "Thêm task";
 
     [ObservableProperty] public partial int FormEmployeeId { get; set; }
     [ObservableProperty] public partial int FormServiceItemId { get; set; }
     [ObservableProperty] public partial double FormEstimatedDuration { get; set; } = 1.0;
 
     [ObservableProperty] public partial int PickerStatusIndex { get; set; } = (int)RepairOrderStatus.Pending;
-    public string[] StatusOptions { get; } = EnumText.GetNames<RepairOrderStatus>();
+    public System.String[] StatusOptions { get; } = EnumText.GetNames<RepairOrderStatus>();
 
     public RepairOrderStatus FormStatus
     {
         get
         {
             RepairOrderStatus[] values = System.Enum.GetValues<RepairOrderStatus>();
-            if (PickerStatusIndex < 0 || PickerStatusIndex >= values.Length)
-            {
-                return RepairOrderStatus.Pending;
-            }
-            return values[PickerStatusIndex];
+            return PickerStatusIndex < 0 || PickerStatusIndex >= values.Length ? RepairOrderStatus.Pending : values[PickerStatusIndex];
         }
     }
 
@@ -209,7 +207,7 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
     [RelayCommand]
     private void OpenEmployeeSelector()
     {
-        EmployeeSearchTerm = string.Empty;
+        EmployeeSearchTerm = System.String.Empty;
         RefreshEmployeeFilter();
         IsEmployeeSelectorVisible = true;
     }
@@ -217,7 +215,7 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
     [RelayCommand]
     private void OpenServiceItemSelector()
     {
-        ServiceItemSearchTerm = string.Empty;
+        ServiceItemSearchTerm = System.String.Empty;
         RefreshServiceItemFilter();
         IsServiceItemSelectorVisible = true;
     }
@@ -265,11 +263,11 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
                 for (System.Int32 i = 0; i < empResult.Employees.Count; i++)
                 {
                     EmployeeDto e = empResult.Employees[i];
-                    if (e.EmployeeId.HasValue && e.EmployeeId.Value > 0)
+                    if (e.EmployeeId > 0)
                     {
                         System.String display = $"#{e.EmployeeId.Value} - {e.Name}";
                         EmployeeOptions.Add(new LookupOption(e.EmployeeId.Value, display));
-                        _employeeNameById[e.EmployeeId.Value] = e.Name ?? display;
+                        _employeeNameById[e.EmployeeId.Value] = display;
                     }
                 }
             }
@@ -286,13 +284,11 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
                 for (System.Int32 i = 0; i < siResult.ServiceItems.Count; i++)
                 {
                     ServiceItemDto s = siResult.ServiceItems[i];
-                    if (s.ServiceItemId.HasValue && s.ServiceItemId.Value > 0)
+                    if (s.ServiceItemId > 0)
                     {
-                        System.String display = $"#{s.ServiceItemId.Value} - {s.Description} ({s.UnitPrice:n0})";
-                        ServiceItemOptions.Add(new LookupOption(
-                            s.ServiceItemId.Value,
-                            display));
-                        _serviceDescById[s.ServiceItemId.Value] = s.Description ?? display;
+                        System.String display = $"#{s.ServiceItemId.Value} - {EnumText.Get<ServiceType>(s.Type)} ({s.UnitPrice:n0})";
+                        ServiceItemOptions.Add(new LookupOption(s.ServiceItemId.Value, display));
+                        _serviceDescById[s.ServiceItemId.Value] = display;
                     }
                 }
             }
@@ -353,8 +349,22 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
 
     partial void OnCurrentPageChanged(int value) => _ = LoadAsync();
 
-    [RelayCommand] private void NextPage() { if (HasNextPage) CurrentPage++; }
-    [RelayCommand] private void PreviousPage() { if (HasPreviousPage) CurrentPage--; }
+    [RelayCommand]
+    private void NextPage()
+    {
+        if (HasNextPage)
+        {
+            CurrentPage++;
+        }
+    }
+    [RelayCommand]
+    private void PreviousPage()
+    {
+        if (HasPreviousPage)
+        {
+            CurrentPage--;
+        }
+    }
 
     [RelayCommand]
     private void OpenAddForm()
@@ -366,7 +376,7 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
         SelectedEmployeeOption = null;
         SelectedServiceItemOption = null;
         FormEstimatedDuration = 1.0;
-        PickerStatusIndex = (int)RepairOrderStatus.Pending;
+        PickerStatusIndex = (System.Int32)RepairOrderStatus.Pending;
         HasStartDate = false;
         HasCompletionDate = false;
         FormStartDateValue = System.DateTime.Today;
@@ -383,7 +393,7 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
         FormServiceItemId = t.ServiceItemId;
         SyncSelectedOptionsFromIds();
         FormEstimatedDuration = t.EstimatedDuration;
-        PickerStatusIndex = (int)t.Status;
+        PickerStatusIndex = (System.Int32)t.Status;
         HasStartDate = t.StartDate.HasValue;
         FormStartDateValue = t.StartDate?.ToLocalTime().Date ?? System.DateTime.Today;
         HasCompletionDate = t.CompletionDate.HasValue;
@@ -525,7 +535,7 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
 
     private void ClearError() { HasError = false; ErrorMessage = null; }
 
-    private void HandleError(string title, string message, ProtocolAdvice advice)
+    private void HandleError(System.String title, System.String message, ProtocolAdvice advice)
     {
         switch (advice)
         {
@@ -539,7 +549,7 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
         }
     }
 
-    private void ShowPopup(string title, string message, bool isRetry)
+    private void ShowPopup(System.String title, System.String message, System.Boolean isRetry)
     {
         PopupTitle = title;
         PopupMessage = message;

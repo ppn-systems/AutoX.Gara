@@ -15,15 +15,12 @@ using System.Collections.ObjectModel;
 
 namespace AutoX.Gara.Frontend.ViewModels;
 
-public sealed partial class RepairOrdersViewModel : ObservableObject, System.IDisposable
+public sealed partial class RepairOrdersViewModel(RepairOrderService service) : ObservableObject, System.IDisposable
 {
-    private readonly RepairOrderService _service;
+    private readonly RepairOrderService _service = service ?? throw new System.ArgumentNullException(nameof(service));
     private System.Threading.CancellationTokenSource? _cts;
 
     private const System.Int32 DefaultPageSize = 5;
-
-    public RepairOrdersViewModel(RepairOrderService service)
-        => _service = service ?? throw new System.ArgumentNullException(nameof(service));
 
     // ─── Context ─────────────────────────────────────────────────────────────
 

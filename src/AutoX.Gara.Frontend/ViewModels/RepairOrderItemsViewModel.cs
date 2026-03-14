@@ -7,7 +7,8 @@ using AutoX.Gara.Shared.Protocol.Billings;
 using AutoX.Gara.Shared.Protocol.Inventory;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Nalix.Common.Networking.Protocols;
+using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Framework.Injection;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -20,10 +21,10 @@ public sealed partial class RepairOrderItemsViewModel : ObservableObject, System
     private readonly PartService _partService;
     private System.Threading.CancellationTokenSource? _lookupCts;
 
-    private readonly System.Collections.Generic.Dictionary<System.Int32, System.String> _partNameById = new();
+    private readonly System.Collections.Generic.Dictionary<System.Int32, System.String> _partNameById = [];
     private System.Collections.Generic.List<RepairOrderItemDto> _rawItems = [];
 
-    private const int DefaultPageSize = 20;
+    private const System.Int32 DefaultPageSize = 20;
 
     public RepairOrderItemsViewModel(RepairOrderItemService service, PartService partService)
     {
@@ -41,7 +42,7 @@ public sealed partial class RepairOrderItemsViewModel : ObservableObject, System
 
     [ObservableProperty] public partial RepairOrderDto? RepairOrder { get; set; }
 
-    public string PageTitle => RepairOrder?.RepairOrderId is null
+    public System.String PageTitle => RepairOrder?.RepairOrderId is null
         ? "Part trong lệnh"
         : $"Part lệnh #{RepairOrder.RepairOrderId}";
 
@@ -51,11 +52,12 @@ public sealed partial class RepairOrderItemsViewModel : ObservableObject, System
     [ObservableProperty] public partial bool HasNextPage { get; set; }
     [ObservableProperty] public partial bool HasPreviousPage { get; set; }
     [ObservableProperty] public partial int TotalCount { get; set; }
-    public int TotalPages => TotalCount > 0
-        ? (int)System.Math.Ceiling((double)TotalCount / DefaultPageSize)
+    public System.Int32 TotalPages => TotalCount > 0
+        ? (System.Int32)System.Math.Ceiling((System.Double)TotalCount / DefaultPageSize)
         : 0;
 
     [ObservableProperty] public partial bool IsLoading { get; set; }
+    [ObservableProperty] public partial bool IsLookupLoading { get; set; }
     [ObservableProperty] public partial bool HasError { get; set; }
     [ObservableProperty] public partial string? ErrorMessage { get; set; }
 
@@ -118,9 +120,15 @@ public sealed partial class RepairOrderItemsViewModel : ObservableObject, System
     [RelayCommand]
     private void OpenPartSelector()
     {
-        PartSearchTerm = string.Empty;
+        PartSearchTerm = System.String.Empty;
         RefreshPartFilter();
         IsPartSelectorVisible = true;
+
+        // If user opens selector before lookups finished, ensure we start loading.
+        if (PartOptions.Count == 0 && !IsLookupLoading)
+        {
+            _ = LoadLookupsAsync();
+        }
     }
 
     [RelayCommand]
@@ -158,34 +166,50 @@ public sealed partial class RepairOrderItemsViewModel : ObservableObject, System
 
         try
         {
+            IsLookupLoading = true;
             var result = await _partService.GetListAsync(
                 page: 1,
                 pageSize: 200,
                 ct: ct);
 
-            if (result.IsSuccess)
+            if (!result.IsSuccess)
             {
-                PartOptions.Clear();
-                _partNameById.Clear();
-                for (System.Int32 i = 0; i < result.Parts.Count; i++)
+                HasError = true;
+                ErrorMessage = $"Không tải được danh sách part: {result.ErrorMessage ?? "Thao tác thất bại."}";
+                return;
+            }
+
+            PartOptions.Clear();
+            _partNameById.Clear();
+            for (System.Int32 i = 0; i < result.Parts.Count; i++)
+            {
+                PartDto p = result.Parts[i];
+                if (p.PartId.HasValue && p.PartId.Value > 0)
                 {
-                    PartDto p = result.Parts[i];
-                    if (p.PartId.HasValue && p.PartId.Value > 0)
-                    {
-                        System.String display = $"#{p.PartId.Value} - {p.PartName} ({p.SellingPrice:n0})";
-                        PartOptions.Add(new LookupOption(
-                            p.PartId.Value,
-                            display));
-                        _partNameById[p.PartId.Value] = p.PartName ?? display;
-                    }
+                    System.String display = $"#{p.PartId.Value} - {p.PartName} ({p.SellingPrice:n0})";
+                    PartOptions.Add(new LookupOption(
+                        p.PartId.Value,
+                        display));
+                    _partNameById[p.PartId.Value] = display;
                 }
             }
 
             SyncSelectedPartFromId();
             RefreshRowDisplays();
+            RefreshPartFilter();
         }
         catch (System.OperationCanceledException) when (ct.IsCancellationRequested)
         {
+        }
+        catch (System.Exception ex)
+        {
+            LogException(ex);
+            HasError = true;
+            ErrorMessage = $"Không tải được danh sách part: {ex.Message}";
+        }
+        finally
+        {
+            IsLookupLoading = false;
         }
     }
 
@@ -238,18 +262,39 @@ public sealed partial class RepairOrderItemsViewModel : ObservableObject, System
 
     partial void OnCurrentPageChanged(int value) => _ = LoadAsync();
 
-    [RelayCommand] private void NextPage() { if (HasNextPage) CurrentPage++; }
-    [RelayCommand] private void PreviousPage() { if (HasPreviousPage) CurrentPage--; }
+    [RelayCommand]
+    private void NextPage()
+    {
+        if (HasNextPage)
+        {
+            CurrentPage++;
+        }
+    }
+    [RelayCommand]
+    private void PreviousPage()
+    {
+        if (HasPreviousPage)
+        {
+            CurrentPage--;
+        }
+    }
 
     [RelayCommand]
     private void OpenAddForm()
     {
+        ClearError();
         IsEditing = false;
         SelectedItem = null;
         FormPartId = 0;
         SelectedPartOption = null;
         FormQuantity = 1;
         IsFormVisible = true;
+
+        // Preload part list so user can select immediately.
+        if (PartOptions.Count == 0 && !IsLookupLoading)
+        {
+            _ = LoadLookupsAsync();
+        }
     }
 
     [RelayCommand]
@@ -304,6 +349,7 @@ public sealed partial class RepairOrderItemsViewModel : ObservableObject, System
                 return;
             }
 
+            ClearError();
             IsFormVisible = false;
             await LoadAsync();
         }
@@ -382,6 +428,24 @@ public sealed partial class RepairOrderItemsViewModel : ObservableObject, System
         }
 
         cts.Dispose();
+    }
+
+    private static void LogException(System.Exception ex)
+    {
+        // Keep logging consistent with global crash logging setup.
+        try
+        {
+            ILogger logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+            logger.Error(ex.ToString());
+            if (ex.InnerException is not null)
+            {
+                logger.Error("Inner: " + ex.InnerException);
+            }
+        }
+        catch
+        {
+            // Swallow: logging should never crash UI.
+        }
     }
 
     private void ClearError() { HasError = false; ErrorMessage = null; }

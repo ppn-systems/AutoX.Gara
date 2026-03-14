@@ -1,6 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Services.Billings;
+using AutoX.Gara.Frontend.Services.Inventory;
 using AutoX.Gara.Frontend.ViewModels;
 using AutoX.Gara.Shared.Protocol.Customers;
 using Microsoft.Maui.Controls;
@@ -17,7 +18,17 @@ public partial class InvoicesPage : ContentPage
         InitializeComponent();
         _vm = new InvoicesViewModel(
             new InvoiceService(
-                InstanceManager.Instance.GetOrCreateInstance<InvoiceQueryCache>()));
+                InstanceManager.Instance.GetOrCreateInstance<InvoiceQueryCache>()),
+            new RepairOrderService(
+                InstanceManager.Instance.GetOrCreateInstance<RepairOrderQueryCache>()),
+            new RepairTaskService(
+                InstanceManager.Instance.GetOrCreateInstance<RepairTaskQueryCache>()),
+            new RepairOrderItemService(
+                InstanceManager.Instance.GetOrCreateInstance<RepairOrderItemQueryCache>()),
+            new ServiceItemService(
+                InstanceManager.Instance.GetOrCreateInstance<ServiceItemQueryCache>()),
+            new PartService(
+                InstanceManager.Instance.GetOrCreateInstance<PartQueryCache>()));
         BindingContext = _vm;
     }
 

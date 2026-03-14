@@ -1,26 +1,25 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Domain.Enums.Employees;
-using AutoX.Gara.Frontend.Results.Employees;
-using AutoX.Gara.Frontend.Services.Employees;
+using AutoX.Gara.Frontend.Helpers;
+using AutoX.Gara.Frontend.Results.ServiceItems;
+using AutoX.Gara.Frontend.Services.Billings;
 using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Employees;
+using AutoX.Gara.Shared.Protocol.Billings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Framework.Injection;
 using System;
+using System.Diagnostics;
 
 namespace AutoX.Gara.Frontend.ViewModels;
 
 /// <summary>
-/// ViewModel for employee management.
+/// ViewModel for service item management.
 /// </summary>
-public sealed partial class EmployeesViewModel : ObservableObject, System.IDisposable
+public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDisposable
 {
-    private readonly EmployeeService _service;
+    private readonly ServiceItemService _service;
     private System.Threading.CancellationTokenSource? _loadCts;
     private System.Threading.CancellationTokenSource? _writeCts;
     private System.Threading.CancellationTokenSource? _searchCts;
@@ -42,21 +41,23 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     // ─── Search / Sort ────────────────────────────────────────────────────────
 
     [ObservableProperty] public partial System.String SearchTerm { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial EmployeeSortField SortBy { get; set; } = EmployeeSortField.Name;
+    [ObservableProperty] public partial ServiceItemSortField SortBy { get; set; } = ServiceItemSortField.Description;
     [ObservableProperty] public partial System.Boolean SortDescending { get; set; } = false;
 
     // ─── Filter ───────────────────────────────────────────────────────────────
 
-    [ObservableProperty] public partial Position FilterPosition { get; set; } = Position.None;
-    [ObservableProperty] public partial EmploymentStatus FilterStatus { get; set; } = EmploymentStatus.None;
-    [ObservableProperty] public partial Gender FilterGender { get; set; } = Gender.None;
+    [ObservableProperty] public partial ServiceType? FilterType { get; set; } = null;
+    [ObservableProperty] public partial System.Decimal? FilterMinPrice { get; set; } = null;
+    [ObservableProperty] public partial System.Decimal? FilterMaxPrice { get; set; } = null;
 
-    [ObservableProperty] public partial System.Int32 PickerPositionIndex { get; set; } = 0;
-    [ObservableProperty] public partial System.Int32 PickerStatusIndex { get; set; } = 0;
-    [ObservableProperty] public partial System.Int32 PickerGenderIndex { get; set; } = 0;
+    [ObservableProperty] public partial System.Int32 PickerTypeIndex { get; set; } = 0;
+
+    // ─── Service Type Names (Enum Display) ─────────────────────────────────────
+
+    public System.Collections.Generic.List<System.String> ServiceTypeNames { get; }
 
     public System.Boolean HasActiveFilters
-        => FilterPosition != Position.None || FilterStatus != EmploymentStatus.None || FilterGender != Gender.None;
+        => FilterType.HasValue || FilterMinPrice.HasValue || FilterMaxPrice.HasValue;
 
     // ─── State ────────────────────────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean HasError { get; set; }
     [ObservableProperty] public partial System.String? ErrorMessage { get; set; }
 
-    public System.Boolean IsEmpty => !IsLoading && Employees.Count == 0;
+    public System.Boolean IsEmpty => !IsLoading && ServiceItems.Count == 0;
 
     // ─── Popup ────────────────────────────────────────────────────────────────
 
@@ -80,40 +81,35 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     [ObservableProperty] public partial System.Boolean IsFormVisible { get; set; }
     [ObservableProperty] public partial System.Boolean IsEditing { get; set; }
-    [ObservableProperty] public partial EmployeeDto? SelectedEmployee { get; set; }
+    [ObservableProperty] public partial ServiceItemDto? SelectedServiceItem { get; set; }
 
-    public System.String FormTitle => IsEditing ? "Sửa nhân viên" : "Thêm nhân viên";
-    public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm nhân viên";
+    public System.String FormTitle => IsEditing ? "Sửa dịch vụ" : "Thêm dịch vụ";
+    public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm dịch vụ";
 
-    [ObservableProperty] public partial System.String FormName { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial System.String FormEmail { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial System.String FormAddress { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial System.String FormPhoneNumber { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial System.Int32 FormGenderIndex { get; set; } = 0;
-    [ObservableProperty] public partial System.Int32 FormPositionIndex { get; set; } = 0;
-    [ObservableProperty] public partial System.Int32 FormStatusIndex { get; set; } = 1;
-    [ObservableProperty] public partial System.DateTime FormDateOfBirth { get; set; } = System.DateTime.Today.AddYears(-20);
-    [ObservableProperty] public partial System.DateTime FormStartDate { get; set; } = System.DateTime.Today;
-    [ObservableProperty] public partial System.DateTime? FormEndDate { get; set; } = null;
+    [ObservableProperty] public partial System.String FormDescription { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.String FormUnitPrice { get; set; } = System.String.Empty;
+    [ObservableProperty] public partial System.Int32 FormTypeIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Boolean HasFormError { get; set; }
     [ObservableProperty] public partial System.String? FormErrorMessage { get; set; }
 
-    // ─── Status Confirm ───────────────────────────────────────────────────────
+    // ─── Delete Confirm ───────────────────────────────────────────────────────
 
-    [ObservableProperty] public partial System.Boolean IsStatusConfirmVisible { get; set; }
-    [ObservableProperty] public partial System.Int32 NewStatusIndex { get; set; } = 1;
-    public System.String StatusConfirmName => SelectedEmployee?.Name ?? System.String.Empty;
+    [ObservableProperty] public partial System.Boolean IsDeleteConfirmVisible { get; set; }
+    public System.String DeleteConfirmName => SelectedServiceItem?.Description ?? System.String.Empty;
 
     // ─── Collection ───────────────────────────────────────────────────────────
 
-    public System.Collections.ObjectModel.ObservableCollection<EmployeeDto> Employees { get; } = [];
+    public System.Collections.ObjectModel.ObservableCollection<ServiceItemDto> ServiceItems { get; } = [];
 
     // ─── Constructor ───────────────────────────────────────────────────────────
 
-    public EmployeesViewModel(EmployeeService service)
+    public ServiceItemsViewModel(ServiceItemService service)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
-        Employees.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
+        ServiceItems.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
+
+        // Load service type names from enum
+        ServiceTypeNames = [.. EnumText.GetNames<ServiceType>()];
     }
 
     // ─── Property Hooks ───────────────────────────────────────────────────────
@@ -121,7 +117,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
     partial void OnTotalCountChanged(int value) => OnPropertyChanged(nameof(TotalPages));
     partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmpty));
-    partial void OnSelectedEmployeeChanged(EmployeeDto? value) => OnPropertyChanged(nameof(StatusConfirmName));
+    partial void OnSelectedServiceItemChanged(ServiceItemDto? value) => OnPropertyChanged(nameof(DeleteConfirmName));
     partial void OnIsEditingChanged(bool value)
     {
         OnPropertyChanged(nameof(FormTitle));
@@ -159,34 +155,26 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         }
         catch (System.OperationCanceledException) { }
     }
-    partial void OnSortByChanged(EmployeeSortField value) => _ = LoadAsync();
+    partial void OnSortByChanged(ServiceItemSortField value) => _ = LoadAsync();
     partial void OnSortDescendingChanged(bool value) => _ = LoadAsync();
-    partial void OnFilterPositionChanged(Position value)
+    partial void OnFilterTypeChanged(ServiceType? value)
     {
         OnPropertyChanged(nameof(HasActiveFilters));
         ResetPageAndLoad();
     }
-    partial void OnFilterStatusChanged(EmploymentStatus value)
+    partial void OnFilterMinPriceChanged(System.Decimal? value)
     {
         OnPropertyChanged(nameof(HasActiveFilters));
         ResetPageAndLoad();
     }
-    partial void OnFilterGenderChanged(Gender value)
+    partial void OnFilterMaxPriceChanged(System.Decimal? value)
     {
         OnPropertyChanged(nameof(HasActiveFilters));
         ResetPageAndLoad();
     }
-    partial void OnPickerPositionIndexChanged(int value)
+    partial void OnPickerTypeIndexChanged(int value)
     {
-        FilterPosition = (Position)value;
-    }
-    partial void OnPickerStatusIndexChanged(int value)
-    {
-        FilterStatus = (EmploymentStatus)value;
-    }
-    partial void OnPickerGenderIndexChanged(int value)
-    {
-        FilterGender = (Gender)value;
+        FilterType = value == 0 ? null : (ServiceType?)value;
     }
 
     // ─── Commands ──────────────────────────────────────────────────────────────
@@ -204,19 +192,18 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
         try
         {
-            EmployeeListResult result = await _service.GetListAsync(
+            ServiceItemListResult result = await _service.GetListAsync(
                 page: CurrentPage,
                 pageSize: DefaultPageSize,
                 searchTerm: SearchTerm,
                 sortBy: SortBy,
                 sortDescending: SortDescending,
-                filterPosition: FilterPosition,
-                filterStatus: FilterStatus,
-                filterGender: FilterGender,
+                filterType: FilterType,
+                filterMinUnitPrice: FilterMinPrice,
+                filterMaxUnitPrice: FilterMaxPrice,
                 ct: ct);
 
-            InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Info($"[EmployeesVM] Load ok={result.IsSuccess} count={result.Employees.Count} total={result.TotalCount}");
+            Debug.WriteLine($"[ServiceItemsVM] Load ok={result.IsSuccess} count={result.ServiceItems.Count} total={result.TotalCount}");
 
             if (ct.IsCancellationRequested)
             {
@@ -225,14 +212,16 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
             if (result.IsSuccess)
             {
-                Employees.Clear();
-                foreach (EmployeeDto e in result.Employees)
+                ServiceItems.Clear();
+                foreach (ServiceItemDto item in result.ServiceItems)
                 {
-                    Employees.Add(e);
+                    ServiceItems.Add(item);
                 }
 
                 TotalCount = result.TotalCount >= 0 ? result.TotalCount : TotalCount;
-                HasNextPage = result.TotalCount >= 0 ? CurrentPage < TotalPages : result.HasMore;
+                HasNextPage = result.TotalCount >= 0
+                    ? CurrentPage < TotalPages
+                    : result.HasMore;
             }
             else
             {
@@ -248,36 +237,29 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [RelayCommand]
     private void ClearFilters()
     {
-        PickerPositionIndex = 0;
-        PickerStatusIndex = 0;
-        PickerGenderIndex = 0;
+        PickerTypeIndex = 0;
+        FilterMinPrice = null;
+        FilterMaxPrice = null;
     }
 
     [RelayCommand]
     private void OpenCreateForm()
     {
         IsEditing = false;
-        SelectedEmployee = null;
+        SelectedServiceItem = null;
         ClearForm();
         IsFormVisible = true;
     }
 
     [RelayCommand]
-    private void OpenEditForm(EmployeeDto employee)
+    private void OpenEditForm(ServiceItemDto item)
     {
         IsEditing = true;
-        SelectedEmployee = employee;
+        SelectedServiceItem = item;
 
-        FormName = employee.Name ?? System.String.Empty;
-        FormEmail = employee.Email ?? System.String.Empty;
-        FormAddress = employee.Address ?? System.String.Empty;
-        FormPhoneNumber = employee.PhoneNumber ?? System.String.Empty;
-        FormGenderIndex = (System.Int32)(employee.Gender ?? Gender.None);
-        FormPositionIndex = (System.Int32)(employee.Position ?? Position.None);
-        FormStatusIndex = (System.Int32)(employee.Status ?? EmploymentStatus.None);
-        FormDateOfBirth = employee.DateOfBirth ?? System.DateTime.Today.AddYears(-20);
-        FormStartDate = employee.StartDate ?? System.DateTime.Today;
-        FormEndDate = employee.EndDate;
+        FormDescription = item.Description ?? System.String.Empty;
+        FormUnitPrice = item.UnitPrice.ToString("0.##");
+        FormTypeIndex = (System.Int32)item.Type;
 
         ClearFormError();
         IsFormVisible = true;
@@ -307,8 +289,8 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
         try
         {
-            EmployeeDto data = BuildPacketFromForm();
-            EmployeeWriteResult result = IsEditing
+            ServiceItemDto data = BuildPacketFromForm();
+            ServiceItemWriteResult result = IsEditing
                 ? await _service.UpdateAsync(data, ct)
                 : await _service.CreateAsync(data, ct);
 
@@ -321,10 +303,10 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                 {
                     if (IsEditing)
                     {
-                        System.Int32 idx = IndexOfEmployee(result.UpdatedEntity.EmployeeId);
+                        System.Int32 idx = IndexOfServiceItem(result.UpdatedEntity.ServiceItemId);
                         if (idx >= 0)
                         {
-                            Employees[idx] = result.UpdatedEntity;
+                            ServiceItems[idx] = result.UpdatedEntity;
                         }
                         else
                         {
@@ -333,7 +315,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                     }
                     else
                     {
-                        Employees.Insert(0, result.UpdatedEntity);
+                        ServiceItems.Insert(0, result.UpdatedEntity);
                         TotalCount++;
                         OnPropertyChanged(nameof(TotalPages));
                         HasNextPage = CurrentPage < TotalPages;
@@ -356,20 +338,19 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     }
 
     [RelayCommand]
-    private void RequestChangeStatus(EmployeeDto employee)
+    private void RequestDelete(ServiceItemDto item)
     {
-        SelectedEmployee = employee;
-        NewStatusIndex = (System.Int32)(employee.Status ?? EmploymentStatus.None);
-        IsStatusConfirmVisible = true;
+        SelectedServiceItem = item;
+        IsDeleteConfirmVisible = true;
     }
 
     [RelayCommand]
-    private void CancelChangeStatus() => IsStatusConfirmVisible = false;
+    private void CancelDelete() => IsDeleteConfirmVisible = false;
 
     [RelayCommand]
-    private async System.Threading.Tasks.Task ConfirmChangeStatusAsync()
+    private async System.Threading.Tasks.Task ConfirmDeleteAsync()
     {
-        if (SelectedEmployee is null)
+        if (SelectedServiceItem is null)
         {
             return;
         }
@@ -379,34 +360,31 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         _writeCts = new System.Threading.CancellationTokenSource();
         var ct = _writeCts.Token;
 
-        IsStatusConfirmVisible = false;
+        IsDeleteConfirmVisible = false;
         IsLoading = true;
+
+        ServiceItemDto toDelete = SelectedServiceItem;
 
         try
         {
-            EmployeeDto data = new()
-            {
-                EmployeeId = SelectedEmployee.EmployeeId,
-                Status = (EmploymentStatus)NewStatusIndex,
-                SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
-            };
-
-            EmployeeWriteResult result = await _service.ChangeStatusAsync(data, ct);
+            ServiceItemWriteResult result = await _service.DeleteAsync(toDelete, ct);
 
             if (result.IsSuccess)
             {
-                System.Int32 idx = IndexOfEmployee(SelectedEmployee.EmployeeId);
-                if (idx >= 0)
+                ServiceItems.Remove(toDelete);
+                TotalCount = System.Math.Max(0, TotalCount - 1);
+                SelectedServiceItem = null;
+                OnPropertyChanged(nameof(TotalPages));
+                HasNextPage = CurrentPage < TotalPages;
+
+                if (ServiceItems.Count == 0 && CurrentPage > 1)
                 {
-                    EmployeeDto updated = Employees[idx];
-                    updated.Status = (EmploymentStatus)NewStatusIndex;
-                    Employees[idx] = updated;
+                    CurrentPage--;
                 }
-                SelectedEmployee = null;
             }
             else
             {
-                HandleError("Đổi trạng thái thất bại", result.ErrorMessage!, result.Advice);
+                HandleError("Xóa thất bại", result.ErrorMessage!, result.Advice);
             }
         }
         finally
@@ -475,16 +453,9 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     private void ClearForm()
     {
-        FormName = System.String.Empty;
-        FormEmail = System.String.Empty;
-        FormAddress = System.String.Empty;
-        FormPhoneNumber = System.String.Empty;
-        FormGenderIndex = 0;
-        FormPositionIndex = 0;
-        FormStatusIndex = 1;
-        FormDateOfBirth = System.DateTime.Today.AddYears(-20);
-        FormStartDate = System.DateTime.Today;
-        FormEndDate = null;
+        FormDescription = System.String.Empty;
+        FormUnitPrice = System.String.Empty;
+        FormTypeIndex = 0;
         ClearFormError();
     }
 
@@ -502,59 +473,45 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     private System.Boolean ValidateForm()
     {
-        if (System.String.IsNullOrWhiteSpace(FormName))
-        { SetFormError("Tên nhân viên không được để trống."); return false; }
+        if (System.String.IsNullOrWhiteSpace(FormDescription))
+        { SetFormError("Mô tả dịch vụ không được để trống."); return false; }
 
-        if (FormName.Length > 50)
-        { SetFormError("Tên không được vượt quá 50 ký tự."); return false; }
+        if (FormDescription.Length > 255)
+        { SetFormError("Mô tả không được vượt quá 255 ký tự."); return false; }
 
-        if (!IsValidEmail(FormEmail))
-        { SetFormError("Email không hợp lệ."); return false; }
+        if (!System.Decimal.TryParse(FormUnitPrice, out System.Decimal price) || price <= 0)
+        { SetFormError("Đơn giá không hợp lệ (phải là số dương)."); return false; }
 
-        if (!System.String.IsNullOrWhiteSpace(FormPhoneNumber))
-        {
-            if (!IsValidPhone(FormPhoneNumber))
-            { SetFormError("Số điện thoại không hợp lệ (10-14 chữ số)."); return false; }
-        }
-
-        if (FormDateOfBirth >= System.DateTime.Today)
-        { SetFormError("Ngày sinh phải trong quá khứ."); return false; }
-
-        if (FormEndDate.HasValue && FormEndDate <= FormStartDate)
-        { SetFormError("Ngày kết thúc phải sau ngày bắt đầu."); return false; }
+        if (FormTypeIndex == 0)
+        { SetFormError("Vui lòng chọn loại dịch vụ."); return false; }
 
         return true;
     }
 
-    private EmployeeDto BuildPacketFromForm()
+    private ServiceItemDto BuildPacketFromForm()
     {
-        return new EmployeeDto
+        System.Decimal.TryParse(FormUnitPrice, out System.Decimal price);
+
+        return new ServiceItemDto
         {
-            EmployeeId = IsEditing ? SelectedEmployee?.EmployeeId : null,
-            Name = FormName,
-            Email = FormEmail,
-            Address = FormAddress,
-            PhoneNumber = FormPhoneNumber,
-            Gender = (Gender)FormGenderIndex,
-            Position = (Position)FormPositionIndex,
-            Status = (EmploymentStatus)FormStatusIndex,
-            DateOfBirth = FormDateOfBirth,
-            StartDate = FormStartDate,
-            EndDate = FormEndDate,
+            ServiceItemId = IsEditing ? SelectedServiceItem?.ServiceItemId : null,
+            Description = FormDescription,
+            UnitPrice = price,
+            Type = (ServiceType)FormTypeIndex,
             SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
         };
     }
 
-    private System.Int32 IndexOfEmployee(System.Object? id)
+    private System.Int32 IndexOfServiceItem(System.Object? id)
     {
         if (id is null)
         {
             return -1;
         }
 
-        for (System.Int32 i = 0; i < Employees.Count; i++)
+        for (System.Int32 i = 0; i < ServiceItems.Count; i++)
         {
-            if (Employees[i].EmployeeId is System.Object employeeId && employeeId.Equals(id))
+            if (ServiceItems[i].ServiceItemId is System.Object itemId && itemId.Equals(id))
             {
                 return i;
             }
@@ -588,19 +545,4 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         PopupButtonText = isRetry ? "Thử lại" : "OK";
         IsPopupVisible = true;
     }
-
-    private static System.Boolean IsValidEmail(System.String email)
-    {
-        try
-        {
-            var addr = new System.Net.Mail.MailAddress(email);
-            return addr.Address == email;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static System.Boolean IsValidPhone(System.String phone) => System.Text.RegularExpressions.Regex.IsMatch(phone, @"^\d{10,14}$");
 }
