@@ -5,6 +5,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:AutoX.Gara.Frontend.ViewModels"
+    xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Billings;assembly=AutoX.Gara.Shared"
     x:DataType="vm:TransactionsViewModel"
     Title="{Binding PageTitle}"
@@ -12,6 +13,7 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
+            <conv:EnumTextConverter x:Key="EnumText" />
             <Style x:Key="CardStyle" TargetType="Border">
                 <Setter Property="BackgroundColor" Value="#111118" />
                 <Setter Property="StrokeShape" Value="RoundRectangle 10" />
@@ -63,8 +65,8 @@
                         <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Padding="12">
                             <VerticalStackLayout Spacing="6">
                                 <Label Text="{Binding Amount, StringFormat='{0:N0}'}" TextColor="#F1F1F5" FontAttributes="Bold" />
-                                <Label Text="{Binding PaymentMethod, StringFormat='PTTT: {0}'}" Style="{StaticResource MutedLabel}" />
-                                <Label Text="{Binding Status, StringFormat='Trạng thái: {0}'}" Style="{StaticResource MutedLabel}" />
+                                <Label Text="{Binding PaymentMethod, Converter={StaticResource EnumText}, ConverterParameter='PTTT: '}" Style="{StaticResource MutedLabel}" />
+                                <Label Text="{Binding Status, Converter={StaticResource EnumText}, ConverterParameter='Trạng thái: '}" Style="{StaticResource MutedLabel}" />
                                 <Label Text="{Binding Description}" Style="{StaticResource MutedLabel}" />
                                 <Button Text="Xóa" Style="{StaticResource DangerBtn}"
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.DeleteCommand}"
@@ -106,4 +108,3 @@
         </Grid>
     </Grid>
 </ContentPage>
-

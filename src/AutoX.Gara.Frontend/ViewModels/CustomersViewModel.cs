@@ -3,6 +3,7 @@
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
+using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.ViewModels.Results;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Customers;
@@ -12,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
 using Nalix.Common.Networking.Protocols;
 using System.Diagnostics;
+using System.Linq;
 
 namespace AutoX.Gara.Frontend.ViewModels;
 
@@ -44,6 +46,55 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     // Giữ nguyên FilterType/FilterMembership để logic không đổi
     [ObservableProperty] public partial CustomerType FilterType { get; set; } = CustomerType.None;
     [ObservableProperty] public partial MembershipLevel FilterMembership { get; set; } = MembershipLevel.None;
+
+    private static readonly CustomerType[] CustomerTypeValues =
+    [
+        CustomerType.None,
+        CustomerType.Individual,
+        CustomerType.Business,
+        CustomerType.Government,
+        CustomerType.Fleet,
+        CustomerType.InsuranceCompany,
+        CustomerType.VIP,
+        CustomerType.Potential,
+        CustomerType.Supplier,
+        CustomerType.NonProfit,
+        CustomerType.Dealer,
+        CustomerType.Other
+    ];
+
+    private static readonly MembershipLevel[] MembershipValues =
+    [
+        MembershipLevel.None,
+        MembershipLevel.Trial,
+        MembershipLevel.Standard,
+        MembershipLevel.Silver,
+        MembershipLevel.Gold,
+        MembershipLevel.Platinum,
+        MembershipLevel.Diamond
+    ];
+
+    private static readonly Gender[] GenderValues =
+    [
+        Gender.None,
+        Gender.Male,
+        Gender.Female
+    ];
+
+    public string[] FilterTypeOptions { get; } =
+        CustomerTypeValues.Select((v, idx) => idx == 0 ? "Tất cả loại" : EnumText.Get(v)).ToArray();
+
+    public string[] FilterMembershipOptions { get; } =
+        MembershipValues.Select((v, idx) => idx == 0 ? "Tất cả hạng" : EnumText.Get(v)).ToArray();
+
+    public string[] FormTypeOptions { get; } =
+        CustomerTypeValues.Select((v, idx) => idx == 0 ? "— chọn —" : EnumText.Get(v)).ToArray();
+
+    public string[] FormMembershipOptions { get; } =
+        MembershipValues.Select((v, idx) => idx == 0 ? "— chọn —" : EnumText.Get(v)).ToArray();
+
+    public string[] FormGenderOptions { get; } =
+        GenderValues.Select((v, idx) => idx == 0 ? "— chọn —" : EnumText.Get(v)).ToArray();
 
     // FIX PICKER: Picker.SelectedIndex (int) thay vì SelectedItem (string→enum không match)
     // 0=Tất cả, 1=Cá nhân, 2=Doanh nghiệp
@@ -179,80 +230,29 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     // CustomerType: 0=None,1=Individual,2=Business,3=Government,4=Fleet,5=Insurance,6=VIP,7=Potential,8=Supplier,9=NonProfit,10=Dealer,11=Other
     partial void OnPickerFilterTypeIndexChanged(int value)
     {
-        FilterType = value switch
-        {
-            1 => CustomerType.Individual,
-            2 => CustomerType.Business,
-            3 => CustomerType.Government,
-            4 => CustomerType.Fleet,
-            5 => CustomerType.InsuranceCompany,
-            6 => CustomerType.VIP,
-            7 => CustomerType.Potential,
-            8 => CustomerType.Supplier,
-            9 => CustomerType.NonProfit,
-            10 => CustomerType.Dealer,
-            11 => CustomerType.Other,
-            _ => CustomerType.None
-        };
+        FilterType = CustomerTypeValues[System.Math.Clamp(value, 0, CustomerTypeValues.Length - 1)];
     }
 
     // MembershipLevel: 0=None,1=Trial,2=Standard,3=Silver,4=Gold,5=Platinum,6=Diamond
     partial void OnPickerMembershipIndexChanged(int value)
     {
-        FilterMembership = value switch
-        {
-            1 => MembershipLevel.Trial,
-            2 => MembershipLevel.Standard,
-            3 => MembershipLevel.Silver,
-            4 => MembershipLevel.Gold,
-            5 => MembershipLevel.Platinum,
-            6 => MembershipLevel.Diamond,
-            _ => MembershipLevel.None
-        };
+        FilterMembership = MembershipValues[System.Math.Clamp(value, 0, MembershipValues.Length - 1)];
     }
 
     // Picker index → enum (form)
     partial void OnFormPickerTypeIndexChanged(int value)
     {
-        FormType = value switch
-        {
-            1 => CustomerType.Individual,
-            2 => CustomerType.Business,
-            3 => CustomerType.Government,
-            4 => CustomerType.Fleet,
-            5 => CustomerType.InsuranceCompany,
-            6 => CustomerType.VIP,
-            7 => CustomerType.Potential,
-            8 => CustomerType.Supplier,
-            9 => CustomerType.NonProfit,
-            10 => CustomerType.Dealer,
-            11 => CustomerType.Other,
-            _ => CustomerType.None
-        };
+        FormType = CustomerTypeValues[System.Math.Clamp(value, 0, CustomerTypeValues.Length - 1)];
     }
 
     partial void OnFormPickerMembershipIndexChanged(int value)
     {
-        FormMembership = value switch
-        {
-            1 => MembershipLevel.Trial,
-            2 => MembershipLevel.Standard,
-            3 => MembershipLevel.Silver,
-            4 => MembershipLevel.Gold,
-            5 => MembershipLevel.Platinum,
-            6 => MembershipLevel.Diamond,
-            _ => MembershipLevel.None
-        };
+        FormMembership = MembershipValues[System.Math.Clamp(value, 0, MembershipValues.Length - 1)];
     }
 
     partial void OnFormPickerGenderIndexChanged(int value)
     {
-        FormGender = value switch
-        {
-            1 => Gender.Male,
-            2 => Gender.Female,
-            _ => Gender.None
-        };
+        FormGender = GenderValues[System.Math.Clamp(value, 0, GenderValues.Length - 1)];
     }
 
     // ─── Commands ─────────────────────────────────────────────────────────────
@@ -361,39 +361,14 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         FormNotes = customer.Notes ?? System.String.Empty;
         FormDateOfBirth = customer.DateOfBirth == default ? null : customer.DateOfBirth;
 
-        FormPickerTypeIndex = (customer.Type ?? CustomerType.None) switch
-        {
-            CustomerType.Individual => 1,
-            CustomerType.Business => 2,
-            CustomerType.Government => 3,
-            CustomerType.Fleet => 4,
-            CustomerType.InsuranceCompany => 5,
-            CustomerType.VIP => 6,
-            CustomerType.Potential => 7,
-            CustomerType.Supplier => 8,
-            CustomerType.NonProfit => 9,
-            CustomerType.Dealer => 10,
-            CustomerType.Other => 11,
-            _ => 0
-        };
+        FormPickerTypeIndex = System.Array.IndexOf(CustomerTypeValues, customer.Type ?? CustomerType.None);
+        if (FormPickerTypeIndex < 0) FormPickerTypeIndex = 0;
 
-        FormPickerMembershipIndex = (customer.Membership ?? MembershipLevel.None) switch
-        {
-            MembershipLevel.Trial => 1,
-            MembershipLevel.Standard => 2,
-            MembershipLevel.Silver => 3,
-            MembershipLevel.Gold => 4,
-            MembershipLevel.Platinum => 5,
-            MembershipLevel.Diamond => 6,
-            _ => 0
-        };
+        FormPickerMembershipIndex = System.Array.IndexOf(MembershipValues, customer.Membership ?? MembershipLevel.None);
+        if (FormPickerMembershipIndex < 0) FormPickerMembershipIndex = 0;
 
-        FormPickerGenderIndex = (customer.Gender ?? Gender.None) switch
-        {
-            Gender.Male => 1,
-            Gender.Female => 2,
-            _ => 0
-        };
+        FormPickerGenderIndex = System.Array.IndexOf(GenderValues, customer.Gender ?? Gender.None);
+        if (FormPickerGenderIndex < 0) FormPickerGenderIndex = 0;
 
         ClearFormError();
         IsFormVisible = true;

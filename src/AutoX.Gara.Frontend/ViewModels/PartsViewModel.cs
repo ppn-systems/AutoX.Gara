@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Parts;
+using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Results.Parts;
 using AutoX.Gara.Frontend.Services.Inventory;
 using AutoX.Gara.Shared.Enums;
@@ -10,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace AutoX.Gara.Frontend.ViewModels;
 
@@ -59,6 +61,13 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
     [ObservableProperty] public partial System.Int32 PickerDefectiveIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 PickerExpiredIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 PickerDiscontinuedIndex { get; set; } = 0;
+
+    // Picker options (auto from enum Display attributes)
+    public System.Collections.Generic.IReadOnlyList<System.String> PartCategoryFilterOptions { get; }
+    public System.Collections.Generic.IReadOnlyList<System.String> PartCategoryFormOptions { get; }
+
+    private readonly PartCategory?[] _partCategoryFilterValues;
+    private readonly PartCategory[] _partCategoryFormValues;
 
     public System.Boolean HasActiveFilters
         => FilterSupplierId != 0 || FilterCategory.HasValue || FilterInStock.HasValue ||
@@ -121,6 +130,27 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         Parts.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
+
+        // Build category pickers from enum so UI stays in sync when enum grows.
+        PartCategory[] allCategories = System.Enum.GetValues<PartCategory>()
+            .Where(c => c != PartCategory.None)
+            .ToArray();
+
+        // Filter: "Tất cả loại" + all enum values (excluding None)
+        _partCategoryFilterValues = new PartCategory?[allCategories.Length + 1];
+        _partCategoryFilterValues[0] = null;
+        for (int i = 0; i < allCategories.Length; i++)
+        {
+            _partCategoryFilterValues[i + 1] = allCategories[i];
+        }
+        PartCategoryFilterOptions = new[] { "Tất cả loại" }
+            .Concat(allCategories.Select(EnumText.Get))
+            .ToArray();
+
+        // Form: put "Other" first for convenience, then remaining values (excluding None/Other).
+        PartCategory[] rest = allCategories.Where(c => c != PartCategory.Other).ToArray();
+        _partCategoryFormValues = [PartCategory.Other, .. rest];
+        PartCategoryFormOptions = _partCategoryFormValues.Select(EnumText.Get).ToArray();
     }
 
     // ─── Property Change Hooks ────────────────────────────────────────────────
@@ -202,18 +232,13 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
     partial void OnPickerCategoryIndexChanged(int value)
     {
-        FilterCategory = value switch
+        if (value < 0 || value >= _partCategoryFilterValues.Length)
         {
-            1 => PartCategory.Engine,
-            2 => PartCategory.Brake,
-            3 => PartCategory.Suspension,
-            4 => PartCategory.Electrical,
-            5 => PartCategory.Body,
-            6 => PartCategory.Transmission,
-            7 => PartCategory.Cooling,
-            8 => PartCategory.Exhaust,
-            _ => null
-        };
+            FilterCategory = null;
+            return;
+        }
+
+        FilterCategory = _partCategoryFilterValues[value];
     }
     partial void OnPickerInStockIndexChanged(int value)
     {
@@ -233,18 +258,13 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
     }
     partial void OnFormPickerCategoryIndexChanged(int value)
     {
-        FormCategory = value switch
+        if (value < 0 || value >= _partCategoryFormValues.Length)
         {
-            1 => PartCategory.Engine,
-            2 => PartCategory.Brake,
-            3 => PartCategory.Suspension,
-            4 => PartCategory.Electrical,
-            5 => PartCategory.Body,
-            6 => PartCategory.Transmission,
-            7 => PartCategory.Cooling,
-            8 => PartCategory.Exhaust,
-            _ => PartCategory.Other
-        };
+            FormCategory = PartCategory.Other;
+            return;
+        }
+
+        FormCategory = _partCategoryFormValues[value];
     }
     private PartCategory FormCategory { get; set; } = PartCategory.Other;
 
@@ -348,18 +368,9 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
             ? part.ExpiryDate.Value.ToDateTime(System.TimeOnly.MinValue)
             : null;
 
-        FormPickerCategoryIndex = (part.PartCategory ?? PartCategory.Other) switch
-        {
-            PartCategory.Engine => 1,
-            PartCategory.Brake => 2,
-            PartCategory.Suspension => 3,
-            PartCategory.Electrical => 4,
-            PartCategory.Body => 5,
-            PartCategory.Transmission => 6,
-            PartCategory.Cooling => 7,
-            PartCategory.Exhaust => 8,
-            _ => 0
-        };
+        PartCategory cat = part.PartCategory ?? PartCategory.Other;
+        int idx = System.Array.IndexOf(_partCategoryFormValues, cat);
+        FormPickerCategoryIndex = idx >= 0 ? idx : 0;
 
         ClearFormError();
         IsFormVisible = true;

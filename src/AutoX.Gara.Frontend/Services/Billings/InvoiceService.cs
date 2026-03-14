@@ -12,12 +12,14 @@ using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
 using Nalix.Shared.Frames.Controls;
+using System.Diagnostics;
 
 namespace AutoX.Gara.Frontend.Services.Billings;
 
 public sealed class InvoiceService
 {
-    private const int RequestTimeoutMs = 10_000;
+    private const int QueryTimeoutMs = 10_000;
+    private const int WriteTimeoutMs = 30_000;
     private readonly InvoiceQueryCache _cache;
 
     public InvoiceService(InvoiceQueryCache cache)
@@ -47,6 +49,9 @@ public sealed class InvoiceService
 
         try
         {
+            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+            Stopwatch sw = Stopwatch.StartNew();
+
             uint sq = Csprng.NextUInt32();
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
@@ -63,6 +68,9 @@ public sealed class InvoiceService
                 OpCode = (ushort)OpCommand.INVOICE_GET
             };
 
+            logger?.Info(
+                $"[FE.{nameof(InvoiceService)}:{nameof(GetListAsync)}] send seq={sq} op={(ushort)OpCommand.INVOICE_GET} page={page} size={pageSize} cust={filterCustomerId} sort={sortBy} desc={sortDescending} pay={filterPaymentStatus} term='{packet.SearchTerm}'");
+
             System.Threading.Tasks.TaskCompletionSource<InvoiceListResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -77,6 +85,8 @@ public sealed class InvoiceService
                     errSub?.Dispose();
                     _cache.Set(key, resp.Invoices, resp.TotalCount);
                     bool hasMore = page * pageSize < resp.TotalCount;
+                    logger?.Info(
+                        $"[FE.{nameof(InvoiceService)}:{nameof(GetListAsync)}] ok seq={sq} ms={sw.ElapsedMilliseconds} items={resp.Invoices?.Count ?? 0} total={resp.TotalCount}");
                     tcs.TrySetResult(InvoiceListResult.Success(resp.Invoices, resp.TotalCount, hasMore));
                 });
 
@@ -86,6 +96,8 @@ public sealed class InvoiceService
                 {
                     sub?.Dispose();
                     errSub?.Dispose();
+                    logger?.Warn(
+                        $"[FE.{nameof(InvoiceService)}:{nameof(GetListAsync)}] directive seq={sq} ms={sw.ElapsedMilliseconds} reason={resp.Reason} advice={resp.Action} type={resp.Type}");
                     tcs.TrySetResult(InvoiceListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
                 });
 
@@ -94,7 +106,7 @@ public sealed class InvoiceService
             using System.Threading.CancellationTokenSource cts =
                 System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
 
-            System.Threading.Tasks.Task timeoutTask = System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
+            System.Threading.Tasks.Task timeoutTask = System.Threading.Tasks.Task.Delay(QueryTimeoutMs, cts.Token);
             System.Threading.Tasks.Task winner = await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
             cts.Cancel();
 
@@ -102,6 +114,8 @@ public sealed class InvoiceService
             {
                 sub?.Dispose();
                 errSub?.Dispose();
+                logger?.Warn(
+                    $"[FE.{nameof(InvoiceService)}:{nameof(GetListAsync)}] timeout seq={sq} ms={sw.ElapsedMilliseconds} timeoutMs={QueryTimeoutMs}");
                 return InvoiceListResult.Timeout();
             }
 
@@ -135,11 +149,17 @@ public sealed class InvoiceService
     {
         try
         {
+            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+            Stopwatch sw = Stopwatch.StartNew();
+
             uint sq = Csprng.NextUInt32();
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
             data.OpCode = opcode;
             data.SequenceId = sq;
+
+            logger?.Info(
+                $"[FE.{nameof(InvoiceService)}:{nameof(SendWritePacketAsync)}] send seq={sq} op={opcode} expectEcho={expectEcho} invoiceId={data.InvoiceId} cust={data.CustomerId} invNo='{data.InvoiceNumber}' roId={data.RepairOrderId} tax={data.TaxRate} discType={data.DiscountType} disc={data.Discount}");
 
             InvoiceDto.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
@@ -157,6 +177,8 @@ public sealed class InvoiceService
                     {
                         echoSub?.Dispose();
                         errSub?.Dispose();
+                        logger?.Info(
+                            $"[FE.{nameof(InvoiceService)}:{nameof(SendWritePacketAsync)}] ok seq={sq} ms={sw.ElapsedMilliseconds} invoiceId={confirmed.InvoiceId} total={confirmed.TotalAmount} subtotal={confirmed.Subtotal} service={confirmed.ServiceSubtotal} parts={confirmed.PartsSubtotal} due={confirmed.BalanceDue}");
                         tcs.TrySetResult(InvoiceWriteResult.Success(confirmed));
                     });
             }
@@ -167,6 +189,8 @@ public sealed class InvoiceService
                 {
                     echoSub?.Dispose();
                     errSub?.Dispose();
+                    logger?.Warn(
+                        $"[FE.{nameof(InvoiceService)}:{nameof(SendWritePacketAsync)}] directive seq={sq} ms={sw.ElapsedMilliseconds} op={opcode} reason={resp.Reason} advice={resp.Action} type={resp.Type}");
                     InvoiceWriteResult result = resp.Type == ControlType.NONE
                         ? InvoiceWriteResult.Success()
                         : InvoiceWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
@@ -177,7 +201,7 @@ public sealed class InvoiceService
 
             using System.Threading.CancellationTokenSource cts =
                 System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
-            System.Threading.Tasks.Task timeoutTask = System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
+            System.Threading.Tasks.Task timeoutTask = System.Threading.Tasks.Task.Delay(WriteTimeoutMs, cts.Token);
             System.Threading.Tasks.Task winner = await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
             cts.Cancel();
 
@@ -185,6 +209,8 @@ public sealed class InvoiceService
             {
                 echoSub?.Dispose();
                 errSub?.Dispose();
+                logger?.Warn(
+                    $"[FE.{nameof(InvoiceService)}:{nameof(SendWritePacketAsync)}] timeout seq={sq} ms={sw.ElapsedMilliseconds} op={opcode} timeoutMs={WriteTimeoutMs}");
                 return InvoiceWriteResult.Timeout();
             }
 
@@ -223,12 +249,11 @@ public sealed class InvoiceService
 
     private static void LogException(System.Exception ex)
     {
-        ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
-        logger.Error(ex.ToString());
+        ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+        logger?.Error(ex.ToString());
         if (ex.InnerException is not null)
         {
-            logger.Error("Inner: " + ex.InnerException);
+            logger?.Error("Inner: " + ex.InnerException);
         }
     }
 }
-

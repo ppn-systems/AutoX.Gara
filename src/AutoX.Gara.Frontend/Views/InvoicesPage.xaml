@@ -14,6 +14,7 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <conv:InverseBoolConverter x:Key="InverseBool" />
+            <conv:PaymentStatusBadgeColorConverter x:Key="PayBadgeColor" />
             <Style x:Key="CardStyle" TargetType="Border">
                 <Setter Property="BackgroundColor" Value="#111118" />
                 <Setter Property="StrokeShape" Value="RoundRectangle 10" />
@@ -59,30 +60,148 @@
         <Grid Grid.Row="1" RowDefinitions="Auto,*" Margin="0,12,0,0">
             <Label Text="{Binding ErrorMessage}" TextColor="#EF4444" IsVisible="{Binding HasError}" />
 
-            <CollectionView Grid.Row="1" ItemsSource="{Binding Invoices}">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="pkt:InvoiceDto">
-                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Padding="12">
-                            <VerticalStackLayout Spacing="6">
-                                <Label Text="{Binding InvoiceNumber}" TextColor="#F1F1F5" FontAttributes="Bold" />
-                                <Label Text="{Binding TotalAmount, StringFormat='Tổng: {0:N0}'}" Style="{StaticResource MutedLabel}" />
-                                <Label Text="{Binding BalanceDue, StringFormat='Còn nợ: {0:N0}'}" Style="{StaticResource MutedLabel}" />
-                                <HorizontalStackLayout Spacing="8" Margin="0,8,0,0">
-                                    <Button Text="Thanh toán" Style="{StaticResource AccentBtn}"
-                                            Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenTransactionsCommand}"
+            <!-- NOTE: We use BindableLayout instead of CollectionView here because this view supports
+                 expandable rows (money breakdown). CollectionView virtualization can clip/reuse
+                 measurements on some platforms, causing the expanded content to overlap. -->
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Invoices}" Spacing="10">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:InvoicesViewModel+InvoiceRow">
+                            <Border Style="{StaticResource CardStyle}" Padding="12">
+                                <VerticalStackLayout Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="4">
+                                    <Label Text="{Binding InvoiceNumber}"
+                                           TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
+                                    <Border Grid.Column="1"
+                                            Padding="10,4"
+                                            Stroke="{Binding PaymentStatus, Converter={StaticResource PayBadgeColor}, ConverterParameter=stroke}"
+                                            StrokeThickness="1"
+                                            StrokeShape="RoundRectangle 20"
+                                            BackgroundColor="{Binding PaymentStatus, Converter={StaticResource PayBadgeColor}, ConverterParameter=bg}">
+                                        <Label Text="{Binding PaymentStatusText}"
+                                               TextColor="{Binding PaymentStatus, Converter={StaticResource PayBadgeColor}, ConverterParameter=text}"
+                                               FontSize="12" />
+                                    </Border>
+
+                                    <Label Grid.Row="1"
+                                           Text="{Binding InvoiceDate, StringFormat='Ngày: {0:dd/MM/yyyy}'}"
+                                           Style="{StaticResource MutedLabel}" />
+                                </Grid>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
+                                    <Border Style="{StaticResource CardStyle}" Padding="10" BackgroundColor="#0E0E16">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="Tổng" Style="{StaticResource MutedLabel}" />
+                                            <Label Text="{Binding TotalAmount, StringFormat='{0:N0}'}"
+                                                   TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                    <Border Grid.Column="1" Style="{StaticResource CardStyle}" Padding="10" BackgroundColor="#0E0E16">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="Còn nợ" Style="{StaticResource MutedLabel}" />
+                                            <Label Text="{Binding BalanceDue, StringFormat='{0:N0}'}"
+                                                   TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
+                                    <Border Style="{StaticResource CardStyle}" Padding="10" BackgroundColor="#0E0E16">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="Đã trả" Style="{StaticResource MutedLabel}" />
+                                            <Label Text="{Binding AmountPaid, StringFormat='{0:N0}'}"
+                                                   TextColor="#F1F1F5" FontAttributes="Bold" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                    <Border Grid.Column="1" Style="{StaticResource CardStyle}" Padding="10" BackgroundColor="#0E0E16">
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="Thuế" Style="{StaticResource MutedLabel}" />
+                                            <Label Text="{Binding TaxAmount, StringFormat='{0:N0}'}"
+                                                   TextColor="#F1F1F5" FontAttributes="Bold" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </Grid>
+
+                                <Border Style="{StaticResource CardStyle}"
+                                        Padding="12" BackgroundColor="#0E0E16"
+                                        IsVisible="{Binding IsExpanded}">
+                                    <Grid ColumnDefinitions="*,Auto" RowSpacing="6" ColumnSpacing="12">
+                                        <Label Text="Dịch vụ" Style="{StaticResource MutedLabel}" />
+                                        <Label Grid.Column="1" Text="{Binding ServiceSubtotal, StringFormat='{0:N0}'}"
+                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                                        <Label Grid.Row="1" Text="Phụ tùng" Style="{StaticResource MutedLabel}" />
+                                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding PartsSubtotal, StringFormat='{0:N0}'}"
+                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                                        <Label Grid.Row="2" Text="Tạm tính" Style="{StaticResource MutedLabel}" />
+                                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding Subtotal, StringFormat='{0:N0}'}"
+                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                                        <Label Grid.Row="3" Text="Giảm giá" Style="{StaticResource MutedLabel}" />
+                                        <Label Grid.Row="3" Grid.Column="1" Text="{Binding DiscountAmount, StringFormat='-{0:N0}'}"
+                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                                        <Label Grid.Row="4" Text="{Binding TaxRateText}" Style="{StaticResource MutedLabel}" />
+                                        <Label Grid.Row="4" Grid.Column="1" Text="{Binding TaxAmount, StringFormat='{0:N0}'}"
+                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                                        <BoxView Grid.Row="5" Grid.ColumnSpan="2" HeightRequest="1" BackgroundColor="#2A2A38" Margin="0,6,0,6" />
+
+                                        <Label Grid.Row="6" Text="Tổng" TextColor="#F1F1F5" FontAttributes="Bold" />
+                                        <Label Grid.Row="6" Grid.Column="1" Text="{Binding TotalAmount, StringFormat='{0:N0}'}"
+                                               TextColor="#F1F1F5" FontAttributes="Bold" HorizontalTextAlignment="End" />
+
+                                        <Label Grid.Row="7" Text="Đã trả" Style="{StaticResource MutedLabel}" />
+                                        <Label Grid.Row="7" Grid.Column="1" Text="{Binding AmountPaid, StringFormat='{0:N0}'}"
+                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+
+                                        <Label Grid.Row="8" Text="Còn nợ" Style="{StaticResource MutedLabel}" />
+                                        <Label Grid.Row="8" Grid.Column="1" Text="{Binding BalanceDue, StringFormat='{0:N0}'}"
+                                               TextColor="#F1F1F5" HorizontalTextAlignment="End" />
+                                    </Grid>
+                                </Border>
+
+                                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="8">
+                                    <Button Grid.Row="0" Grid.Column="0"
+                                            Text="Chi tiết tiền"
+                                            Style="{StaticResource GhostBtn}"
+                                            Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.ToggleDetailsCommand}"
                                             CommandParameter="{Binding .}" />
-                                    <Button Text="Sửa" Style="{StaticResource GhostBtn}"
+                                    <Button Grid.Row="0" Grid.Column="1"
+                                            Text="Xem lệnh"
+                                            Style="{StaticResource GhostBtn}"
+                                            Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenRepairOrdersCommand}"
+                                            CommandParameter="{Binding .}" />
+                                        <Button Grid.Row="1" Grid.Column="0"
+                                            Text="Sửa"
+                                            Style="{StaticResource GhostBtn}"
                                             Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}"
                                             CommandParameter="{Binding .}" />
-                                    <Button Text="Xóa" Style="{StaticResource DangerBtn}"
+                                    <Button Grid.Row="1" Grid.Column="1"
+                                            Text="Giao dịch"
+                                            Style="{StaticResource GhostBtn}"
+                                            Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenTransactionsCommand}"
+                                            CommandParameter="{Binding .}" />
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <Button Grid.Column="0"
+                                            Text="Thanh toán"
+                                            Style="{StaticResource AccentBtn}"
+                                            Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.PayNowCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    <Button Grid.Column="1"
+                                            Text="Xóa"
+                                            Style="{StaticResource DangerBtn}"
                                             Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.DeleteCommand}"
                                             CommandParameter="{Binding .}" />
-                                </HorizontalStackLayout>
-                            </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                                </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </ScrollView>
         </Grid>
 
         <!-- Form overlay -->
@@ -96,7 +215,7 @@
                         <Label Grid.Row="1" Text="{Binding ErrorMessage}" TextColor="#EF4444" IsVisible="{Binding HasError}" />
                     </Grid>
 
-                    <ScrollView Grid.Row="1">
+                    <ScrollView Grid.Row="1" Padding="0,0,12,0">
                         <VerticalStackLayout Spacing="12">
                             <Label Text="Lệnh sửa chữa" Style="{StaticResource MutedLabel}" />
                             <Button Text="{Binding SelectedRepairOrderOption.Display, FallbackValue='Chọn lệnh sửa chữa'}"
@@ -180,7 +299,7 @@
                     <Label Text="Chọn lệnh sửa chữa" TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
                     <Entry Grid.Row="1" Placeholder="Tìm theo id, ngày, trạng thái..." Text="{Binding RepairOrderSearchTerm}" TextColor="#F1F1F5" HeightRequest="44" />
                     <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsLookupLoading}" IsVisible="{Binding IsLookupLoading}" Color="#6366F1" />
-                    <CollectionView Grid.Row="3" ItemsSource="{Binding FilteredRepairOrderOptions}" VerticalOptions="FillAndExpand">
+                    <CollectionView Grid.Row="3" ItemsSource="{Binding FilteredRepairOrderOptions}">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="vm:InvoicesViewModel+LookupOption">
                                 <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"

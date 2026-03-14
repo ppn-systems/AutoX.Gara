@@ -21,7 +21,8 @@ public partial class TransactionsPage : ContentPage
         BindingContext = _vm;
     }
 
-    public void Initialize(InvoiceDto invoice) => _vm.Initialize(invoice);
+    public void Initialize(InvoiceDto invoice, bool autoOpenAddForm = false, decimal? prefillAmount = null)
+        => _vm.Initialize(invoice, autoOpenAddForm, prefillAmount);
 
     private async void OnBackClicked(System.Object sender, System.EventArgs e)
     {

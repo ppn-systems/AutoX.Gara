@@ -16,6 +16,7 @@ public partial class App : Application
     {
         InitializeComponent();
         InstallGlobalExceptionHandlers();
+        LogAppDataPath();
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
@@ -54,6 +55,20 @@ public partial class App : Application
             {
             }
         };
+    }
+
+    private static void LogAppDataPath()
+    {
+        try
+        {
+            string path = Microsoft.Maui.Storage.FileSystem.AppDataDirectory;
+            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+            logger?.Info($"[FE.{nameof(App)}] AppDataDirectory={path}");
+            Debug.WriteLine($"[FE.{nameof(App)}] AppDataDirectory={path}");
+        }
+        catch
+        {
+        }
     }
 
     private static void LogCrash(System.String source, System.Exception? ex)

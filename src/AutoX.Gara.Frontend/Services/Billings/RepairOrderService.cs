@@ -12,12 +12,14 @@ using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
 using Nalix.Shared.Frames.Controls;
+using System.Diagnostics;
 
 namespace AutoX.Gara.Frontend.Services.Billings;
 
 public sealed class RepairOrderService
 {
-    private const System.Int32 RequestTimeoutMs = 10_000;
+    private const System.Int32 QueryTimeoutMs = 10_000;
+    private const System.Int32 WriteTimeoutMs = 30_000;
     private readonly RepairOrderQueryCache _cache;
 
     public RepairOrderService(RepairOrderQueryCache cache)
@@ -50,6 +52,9 @@ public sealed class RepairOrderService
 
         try
         {
+            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+            Stopwatch sw = Stopwatch.StartNew();
+
             System.UInt32 sq = Csprng.NextUInt32();
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
@@ -68,6 +73,9 @@ public sealed class RepairOrderService
                 OpCode = (System.UInt16)OpCommand.REPAIR_ORDER_GET
             };
 
+            logger?.Info(
+                $"[FE.{nameof(RepairOrderService)}:{nameof(GetListAsync)}] send seq={sq} op={(System.UInt16)OpCommand.REPAIR_ORDER_GET} page={page} size={pageSize} cust={filterCustomerId} veh={filterVehicleId} inv={filterInvoiceId} status={filterStatus} sort={sortBy} desc={sortDescending} term='{packet.SearchTerm}'");
+
             System.Threading.Tasks.TaskCompletionSource<RepairOrderListResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -83,6 +91,8 @@ public sealed class RepairOrderService
 
                     _cache.Set(key, resp.RepairOrders, resp.TotalCount);
                     System.Boolean hasMore = page * pageSize < resp.TotalCount;
+                    logger?.Info(
+                        $"[FE.{nameof(RepairOrderService)}:{nameof(GetListAsync)}] ok seq={sq} ms={sw.ElapsedMilliseconds} items={resp.RepairOrders?.Count ?? 0} total={resp.TotalCount}");
                     tcs.TrySetResult(RepairOrderListResult.Success(resp.RepairOrders, resp.TotalCount, hasMore));
                 });
 
@@ -92,6 +102,8 @@ public sealed class RepairOrderService
                 {
                     sub?.Dispose();
                     errSub?.Dispose();
+                    logger?.Warn(
+                        $"[FE.{nameof(RepairOrderService)}:{nameof(GetListAsync)}] directive seq={sq} ms={sw.ElapsedMilliseconds} reason={resp.Reason} advice={resp.Action} type={resp.Type}");
                     tcs.TrySetResult(RepairOrderListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
                 });
 
@@ -101,7 +113,7 @@ public sealed class RepairOrderService
                 System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
 
             System.Threading.Tasks.Task timeoutTask =
-                System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
+                System.Threading.Tasks.Task.Delay(QueryTimeoutMs, cts.Token);
 
             System.Threading.Tasks.Task winner =
                 await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
@@ -112,6 +124,8 @@ public sealed class RepairOrderService
             {
                 sub?.Dispose();
                 errSub?.Dispose();
+                logger?.Warn(
+                    $"[FE.{nameof(RepairOrderService)}:{nameof(GetListAsync)}] timeout seq={sq} ms={sw.ElapsedMilliseconds} timeoutMs={QueryTimeoutMs}");
                 return RepairOrderListResult.Timeout();
             }
 
@@ -145,11 +159,17 @@ public sealed class RepairOrderService
     {
         try
         {
+            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+            Stopwatch sw = Stopwatch.StartNew();
+
             System.UInt32 sq = Csprng.NextUInt32();
             ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
 
             data.OpCode = opcode;
             data.SequenceId = sq;
+
+            logger?.Info(
+                $"[FE.{nameof(RepairOrderService)}:{nameof(SendWritePacketAsync)}] send seq={sq} op={opcode} expectEcho={expectEcho} roId={data.RepairOrderId} cust={data.CustomerId} veh={data.VehicleId} inv={data.InvoiceId} status={data.Status}");
 
             RepairOrderDto.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
@@ -167,6 +187,8 @@ public sealed class RepairOrderService
                     {
                         echoSub?.Dispose();
                         errSub?.Dispose();
+                        logger?.Info(
+                            $"[FE.{nameof(RepairOrderService)}:{nameof(SendWritePacketAsync)}] ok seq={sq} ms={sw.ElapsedMilliseconds} roId={confirmed.RepairOrderId} inv={confirmed.InvoiceId} totalCost={confirmed.TotalRepairCost}");
                         tcs.TrySetResult(RepairOrderWriteResult.Success(confirmed));
                     });
             }
@@ -177,6 +199,9 @@ public sealed class RepairOrderService
                 {
                     echoSub?.Dispose();
                     errSub?.Dispose();
+
+                    logger?.Warn(
+                        $"[FE.{nameof(RepairOrderService)}:{nameof(SendWritePacketAsync)}] directive seq={sq} ms={sw.ElapsedMilliseconds} op={opcode} reason={resp.Reason} advice={resp.Action} type={resp.Type}");
 
                     RepairOrderWriteResult result = resp.Type == ControlType.NONE
                         ? RepairOrderWriteResult.Success()
@@ -191,7 +216,7 @@ public sealed class RepairOrderService
                 System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
 
             System.Threading.Tasks.Task timeoutTask =
-                System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
+                System.Threading.Tasks.Task.Delay(WriteTimeoutMs, cts.Token);
 
             System.Threading.Tasks.Task winner =
                 await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
@@ -202,6 +227,8 @@ public sealed class RepairOrderService
             {
                 echoSub?.Dispose();
                 errSub?.Dispose();
+                logger?.Warn(
+                    $"[FE.{nameof(RepairOrderService)}:{nameof(SendWritePacketAsync)}] timeout seq={sq} ms={sw.ElapsedMilliseconds} op={opcode} timeoutMs={WriteTimeoutMs}");
                 return RepairOrderWriteResult.Timeout();
             }
 
@@ -241,12 +268,11 @@ public sealed class RepairOrderService
 
     private static void LogException(System.Exception ex)
     {
-        ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
-        logger.Error(ex.ToString());
+        ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+        logger?.Error(ex.ToString());
         if (ex.InnerException is not null)
         {
-            logger.Error("Inner: " + ex.InnerException);
+            logger?.Error("Inner: " + ex.InnerException);
         }
     }
 }
-

@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
+using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Results.Employees;
 using AutoX.Gara.Frontend.Services.Employees;
 using AutoX.Gara.Shared.Enums;
@@ -12,6 +13,7 @@ using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
 using System;
+using System.Linq;
 
 namespace AutoX.Gara.Frontend.ViewModels;
 
@@ -50,6 +52,47 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial Position FilterPosition { get; set; } = Position.None;
     [ObservableProperty] public partial EmploymentStatus FilterStatus { get; set; } = EmploymentStatus.None;
     [ObservableProperty] public partial Gender FilterGender { get; set; } = Gender.None;
+
+    private static readonly Position[] FilterPositionValues =
+    [
+        Position.None,
+        Position.Apprentice,
+        Position.CarWasher,
+        Position.AutoElectrician,
+        Position.UnderCarMechanic,
+        Position.BodyworkMechanic,
+        Position.Technician,
+        Position.Receptionist,
+        Position.Advisor,
+        Position.Support,
+        Position.Accountant,
+        Position.Manager,
+    ];
+
+    private static readonly EmploymentStatus[] StatusValues = System.Enum.GetValues<EmploymentStatus>();
+    private static readonly Gender[] GenderValues = System.Enum.GetValues<Gender>();
+    private static readonly Position[] FormPositionValues = System.Enum.GetValues<Position>();
+
+    public string[] FilterPositionOptions { get; } =
+        FilterPositionValues.Select((v, idx) => idx == 0 ? "Tất cả chức vụ" : EnumText.Get(v)).ToArray();
+
+    public string[] FilterStatusOptions { get; } =
+        StatusValues.Select((v, idx) => idx == 0 ? "Tất cả trạng thái" : EnumText.Get(v)).ToArray();
+
+    public string[] FilterGenderOptions { get; } =
+        GenderValues.Select((v, idx) => idx == 0 ? "Tất cả" : EnumText.Get(v)).ToArray();
+
+    public string[] FormGenderOptions { get; } =
+        GenderValues.Select(EnumText.Get).ToArray();
+
+    public string[] FormPositionOptions { get; } =
+        FormPositionValues.Select(EnumText.Get).ToArray();
+
+    public string[] FormStatusOptions { get; } =
+        StatusValues.Select(EnumText.Get).ToArray();
+
+    public string[] ChangeStatusOptions { get; } =
+        StatusValues.Select(EnumText.Get).ToArray();
 
     [ObservableProperty] public partial System.Int32 PickerPositionIndex { get; set; } = 0;
     [ObservableProperty] public partial System.Int32 PickerStatusIndex { get; set; } = 0;
@@ -178,15 +221,15 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     }
     partial void OnPickerPositionIndexChanged(int value)
     {
-        FilterPosition = (Position)value;
+        FilterPosition = FilterPositionValues[System.Math.Clamp(value, 0, FilterPositionValues.Length - 1)];
     }
     partial void OnPickerStatusIndexChanged(int value)
     {
-        FilterStatus = (EmploymentStatus)value;
+        FilterStatus = StatusValues[System.Math.Clamp(value, 0, StatusValues.Length - 1)];
     }
     partial void OnPickerGenderIndexChanged(int value)
     {
-        FilterGender = (Gender)value;
+        FilterGender = GenderValues[System.Math.Clamp(value, 0, GenderValues.Length - 1)];
     }
 
     // ─── Commands ──────────────────────────────────────────────────────────────
@@ -272,9 +315,14 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         FormEmail = employee.Email ?? System.String.Empty;
         FormAddress = employee.Address ?? System.String.Empty;
         FormPhoneNumber = employee.PhoneNumber ?? System.String.Empty;
-        FormGenderIndex = (System.Int32)(employee.Gender ?? Gender.None);
-        FormPositionIndex = (System.Int32)(employee.Position ?? Position.None);
-        FormStatusIndex = (System.Int32)(employee.Status ?? EmploymentStatus.None);
+        FormGenderIndex = System.Array.IndexOf(GenderValues, employee.Gender ?? Gender.None);
+        if (FormGenderIndex < 0) FormGenderIndex = 0;
+
+        FormPositionIndex = System.Array.IndexOf(FormPositionValues, employee.Position ?? Position.None);
+        if (FormPositionIndex < 0) FormPositionIndex = 0;
+
+        FormStatusIndex = System.Array.IndexOf(StatusValues, employee.Status ?? EmploymentStatus.None);
+        if (FormStatusIndex < 0) FormStatusIndex = 0;
         FormDateOfBirth = employee.DateOfBirth ?? System.DateTime.Today.AddYears(-20);
         FormStartDate = employee.StartDate ?? System.DateTime.Today;
         FormEndDate = employee.EndDate;
@@ -359,7 +407,8 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     private void RequestChangeStatus(EmployeeDto employee)
     {
         SelectedEmployee = employee;
-        NewStatusIndex = (System.Int32)(employee.Status ?? EmploymentStatus.None);
+        NewStatusIndex = System.Array.IndexOf(StatusValues, employee.Status ?? EmploymentStatus.None);
+        if (NewStatusIndex < 0) NewStatusIndex = 0;
         IsStatusConfirmVisible = true;
     }
 
@@ -387,7 +436,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             EmployeeDto data = new()
             {
                 EmployeeId = SelectedEmployee.EmployeeId,
-                Status = (EmploymentStatus)NewStatusIndex,
+                Status = StatusValues[System.Math.Clamp(NewStatusIndex, 0, StatusValues.Length - 1)],
                 SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
             };
 
@@ -399,7 +448,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                 if (idx >= 0)
                 {
                     EmployeeDto updated = Employees[idx];
-                    updated.Status = (EmploymentStatus)NewStatusIndex;
+                    updated.Status = StatusValues[System.Math.Clamp(NewStatusIndex, 0, StatusValues.Length - 1)];
                     Employees[idx] = updated;
                 }
                 SelectedEmployee = null;
@@ -535,9 +584,9 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             Email = FormEmail,
             Address = FormAddress,
             PhoneNumber = FormPhoneNumber,
-            Gender = (Gender)FormGenderIndex,
-            Position = (Position)FormPositionIndex,
-            Status = (EmploymentStatus)FormStatusIndex,
+            Gender = GenderValues[System.Math.Clamp(FormGenderIndex, 0, GenderValues.Length - 1)],
+            Position = FormPositionValues[System.Math.Clamp(FormPositionIndex, 0, FormPositionValues.Length - 1)],
+            Status = StatusValues[System.Math.Clamp(FormStatusIndex, 0, StatusValues.Length - 1)],
             DateOfBirth = FormDateOfBirth,
             StartDate = FormStartDate,
             EndDate = FormEndDate,

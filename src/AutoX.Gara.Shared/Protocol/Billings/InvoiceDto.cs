@@ -68,9 +68,16 @@ public sealed class InvoiceDto : PacketBase<InvoiceDto>, IPacketTransformer<Invo
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 15)]
     public System.Boolean IsFullyPaid { get; set; }
 
+    /// <summary>
+    /// Optional: RepairOrderId to link this invoice with a specific repair order when creating/updating.
+    /// 0 means no link request.
+    /// </summary>
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 16)]
+    public System.Int32 RepairOrderId { get; set; }
+
     // Dynamic-size fields (string) - must be last
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 16)]
+    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 17)]
     public System.String InvoiceNumber { get; set; }
 
     public InvoiceDto()
@@ -80,6 +87,7 @@ public sealed class InvoiceDto : PacketBase<InvoiceDto>, IPacketTransformer<Invo
         PaymentStatus = PaymentStatus.Unpaid;
         TaxRate = TaxRateType.VAT10;
         DiscountType = DiscountType.None;
+        RepairOrderId = 0;
         OpCode = OpCommand.NONE.AsUInt16();
     }
 
@@ -103,6 +111,7 @@ public sealed class InvoiceDto : PacketBase<InvoiceDto>, IPacketTransformer<Invo
         ServiceSubtotal = 0;
         PartsSubtotal = 0;
         IsFullyPaid = false;
+        RepairOrderId = 0;
         InvoiceNumber = System.String.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
     }
@@ -119,4 +128,3 @@ public sealed class InvoiceDto : PacketBase<InvoiceDto>, IPacketTransformer<Invo
         return packet;
     }
 }
-

@@ -21,6 +21,31 @@ public sealed class InvoiceRepository
     public InvoiceRepository(AutoXDbContext dbContext)
         => _dbContext = dbContext ?? throw new System.ArgumentNullException(nameof(dbContext));
 
+    /// <summary>
+    /// Loads the Invoice entity with all details using tracking.
+    /// Tracking is needed for financial recalculation and avoids duplicate entity instances when materializing large object graphs.
+    /// Use this when identity resolution is required.
+    /// </summary>
+    /// <param name="id">The invoice identifier.</param>
+    /// <returns>A Task of Invoice with details, or null if not found.</returns>
+    public Task<Invoice> GetInvoiceWithFullGraphTrackedAsync(System.Int32 id)
+    {
+        // AutoXDbContextFactory configures QueryTrackingBehavior.NoTracking globally.
+        // For financial recalculation we must track (identity resolution) to avoid
+        // duplicate entity instances (e.g., Part) when materializing large graphs.
+        return _dbContext.Invoices
+            .AsTracking()
+            .AsSplitQuery()
+            .Include(i => i.Transactions)
+            .Include(i => i.RepairOrders)
+                .ThenInclude(ro => ro.Tasks)
+                    .ThenInclude(t => t.ServiceItem)
+            .Include(i => i.RepairOrders)
+                .ThenInclude(ro => ro.Parts)
+                    .ThenInclude(p => p.SparePart)
+            .FirstOrDefaultAsync(i => i.Id == id);
+    }
+
     public async Task<(List<Invoice> Items, System.Int32 TotalCount)> GetPageAsync(
         InvoiceListQuery query)
     {

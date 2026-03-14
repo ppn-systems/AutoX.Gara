@@ -30,9 +30,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     /// <summary>Customer đang được xem xe — set từ Shell navigation parameter.</summary>
     [ObservableProperty] public partial CustomerDto? Owner { get; set; }
 
-    public System.String PageTitle => Owner is not null
-        ? $"Xe của {Owner.Name}"
-        : "Danh sách xe";
+    public System.String PageTitle => Owner is not null ? $"Xe của {Owner.Name}" : "Danh sách xe";
 
     // ─── Pagination ───────────────────────────────────────────────────────────
 

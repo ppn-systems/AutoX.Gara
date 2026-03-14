@@ -15,6 +15,7 @@
         <ResourceDictionary>
             <conv:InverseBoolConverter x:Key="InverseBool" />
             <conv:DecimalToCurrencyConverter x:Key="ToCurrency" />
+            <conv:EnumTextConverter x:Key="EnumText" />
 
             <Style x:Key="CardStyle" TargetType="Border">
                 <Setter Property="BackgroundColor" Value="#111118" />
@@ -109,47 +110,32 @@
 
                     <!-- Picker Position -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="150">
-                        <Picker SelectedIndex="{Binding PickerPositionIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44">
-                            <Picker.Items>
-                                <x:String>Tất cả chức vụ</x:String>
-                                <x:String>Học việc</x:String>
-                                <x:String>Rửa xe</x:String>
-                                <x:String>Điện ô tô</x:String>
-                                <x:String>Thợ gầm</x:String>
-                                <x:String>Thợ đồng</x:String>
-                                <x:String>Kỹ thuật viên</x:String>
-                                <x:String>Tiếp nhận</x:String>
-                                <x:String>Tư vấn</x:String>
-                                <x:String>Hỗ trợ</x:String>
-                                <x:String>Kế toán</x:String>
-                                <x:String>Quản lý</x:String>
-                            </Picker.Items>
-                        </Picker>
+                        <Picker SelectedIndex="{Binding PickerPositionIndex}"
+                                ItemsSource="{Binding FilterPositionOptions}"
+                                TextColor="#C4C4D4"
+                                BackgroundColor="Transparent"
+                                VerticalOptions="Center"
+                                HeightRequest="44" />
                     </Border>
 
                     <!-- Picker Status -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="160">
-                        <Picker SelectedIndex="{Binding PickerStatusIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44">
-                            <Picker.Items>
-                                <x:String>Tất cả trạng thái</x:String>
-                                <x:String>Đang làm việc</x:String>
-                                <x:String>Đã nghỉ việc</x:String>
-                                <x:String>Đang nghỉ phép</x:String>
-                                <x:String>Bị sa thải</x:String>
-                                <x:String>Chờ bắt đầu</x:String>
-                            </Picker.Items>
-                        </Picker>
+                        <Picker SelectedIndex="{Binding PickerStatusIndex}"
+                                ItemsSource="{Binding FilterStatusOptions}"
+                                TextColor="#C4C4D4"
+                                BackgroundColor="Transparent"
+                                VerticalOptions="Center"
+                                HeightRequest="44" />
                     </Border>
 
                     <!-- Picker Gender -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="120">
-                        <Picker SelectedIndex="{Binding PickerGenderIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44">
-                            <Picker.Items>
-                                <x:String>Tất cả</x:String>
-                                <x:String>Nam</x:String>
-                                <x:String>Nữ</x:String>
-                            </Picker.Items>
-                        </Picker>
+                        <Picker SelectedIndex="{Binding PickerGenderIndex}"
+                                ItemsSource="{Binding FilterGenderOptions}"
+                                TextColor="#C4C4D4"
+                                BackgroundColor="Transparent"
+                                VerticalOptions="Center"
+                                HeightRequest="44" />
                     </Border>
 
                     <!-- Clear Filter Button -->
@@ -186,11 +172,11 @@
                                         </HorizontalStackLayout>
                                         <HorizontalStackLayout Spacing="6">
                                             <Label Text="Chức vụ:" Style="{StaticResource MutedLabel}" />
-                                            <Label Text="{Binding Position}" FontSize="12" TextColor="#6366F1" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Text="{Binding Position, Converter={StaticResource EnumText}}" FontSize="12" TextColor="#6366F1" FontAttributes="Bold" VerticalOptions="Center" />
                                         </HorizontalStackLayout>
                                         <HorizontalStackLayout Spacing="6">
                                             <Label Text="Trạng thái:" Style="{StaticResource MutedLabel}" />
-                                            <Label Text="{Binding Status}" FontSize="12" TextColor="#22C55E" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Text="{Binding Status, Converter={StaticResource EnumText}}" FontSize="12" TextColor="#22C55E" FontAttributes="Bold" VerticalOptions="Center" />
                                         </HorizontalStackLayout>
                                     </VerticalStackLayout>
 
@@ -287,62 +273,25 @@
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="GIỚI TÍNH" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                                    <Picker SelectedIndex="{Binding FormGenderIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44" Margin="10,0">
-                                        <Picker.Items>
-                                            <x:String>Không xác định</x:String>
-                                            <x:String>Nam</x:String>
-                                            <x:String>Nữ</x:String>
-                                        </Picker.Items>
-                                    </Picker>
+                                    <Picker SelectedIndex="{Binding FormGenderIndex}"
+                                            ItemsSource="{Binding FormGenderOptions}"
+                                            TextColor="#C4C4D4"
+                                            BackgroundColor="Transparent"
+                                            VerticalOptions="Center"
+                                            HeightRequest="44"
+                                            Margin="10,0" />
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
                                 <Label Text="CHỨC VỤ *" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                                    <Picker SelectedIndex="{Binding FormPositionIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44" Margin="10,0">
-                                        <Picker.Items>
-                                            <x:String>Không xác định</x:String>
-                                            <x:String>Học việc</x:String>
-                                            <x:String>Rửa xe</x:String>
-                                            <x:String>Điện ô tô</x:String>
-                                            <x:String>Thợ gầm</x:String>
-                                            <x:String>Thợ đồng</x:String>
-                                            <x:String>Kỹ thuật viên</x:String>
-                                            <x:String>Tiếp nhận</x:String>
-                                            <x:String>Tư vấn</x:String>
-                                            <x:String>Hỗ trợ</x:String>
-                                            <x:String>Kế toán</x:String>
-                                            <x:String>Quản lý</x:String>
-                                            <x:String>Bảo trì</x:String>
-                                            <x:String>Điều phối kho</x:String>
-                                            <x:String>Giám sát kho</x:String>
-                                            <x:String>Thợ sơn</x:String>
-                                            <x:String>Chẩn đoán</x:String>
-                                            <x:String>Chuyên gia động cơ</x:String>
-                                            <x:String>Chuyên gia hộp số</x:String>
-                                            <x:String>Chuyên gia điều hòa</x:String>
-                                            <x:String>Thợ mài</x:String>
-                                            <x:String>Bảo hiểm</x:String>
-                                            <x:String>Tư vấn phụ tùng</x:String>
-                                            <x:String>Giao nhận xe</x:String>
-                                            <x:String>Vệ sinh</x:String>
-                                            <x:String>Bảo vệ</x:String>
-                                            <x:String>Marketing</x:String>
-                                            <x:String>Chăm sóc khách hàng</x:String>
-                                            <x:String>Giám đốc kỹ thuật</x:String>
-                                            <x:String>Giám đốc dịch vụ</x:String>
-                                            <x:String>Giám đốc điều hành</x:String>
-                                            <x:String>Điện tử &amp; Lập trình</x:String>
-                                            <x:String>Kiểm tra chất lượng</x:String>
-                                            <x:String>Đặt hàng phụ tùng</x:String>
-                                            <x:String>Bảo hành</x:String>
-                                            <x:String>Thu ngân</x:String>
-                                            <x:String>Trưởng ca</x:String>
-                                            <x:String>Lái thử</x:String>
-                                            <x:String>Chuyên gia lốp</x:String>
-                                            <x:String>Kỹ thuật thủy lực</x:String>
-                                        </Picker.Items>
-                                    </Picker>
+                                    <Picker SelectedIndex="{Binding FormPositionIndex}"
+                                            ItemsSource="{Binding FormPositionOptions}"
+                                            TextColor="#C4C4D4"
+                                            BackgroundColor="Transparent"
+                                            VerticalOptions="Center"
+                                            HeightRequest="44"
+                                            Margin="10,0" />
                                 </Border>
                             </VerticalStackLayout>
                         </Grid>
@@ -352,16 +301,13 @@
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="TRẠNG THÁI" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                                    <Picker SelectedIndex="{Binding FormStatusIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44" Margin="10,0">
-                                        <Picker.Items>
-                                            <x:String>Không xác định</x:String>
-                                            <x:String>Đang làm việc</x:String>
-                                            <x:String>Đã nghỉ việc</x:String>
-                                            <x:String>Đang nghỉ phép</x:String>
-                                            <x:String>Bị sa thải</x:String>
-                                            <x:String>Chờ bắt đầu</x:String>
-                                        </Picker.Items>
-                                    </Picker>
+                                    <Picker SelectedIndex="{Binding FormStatusIndex}"
+                                            ItemsSource="{Binding FormStatusOptions}"
+                                            TextColor="#C4C4D4"
+                                            BackgroundColor="Transparent"
+                                            VerticalOptions="Center"
+                                            HeightRequest="44"
+                                            Margin="10,0" />
                                 </Border>
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1">
@@ -427,16 +373,13 @@
                     <Label Text="Thay đổi trạng thái" FontSize="18" FontAttributes="Bold" TextColor="#F1F1F5" HorizontalOptions="Center" />
                     <Label Text="{Binding StatusConfirmName}" FontSize="14" TextColor="#6B6B80" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
                     <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
-                        <Picker SelectedIndex="{Binding NewStatusIndex}" TextColor="#C4C4D4" BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="44" Margin="10,0">
-                            <Picker.Items>
-                                <x:String>Không xác định</x:String>
-                                <x:String>Đang làm việc</x:String>
-                                <x:String>Đã nghỉ việc</x:String>
-                                <x:String>Đang nghỉ phép</x:String>
-                                <x:String>Bị sa thải</x:String>
-                                <x:String>Chờ bắt đầu</x:String>
-                            </Picker.Items>
-                        </Picker>
+                        <Picker SelectedIndex="{Binding NewStatusIndex}"
+                                ItemsSource="{Binding ChangeStatusOptions}"
+                                TextColor="#C4C4D4"
+                                BackgroundColor="Transparent"
+                                VerticalOptions="Center"
+                                HeightRequest="44"
+                                Margin="10,0" />
                     </Border>
                     <BoxView HeightRequest="1" BackgroundColor="#2A2A38" Margin="0,4,0,4" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">

@@ -382,11 +382,14 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
                     .HasOne(ro => ro.Invoice)
                     .WithMany(i => i.RepairOrders)
                     .HasForeignKey(ro => ro.InvoiceId)
+                    .IsRequired(false)
                     .OnDelete(DeleteBehavior.SetNull);
 
         // Tạo index tối ưu truy vấn
         modelBuilder.Entity<RepairOrder>().HasIndex(ro => ro.VehicleId);
-        modelBuilder.Entity<RepairOrder>().HasIndex(ro => ro.InvoiceId);
+        // Enforce: one invoice can be linked to at most one repair order.
+        // Multiple NULLs are allowed by most providers (including SQLite/SQL Server).
+        modelBuilder.Entity<RepairOrder>().HasIndex(ro => ro.InvoiceId).IsUnique();
         modelBuilder.Entity<RepairOrder>().HasIndex(ro => ro.CustomerId);
     }
 

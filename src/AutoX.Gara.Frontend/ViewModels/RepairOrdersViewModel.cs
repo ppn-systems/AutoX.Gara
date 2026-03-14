@@ -26,10 +26,15 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
 
     [ObservableProperty] public partial CustomerDto? Owner { get; set; }
     [ObservableProperty] public partial VehicleDto? Vehicle { get; set; }
+    [ObservableProperty] public partial InvoiceDto? Invoice { get; set; }
 
     public System.String PageTitle => Vehicle is not null
         ? $"Sửa chữa {Vehicle.LicensePlate}"
-        : "Lệnh sửa chữa";
+        : Invoice?.InvoiceNumber is not null
+            ? $"Lệnh sửa chữa ({Invoice.InvoiceNumber})"
+            : "Lệnh sửa chữa";
+
+    public System.Boolean CanAdd => Vehicle?.VehicleId is not null;
 
     // ─── List ───────────────────────────────────────────────────────────────
 
@@ -97,7 +102,19 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
     {
         Owner = owner;
         Vehicle = vehicle;
+        Invoice = null;
         OnPropertyChanged(nameof(PageTitle));
+        OnPropertyChanged(nameof(CanAdd));
+        _ = LoadAsync();
+    }
+
+    public void Initialize(CustomerDto owner, InvoiceDto invoice)
+    {
+        Owner = owner;
+        Vehicle = null;
+        Invoice = invoice;
+        OnPropertyChanged(nameof(PageTitle));
+        OnPropertyChanged(nameof(CanAdd));
         _ = LoadAsync();
     }
 
@@ -106,7 +123,14 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
     [RelayCommand]
     public async System.Threading.Tasks.Task LoadAsync()
     {
-        if (Owner?.CustomerId is null || Vehicle?.VehicleId is null)
+        if (Owner?.CustomerId is null)
+        {
+            return;
+        }
+
+        System.Int32 vehicleId = Vehicle?.VehicleId ?? 0;
+        System.Int32 invoiceId = Invoice?.InvoiceId ?? 0;
+        if (vehicleId <= 0 && invoiceId <= 0)
         {
             return;
         }
@@ -125,7 +149,8 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
                 page: CurrentPage,
                 pageSize: DefaultPageSize,
                 filterCustomerId: Owner.CustomerId.Value,
-                filterVehicleId: Vehicle.VehicleId.Value,
+                filterVehicleId: vehicleId,
+                filterInvoiceId: invoiceId,
                 ct: ct);
 
             if (ct.IsCancellationRequested)
@@ -206,7 +231,16 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
     [RelayCommand]
     private async System.Threading.Tasks.Task SaveAsync()
     {
-        if (Owner?.CustomerId is null || Vehicle?.VehicleId is null)
+        if (Owner?.CustomerId is null)
+        {
+            return;
+        }
+
+        // Create requires vehicle context. Update can fall back to the selected row's VehicleId.
+        System.Int32 vehicleId = Vehicle?.VehicleId
+            ?? (IsEditing ? (SelectedRepairOrder?.VehicleId ?? 0) : 0);
+
+        if (vehicleId <= 0)
         {
             return;
         }
@@ -220,7 +254,7 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
             {
                 RepairOrderId = IsEditing ? SelectedRepairOrder?.RepairOrderId : null,
                 CustomerId = Owner.CustomerId.Value,
-                VehicleId = Vehicle.VehicleId.Value,
+                VehicleId = vehicleId,
                 InvoiceId = IsEditing ? SelectedRepairOrder?.InvoiceId : null,
                 OrderDate = FormOrderDate.ToUniversalTime(),
                 CompletionDate = HasCompletionDate ? FormCompletionDateValue.ToUniversalTime() : null,

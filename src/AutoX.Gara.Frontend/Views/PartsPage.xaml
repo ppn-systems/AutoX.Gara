@@ -16,8 +16,8 @@
             <conv:InverseBoolConverter          x:Key="InverseBool"   />
             <conv:DecimalToCurrencyConverter    x:Key="ToCurrency"    />
             <conv:DateOnlyToStringConverter     x:Key="ToDateStr"     />
-            <conv:PartCategoryToLabelConverter  x:Key="CategoryLabel" />
             <conv:PartCategoryToColorConverter  x:Key="CategoryColor" />
+            <conv:EnumTextConverter             x:Key="EnumText"      />
 
             <Style x:Key="CardStyle" TargetType="Border">
                 <Setter Property="BackgroundColor"  Value="#111118" />
@@ -147,21 +147,9 @@
                     <!-- Loại phụ tùng -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="148">
                         <Picker SelectedIndex="{Binding PickerCategoryIndex}"
+                                ItemsSource="{Binding PartCategoryFilterOptions}"
                                 TextColor="#C4C4D4" BackgroundColor="Transparent"
-                                VerticalOptions="Center" HeightRequest="44">
-                            <Picker.Items>
-                                <x:String>Tất cả loại</x:String>
-                                <x:String>Động cơ</x:String>
-                                <x:String>Phanh</x:String>
-                                <x:String>Hệ thống treo</x:String>
-                                <x:String>Điện</x:String>
-                                <x:String>Thân xe</x:String>
-                                <x:String>Hộp số</x:String>
-                                <x:String>Làm mát</x:String>
-                                <x:String>Xả</x:String>
-                                <x:String>Khác</x:String>
-                            </Picker.Items>
-                        </Picker>
+                                VerticalOptions="Center" HeightRequest="44" />
                     </Border>
 
                     <!-- Tồn kho -->
@@ -259,7 +247,7 @@
                                                    LineBreakMode="TailTruncation" MaxLines="1" />
                                             <Border Style="{StaticResource BadgeStyle}"
                                                     BackgroundColor="{Binding PartCategory, Converter={StaticResource CategoryColor}}">
-                                                <Label Text="{Binding PartCategory, Converter={StaticResource CategoryLabel}}"
+                                                <Label Text="{Binding PartCategory, Converter={StaticResource EnumText}}"
                                                        FontSize="11" FontAttributes="Bold" TextColor="Black" />
                                             </Border>
                                             <!-- Badge lỗi -->
@@ -472,20 +460,9 @@
                         <Label Text="LOẠI PHỤ TÙNG" Style="{StaticResource FieldLabel}" />
                         <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
                             <Picker SelectedIndex="{Binding FormPickerCategoryIndex}"
+                                    ItemsSource="{Binding PartCategoryFormOptions}"
                                     TextColor="#C4C4D4" BackgroundColor="Transparent"
-                                    VerticalOptions="Center" HeightRequest="44" Margin="10,0">
-                                <Picker.Items>
-                                    <x:String>Khác</x:String>
-                                    <x:String>Động cơ</x:String>
-                                    <x:String>Phanh</x:String>
-                                    <x:String>Hệ thống treo</x:String>
-                                    <x:String>Điện</x:String>
-                                    <x:String>Thân xe</x:String>
-                                    <x:String>Hộp số</x:String>
-                                    <x:String>Làm mát</x:String>
-                                    <x:String>Xả</x:String>
-                                </Picker.Items>
-                            </Picker>
+                                    VerticalOptions="Center" HeightRequest="44" Margin="10,0" />
                         </Border>
 
                         <!-- Giá nhập + Giá bán -->

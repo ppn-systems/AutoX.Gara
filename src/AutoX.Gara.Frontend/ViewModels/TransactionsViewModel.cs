@@ -3,11 +3,13 @@
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
 using AutoX.Gara.Frontend.Helpers;
+using AutoX.Gara.Frontend.Messages;
 using AutoX.Gara.Frontend.Results.Billings;
 using AutoX.Gara.Frontend.Services.Billings;
 using AutoX.Gara.Shared.Protocol.Billings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Nalix.Common.Networking.Protocols;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -59,11 +61,20 @@ public sealed partial class TransactionsViewModel : ObservableObject, System.IDi
     public string[] StatusOptions { get; } = StatusValues.Select(EnumText.Get).ToArray();
     public string[] TypeOptions { get; } = TypeValues.Select(EnumText.Get).ToArray();
 
-    public void Initialize(InvoiceDto invoice)
+    public void Initialize(InvoiceDto invoice, bool autoOpenAddForm = false, decimal? prefillAmount = null)
     {
         Invoice = invoice;
         OnPropertyChanged(nameof(PageTitle));
         _ = LoadAsync();
+
+        if (autoOpenAddForm)
+        {
+            OpenAddForm();
+            if (prefillAmount.HasValue && prefillAmount.Value > 0)
+            {
+                FormAmount = prefillAmount.Value;
+            }
+        }
     }
 
     [RelayCommand]
@@ -169,6 +180,9 @@ public sealed partial class TransactionsViewModel : ObservableObject, System.IDi
             }
 
             IsFormVisible = false;
+
+            // Invoice totals changed on server after transaction write.
+            WeakReferenceMessenger.Default.Send(new InvoiceTotalsChangedMessage(Invoice.InvoiceId.Value));
             await LoadAsync();
         }
         finally
@@ -190,6 +204,12 @@ public sealed partial class TransactionsViewModel : ObservableObject, System.IDi
                 HandleError("Xóa thất bại", result.ErrorMessage ?? "Thao tác thất bại.", result.Advice);
                 return;
             }
+
+            if (Invoice?.InvoiceId is not null)
+            {
+                WeakReferenceMessenger.Default.Send(new InvoiceTotalsChangedMessage(Invoice.InvoiceId.Value));
+            }
+
             await LoadAsync();
         }
         finally

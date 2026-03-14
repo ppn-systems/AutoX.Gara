@@ -64,6 +64,7 @@
                     Text="+"
                     Style="{StaticResource AccentBtn}"
                     WidthRequest="44"
+                    IsVisible="{Binding CanAdd}"
                     Command="{Binding OpenAddFormCommand}" />
         </Grid>
 

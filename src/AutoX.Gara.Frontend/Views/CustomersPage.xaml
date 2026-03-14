@@ -38,6 +38,7 @@
             <conv:DateTimeToShortStringConverter x:Key="ToShortDate"   />
             <conv:StringNotEmptyConverter        x:Key="NotEmpty"      />
             <conv:InverseBoolConverter           x:Key="InverseBool"   />
+            <conv:EnumTextConverter              x:Key="EnumText"      />
 
             <!-- Surface card — viền mỏng, không shadow nặng -->
             <Style x:Key="CardStyle" TargetType="Border">
@@ -225,43 +226,22 @@
                     <!-- Picker Loại KH -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="148">
                         <Picker SelectedIndex="{Binding PickerFilterTypeIndex}"
+                                ItemsSource="{Binding FilterTypeOptions}"
                                 TextColor="#C4C4D4"
                                 BackgroundColor="Transparent"
                                 VerticalOptions="Center"
                                 HeightRequest="44" Margin="0,0">
-                            <Picker.Items>
-                                <x:String>Tất cả loại</x:String>
-                                <x:String>Cá nhân</x:String>
-                                <x:String>Doanh nghiệp</x:String>
-                                <x:String>Chính phủ</x:String>
-                                <x:String>Đội xe</x:String>
-                                <x:String>Bảo hiểm</x:String>
-                                <x:String>VIP</x:String>
-                                <x:String>Tiềm năng</x:String>
-                                <x:String>Nhà cung cấp</x:String>
-                                <x:String>Phi lợi nhuận</x:String>
-                                <x:String>Đại lý</x:String>
-                                <x:String>Khác</x:String>
-                            </Picker.Items>
                         </Picker>
                     </Border>
 
                     <!-- Picker Hạng -->
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="148">
                         <Picker SelectedIndex="{Binding PickerMembershipIndex}"
+                                ItemsSource="{Binding FilterMembershipOptions}"
                                 TextColor="#C4C4D4"
                                 BackgroundColor="Transparent"
                                 VerticalOptions="Center"
                                 HeightRequest="44" Margin="0,0">
-                            <Picker.Items>
-                                <x:String>Tất cả hạng</x:String>
-                                <x:String>Trial</x:String>
-                                <x:String>Standard</x:String>
-                                <x:String>Silver</x:String>
-                                <x:String>Gold</x:String>
-                                <x:String>Platinum</x:String>
-                                <x:String>Diamond</x:String>
-                            </Picker.Items>
                         </Picker>
                     </Border>
 
@@ -345,15 +325,15 @@
                                                    LineBreakMode="TailTruncation" MaxLines="1" />
                                             <Border Style="{StaticResource BadgeStyle}"
                                                     BackgroundColor="{Binding Type, Converter={StaticResource TypeToColor}, ConverterParameter=dark}">
-                                                <Label Text="{Binding Type, Converter={StaticResource TypeToLabel}}"
-                                                       FontSize="12" FontAttributes="Bold"
-                                                       TextColor="White" />
+                                            <Label Text="{Binding Type, Converter={StaticResource EnumText}}"
+                                                   FontSize="12" FontAttributes="Bold"
+                                                   TextColor="White" />
                                             </Border>
                                             <Border Style="{StaticResource BadgeStyle}"
                                                     BackgroundColor="{Binding Membership, Converter={StaticResource MemberToColor}}">
-                                                <Label Text="{Binding Membership, Converter={StaticResource MemberToLabel}}"
-                                                       FontSize="12" FontAttributes="Bold"
-                                                       TextColor="White" />
+                                            <Label Text="{Binding Membership, Converter={StaticResource EnumText}}"
+                                                   FontSize="12" FontAttributes="Bold"
+                                                   TextColor="White" />
                                             </Border>
                                         </HorizontalStackLayout>
 
@@ -574,24 +554,11 @@
                                 <Label Text="LOẠI KHÁCH HÀNG" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
                                     <Picker SelectedIndex="{Binding FormPickerTypeIndex}"
+                                            ItemsSource="{Binding FormTypeOptions}"
                                             TextColor="#C4C4D4"
                                             BackgroundColor="Transparent"
                                             VerticalOptions="Center"
                                             HeightRequest="44" Margin="10,0">
-                                        <Picker.Items>
-                                            <x:String>— chọn —</x:String>
-                                            <x:String>Cá nhân</x:String>
-                                            <x:String>Doanh nghiệp</x:String>
-                                            <x:String>Cơ quan chính phủ</x:String>
-                                            <x:String>Đội xe (Fleet)</x:String>
-                                            <x:String>Công ty bảo hiểm</x:String>
-                                            <x:String>Khách VIP</x:String>
-                                            <x:String>Tiềm năng</x:String>
-                                            <x:String>Nhà cung cấp</x:String>
-                                            <x:String>Phi lợi nhuận</x:String>
-                                            <x:String>Đại lý</x:String>
-                                            <x:String>Khác</x:String>
-                                        </Picker.Items>
                                     </Picker>
                                 </Border>
                             </VerticalStackLayout>
@@ -599,19 +566,11 @@
                                 <Label Text="HẠNG THÀNH VIÊN" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}" Padding="-12,0">
                                     <Picker SelectedIndex="{Binding FormPickerMembershipIndex}"
+                                            ItemsSource="{Binding FormMembershipOptions}"
                                             TextColor="#C4C4D4"
                                             BackgroundColor="Transparent"
                                             VerticalOptions="Center"
                                             HeightRequest="44" Margin="10,0">
-                                        <Picker.Items>
-                                            <x:String>— chọn —</x:String>
-                                            <x:String>Trial (Dùng thử)</x:String>
-                                            <x:String>Standard (Thường)</x:String>
-                                            <x:String>Silver (Bạc)</x:String>
-                                            <x:String>Gold (Vàng)</x:String>
-                                            <x:String>Platinum (Bạch kim)</x:String>
-                                            <x:String>Diamond (Kim cương)</x:String>
-                                        </Picker.Items>
                                     </Picker>
                                 </Border>
                             </VerticalStackLayout>
@@ -639,16 +598,11 @@
                                 <Label Text="GIỚI TÍNH" Style="{StaticResource FieldLabel}" />
                                 <Border Style="{StaticResource PickerBorder}">
                                     <Picker SelectedIndex="{Binding FormPickerGenderIndex}"
+                                            ItemsSource="{Binding FormGenderOptions}"
                                             TextColor="#C4C4D4"
                                             BackgroundColor="Transparent"
                                             VerticalOptions="Center"
                                             HeightRequest="44" Margin="0,0">
-                                        <Picker.Items>
-                                            <x:String>— chọn —</x:String>
-                                            <x:String>Nam</x:String>
-                                            <x:String>Nữ</x:String>
-                                            <x:String>Khác</x:String>
-                                        </Picker.Items>
                                     </Picker>
                                 </Border>
                             </VerticalStackLayout>

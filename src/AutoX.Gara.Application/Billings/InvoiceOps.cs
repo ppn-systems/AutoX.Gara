@@ -7,6 +7,8 @@ using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Billings;
+using Microsoft.EntityFrameworkCore;
+using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Abstractions;
 using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Attributes;
@@ -16,6 +18,8 @@ using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
 using Nalix.Shared.Memory.Pooling;
 using Nalix.Shared.Serialization;
+using System.Diagnostics;
+using System.Linq;
 
 namespace AutoX.Gara.Application.Billings;
 
@@ -33,6 +37,9 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
     [PacketOpcode((System.UInt16)OpCommand.INVOICE_GET)]
     public async System.Threading.Tasks.Task GetAsync(IPacket p, IConnection connection)
     {
+        ILogger logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+        Stopwatch sw = Stopwatch.StartNew();
+
         if (p is not InvoiceQueryRequest packet)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
@@ -76,14 +83,23 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
 
             if (!sent)
             {
+                logger?.Warn(
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
             }
+            else
+            {
+                logger?.Info(
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} items={items.Count} total={totalCount} cust={packet.FilterCustomerId} term='{packet.SearchTerm}'");
+            }
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
+            logger?.Error(
+                $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -107,6 +123,9 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
     [PacketOpcode((System.UInt16)OpCommand.INVOICE_CREATE)]
     public async System.Threading.Tasks.Task CreateAsync(IPacket p, IConnection connection)
     {
+        ILogger logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+        Stopwatch sw = Stopwatch.StartNew();
+
         if (!TryParseInvoicePacket(p, out InvoiceDto packet, out System.UInt32 fallbackSeq) || packet.InvoiceId is not null)
         {
             await connection.SendAsync(
@@ -118,17 +137,30 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         }
 
         InvoiceDto confirmed = null;
+        System.Int64 tDb = 0;
+        System.Int64 tExists = 0;
+        System.Int64 tSaveInvoice = 0;
+        System.Int64 tLink = 0;
+        System.Int64 tReload = 0;
+        System.Int64 tRecalcSave = 0;
         try
         {
+            logger?.Info(
+                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} cust={packet.CustomerId} invNo='{packet.InvoiceNumber}' roId={packet.RepairOrderId} tax={packet.TaxRate} discType={packet.DiscountType} disc={packet.Discount}");
+
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var invoices = new InvoiceRepository(db);
+            InvoiceRepository invoices = new(db);
+            tDb = sw.ElapsedMilliseconds;
 
             System.Boolean existed = await invoices
                 .ExistsByInvoiceNumberAsync(packet.InvoiceNumber)
                 .ConfigureAwait(false);
+            tExists = sw.ElapsedMilliseconds;
 
             if (existed)
             {
+                logger?.Warn(
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] already-exists ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invNo='{packet.InvoiceNumber}'");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.ALREADY_EXISTS,
@@ -148,16 +180,92 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 Discount = packet.Discount,
             };
 
-            invoice.Recalculate();
-
             await invoices.AddAsync(invoice).ConfigureAwait(false);
             await invoices.SaveChangesAsync().ConfigureAwait(false);
+            tSaveInvoice = sw.ElapsedMilliseconds;
+            System.Int32 invoiceId = invoice.Id;
 
-            confirmed = MapToPacket(invoice, packet.SequenceId);
+            // If client requests linking an order, do it server-side (one-step UX).
+            if (packet.RepairOrderId > 0)
+            {
+                // Enforce: one repair order belongs to at most one invoice.
+                var roInfo = await db.RepairOrders
+                    .AsNoTracking()
+                    .Where(r => r.Id == packet.RepairOrderId)
+                    .Select(r => new { r.CustomerId, r.InvoiceId })
+                    .FirstOrDefaultAsync()
+                    .ConfigureAwait(false);
 
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+                if (roInfo is null || roInfo.CustomerId != packet.CustomerId)
+                {
+                    logger?.Warn(
+                        $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-not-found-or-mismatch ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} cust={packet.CustomerId}");
 
-            if (!sent)
+                    // Rollback created invoice to avoid orphan records.
+                    db.Invoices.Remove(invoice);
+                    await db.SaveChangesAsync().ConfigureAwait(false);
+
+                    await connection.SendAsync(
+                        ControlType.ERROR,
+                        ProtocolReason.NOT_FOUND,
+                        ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                    return;
+                }
+
+                if (roInfo.InvoiceId.HasValue)
+                {
+                    logger?.Warn(
+                        $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-already-invoiced ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} roInvoiceId={roInfo.InvoiceId.Value}");
+
+                    db.Invoices.Remove(invoice);
+                    await db.SaveChangesAsync().ConfigureAwait(false);
+
+                    await connection.SendAsync(
+                        ControlType.ERROR,
+                        ProtocolReason.ALREADY_EXISTS,
+                        ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                    return;
+                }
+
+                // Fast + safe in a NoTracking DbContext: update FK directly in database.
+                System.Int32 affected = await db.RepairOrders
+                    .Where(r => r.Id == packet.RepairOrderId && r.CustomerId == packet.CustomerId)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.InvoiceId, invoiceId))
+                    .ConfigureAwait(false);
+
+                if (affected <= 0)
+                {
+                    logger?.Warn(
+                        $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-not-found-or-mismatch ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} cust={packet.CustomerId}");
+
+                    // Rollback created invoice to avoid orphan records.
+                    db.Invoices.Remove(invoice);
+                    await db.SaveChangesAsync().ConfigureAwait(false);
+
+                    await connection.SendAsync(
+                        ControlType.ERROR,
+                        ProtocolReason.NOT_FOUND,
+                        ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                    return;
+                }
+                tLink = sw.ElapsedMilliseconds;
+            }
+
+            // Reload and recalculate with linked data.
+            db.ChangeTracker.Clear();
+            Invoice withDetails = await invoices.GetInvoiceWithFullGraphTrackedAsync(invoiceId).ConfigureAwait(false);
+            tReload = sw.ElapsedMilliseconds;
+            if (withDetails is not null)
+            {
+                withDetails.Recalculate();
+                await db.SaveChangesAsync().ConfigureAwait(false);
+                tRecalcSave = sw.ElapsedMilliseconds;
+                confirmed = MapToPacket(withDetails, packet.SequenceId);
+            }
+            else
             {
                 await connection.SendAsync(
                     ControlType.ERROR,
@@ -166,16 +274,37 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
 
                 return;
             }
+
+            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+
+            if (!sent)
+            {
+                logger?.Warn(
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={invoice.Id}");
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                return;
+            }
+
+            logger?.Info(
+                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={confirmed.InvoiceId} total={confirmed.TotalAmount} due={confirmed.BalanceDue} tDb={tDb} tExists={tExists} tSave={tSaveInvoice} tLink={tLink} tReload={tReload} tRecalcSave={tRecalcSave}");
         }
         catch (System.ArgumentException)
         {
+            logger?.Warn(
+                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] validation-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.VALIDATION_FAILED,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
+            logger?.Error(
+                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -195,6 +324,9 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
     [PacketOpcode((System.UInt16)OpCommand.INVOICE_UPDATE)]
     public async System.Threading.Tasks.Task UpdateAsync(IPacket p, IConnection connection)
     {
+        ILogger logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+        Stopwatch sw = Stopwatch.StartNew();
+
         if (!TryParseInvoicePacket(p, out InvoiceDto packet, out System.UInt32 fallbackSeq) || packet.InvoiceId is null)
         {
             await connection.SendAsync(
@@ -206,17 +338,28 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         }
 
         InvoiceDto confirmed = null;
+        System.Int64 tDb = 0;
+        System.Int64 tLoad = 0;
+        System.Int64 tExistsCheck = 0;
+        System.Int64 tLink = 0;
+        System.Int64 tReload = 0;
+        System.Int64 tRecalcSave = 0;
         try
         {
+            logger?.Info(
+                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} invoiceId={packet.InvoiceId} cust={packet.CustomerId} invNo='{packet.InvoiceNumber}' roId={packet.RepairOrderId} tax={packet.TaxRate} discType={packet.DiscountType} disc={packet.Discount} status={packet.PaymentStatus}");
+
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
             var invoices = new InvoiceRepository(db);
+            tDb = sw.ElapsedMilliseconds;
 
-            Invoice existing = await invoices
-                .GetByIdWithDetailsAsync(packet.InvoiceId.Value)
-                .ConfigureAwait(false);
+            Invoice existing = await invoices.GetInvoiceWithFullGraphTrackedAsync(packet.InvoiceId.Value).ConfigureAwait(false);
+            tLoad = sw.ElapsedMilliseconds;
 
             if (existing is null)
             {
+                logger?.Warn(
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] not-found ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={packet.InvoiceId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
@@ -230,9 +373,12 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 System.Boolean existed = await invoices
                     .ExistsByInvoiceNumberAsync(packet.InvoiceNumber, excludeId: existing.Id)
                     .ConfigureAwait(false);
+                tExistsCheck = sw.ElapsedMilliseconds;
 
                 if (existed)
                 {
+                    logger?.Warn(
+                        $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] already-exists ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={existing.Id} invNo='{packet.InvoiceNumber}'");
                     await connection.SendAsync(
                         ControlType.ERROR,
                         ProtocolReason.ALREADY_EXISTS,
@@ -250,15 +396,79 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             existing.DiscountType = packet.DiscountType;
             existing.Discount = packet.Discount;
 
-            existing.Recalculate();
+            // Link a repair order if requested.
+            if (packet.RepairOrderId > 0)
+            {
+                // Enforce: 1 invoice links to at most 1 repair order.
+                System.Boolean hasOtherOrders = await db.RepairOrders
+                    .AsNoTracking()
+                    .AnyAsync(r => r.InvoiceId == existing.Id && r.Id != packet.RepairOrderId)
+                    .ConfigureAwait(false);
 
-            invoices.Update(existing);
-            await invoices.SaveChangesAsync().ConfigureAwait(false);
+                if (hasOtherOrders)
+                {
+                    await connection.SendAsync(
+                        ControlType.ERROR,
+                        ProtocolReason.VALIDATION_FAILED,
+                        ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    return;
+                }
 
-            confirmed = MapToPacket(existing, packet.SequenceId);
+                var roInfo = await db.RepairOrders
+                    .AsNoTracking()
+                    .Where(r => r.Id == packet.RepairOrderId)
+                    .Select(r => new { r.CustomerId, r.InvoiceId })
+                    .FirstOrDefaultAsync()
+                    .ConfigureAwait(false);
 
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
-            if (!sent)
+                if (roInfo is null || roInfo.CustomerId != packet.CustomerId)
+                {
+                    await connection.SendAsync(
+                        ControlType.ERROR,
+                        ProtocolReason.NOT_FOUND,
+                        ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    return;
+                }
+
+                if (roInfo.InvoiceId.HasValue && roInfo.InvoiceId.Value != existing.Id)
+                {
+                    await connection.SendAsync(
+                        ControlType.ERROR,
+                        ProtocolReason.ALREADY_EXISTS,
+                        ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    return;
+                }
+
+                System.Int32 affected = await db.RepairOrders
+                    .Where(r => r.Id == packet.RepairOrderId && r.CustomerId == packet.CustomerId)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.InvoiceId, existing.Id))
+                    .ConfigureAwait(false);
+
+                if (affected > 0)
+                {
+                    tLink = sw.ElapsedMilliseconds;
+                }
+                else
+                {
+                    logger?.Warn(
+                        $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] ro-not-found-or-mismatch ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} cust={packet.CustomerId}");
+                }
+            }
+
+            // Reload to ensure RepairOrders collection reflects any new link, then recalc.
+            await db.SaveChangesAsync().ConfigureAwait(false);
+
+            db.ChangeTracker.Clear();
+            Invoice recalcing = await invoices.GetInvoiceWithFullGraphTrackedAsync(existing.Id).ConfigureAwait(false);
+            tReload = sw.ElapsedMilliseconds;
+            if (recalcing is not null)
+            {
+                recalcing.Recalculate();
+                await db.SaveChangesAsync().ConfigureAwait(false);
+                tRecalcSave = sw.ElapsedMilliseconds;
+                confirmed = MapToPacket(recalcing, packet.SequenceId);
+            }
+            else
             {
                 await connection.SendAsync(
                     ControlType.ERROR,
@@ -267,16 +477,36 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
 
                 return;
             }
+
+            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
+            if (!sent)
+            {
+                logger?.Warn(
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={packet.InvoiceId}");
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                return;
+            }
+
+            logger?.Info(
+                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={confirmed.InvoiceId} total={confirmed.TotalAmount} due={confirmed.BalanceDue} tDb={tDb} tLoad={tLoad} tExists={tExistsCheck} tLink={tLink} tReload={tReload} tRecalcSave={tRecalcSave}");
         }
         catch (System.ArgumentException)
         {
+            logger?.Warn(
+                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] validation-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.VALIDATION_FAILED,
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
+            logger?.Error(
+                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -310,13 +540,25 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         try
         {
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var invoices = new InvoiceRepository(db);
+            System.Int32 invoiceId = packet.InvoiceId.Value;
 
-            Invoice existing = await invoices
-                .GetByIdWithDetailsAsync(packet.InvoiceId.Value)
+            // Unlink repair orders first (nullable FK), then delete transactions, then delete invoice.
+            await db.RepairOrders
+                .Where(r => r.InvoiceId == invoiceId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.InvoiceId, (System.Int32?)null))
                 .ConfigureAwait(false);
 
-            if (existing is null)
+            await db.Transactions
+                .Where(t => t.InvoiceId == invoiceId)
+                .ExecuteDeleteAsync()
+                .ConfigureAwait(false);
+
+            System.Int32 deleted = await db.Invoices
+                .Where(i => i.Id == invoiceId)
+                .ExecuteDeleteAsync()
+                .ConfigureAwait(false);
+
+            if (deleted <= 0)
             {
                 await connection.SendAsync(
                     ControlType.ERROR,
@@ -325,9 +567,6 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
 
                 return;
             }
-
-            invoices.Delete(existing);
-            await invoices.SaveChangesAsync().ConfigureAwait(false);
 
             await connection.SendAsync(
                 ControlType.NONE,
@@ -409,6 +648,23 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         dto.ServiceSubtotal = invoice.ServiceSubtotal;
         dto.PartsSubtotal = invoice.PartsSubtotal;
         dto.IsFullyPaid = invoice.IsFullyPaid;
+        // If there's exactly 1 linked order, expose it for FE convenience.
+        // Otherwise keep 0 (unknown / multiple).
+        System.Int32 roId = 0;
+        if (invoice.RepairOrders is not null)
+        {
+            System.Int32[] ids = invoice.RepairOrders
+                .Select(r => r.Id)
+                .Distinct()
+                .Take(2)
+                .ToArray();
+
+            if (ids.Length == 1)
+            {
+                roId = ids[0];
+            }
+        }
+        dto.RepairOrderId = roId;
 
         return dto;
     }

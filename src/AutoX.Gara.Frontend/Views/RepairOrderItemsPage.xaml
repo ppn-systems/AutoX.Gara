@@ -117,7 +117,7 @@
                         <Label Text="{Binding ErrorMessage}" TextColor="#EF4444" IsVisible="{Binding HasError}" />
                         <ActivityIndicator IsRunning="{Binding IsLookupLoading}" IsVisible="{Binding IsLookupLoading}" Color="#6366F1" />
                     </VerticalStackLayout>
-                    <CollectionView Grid.Row="3" ItemsSource="{Binding FilteredPartOptions}" VerticalOptions="FillAndExpand">
+                    <CollectionView Grid.Row="3" ItemsSource="{Binding FilteredPartOptions}">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="vm:RepairOrderItemsViewModel+LookupOption">
                                 <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"

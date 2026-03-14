@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Frontend.Services.Billings;
 using AutoX.Gara.Frontend.ViewModels;
+using AutoX.Gara.Shared.Protocol.Billings;
 using AutoX.Gara.Shared.Protocol.Customers;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Microsoft.Maui.Controls;
@@ -23,6 +24,7 @@ public partial class RepairOrdersPage : ContentPage
     }
 
     public void Initialize(CustomerDto owner, VehicleDto vehicle) => _vm.Initialize(owner, vehicle);
+    public void Initialize(CustomerDto owner, InvoiceDto invoice) => _vm.Initialize(owner, invoice);
 
     private async void OnBackClicked(System.Object sender, System.EventArgs e)
     {
