@@ -19,32 +19,32 @@ Tài liệu mô tả kiến trúc thực tế của hệ thống **AutoX.Gara** 
 ## 2. Kiến trúc phân lớp (Layered)
 
 ```text
-┌─────────────────────────────────────────────────────────┐
-│  Presentation (UI)                                       │
-│  AutoX.Gara.Frontend — MAUI, MVVM (CommunityToolkit)    │
-└───────────────────────────┬───────────────────────────────┘
+┌───────────────────────────────────────────────────────────┐
+│  Presentation (UI)                                        │
+│  AutoX.Gara.Frontend — MAUI, MVVM (CommunityToolkit)      │
+└──────────────────────────┬────────────────────────────────┘
                            │ TCP / Nalix (Request–Response)
-┌──────────────────────────▼───────────────────────────────┐
+┌──────────────────────────▼────────────────────────────────┐
 │  Application Layer                                        │
-│  AutoX.Gara.Application — Use case, message handlers     │
-│  (CustomerOps, EmployeeOps, SparePartOps, VehicleOps, …) │
-└───────────────────────────┬───────────────────────────────┘
+│  AutoX.Gara.Application — Use case, message handlers      │
+│  (CustomerOps, EmployeeOps, SparePartOps, VehicleOps, …)  │
+└──────────────────────────┬────────────────────────────────┘
                            │
-┌──────────────────────────▼───────────────────────────────┐
+┌──────────────────────────▼────────────────────────────────┐
 │  Domain Layer                                             │
-│  AutoX.Gara.Domain — Entities, value objects (DDD)       │
-│  (không phụ thuộc EF Core / Infrastructure)              │
-└───────────────────────────┬───────────────────────────────┘
+│  AutoX.Gara.Domain — Entities, value objects (DDD)        │
+│  (không phụ thuộc EF Core / Infrastructure)               │
+└──────────────────────────┬────────────────────────────────┘
                            │
-┌──────────────────────────▼───────────────────────────────┐
-│  Infrastructure Layer                                    │
+┌──────────────────────────▼────────────────────────────────┐
+│  Infrastructure Layer                                     │
 │  AutoX.Gara.Infrastructure — DbContext, Repositories,     │
-│  Nalix listener (AutoXListener), protocol (AutoXProtocol)│
-└───────────────────────────┬───────────────────────────────┘
+│  Nalix listener (AutoXListener), protocol (AutoXProtocol) │
+└──────────────────────────┬────────────────────────────────┘
                            │
-┌──────────────────────────▼───────────────────────────────┐
+┌──────────────────────────▼────────────────────────────────┐
 │  Database — SQLite / PostgreSQL (EF Core)                 │
-└──────────────────────────────────────────────────────────┘
+└───────────────────────────────────────────────────────────┘
 ```
 
 - **Shared** (`AutoX.Gara.Shared`): DTO, protocol (request/response), cấu hình dùng chung giữa Client và Server.

@@ -162,11 +162,25 @@ Hướng dẫn chi tiết: [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md).
 
 ## Tài liệu thêm
 
+**Gốc repo**
+
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Kiến trúc hệ thống, lớp, luồng dữ liệu
-- [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) — Hướng dẫn bắt đầu nhanh
 - [CONTRIBUTING.md](CONTRIBUTING.md) — Đóng góp code / báo lỗi
 - [CHANGELOG.md](CHANGELOG.md) — Lịch sử thay đổi
 - [SECURITY.md](SECURITY.md) — Báo lỗi bảo mật
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — Quy tắc ứng xử
+
+**Trong [docs/](docs/)**
+
+- [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) — Hướng dẫn bắt đầu nhanh
+- [docs/CONFIGURATION.md](docs/CONFIGURATION.md) — Cấu hình Database, Logging, Network
+- [docs/PROTOCOL.md](docs/PROTOCOL.md) — Giao thức client–server (OpCode, packet)
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Triển khai server & client
+- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — Xử lý sự cố
+- [docs/GLOSSARY.md](docs/GLOSSARY.md) — Thuật ngữ (VN/EN)
+- [docs/RELEASE.md](docs/RELEASE.md) — Quy trình phát hành
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — Hướng dẫn phát triển
+- [docs/README.md](docs/README.md) — Mục lục toàn bộ tài liệu
 
 ---
 

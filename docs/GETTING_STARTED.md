@@ -19,7 +19,7 @@ git clone https://github.com/ppn-systems/AutoX.Gara.git
 cd AutoX.Gara/src
 ```
 
-Mở `AutoX.Gara.sln` bằng Visual Studio 2022 hoặc Rider (hoặc dùng CLI như bên dưới).
+Mở `AutoX.Gara.sln` bằng Visual Studio 2022-2026 hoặc Rider (hoặc dùng CLI như bên dưới).
 
 ---
 
