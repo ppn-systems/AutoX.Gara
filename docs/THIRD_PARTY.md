@@ -1,10 +1,10 @@
-# Thư viện bên thứ ba (Third-Party)
+# 📦 Thư viện bên thứ ba (Third-Party)
 
-Dự án **AutoX.Gara** sử dụng các thư viện và framework sau. Giấy phép đầy đủ của từng package có thể xem trên NuGet hoặc trong package.
+> Các thư viện và framework **AutoX.Gara** sử dụng. Giấy phép đầy đủ xem trên NuGet hoặc trong package.
 
 ---
 
-## NuGet packages (chính)
+## 📋 NuGet packages (chính)
 
 | Package | Mục đích | License (thông thường) |
 |---------|----------|--------------------------|
@@ -20,7 +20,7 @@ Dự án **AutoX.Gara** sử dụng các thư viện và framework sau. Giấy p
 
 ---
 
-## Ghi chú
+## 📝 Ghi chú
 
 - Giấy phép chính của dự án: **Apache-2.0** (xem [LICENSE](../LICENSE)).
 - Thư viện Nalix có thể có điều khoản riêng — kiểm tra trang NuGet hoặc nhà cung cấp.

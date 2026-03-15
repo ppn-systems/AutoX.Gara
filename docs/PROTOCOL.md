@@ -1,10 +1,10 @@
-# Giao thức Client–Server (Protocol)
+# 📡 Giao thức Client–Server (Protocol)
 
-AutoX.Gara giao tiếp **Client ↔ Server** qua **TCP**, sử dụng thư viện **Nalix.Network**. Mọi trao đổi dữ liệu theo mô hình **request–response** dựa trên **packet** (message) có OpCode và payload tuần tự hóa.
+> Giao tiếp **Client ↔ Server** qua **TCP** (Nalix.Network). Mọi trao đổi theo **request–response** với **packet** (OpCode + payload).
 
 ---
 
-## 1. Tổng quan
+## 📋 1. Tổng quan
 
 - **Transport**: TCP (Nalix listener phía server, Nalix client phía MAUI).
 - **Định dạng**: Packet với header (OpCode, flags, length, …) và vùng dữ liệu (serialize theo `LiteSerialize`).
@@ -13,14 +13,14 @@ AutoX.Gara giao tiếp **Client ↔ Server** qua **TCP**, sử dụng thư việ
 
 ---
 
-## 2. Xác thực
+## 🔐 2. Xác thực
 
 - **Login**: Client gửi `LoginPacket` chứa `LoginRequestModel` (username, password). Server xác thực và trả response (session/token). OpCode: `OpCommand.LOGIN`.
 - Các request sau **nên kèm token/session**; server dùng middleware (ví dụ PermissionMiddleware) để kiểm tra.
 
 ---
 
-## 3. OpCode (OpCommand)
+## 🎯 3. OpCode (OpCommand)
 
 Các lệnh được định nghĩa trong `AutoX.Gara.Shared.Enums.OpCommand`:
 
@@ -43,7 +43,7 @@ Các lệnh được định nghĩa trong `AutoX.Gara.Shared.Enums.OpCommand`:
 
 ---
 
-## 4. Packet types (Shared)
+## 📦 4. Packet types (Shared)
 
 Các packet được đăng ký trong `AppConfig.Register()`:
 
@@ -62,7 +62,7 @@ Các packet được đăng ký trong `AppConfig.Register()`:
 
 ---
 
-## 5. Mẫu request/response (ví dụ: Customer)
+## 📤 5. Mẫu request/response (ví dụ: Customer)
 
 - **Danh sách có phân trang**: Client gửi `CustomerQueryRequest` (Page, PageSize, SortBy, SortDescending, FilterType, FilterMembership, SearchTerm). Server trả `CustomerQueryResponse` (danh sách + tổng số).
 - **Tạo/sửa**: Client gửi `CustomerDto` với OpCode tương ứng (CREATE/UPDATE), server trả response (thành công/lỗi hoặc DTO cập nhật).
@@ -72,7 +72,7 @@ Cấu trúc chi tiết từng DTO/Request/Response xem trong `AutoX.Gara.Shared/
 
 ---
 
-## 6. Middleware (Server)
+## 🔌 6. Middleware (Server)
 
 PacketDispatchChannel trên server dùng:
 
@@ -84,13 +84,13 @@ PacketDispatchChannel trên server dùng:
 
 ---
 
-## 7. Nén (Compression)
+## 📦 7. Nén (Compression)
 
 Một số packet hỗ trợ nén chuỗi (Base64), ví dụ `LoginPacket`, `CustomerDto` có `Compress`/`Decompress` tĩnh và flag `COMPRESSED`. Client/server có thể dùng để giảm kích thước trên đường truyền.
 
 ---
 
-## 8. Tài liệu liên quan
+## 📚 8. Tài liệu liên quan
 
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — Luồng giao tiếp tổng quan
 - `AutoX.Gara.Shared/AppConfig.cs` — Đăng ký packet

@@ -1,10 +1,10 @@
-# Cấu hình (Configuration)
+# ⚙️ Cấu hình (Configuration)
 
-Tài liệu tham khảo cấu hình cho **AutoX.Gara** Backend và môi trường chạy.
+> Tham khảo cấu hình **Backend** và môi trường chạy AutoX.Gara.
 
 ---
 
-## 1. Database (Server)
+## 🗄️ 1. Database (Server)
 
 Backend đọc cấu hình qua **Nalix ConfigurationManager**. Class cấu hình: `AutoX.Gara.Infrastructure.Configuration.DatabaseOptions`.
 
@@ -29,7 +29,7 @@ Backend đọc cấu hình qua **Nalix ConfigurationManager**. Class cấu hình
 
 ---
 
-## 2. Logging (Server)
+## 📝 2. Logging (Server)
 
 Backend dùng **Nalix.Logging**. Cấu hình qua `NLogixOptions` (Nalix), ví dụ:
 
@@ -40,7 +40,7 @@ Chi tiết tùy phiên bản Nalix.Logging và NLogixOptions — xem tài liệu
 
 ---
 
-## 3. Network (TCP Listener)
+## 📡 3. Network (TCP Listener)
 
 Server dùng **AutoXListener** (kế thừa Nalix `TcpListenerBase`). Địa chỉ và port lắng nghe do **Nalix** cấu hình (options của listener/transport). Kiểm tra:
 
@@ -52,7 +52,7 @@ Client (Frontend) cần cấu hình **địa chỉ và port** của server để
 
 ---
 
-## 4. Client (Frontend)
+## 🖥️ 4. Client (Frontend)
 
 - **Server address/port**: cấu hình kết nối tới Backend (Nalix client).
 - **Ngôn ngữ / localization**: nếu có, thường qua resource (.resx) hoặc file cấu hình.
@@ -60,7 +60,7 @@ Client (Frontend) cần cấu hình **địa chỉ và port** của server để
 
 ---
 
-## 5. Nơi đặt cấu hình
+## 📂 5. Nơi đặt cấu hình
 
 - **Nalix**: cấu hình thường load từ file (JSON/XML), biến môi trường hoặc code, tùy cách bạn đăng ký với `ConfigurationManager`.
 - **DatabaseOptions**: đảm bảo được bind vào `ConfigurationManager.Instance.Get<DatabaseOptions>()` (trong Backend/Infrastructure) để DbContext factory hoạt động đúng.
@@ -68,7 +68,7 @@ Client (Frontend) cần cấu hình **địa chỉ và port** của server để
 
 ---
 
-## 6. Design-time (EF Core migrations)
+## 🔄 6. Design-time (EF Core migrations)
 
 Khi chạy `dotnet ef migrations` hoặc `dotnet ef database update`, **AutoXDbContextFactory** dùng cùng `DatabaseOptions` (qua ConfigurationManager). Đảm bảo:
 

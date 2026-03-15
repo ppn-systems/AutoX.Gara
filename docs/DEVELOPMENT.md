@@ -1,10 +1,10 @@
-# Hướng dẫn phát triển (Development)
+# 👨‍💻 Hướng dẫn phát triển (Development)
 
-Gợi ý quy trình và convention khi phát triển **AutoX.Gara** (branch, code style, thêm tính năng).
+> Quy trình và convention khi phát triển **AutoX.Gara**: branch, code style, thêm tính năng.
 
 ---
 
-## 1. Môi trường phát triển
+## 🛠️ 1. Môi trường phát triển
 
 - **IDE**: Visual Studio 2026 hoặc JetBrains Rider (khuyến nghị có workload .NET MAUI và .NET 10).
 - **SDK**: .NET 10.
@@ -12,7 +12,7 @@ Gợi ý quy trình và convention khi phát triển **AutoX.Gara** (branch, cod
 
 ---
 
-## 2. Chi nhánh (Branching)
+## 🌿 2. Chi nhánh (Branching)
 
 - **main** (hoặc **master**): nhánh ổn định, sẵn sàng release.
 - **develop** (tùy chọn): tích hợp tính năng cho bản tiếp theo.
@@ -27,7 +27,7 @@ Sau khi xong: tạo **Pull Request** vào `main` (hoặc `develop`), review rồ
 
 ---
 
-## 3. Convention code
+## 📐 3. Convention code
 
 - **C#**: đặt tên rõ ràng, format nhất quán (theo EditorConfig / style của solution). Tránh bỏ qua nullable khi có thể.
 - **Domain**: chỉ entity, value object, logic nghiệp vụ; **không** reference EF Core hay Infrastructure.
@@ -40,7 +40,7 @@ Khi thêm project hoặc thay đổi dependency giữa các layer: cập nhật 
 
 ---
 
-## 4. Thêm tính năng mới (module CRUD)
+## ✨ 4. Thêm tính năng mới (module CRUD)
 
 Gợi ý thứ tự:
 
@@ -55,7 +55,7 @@ Chạy lại server + client, kiểm tra CRUD và phân trang (nếu có).
 
 ---
 
-## 5. Debug
+## 🐛 5. Debug
 
 - **Server**: đặt breakpoint trong Application (Ops) hoặc Infrastructure; chạy Backend từ IDE (F5). Xem log Nalix.Logging (level Debug khi cần).
 - **Client**: chọn Frontend làm startup, target Windows; F5 để debug MAUI. Kiểm tra response từ server (status, payload).
@@ -63,7 +63,7 @@ Chạy lại server + client, kiểm tra CRUD và phân trang (nếu có).
 
 ---
 
-## 6. Commit & Pull Request
+## 📤 6. Commit & Pull Request
 
 - **Commit message**: rõ ràng, có thể dùng prefix: `feat:`, `fix:`, `docs:`, `chore:` (ví dụ: `feat: add customer export to CSV`).
 - **PR**: mô tả thay đổi, cách kiểm tra, issue liên quan (nếu có). Đảm bảo build xanh và không phá chức năng hiện có.

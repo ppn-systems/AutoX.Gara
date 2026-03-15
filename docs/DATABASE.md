@@ -1,10 +1,10 @@
-# Cơ sở dữ liệu (Database)
+# 🗄️ Cơ sở dữ liệu (Database)
 
-Tài liệu tổng quan **schema** và cách làm việc với database trong AutoX.Gara.
+> Tổng quan **schema** và cách làm việc với database trong AutoX.Gara.
 
 ---
 
-## 1. Công nghệ
+## 🛠️ 1. Công nghệ
 
 - **ORM**: Entity Framework Core 10.
 - **Provider**: SQLite (mặc định) hoặc PostgreSQL (cấu hình).
@@ -13,7 +13,7 @@ Tài liệu tổng quan **schema** và cách làm việc với database trong Au
 
 ---
 
-## 2. Bảng (Entities / DbSet)
+## 📋 2. Bảng (Entities / DbSet)
 
 | Bảng (DbSet) | Entity | Mô tả ngắn |
 |--------------|--------|------------|
@@ -34,7 +34,7 @@ Tài liệu tổng quan **schema** và cách làm việc với database trong Au
 
 ---
 
-## 3. Quan hệ chính
+## 🔗 3. Quan hệ chính
 
 ```
 Account 1 ────── 1 Employee
@@ -55,7 +55,7 @@ Supplier 1 ────── N SupplierContactPhone
 
 ---
 
-## 4. Index
+## 📌 4. Index
 
 Một số index đã cấu hình trong `AutoXDbContext` (ví dụ):
 
@@ -73,7 +73,7 @@ Chi tiết đầy đủ xem trong `AutoXDbContext.OnModelCreating`.
 
 ---
 
-## 5. Migration
+## 🔄 5. Migration
 
 ### Tạo migration mới
 
@@ -98,7 +98,7 @@ dotnet ef database update PreviousMigrationName --startup-project ../AutoX.Gara.
 
 ---
 
-## 6. Khởi tạo lần đầu (EnsureCreated & Seed)
+## 🌱 6. Khởi tạo lần đầu (EnsureCreated & Seed)
 
 Backend khi chạy lần đầu có thể gọi `context.Database.EnsureCreated()` — nếu database chưa tồn tại sẽ tạo schema theo model hiện tại (không dùng file migration). Sau đó `DataSeeder.SeedAsync(context)` gieo dữ liệu mẫu (ví dụ tài khoản admin).
 
@@ -107,7 +107,7 @@ Backend khi chạy lần đầu có thể gọi `context.Database.EnsureCreated(
 
 ---
 
-## 7. Connection string mẫu
+## 📝 7. Connection string mẫu
 
 - **SQLite**: `Data Source=C:\Path\To\AutoX.db`
 - **PostgreSQL**: `Host=localhost;Port=5432;Database=autox;Username=postgres;Password=***`

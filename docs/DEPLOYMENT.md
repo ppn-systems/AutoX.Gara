@@ -1,10 +1,10 @@
-# Triển khai (Deployment)
+# 🚀 Triển khai (Deployment)
 
-Hướng dẫn đóng gói và triển khai **AutoX.Gara** Backend (server) và Frontend (client) cho môi trường thực tế.
+> Đóng gói và triển khai **Backend** (server) và **Frontend** (client) AutoX.Gara.
 
 ---
 
-## 1. Yêu cầu môi trường
+## 📌 1. Yêu cầu môi trường
 
 - **Server**: Windows (hoặc Linux nếu dùng .NET 10 cho console + PostgreSQL).
 - **Client**: Windows 10/11 (MAUI Windows).
@@ -12,9 +12,9 @@ Hướng dẫn đóng gói và triển khai **AutoX.Gara** Backend (server) và 
 
 ---
 
-## 2. Backend (Server)
+## ⚙️ 2. Backend (Server)
 
-### 2.1 Publish
+### 📤 2.1 Publish
 
 Từ thư mục solution:
 
@@ -27,25 +27,25 @@ dotnet publish AutoX.Gara.Backend/AutoX.Gara.Backend.csproj -c Release -r win-x6
 - `--self-contained true`: gói kèm .NET runtime, máy đích không cần cài .NET.
 - `PublishSingleFile=true`: tạo 1 file exe (đã cấu hình trong .csproj).
 
-### 2.2 Cấu hình khi triển khai
+### ⚙️ 2.2 Cấu hình khi triển khai
 
 - Đặt **DatabaseOptions** (DatabaseType, ConnectionString) đúng môi trường: file cấu hình Nalix hoặc biến môi trường (nếu Nalix hỗ trợ bind).
 - **SQLite**: đảm bảo thư mục chứa file `.db` có quyền ghi; backup định kỳ file DB.
 - **PostgreSQL**: cấu hình ConnectionString (Host, Port, Database, User, Password); không lưu mật khẩu trong repo.
 
-### 2.3 Chạy như dịch vụ (Windows)
+### 🔧 2.3 Chạy như dịch vụ (Windows)
 
 - Dùng **Windows Service** hoặc **NSSM** / **sc.exe** để cài server chạy nền, khởi động cùng máy.
 - Hoặc chạy trong console và dùng công cụ giám sát (PM2 trên Node không áp dụng trực tiếp; có thể dùng task scheduler hoặc wrapper).
 
-### 2.4 Firewall & mạng
+### 🔒 2.4 Firewall & mạng
 
 - Mở **port TCP** mà Nalix listener đang lắng nghe (xem cấu hình Nalix).
 - Nếu client kết nối từ xa: bật TLS (SslStream hoặc kênh Nalix) và chỉ mở port trên interface cần thiết.
 
 ---
 
-## 3. Frontend (Client MAUI Windows)
+## 🖥️ 3. Frontend (Client MAUI Windows)
 
 ### 3.1 Publish
 
@@ -75,7 +75,7 @@ dotnet publish AutoX.Gara.Frontend/AutoX.Gara.Frontend.csproj -c Release -f net1
 
 ---
 
-## 4. Thứ tự triển khai
+## 📋 4. Thứ tự triển khai
 
 1. **Database**: Tạo DB (PostgreSQL) hoặc đảm bảo thư mục SQLite có quyền ghi; chạy migration nếu dùng migration thay vì EnsureCreated.
 2. **Backend**: Cấu hình DatabaseOptions và (nếu có) Nalix listener; copy bản publish; chạy và kiểm tra log.
@@ -85,7 +85,7 @@ dotnet publish AutoX.Gara.Frontend/AutoX.Gara.Frontend.csproj -c Release -f net1
 
 ---
 
-## 5. Backup & nâng cấp
+## 💾 5. Backup & nâng cấp
 
 - **Backup**: Sao lưu định kỳ file SQLite hoặc dump PostgreSQL; lưu cấu hình (không lưu mật khẩu dạng plain text).
 - **Nâng cấp**: Dừng server → backup DB → thay file publish mới → chạy migration (nếu có) → khởi động lại. Client: phát bản mới (zip/installer/auto-update) và hướng dẫn người dùng cập nhật.

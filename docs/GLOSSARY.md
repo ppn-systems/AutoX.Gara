@@ -1,10 +1,10 @@
-# Thuật ngữ (Glossary)
+# 📖 Thuật ngữ (Glossary)
 
-Bảng thuật ngữ dùng trong dự án **AutoX.Gara** (Tiếng Việt / English) và giải thích ngắn gọn.
+> Thuật ngữ dùng trong **AutoX.Gara** (VN / EN) và giải thích ngắn gọn.
 
 ---
 
-## A–C
+## 🔤 A–C
 
 | Thuật ngữ (VN)     | English           | Giải thích |
 |--------------------|-------------------|------------|
@@ -16,7 +16,7 @@ Bảng thuật ngữ dùng trong dự án **AutoX.Gara** (Tiếng Việt / Engli
 
 ---
 
-## D–K
+## 🔤 D–K
 
 | Thuật ngữ (VN)   | English        | Giải thích |
 |------------------|----------------|------------|
@@ -28,7 +28,7 @@ Bảng thuật ngữ dùng trong dự án **AutoX.Gara** (Tiếng Việt / Engli
 
 ---
 
-## L–P
+## 🔤 L–P
 
 | Thuật ngữ (VN)   | English         | Giải thích |
 |------------------|-----------------|------------|
@@ -42,7 +42,7 @@ Bảng thuật ngữ dùng trong dự án **AutoX.Gara** (Tiếng Việt / Engli
 
 ---
 
-## Q–Z
+## 🔤 Q–Z
 
 | Thuật ngữ (VN)   | English        | Giải thích |
 |------------------|----------------|------------|
@@ -59,7 +59,7 @@ Bảng thuật ngữ dùng trong dự án **AutoX.Gara** (Tiếng Việt / Engli
 
 ---
 
-## Công nghệ
+## 🛠️ Công nghệ
 
 | Thuật ngữ | Giải thích |
 |-----------|------------|

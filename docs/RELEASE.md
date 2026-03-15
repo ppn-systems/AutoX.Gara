@@ -1,10 +1,10 @@
-# Quy trình phát hành (Release Process)
+# 🏷️ Quy trình phát hành (Release Process)
 
-Hướng dẫn đánh version và phát hành bản mới của **AutoX.Gara** (phù hợp open source và nội bộ).
+> Đánh version và phát hành bản mới **AutoX.Gara**.
 
 ---
 
-## 1. Phiên bản (Versioning)
+## 📌 1. Phiên bản (Versioning)
 
 - Dự án dùng **Semantic Versioning**: `MAJOR.MINOR.PATCH` (ví dụ `1.2.3`).
   - **MAJOR**: Thay đổi không tương thích ngược (API, protocol, database schema phá vỡ).
@@ -18,7 +18,7 @@ Hướng dẫn đánh version và phát hành bản mới của **AutoX.Gara** (
 
 ---
 
-## 2. Chuẩn bị trước khi release
+## ✅ 2. Chuẩn bị trước khi release
 
 - [ ] Chạy `dotnet build -c Release` — không lỗi.
 - [ ] Kiểm tra chức năng chính: đăng nhập, CRUD vài module (customer, part, invoice…).
@@ -27,7 +27,7 @@ Hướng dẫn đánh version và phát hành bản mới của **AutoX.Gara** (
 
 ---
 
-## 3. Tạo tag và bản release
+## 🏷️ 3. Tạo tag và bản release
 
 - **Git tag** (khuyến nghị annotated):
   ```bash
@@ -41,7 +41,7 @@ Hướng dẫn đánh version và phát hành bản mới của **AutoX.Gara** (
 
 ---
 
-## 4. Sau khi release
+## 📋 4. Sau khi release
 
 - Merge (nếu release từ branch `release/1.0.0`) vào `main`.
 - Mở lại mục **[Unreleased]** trong CHANGELOG cho các thay đổi tiếp theo; thêm link so sánh mới (ví dụ `compare/v1.0.0...HEAD`).
@@ -49,7 +49,7 @@ Hướng dẫn đánh version và phát hành bản mới của **AutoX.Gara** (
 
 ---
 
-## 5. Hotfix (bản vá nhanh)
+## 🔧 5. Hotfix (bản vá nhanh)
 
 - Tạo branch từ tag release (ví dụ `v1.0.0`): `git checkout -b hotfix/1.0.1 v1.0.0`.
 - Sửa lỗi, tăng **PATCH** (1.0.1), cập nhật CHANGELOG.

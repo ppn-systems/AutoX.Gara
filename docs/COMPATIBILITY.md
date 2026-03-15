@@ -1,10 +1,10 @@
-# Tương thích (Compatibility)
+# 💻 Tương thích (Compatibility)
 
-Thông tin về nền tảng và phiên bản được hỗ trợ cho **AutoX.Gara**.
+> Nền tảng và phiên bản được hỗ trợ cho **AutoX.Gara**.
 
 ---
 
-## 1. Runtime & SDK
+## 🖥️ 1. Runtime & SDK
 
 | Thành phần | Yêu cầu |
 |------------|---------|
@@ -16,7 +16,7 @@ Kiểm tra phiên bản: `dotnet --version` (cần 10.x).
 
 ---
 
-## 2. Hệ điều hành
+## 🖥️ 2. Hệ điều hành
 
 | Thành phần | Hệ điều hành |
 |------------|---------------|
@@ -25,7 +25,7 @@ Kiểm tra phiên bản: `dotnet --version` (cần 10.x).
 
 ---
 
-## 3. Database
+## 🗄️ 3. Database
 
 | Database | Phiên bản (gợi ý) | Ghi chú |
 |----------|--------------------|---------|
@@ -36,7 +36,7 @@ EF Core: 10.0.x; Npgsql.EntityFrameworkCore.PostgreSQL: 10.x.
 
 ---
 
-## 4. Thư viện bên thứ ba (chính)
+## 📦 4. Thư viện bên thứ ba (chính)
 
 - **Nalix.SDK**, **Nalix.Network**, **Nalix.Logging**, **Nalix.Framework**, **Nalix.Common**, **Nalix.Shared** — phiên bản theo package reference trong từng project (ví dụ 11.3.0).
 - **Microsoft.EntityFrameworkCore** 10.0.x.
@@ -47,14 +47,14 @@ Nâng cấp package: kiểm tra release notes và breaking change; chạy build 
 
 ---
 
-## 5. Trình duyệt / Thiết bị
+## 🌐 5. Trình duyệt / Thiết bị
 
 - Client là **ứng dụng desktop MAUI**, không chạy trên trình duyệt.
 - Khuyến nghị độ phân giải màn hình tối thiểu cho giao diện (theo thiết kế MAUI); không có yêu cầu trình duyệt.
 
 ---
 
-## 6. Thay đổi tương thích
+## ⚠️ 6. Thay đổi tương thích
 
 - **Phiên bản major** (x.y.z, tăng x): Có thể thay đổi API, protocol hoặc schema không tương thích ngược; ghi trong CHANGELOG.
 - **Migration EF**: Khi thêm/sửa migration, phiên bản cũ của app có thể không chạy được trên DB mới (hoặc ngược lại) — cần quy trình nâng cấp và backup. Xem [DATABASE.md](DATABASE.md), [OPERATIONS.md](OPERATIONS.md).

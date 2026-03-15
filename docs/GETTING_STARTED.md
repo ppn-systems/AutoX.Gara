@@ -1,18 +1,20 @@
-# Hướng dẫn bắt đầu (Getting Started)
+# 🚀 Hướng dẫn bắt đầu (Getting Started)
 
-Tài liệu này hướng dẫn nhanh cách cài đặt môi trường, build, chạy server và client AutoX.Gara.
-
----
-
-## Yêu cầu
-
-- **.NET 10 SDK** — [Tải .NET](https://dotnet.microsoft.com/download)
-- **Windows 10/11** (cho client MAUI Windows và server)
-- **Git**
+> Cài đặt môi trường, build, chạy server và client **AutoX.Gara**.
 
 ---
 
-## Bước 1: Clone và mở solution
+## 📌 Yêu cầu
+
+| Thành phần | Ghi chú |
+|------------|--------|
+| 🖥️ **.NET 10 SDK** | [Tải .NET](https://dotnet.microsoft.com/download) |
+| 💻 **Windows 10/11** | Client MAUI Windows + server |
+| 📂 **Git** | Clone repository |
+
+---
+
+## 1️⃣ Clone và mở solution
 
 ```bash
 git clone https://github.com/ppn-systems/AutoX.Gara.git
@@ -23,7 +25,7 @@ Mở `AutoX.Gara.sln` bằng Visual Studio 2022-2026 hoặc Rider (hoặc dùng 
 
 ---
 
-## Bước 2: Restore và build
+## 2️⃣ Restore và build
 
 ```bash
 cd src
@@ -39,7 +41,7 @@ dotnet build AutoX.Gara.Frontend/AutoX.Gara.Frontend.csproj -f net10.0-windows10
 
 ---
 
-## Bước 3: Cấu hình database (Server)
+## 3️⃣ Cấu hình database (Server)
 
 Server dùng **SQLite** mặc định (file `AutoX.db` trong thư mục dữ liệu của ứng dụng). Không cần cài đặt thêm.
 
@@ -52,7 +54,7 @@ Cấu hình thường nằm trong options load bởi `ConfigurationManager` (Nal
 
 ---
 
-## Bước 4: Chạy server (Backend)
+## 4️⃣ Chạy server (Backend)
 
 ```bash
 cd src/AutoX.Gara.Backend
@@ -64,7 +66,7 @@ dotnet run
 
 ---
 
-## Bước 5: Chạy client (Frontend – Windows)
+## 5️⃣ Chạy client (Frontend – Windows)
 
 Mở terminal mới:
 
@@ -79,7 +81,7 @@ Hoặc trong Visual Studio: chọn **AutoX.Gara.Frontend** làm startup project,
 
 ---
 
-## Bước 6: EF Core migrations (tùy chọn)
+## 6️⃣ EF Core migrations (tùy chọn)
 
 Khi thay đổi model và cần tạo/cập nhật schema:
 
@@ -93,7 +95,7 @@ Design-time factory: `AutoXDbContextFactory` (đọc `DatabaseOptions` từ Nali
 
 ---
 
-## Xử lý lỗi thường gặp
+## 🔧 Xử lý lỗi thường gặp
 
 | Vấn đề | Gợi ý |
 |--------|--------|
@@ -104,8 +106,10 @@ Design-time factory: `AutoXDbContextFactory` (đọc `DatabaseOptions` từ Nali
 
 ---
 
-## Tài liệu liên quan
+## 📚 Tài liệu liên quan
 
-- [README.md](../README.md) — Tổng quan dự án, tính năng, công nghệ
-- [ARCHITECTURE.md](../ARCHITECTURE.md) — Kiến trúc hệ thống, lớp, luồng dữ liệu
-- [CONTRIBUTING.md](../CONTRIBUTING.md) — Đóng góp code, báo lỗi, PR
+| Tài liệu | Nội dung |
+|----------|----------|
+| [README.md](../README.md) | Tổng quan, tính năng, công nghệ |
+| [ARCHITECTURE.md](../ARCHITECTURE.md) | Kiến trúc, lớp, luồng dữ liệu |
+| [CONTRIBUTING.md](../CONTRIBUTING.md) | Đóng góp code, báo lỗi, PR |

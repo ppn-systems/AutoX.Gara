@@ -1,10 +1,10 @@
-# Vận hành (Operations)
+# 📋 Vận hành (Operations)
 
-Hướng dẫn vận hành hàng ngày: khởi động lần đầu, backup, khôi phục và theo dõi.
+> Khởi động lần đầu, backup, khôi phục và theo dõi **AutoX.Gara**.
 
 ---
 
-## 1. Chạy lần đầu (First run)
+## 🚀 1. Chạy lần đầu (First run)
 
 1. **Cấu hình**: Đặt DatabaseOptions (SQLite hoặc PostgreSQL) theo [CONFIGURATION.md](CONFIGURATION.md). Với SQLite, thư mục chứa file DB phải có quyền ghi.
 2. **Backend**: Chạy server. Nếu dùng `EnsureCreated()`, database sẽ được tạo và DataSeeder có thể gieo tài khoản/ dữ liệu mẫu.
@@ -15,7 +15,7 @@ Nếu dùng **migration** thay vì EnsureCreated: chạy `dotnet ef database upd
 
 ---
 
-## 2. Backup
+## 💾 2. Backup
 
 ### SQLite
 
@@ -35,7 +35,7 @@ Nếu dùng **migration** thay vì EnsureCreated: chạy `dotnet ef database upd
 
 ---
 
-## 3. Khôi phục (Restore)
+## 🔄 3. Khôi phục (Restore)
 
 ### SQLite
 
@@ -50,7 +50,7 @@ Sau khi restore, kiểm tra đăng nhập và vài chức năng cơ bản.
 
 ---
 
-## 4. Nâng cấp phiên bản
+## ⬆️ 4. Nâng cấp phiên bản
 
 1. **Backup** database và cấu hình (xem mục 2).
 2. **Dừng server**.
@@ -63,7 +63,7 @@ Chi tiết release: [RELEASE.md](RELEASE.md), triển khai: [DEPLOYMENT.md](DEPL
 
 ---
 
-## 5. Theo dõi (Monitoring)
+## 👀 5. Theo dõi (Monitoring)
 
 - **Log server**: Nalix.Logging ghi file/console. Kiểm tra log khi lỗi hoặc hành vi bất thường; cấu hình level (Debug/Info/Warn/Error) và rotation theo [CONFIGURATION.md](CONFIGURATION.md).
 - **Kết nối client**: Nếu client không kết nối được, kiểm tra server đang chạy, firewall, địa chỉ/port ở client.
@@ -71,7 +71,7 @@ Chi tiết release: [RELEASE.md](RELEASE.md), triển khai: [DEPLOYMENT.md](DEPL
 
 ---
 
-## 6. Sự cố thường gặp
+## 🔧 6. Sự cố thường gặp
 
 - **Server không start**: Xem log; thường do không kết nối được DB hoặc thiếu cấu hình. [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 - **Database locked (SQLite)**: Tránh nhiều process ghi cùng lúc; cân nhắc chuyển PostgreSQL nếu nhiều client đồng thời.
