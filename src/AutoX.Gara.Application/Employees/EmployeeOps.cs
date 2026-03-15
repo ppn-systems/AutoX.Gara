@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
@@ -62,7 +61,7 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
             (System.Collections.Generic.List<Employee> items, System.Int32 totalCount)
                 = await employees.GetPageAsync(query).ConfigureAwait(false);
 
-            var payload = items.ConvertAll(e => MapToPacket(e, sequenceId: 0));
+            var payload = items.ConvertAll(e => MapToPacket(e, sequenceId: packet.SequenceId));
             response = new()
             {
                 TotalCount = totalCount,
@@ -70,16 +69,33 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
                 Employees = payload
             };
 
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(packet)).ConfigureAwait(false);
+            System.Byte[] bytes;
+            try
+            {
+                bytes = LiteSerializer.Serialize(response);
+            }
+            catch (System.Exception ex)
+            {
+                logger?.Error(
+                    $"[APP.{nameof(EmployeeOps)}:{nameof(GetAsync)}] serialization-failed seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+                await connection.SendAsync(
+                    ControlType.ERROR,
+                    ProtocolReason.INTERNAL_ERROR,
+                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+
+                return;
+            }
+            System.Boolean sent = await connection.TCP.SendAsync(bytes).ConfigureAwait(false);
 
             if (!sent)
             {
-                logger?.Warn($"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] send-failed seq={packet.SequenceId}");
+                logger?.Warn($"[APP.{nameof(EmployeeOps)}:{nameof(GetAsync)}] send-failed seq={packet.SequenceId}");
 
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
                     ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                return;
             }
 
             logger?.Info(

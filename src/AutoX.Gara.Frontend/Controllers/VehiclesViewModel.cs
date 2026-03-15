@@ -16,8 +16,8 @@ using System.Linq;
 namespace AutoX.Gara.Frontend.Controllers;
 
 /// <summary>
-/// ViewModel cho VehiclesPage — hi?n th? danh sách xe + form thêm/Sửa/xóa
-/// c?a m?t customer c? th?. Nh?n <see cref="CustomerDto"/> t? CustomersViewModel
+/// ViewModel cho VehiclesPage — hiển thị danh sách xe + form thêm/sửa/xóa
+/// của một customer cụ thể. Nhận <see cref="CustomerDto"/> từ CustomersViewModel
 /// thông qua Shell query parameter.
 /// </summary>
 public sealed partial class VehiclesViewModel : ObservableObject, System.IDisposable
@@ -29,7 +29,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
 
     // --- Customer context -----------------------------------------------------
 
-    /// <summary>Customer dang du?c xem xe — set t? Shell navigation parameter.</summary>
+    /// <summary>Customer đang được xem xe — set từ Shell navigation parameter.</summary>
     [ObservableProperty] public partial CustomerDto? Owner { get; set; }
 
     public System.String PageTitle => Owner is not null ? $"Xe c?a {Owner.Name}" : "Danh sách xe";
@@ -70,7 +70,7 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     [ObservableProperty] public partial VehicleDto? SelectedVehicle { get; set; }
 
     public System.String FormTitle => IsEditing ? "Sửa xe" : "Thêm xe mới";
-    public System.String FormSaveText => IsEditing ? "Luu thay đổi" : "Thêm xe";
+    public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm xe";
 
     // Form fields
     [ObservableProperty] public partial System.String FormLicensePlate { get; set; } = System.String.Empty;
@@ -570,16 +570,16 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
     private System.Boolean ValidateForm()
     {
         if (System.String.IsNullOrWhiteSpace(FormLicensePlate))
-        { SetFormError("Bi?n s? xe không du?c d? tr?ng."); return false; }
+        { SetFormError("Biển số xe không được để trống."); return false; }
 
         if (FormLicensePlate.Length > 20)
-        { SetFormError("Bi?n s? xe không du?c vu?t quá 20 ký t?."); return false; }
+        { SetFormError("Biển số xe không được vượt quá 20 ký tự."); return false; }
 
         if (FormYear < 1900 || FormYear > System.DateTime.Now.Year + 1)
-        { SetFormError($"Nam s?n xu?t không h?p l? (1900 – {System.DateTime.Now.Year + 1})."); return false; }
+        { SetFormError($"Năm sản xuất không hợp lệ (1900 – {System.DateTime.Now.Year + 1})."); return false; }
 
         if (FormMileage < 0)
-        { SetFormError("S? km không du?c âm."); return false; }
+        { SetFormError("Số km không được âm."); return false; }
 
         return true;
     }

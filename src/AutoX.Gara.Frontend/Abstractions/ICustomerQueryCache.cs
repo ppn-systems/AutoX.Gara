@@ -13,7 +13,7 @@ public interface ICustomerQueryCache
 {
     /// <summary>
     /// Th? l?y k?t qu? dã cache.
-    /// Tr? vụ <c>false</c> n?u không tìm th?y ho?c entry dã h?t h?n.
+    /// Tr? vụ <c>false</c> n?u không tìm tHủy ho?c entry dã h?t h?n.
     /// </summary>
     System.Boolean TryGet(CustomerCacheKey key, out CustomerCacheEntry? entry);
 

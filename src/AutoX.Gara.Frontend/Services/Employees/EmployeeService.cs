@@ -92,6 +92,11 @@ public sealed class EmployeeService : IEmployeeService
                 {
                     sub?.Dispose();
                     errSub?.Dispose();
+                    if (resp.Type == ControlType.NONE && resp.Reason == ProtocolReason.NONE)
+                    {
+                        return;
+                    }
+
                     tcs.TrySetResult(EmployeeListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
                 });
 
@@ -116,12 +121,13 @@ public sealed class EmployeeService : IEmployeeService
         }
         catch (System.OperationCanceledException)
         {
-            return EmployeeListResult.Failure("Yêu c?u b? h?y.", ProtocolAdvice.NONE);
+            return EmployeeListResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return EmployeeListResult.Failure($"L?i không xác d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return EmployeeListResult.Failure(
+                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
@@ -235,27 +241,28 @@ public sealed class EmployeeService : IEmployeeService
         }
         catch (System.OperationCanceledException)
         {
-            return EmployeeWriteResult.Failure("Yêu c?u b? h?y.", ProtocolAdvice.NONE);
+            return EmployeeWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return EmployeeWriteResult.Failure($"L?i không xác d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return EmployeeWriteResult.Failure(
+                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "Không tìm th?y nhân viên.",
-            ProtocolReason.ALREADY_EXISTS => "Email ho?c s? di?n tho?i dã t?n Tải.",
-            ProtocolReason.MALFORMED_PACKET => "D? li?u không h?p l?.",
-            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui lòng Thử lại sau.",
-            ProtocolReason.FORBIDDEN => "B?n không có quy?n th?c hi?n thao tác này.",
-            ProtocolReason.UNAUTHENTICATED => "B?n không có quy?n th?c hi?n thao tác này.",
-            ProtocolReason.RATE_LIMITED => "B?n dang thao tác quá nhanh. Vui lòng ch? m?t chút r?i Thử lại.",
-            ProtocolReason.TIMEOUT => "Máy ch? phụn h?i h?t h?n. Vui lòng Thử lại.",
-            _ => "Thao tác thất bại. Vui lòng Thử lại."
+            ProtocolReason.NOT_FOUND => "Không tìm thấy nhân viên.",
+            ProtocolReason.ALREADY_EXISTS => "Email hoặc số điện thoại đã tồn tại.",
+            ProtocolReason.MALFORMED_PACKET => "Dữ liệu không hợp lệ.",
+            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống, vui lòng thử lại sau.",
+            ProtocolReason.FORBIDDEN => "Bạn không có quyền thực hiện thao tác này.",
+            ProtocolReason.UNAUTHENTICATED => "Bạn không có quyền thực hiện thao tác này.",
+            ProtocolReason.RATE_LIMITED => "Bạn đang thao tác quá nhanh, vui lòng chờ một chút rồi thử lại.",
+            ProtocolReason.TIMEOUT => "Máy chủ phản hồi hết hạn, vui lòng thử lại.",
+            _ => "Thao tác thất bại, vui lòng thử lại."
         };
 
     private static void LogException(System.Exception ex)

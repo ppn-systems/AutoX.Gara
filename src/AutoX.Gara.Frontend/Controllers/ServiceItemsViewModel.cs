@@ -92,7 +92,7 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
     [ObservableProperty] public partial ServiceItemDto? SelectedServiceItem { get; set; }
 
     public System.String FormTitle => IsEditing ? "Sửa dịch vụ" : "Thêm dịch vụ";
-    public System.String FormSaveText => IsEditing ? "Luu thay đổi" : "Thêm dịch vụ";
+    public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm dịch vụ";
 
     [ObservableProperty] public partial System.String FormDescription { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormUnitPrice { get; set; } = System.String.Empty;
@@ -135,7 +135,7 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
             .ToArray();
 
         _serviceTypeFormValues = all;
-        ServiceTypeFormOptions = new[] { "� Ch?n lo?i �" }
+        ServiceTypeFormOptions = new[] { "— Chọn loại —" }
             .Concat(all.Select(EnumText.Get))
             .ToArray();
 
@@ -375,7 +375,7 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
             }
             else
             {
-                SetFormError(result.ErrorMessage ?? "Thao t�c thất bại.");
+                SetFormError(result.ErrorMessage ?? "Thao tác thất bại.");
             }
         }
         finally
@@ -521,16 +521,16 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
     private System.Boolean ValidateForm()
     {
         if (System.String.IsNullOrWhiteSpace(FormDescription))
-        { SetFormError("M� t? dịch vụ kh�ng du?c d? tr?ng."); return false; }
+        { SetFormError("Mô tả dịch vụ không được để trống."); return false; }
 
         if (FormDescription.Length > 255)
-        { SetFormError("M� t? kh�ng du?c vu?t qu� 255 k� t?."); return false; }
+        { SetFormError("Mô tả không được vượt quá 255 ký tự."); return false; }
 
         if (!System.Decimal.TryParse(FormUnitPrice, out System.Decimal price) || price <= 0)
-        { SetFormError("�on gi� kh�ng h?p l? (phụi l� s? duong)."); return false; }
+        { SetFormError("Đơn giá không hợp lệ (phải là số dương)."); return false; }
 
         if (FormTypeIndex == 0)
-        { SetFormError("Vui l�ng ch?n lo?i dịch vụ."); return false; }
+        { SetFormError("Vui lòng chọn loại dịch vụ."); return false; }
 
         return true;
     }

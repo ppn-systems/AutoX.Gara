@@ -44,7 +44,7 @@ public sealed class AccountService : IAccountService
 
             return ok
                 ? ConnectionResult.Success()
-                : ConnectionResult.Failure("Handshake thất bại, không thi?t l?p du?c kênh mã hóa.");
+                : ConnectionResult.Failure("Handshake thất bại, không thiết lập được kênh mã hóa.");
         }
         catch (System.Exception ex)
         {
@@ -110,7 +110,7 @@ public sealed class AccountService : IAccountService
         }
         catch (System.OperationCanceledException)
         {
-            return LoginResult.Failure("Ðang nh?p b? h?y.", ProtocolAdvice.NONE);
+            return LoginResult.Failure("Đăng nhập bị hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
@@ -120,7 +120,7 @@ public sealed class AccountService : IAccountService
                 InstanceManager.Instance.GetOrCreateInstance<ILogger>().Error("Inner: " + ex.InnerException);
             }
 
-            return LoginResult.Failure($"L?i không xác d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return LoginResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
@@ -130,13 +130,13 @@ public sealed class AccountService : IAccountService
     {
         System.String message = reason switch
         {
-            ProtocolReason.NOT_FOUND => "Tài kho?n không t?n Tải.",
-            ProtocolReason.MALFORMED_PACKET => "Gói tin không h?p l?.",
-            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui lòng Thử lại sau.",
-            ProtocolReason.UNAUTHENTICATED => "Sai m?t kh?u. Vui lòng ki?m tra l?i.",
-            ProtocolReason.FORBIDDEN => "Tài kho?n b? c?m ho?c chua du?c kích ho?t. Vui lòng liên h? qu?n tr? viên.",
-            ProtocolReason.ACCOUNT_LOCKED => "Tài kho?n t?m b? khóa do nh?p sai nhi?u l?n. Vui lòng Thử lại sau 15 phút.",
-            _ => "Ðang nh?p thất bại. Vui lòng Thử lại."
+            ProtocolReason.NOT_FOUND => "Tài khoản không tồn tại.",
+            ProtocolReason.MALFORMED_PACKET => "Gói tin không hợp lệ.",
+            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống, vui lòng thử lại sau.",
+            ProtocolReason.UNAUTHENTICATED => "Sai mật khẩu, vui lòng kiểm tra lại.",
+            ProtocolReason.FORBIDDEN => "Tài khoản bị cấm hoặc chưa được kích hoạt, vui lòng liên hệ quản trị viên.",
+            ProtocolReason.ACCOUNT_LOCKED => "Tài khoản tạm bị khóa do nhập sai nhiều lần, vui lòng thử lại sau 15 phút.",
+            _ => "Đăng nhập thất bại, vui lòng thử lại."
         };
 
         return LoginResult.Failure(message, advice);

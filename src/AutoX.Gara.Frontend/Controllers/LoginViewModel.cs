@@ -33,7 +33,7 @@ public sealed partial class LoginViewModel : ObservableObject
     // --- Cancellation --------------------------------------------------------
 
     /// <summary>
-    /// Token d? h?y login dang ch?y khi user b?m nút khác / thoát màn hình.
+    /// Token d? Hủy login dang cHủy khi user b?m nút khác / thoát màn hình.
     /// </summary>
     private System.Threading.CancellationTokenSource? _loginCts;
 
@@ -67,8 +67,8 @@ public sealed partial class LoginViewModel : ObservableObject
     // --- Constructor ---------------------------------------------------------
 
     /// <summary>
-    /// Constructor nh?n dependencies qua DI — d? unit test hon <c>InstanceManager</c>.
-    /// N?u chua dùng DI container, b?n có th? dùng constructor m?c d?nh bên du?i.
+    /// Constructor nhận dependencies qua DI — dễ unit test hơn <c>InstanceManager</c>.
+    /// Nếu chưa dùng DI container, bạn có thể dùng constructor mặc định bên dưới.
     /// </summary>
     public LoginViewModel(IAccountService loginService, INavigationService navigation)
     {
@@ -87,7 +87,7 @@ public sealed partial class LoginViewModel : ObservableObject
     [RelayCommand]
     private async System.Threading.Tasks.Task LoginAsync()
     {
-        // H?y login tru?c dó n?u dang ch?y (ví d? user b?m nhanh 2 l?n)
+        // Hủy login tru?c dó n?u dang cHủy (ví d? user b?m nhanh 2 l?n)
         _loginCts?.Cancel();
         _loginCts = new System.Threading.CancellationTokenSource();
         var ct = _loginCts.Token;
@@ -190,28 +190,28 @@ public sealed partial class LoginViewModel : ObservableObject
     }
 
     /// <summary>
-    /// X? lý phụn h?i l?i t? server theo <see cref="ProtocolAdvice"/>:
-    /// - DO_NOT_RETRY  ? khóa nút login
-    /// - BACKOFF_RETRY ? hi?n popup có nút retry
-    /// - FIX_AND_RETRY ? ch? hi?n l?i inline, cho phép nh?p l?i
+    /// Xử lý phản hồi từ server theo <see cref="ProtocolAdvice"/>:
+    /// - DO_NOT_RETRY  -> khóa nút đăng nhập
+    /// - BACKOFF_RETRY -> hiện popup có nút retry
+    /// - FIX_AND_RETRY -> chỉ hiện lỗi inline, cho phép nhập lại
     /// </summary>
     private void HandleFailedLogin(LoginResult result)
     {
         switch (result.Advice)
         {
             case ProtocolAdvice.DO_NOT_RETRY:
-                // Tài kho?n b? c?m / chua active — show popup, không cho retry
+                // Tài khoản bị cấm / chưa active — show popup, không cho retry
                 ShowPopup("Không thể đăng nhập", result.ErrorMessage!, isRetry: false);
                 break;
 
             case ProtocolAdvice.BACKOFF_RETRY:
-                // Tài kho?n b? lock t?m th?i — show popup có nút retry
+                // Tài khoản bị khóa tạm thời — show popup có nút retry
                 ShowPopup("Tài khoản của bạn đã bị khóa tạm thời. Vui lòng thử lại sau.", result.ErrorMessage!, isRetry: true);
                 break;
 
             case ProtocolAdvice.FIX_AND_RETRY:
             default:
-                // Sai pass / tài kho?n không t?n Tải — inline error, cho nh?p l?i
+                // Sai mật khẩu / tài khoản không tồn tại — inline error, cho nhập lại
                 SetError(result.ErrorMessage!);
                 break;
         }

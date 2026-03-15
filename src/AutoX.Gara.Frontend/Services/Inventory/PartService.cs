@@ -131,7 +131,7 @@ public sealed class PartService : IPartService
         }
         catch (System.OperationCanceledException)
         {
-            return PartListResult.Failure("Yêu c?u b? h?y.", ProtocolAdvice.NONE);
+            return PartListResult.Failure("Yêu c?u b? Hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
@@ -267,7 +267,7 @@ public sealed class PartService : IPartService
         }
         catch (System.OperationCanceledException)
         {
-            return PartWriteResult.Failure("Yêu c?u b? h?y.", ProtocolAdvice.NONE);
+            return PartWriteResult.Failure("Yêu c?u b? Hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
@@ -279,7 +279,7 @@ public sealed class PartService : IPartService
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "Không tìm th?y phụ tùng.",
+            ProtocolReason.NOT_FOUND => "Không tìm tHủy phụ tùng.",
             ProtocolReason.ALREADY_EXISTS => "Mã SKU/phụ tùng dã t?n Tải.",
             ProtocolReason.MALFORMED_PACKET => "D? li?u không h?p l?.",
             ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui lòng Thử lại sau.",

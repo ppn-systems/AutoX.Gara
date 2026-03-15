@@ -25,6 +25,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 {
     private readonly EmployeeService _service;
     private readonly EmployeeSalaryService _salaryService;
+
     private System.Threading.CancellationTokenSource? _loadCts;
     private System.Threading.CancellationTokenSource? _writeCts;
     private System.Threading.CancellationTokenSource? _searchCts;
@@ -97,12 +98,12 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     public String[] SalaryFilterOptions { get; } =
     [
-        "Tất cả luong",
-        "Có luong",
-        "Chua có luong",
+        "Tất cả lương",
+        "Có lương",
+        "Chưa có lương",
         "Theo tháng",
         "Theo ngày",
-        "Theo gi?",
+        "Theo giờ",
     ];
 
     public System.String SelectedPositionText
@@ -151,7 +152,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial EmployeeRow? SelectedEmployee { get; set; }
 
     public System.String FormTitle => IsEditing ? "Sửa nhân viên" : "Thêm nhân viên";
-    public System.String FormSaveText => IsEditing ? "Luu thay đổi" : "Thêm nhân viên";
+    public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm nhân viên";
 
     [ObservableProperty] public partial System.String FormName { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormEmail { get; set; } = System.String.Empty;
@@ -192,7 +193,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     {
         public EmployeeDto Dto { get; }
 
-        private System.String _salaryText = "Chua có";
+        private System.String _salaryText = "Chưa có";
         public System.String SalaryText
         {
             get => _salaryText;
@@ -239,8 +240,8 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     [ObservableProperty] public partial System.Boolean HasSalaryFormError { get; set; }
     [ObservableProperty] public partial System.String? SalaryFormErrorMessage { get; set; }
 
-    public System.String SalaryFormTitle => IsSalaryEditing ? "Ch?nh Sửa luong" : "Thi?t l?p luong";
-    public System.String SalaryFormSaveText => IsSalaryEditing ? "Luu" : "T?o";
+    public String SalaryFormTitle => IsSalaryEditing ? "Chỉnh sửa lương" : "Thiết lập lương";
+    public String SalaryFormSaveText => IsSalaryEditing ? "Lưu" : "Tạo";
 
     public System.String SelectedSalaryFormTypeText =>
         SalaryFormTypeOptions[System.Math.Clamp(SalaryFormTypeIndex, 0, SalaryFormTypeOptions.Length - 1)];
@@ -441,7 +442,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                 {
                     var row = new EmployeeRow(e)
                     {
-                        SalaryText = "Chua có",
+                        SalaryText = "Chưa có",
                         HasSalary = false,
                         LatestSalaryType = SalaryType.None
                     };
@@ -486,8 +487,8 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             return;
         }
 
-        String pick = await page.DisplayActionSheetAsync("Ch?n ch?c vụ", "H?y", null, FilterPositionOptions);
-        if (pick == "H?y" || String.IsNullOrWhiteSpace(pick))
+        String pick = await page.DisplayActionSheetAsync("Ch?n ch?c vụ", "Hủy", null, FilterPositionOptions);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
         {
             return;
         }
@@ -505,8 +506,8 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             return;
         }
 
-        String pick = await page.DisplayActionSheetAsync("Ch?n tr?ng thái", "H?y", null, FilterStatusOptions);
-        if (pick == "H?y" || String.IsNullOrWhiteSpace(pick))
+        String pick = await page.DisplayActionSheetAsync("Chọn trạng thái", "Hủy", null, FilterStatusOptions);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
         {
             return;
         }
@@ -524,8 +525,8 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             return;
         }
 
-        String pick = await page.DisplayActionSheetAsync("Ch?n gi?i tính", "H?y", null, FilterGenderOptions);
-        if (pick == "H?y" || String.IsNullOrWhiteSpace(pick))
+        String pick = await page.DisplayActionSheetAsync("Ch?n giới tính", "Hủy", null, FilterGenderOptions);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
         {
             return;
         }
@@ -542,9 +543,8 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         {
             return;
         }
-
-        String pick = await page.DisplayActionSheetAsync("L?c theo luong", "H?y", null, SalaryFilterOptions);
-        if (pick == "H?y" || String.IsNullOrWhiteSpace(pick))
+        String pick = await page.DisplayActionSheetAsync("Lọc theo lương", "Hủy", null, SalaryFilterOptions);
+        if (pick == "Hủy" || String.IsNullOrWhiteSpace(pick))
         {
             return;
         }
@@ -732,7 +732,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             }
             else
             {
-                HandleError("Ð?i tr?ng thái thất bại", result.ErrorMessage!, result.Advice);
+                HandleError("Đổi trạng thái thất bại", result.ErrorMessage!, result.Advice);
             }
         }
         finally
@@ -845,19 +845,19 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
         if (SalaryEmployeeId <= 0)
         {
-            SetSalaryFormError("Chua ch?n nhân viên.");
+            SetSalaryFormError("Chưa chọn nhân viên.");
             return;
         }
 
         if (SalaryFormSalary < 0)
         {
-            SetSalaryFormError("M?c luong phụi >= 0.");
+            SetSalaryFormError("Mức lương phải >= 0.");
             return;
         }
 
         if (SalaryFormUnit < 0)
         {
-            SetSalaryFormError("S? don vụ phụi >= 0.");
+            SetSalaryFormError("Số đơn vị phải >= 0.");
             return;
         }
 
@@ -883,7 +883,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         if (!result.IsSuccess)
         {
             await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
-                SetSalaryFormError(result.ErrorMessage ?? "Luu thất bại."));
+                SetSalaryFormError(result.ErrorMessage ?? "Lưu thất bại."));
             return;
         }
 
@@ -891,7 +891,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         EmployeeSalaryDto? saved = result.Salary;
         if (SalaryEmployee is not null)
         {
-            String text = saved is null ? "Chua có" : FormatSalaryText(saved);
+            String text = saved is null ? "Chưa có" : FormatSalaryText(saved);
             Boolean has = saved is not null;
             await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
             {
@@ -935,7 +935,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                 return;
             }
 
-            String text = latest is null ? "Chua có" : FormatSalaryText(latest);
+            String text = latest is null ? "Chưa có" : FormatSalaryText(latest);
             Boolean has = latest is not null;
 
             await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>

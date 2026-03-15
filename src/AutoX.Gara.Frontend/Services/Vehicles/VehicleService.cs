@@ -136,7 +136,7 @@ public sealed class VehicleService
         catch (System.OperationCanceledException)
         {
             logger.Warn("[VehicleService.GetListAsync] Request cancelled by caller.");
-            return VehicleListResult.Failure("Yêu c?u b? h?y.", ProtocolAdvice.NONE);
+            return VehicleListResult.Failure("Yêu c?u b? Hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
@@ -271,7 +271,7 @@ public sealed class VehicleService
         }
         catch (System.OperationCanceledException)
         {
-            return VehicleWriteResult.Failure("Yêu c?u b? h?y.", ProtocolAdvice.NONE);
+            return VehicleWriteResult.Failure("Yêu c?u b? Hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
@@ -283,7 +283,7 @@ public sealed class VehicleService
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "Không tìm th?y xe.",
+            ProtocolReason.NOT_FOUND => "Không tìm tHủy xe.",
             ProtocolReason.ALREADY_EXISTS => "Bi?n s? ho?c s? khung/máy dã t?n Tải.",
             ProtocolReason.MALFORMED_PACKET => "D? li?u không h?p l?.",
             ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui lòng Thử lại sau.",

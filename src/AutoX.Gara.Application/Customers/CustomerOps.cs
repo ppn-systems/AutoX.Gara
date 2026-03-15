@@ -82,7 +82,19 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
                 Customers = payload
             };
 
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(packet)).ConfigureAwait(false);
+            System.Byte[] bytes;
+            try
+            {
+                bytes = LiteSerializer.Serialize(response);
+            }
+            catch (System.Exception ex)
+            {
+                logger?.Error(
+                    $"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] serialization-failed seq={packet.SequenceId} page={packet.Page} size={packet.PageSize} ms={sw.ElapsedMilliseconds}\n{ex}");
+                await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR, ProtocolAdvice.DO_NOT_RETRY, logger, nameof(GetAsync), packet.SequenceId).ConfigureAwait(false);
+                return;
+            }
+            System.Boolean sent = await connection.TCP.SendAsync(bytes).ConfigureAwait(false);
 
             if (!sent)
             {
@@ -95,7 +107,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
             }
 
             logger?.Info(
-                $"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] ok seq={packet.SequenceId} page={packet.Page} size={packet.PageSize} total={totalCount} returned={payload.Count} ms={sw.ElapsedMilliseconds}");
+                $"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] ok seq={packet.SequenceId} len={bytes.Length} page={packet.Page} size={packet.PageSize} total={totalCount} returned={payload.Count} ms={sw.ElapsedMilliseconds}");
         }
         catch (System.Exception ex)
         {
@@ -163,7 +175,8 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
 
             confirmed = MapToPacket(newCustomer, packet.SequenceId);
 
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(packet)).ConfigureAwait(false);
+            System.Byte[] bytes = LiteSerializer.Serialize(confirmed);
+            System.Boolean sent = await connection.TCP.SendAsync(bytes).ConfigureAwait(false);
 
             if (!sent)
             {
@@ -176,7 +189,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
             }
 
             logger?.Info(
-                $"[APP.{nameof(CustomerOps)}:{nameof(CreateAsync)}] ok seq={packet.SequenceId} id={newCustomer.Id} ms={sw.ElapsedMilliseconds}");
+                $"[APP.{nameof(CustomerOps)}:{nameof(CreateAsync)}] ok seq={packet.SequenceId} id={newCustomer.Id} len={bytes.Length} ms={sw.ElapsedMilliseconds}");
         }
         catch (System.Exception ex)
         {
@@ -243,7 +256,8 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
 
             confirmed = MapToPacket(existing, packet.SequenceId);
 
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(packet)).ConfigureAwait(false);
+            System.Byte[] bytes = LiteSerializer.Serialize(confirmed);
+            System.Boolean sent = await connection.TCP.SendAsync(bytes).ConfigureAwait(false);
 
             if (!sent)
             {
@@ -256,7 +270,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
             }
 
             logger?.Info(
-                $"[APP.{nameof(CustomerOps)}:{nameof(UpdateAsync)}] ok seq={packet.SequenceId} id={existing.Id} ms={sw.ElapsedMilliseconds}");
+                $"[APP.{nameof(CustomerOps)}:{nameof(UpdateAsync)}] ok seq={packet.SequenceId} id={existing.Id} len={bytes.Length} ms={sw.ElapsedMilliseconds}");
         }
         catch (System.Exception ex)
         {

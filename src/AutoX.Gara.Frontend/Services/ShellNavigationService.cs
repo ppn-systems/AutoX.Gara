@@ -17,7 +17,7 @@ public sealed class ShellNavigationService : INavigationService
     {
         // Xóa LoginPage ra kh?i shell history d? back không vụ du?c
         ShellItem? loginItem = Shell.Current.Items
-            .FirstOrDefault(i => i.Title is "Login" or "Ðang nhập");
+            .FirstOrDefault(i => i.Title is "Login" or "Đăng nhập");
 
         if (loginItem is not null)
         {

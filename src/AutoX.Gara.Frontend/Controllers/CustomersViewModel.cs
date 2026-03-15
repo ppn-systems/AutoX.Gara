@@ -131,7 +131,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
     // FIX: thay StringFormat bool không ho?t d?ng — dùng computed property
     public System.String FormTitle => IsEditing ? "Sửa khách hàng" : "Thêm khách hàng";
-    public System.String FormSaveText => IsEditing ? "Luu thay đổi" : "Thêm khách hàng";
+    public System.String FormSaveText => IsEditing ? "Lưu thay đổi" : "Thêm khách hàng";
 
     [ObservableProperty] public partial System.String FormName { get; set; } = System.String.Empty;
     [ObservableProperty] public partial System.String FormEmail { get; set; } = System.String.Empty;
@@ -636,31 +636,31 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     private System.Boolean ValidateForm()
     {
         if (System.String.IsNullOrWhiteSpace(FormName))
-        { SetFormError("Tên khách hàng không du?c d? tr?ng."); return false; }
+        { SetFormError("Tên khách hàng không được để trống."); return false; }
 
         if (FormName.Length > 100)
-        { SetFormError("Tên không du?c vu?t quá 100 ký t?."); return false; }
+        { SetFormError("Tên không được vượt quá 100 ký tự."); return false; }
 
         if (!AccountValidation.IsValidEmail(FormEmail))
-        { SetFormError("Email không h?p l?."); return false; }
+        { SetFormError("Email không hợp lệ."); return false; }
 
         if (!AccountValidation.IsValidVietnamPhoneNumber(FormPhone))
-        { SetFormError("S? di?n tho?i không h?p l? (VD: 0901234567)."); return false; }
+        { SetFormError("Số điện thoại không hợp lệ (VD: 0901234567)."); return false; }
 
         if (FormDateOfBirth.HasValue)
         {
             if (FormDateOfBirth.Value > System.DateTime.Today)
-            { SetFormError("Ngày sinh không du?c là ngày trong tuong lai."); return false; }
+            { SetFormError("Ngày sinh không được là ngày trong tương lai."); return false; }
 
             if (FormDateOfBirth.Value < System.DateTime.Today.AddYears(-120))
-            { SetFormError("Ngày sinh không h?p l?."); return false; }
+            { SetFormError("Ngày sinh không hợp lệ."); return false; }
         }
 
         if (FormType == CustomerType.Business && System.String.IsNullOrWhiteSpace(FormTaxCode))
-        { SetFormError("Mã s? thu? b?t bu?c đổi vụi khách hàng doanh nghi?p."); return false; }
+        { SetFormError("Mã số thuế bắt buộc đối với khách hàng doanh nghiệp."); return false; }
 
         if (FormNotes.Length > 500)
-        { SetFormError("Ghi chú không du?c vu?t quá 500 ký t?."); return false; }
+        { SetFormError("Ghi chú không được vượt quá 500 ký tự."); return false; }
 
         return true;
     }

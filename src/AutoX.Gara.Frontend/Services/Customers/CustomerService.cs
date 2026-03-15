@@ -17,13 +17,13 @@ using Nalix.Shared.Frames.Controls;
 namespace AutoX.Gara.Frontend.Services.Customers;
 
 /// <summary>
-/// Real implementation c?a <see cref="ICustomerService"/>.
+/// Real implementation của <see cref="ICustomerService"/>.
 /// <para>
-/// Thay đổi so vụi version cu:
+/// Thay đổi so với version cũ:
 /// <list type="bullet">
-///   <item>Inject <see cref="ICustomerQueryCache"/> ? cache 30 giây tránh duplicate request.</item>
-///   <item>Write operations t? d?ng g?i <see cref="ICustomerQueryCache.Invalidate"/> sau khi thành công.</item>
-///   <item>Cache hit hoàn toàn bypass network — tr? vụ ngay t? memory.</item>
+///   <item>Inject <see cref="ICustomerQueryCache"/> → cache 30 giây tránh duplicate request.</item>
+///   <item>Write operations tự động gọi <see cref="ICustomerQueryCache.Invalidate"/> sau khi thành công.</item>
+///   <item>Cache hit hoàn toàn bypass network — trả về ngay từ memory.</item>
 /// </list>
 /// </para>
 /// </summary>
@@ -35,7 +35,7 @@ public sealed class CustomerService : ICustomerService
 
     public CustomerService(ICustomerQueryCache cache) => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
-    // --- GetListAsync ---------------------------------------------------------
+    // ─── GetListAsync ─────────────────────────────────────────────────────────
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerListResult> GetListAsync(
@@ -48,7 +48,7 @@ public sealed class CustomerService : ICustomerService
         MembershipLevel filterMembership = MembershipLevel.None,
         System.Threading.CancellationToken ct = default)
     {
-        // -- Cache hit: tr? vụ ngay, không t?n bang thông -----------------
+        // ── Cache hit: trả về ngay, không tốn băng thông ─────────────────
         CustomerCacheKey key = new(
             page, pageSize,
             searchTerm ?? System.String.Empty,
@@ -64,7 +64,7 @@ public sealed class CustomerService : ICustomerService
                 hasMore: hasMore);
         }
 
-        // -- Cache miss: g?i request lên server ----------------------------
+        // ── Cache miss: gửi request lên server ────────────────────────────
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
@@ -96,7 +96,7 @@ public sealed class CustomerService : ICustomerService
                     sub?.Dispose();
                     errSub?.Dispose();
 
-                    // Luu k?t qu? vào cache 30s
+                    // Lưu kết quả vào cache 30s
                     _cache.Set(key, resp.Customers, resp.TotalCount);
 
                     System.Boolean hasMore = page * pageSize < resp.TotalCount;
@@ -141,17 +141,17 @@ public sealed class CustomerService : ICustomerService
         }
         catch (System.OperationCanceledException)
         {
-            return CustomerListResult.Failure("Yêu c?u b? h?y.", ProtocolAdvice.NONE);
+            return CustomerListResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
             return CustomerListResult.Failure(
-                $"L?i không xác d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
-    // --- CreateAsync ----------------------------------------------------------
+    // ─── CreateAsync ──────────────────────────────────────────────────────────
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerWriteResult> CreateAsync(
@@ -162,7 +162,7 @@ public sealed class CustomerService : ICustomerService
             (System.UInt16)OpCommand.CUSTOMER_CREATE, data, expectEcho: true, ct)
             .ConfigureAwait(false);
 
-        // D? li?u mới ? cache cu không còn chính xác
+        // Dữ liệu mới → cache cũ không còn chính xác
         if (result.IsSuccess)
         {
             _cache.Invalidate();
@@ -171,7 +171,7 @@ public sealed class CustomerService : ICustomerService
         return result;
     }
 
-    // --- UpdateAsync ----------------------------------------------------------
+    // ─── UpdateAsync ──────────────────────────────────────────────────────────
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerWriteResult> UpdateAsync(
@@ -190,7 +190,7 @@ public sealed class CustomerService : ICustomerService
         return result;
     }
 
-    // --- DeleteAsync ----------------------------------------------------------
+    // ─── DeleteAsync ──────────────────────────────────────────────────────────
 
     /// <inheritdoc/>
     public async System.Threading.Tasks.Task<CustomerWriteResult> DeleteAsync(
@@ -209,7 +209,7 @@ public sealed class CustomerService : ICustomerService
         return result;
     }
 
-    // --- Private Helpers -----------------------------------------------------
+    // ─── Private Helpers ─────────────────────────────────────────────────────
 
     private static async System.Threading.Tasks.Task<CustomerWriteResult> SendWritePacketAsync(
         System.UInt16 opcode,
@@ -287,32 +287,32 @@ public sealed class CustomerService : ICustomerService
         }
         catch (System.OperationCanceledException)
         {
-            return CustomerWriteResult.Failure("Yêu c?u b? h?y.", ProtocolAdvice.NONE);
+            return CustomerWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
             return CustomerWriteResult.Failure(
-                $"L?i không xác d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "Không tìm th?y khách hàng.",
-            ProtocolReason.ALREADY_EXISTS => "Email ho?c s? di?n tho?i dã t?n Tải.",
-            ProtocolReason.MALFORMED_PACKET => "D? li?u không h?p l?.",
-            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui lòng Thử lại sau.",
-            ProtocolReason.FORBIDDEN => "B?n không có quy?n th?c hi?n thao tác này.",
-            ProtocolReason.UNAUTHENTICATED => "B?n không có quy?n th?c hi?n thao tác này.",
-            ProtocolReason.RATE_LIMITED => "B?n dang thao tác quá nhanh. Vui lòng ch? m?t chút r?i Thử lại.",
-            ProtocolReason.UNSUPPORTED_PACKET => "Yêu c?u không du?c h? tr?. Vui lòng c?p nh?t phụn m?m n?u có th?.",
-            ProtocolReason.CRYPTO_UNSUPPORTED => "L?i mã hóa. Vui lòng c?p nh?t phụn m?m n?u có th?.",
-            ProtocolReason.COMPRESSION_FAILED => "L?i nén d? li?u. Vui lòng c?p nh?t phụn m?m n?u có th?.",
-            ProtocolReason.TRANSFORM_FAILED => "L?i x? lý d? li?u. Vui lòng c?p nh?t phụn m?m n?u có th?.",
-            ProtocolReason.TIMEOUT => "Máy ch? phụn h?i h?t h?n. Vui lòng Thử lại.",
-            _ => "Thao tác thất bại. Vui lòng Thử lại."
+            ProtocolReason.NOT_FOUND => "Không tìm thấy khách hàng.",
+            ProtocolReason.ALREADY_EXISTS => "Email hoặc số điện thoại đã tồn tại.",
+            ProtocolReason.MALFORMED_PACKET => "Dữ liệu không hợp lệ.",
+            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống. Vui lòng thử lại sau.",
+            ProtocolReason.FORBIDDEN => "Bạn không có quyền thực hiện thao tác này.",
+            ProtocolReason.UNAUTHENTICATED => "Bạn không có quyền thực hiện thao tác này.",
+            ProtocolReason.RATE_LIMITED => "Bạn đang thao tác quá nhanh. Vui lòng chờ một chút rồi thử lại.",
+            ProtocolReason.UNSUPPORTED_PACKET => "Yêu cầu không được hỗ trợ. Vui lòng cập nhật phần mềm nếu có thể.",
+            ProtocolReason.CRYPTO_UNSUPPORTED => "Lỗi mã hóa. Vui lòng cập nhật phần mềm nếu có thể.",
+            ProtocolReason.COMPRESSION_FAILED => "Lỗi nén dữ liệu. Vui lòng cập nhật phần mềm nếu có thể.",
+            ProtocolReason.TRANSFORM_FAILED => "Lỗi xử lý dữ liệu. Vui lòng cập nhật phần mềm nếu có thể.",
+            ProtocolReason.TIMEOUT => "Máy chủ phản hồi hết hạn. Vui lòng thử lại.",
+            _ => "Thao tác thất bại. Vui lòng thử lại."
         };
 
     private static void LogException(System.Exception ex)
