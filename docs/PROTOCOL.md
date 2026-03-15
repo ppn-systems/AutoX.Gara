@@ -7,7 +7,7 @@ AutoX.Gara giao tiếp **Client ↔ Server** qua **TCP**, sử dụng thư việ
 ## 1. Tổng quan
 
 - **Transport**: TCP (Nalix listener phía server, Nalix client phía MAUI).
-- **Định dạng**: Packet với header (OpCode, flags, length, …) và vùng dữ liệu (serialize theo `SerializePackable`).
+- **Định dạng**: Packet với header (OpCode, flags, length, …) và vùng dữ liệu (serialize theo `LiteSerialize`).
 - **Đăng ký packet**: Client và server dùng chung catalog trong `AutoX.Gara.Shared.AppConfig.Register()` (PacketRegistry).
 - **Luồng**: Client gửi request (ví dụ Login, CustomerQueryRequest) → Server xử lý qua PacketDispatchChannel → Handler (Ops) → Trả response (ví dụ CustomerQueryResponse, CustomerDto).
 

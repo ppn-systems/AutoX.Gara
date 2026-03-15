@@ -178,8 +178,15 @@ Hướng dẫn chi tiết: [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md).
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Triển khai server & client
 - [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — Xử lý sự cố
 - [docs/GLOSSARY.md](docs/GLOSSARY.md) — Thuật ngữ (VN/EN)
+- [docs/MODULES.md](docs/MODULES.md) — Tổng quan từng module chức năng
+- [docs/DATABASE.md](docs/DATABASE.md) — Schema, migration, backup
+- [docs/FAQ.md](docs/FAQ.md) — Câu hỏi thường gặp
+- [docs/OPERATIONS.md](docs/OPERATIONS.md) — Vận hành: backup, restore, nâng cấp
+- [docs/ROADMAP.md](docs/ROADMAP.md) — Lộ trình phát triển
 - [docs/RELEASE.md](docs/RELEASE.md) — Quy trình phát hành
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — Hướng dẫn phát triển
+- [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) — Nền tảng & phiên bản hỗ trợ
+- [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md) — Thư viện bên thứ ba
 - [docs/README.md](docs/README.md) — Mục lục toàn bộ tài liệu
 
 ---

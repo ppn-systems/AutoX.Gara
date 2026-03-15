@@ -17,6 +17,13 @@ Thư mục này chứa tài liệu bổ sung cho dự án AutoX.Gara.
 | [GLOSSARY.md](GLOSSARY.md) | Thuật ngữ (VN/EN) dùng trong dự án |
 | [RELEASE.md](RELEASE.md) | Quy trình phát hành: versioning, tag, release, hotfix |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Hướng dẫn phát triển: branch, convention, thêm tính năng, debug |
+| [MODULES.md](MODULES.md) | Tổng quan từng module: Identity, Customer, Vehicle, Part, Supplier, Invoice, Repair, … |
+| [DATABASE.md](DATABASE.md) | Schema, bảng, quan hệ, migration, backup/restore |
+| [FAQ.md](FAQ.md) | Câu hỏi thường gặp: cài đặt, DB, bảo mật, đóng góp |
+| [OPERATIONS.md](OPERATIONS.md) | Vận hành: first run, backup, restore, nâng cấp, monitoring |
+| [ROADMAP.md](ROADMAP.md) | Lộ trình: tính năng đã có, ngắn/trung/dài hạn |
+| [COMPATIBILITY.md](COMPATIBILITY.md) | Nền tảng hỗ trợ: .NET, OS, database, package |
+| [THIRD_PARTY.md](THIRD_PARTY.md) | Thư viện bên thứ ba và giấy phép |
 
 ---
 
@@ -30,6 +37,10 @@ Thư mục này chứa tài liệu bổ sung cho dự án AutoX.Gara.
 - **[../CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)** — Quy tắc ứng xử
 
 ---
+
+## File ở gốc repo
+
+- **[../NOTICE](../NOTICE)** — Thông báo bản quyền và giấy phép (Apache-2.0, third-party)
 
 ## Media
 
