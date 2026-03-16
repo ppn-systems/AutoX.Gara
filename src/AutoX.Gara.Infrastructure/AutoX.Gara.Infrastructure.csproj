@@ -26,7 +26,7 @@
 	<!-- Nalix Framework -->
 	<ItemGroup>
 		<PackageReference Include="Nalix.Logging" Version="11.6.1" />
-		<PackageReference Include="Nalix.Network" Version="11.6.1" />
+		<PackageReference Include="Nalix.Network" Version="11.6.2" />
 	</ItemGroup>
 
 	<!-- EF SQL -->

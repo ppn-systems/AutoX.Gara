@@ -27,8 +27,8 @@ public sealed class ShellNavigationService : INavigationService
             Shell.Current.Items.Remove(loginItem);
         }
 
-        await InstanceManager.Instance.GetOrCreateInstance<TcpSession>()
-                                      .HeartbeatLoopAsync(default);
+        _ = Task.Run(async () =>
+            await InstanceManager.Instance.GetOrCreateInstance<TcpSession>().HeartbeatLoopAsync(default));
 
         // Resize window vụ kích thu?c app chính (Windows/Mac)
         if (Application.Current?.Windows[0] is { } window)
