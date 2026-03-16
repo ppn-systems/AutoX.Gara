@@ -3,7 +3,6 @@
 using AutoX.Gara.Shared.Enums;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Abstractions;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Attributes;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security.Enums;
@@ -24,33 +23,13 @@ namespace AutoX.Gara.Application.Communication;
 [PacketController]
 public sealed class HandshakeOps
 {
-    /// <summary>
-    /// Khởi tạo quá trình bắt tay bảo mật với client.
-    /// Nhận gói tin chứa khóa công khai X25519 (32 byte) từ client, tạo cặp khóa X25519 cho server,
-    /// tính toán khóa mã hóa chung, và gửi khóa công khai của server về client.
-    /// Phương thức này kiểm tra định dạng gói tin để đảm bảo an toàn và hiệu quả.
-    /// </summary>
-    /// <param name="p">Gói tin chứa khóa công khai X25519 của client, yêu cầu định dạng nhị phân và độ dài 32 byte.</param>
-    /// <param name="connection">Thông tin kết nối của client yêu cầu bắt tay bảo mật.</param>
-    /// <returns>Gói tin chứa khóa công khai của server hoặc thông báo lỗi nếu quá trình thất bại.</returns>
     [PacketEncryption(false)]
     [PacketPermission(PermissionLevel.NONE)]
     [PacketOpcode((System.UInt16)OpCommand.HANDSHAKE)]
     public static async System.Threading.Tasks.Task Handshake(
-        IPacket p,
+        Handshake packet,
         IConnection connection)
     {
-        if (p is not Handshake packet)
-        {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
-            await connection.SendAsync(
-                ControlType.ERROR,
-                ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
-
-            return;
-        }
-
         // Defensive programming - kiểm tra payload null
         if (packet.Data is null)
         {

@@ -19,22 +19,14 @@ using Nalix.Shared.Security.Credentials;
 
 namespace AutoX.Gara.Application.Employees;
 
-/// <summary>
-/// Dịch vụ quản lý tài khoản người dùng, bao gồm đăng ký, đăng nhập, xóa tài khoản và cập nhật mật khẩu.
-/// </summary>
-/// <remarks>
-/// Sử dụng DbContextFactory để tạo context "mới" mỗi lần request (tránh lỗi multi-thread).
-/// </remarks>
 [PacketController]
 public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
 
     [PacketPermission(PermissionLevel.NONE)]
     [PacketOpcode((System.UInt16)OpCommand.LOGIN)]
     [PacketRateLimit(requestsPerSecond: 1, burst: 1)]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1862:Use the 'StringComparison' method overloads to perform case-insensitive string comparisons", Justification = "<Pending>")]
     public async System.Threading.Tasks.Task LoginAsync(
         IPacket p,
         IConnection connection)
@@ -49,7 +41,6 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             return;
         }
 
-        // Tạo context mới cho mỗi lệnh
         await using var context = _dbContextFactory.CreateDbContext();
         var account = await context.Set<Account>().FirstOrDefaultAsync(a => a.Username == packet.Account.Username.Trim().ToLower());
 

@@ -167,12 +167,12 @@ public static class Program
     {
 #if DEBUG
         ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Debug;
+                            .MinLevel = LogLevel.Meta;
 
         ILogger logger = new NLogix(cfg => cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = true)));
 #else
         ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Trace;
+                            .MinLevel = LogLevel.Meta;
 
         ILogger logger = new NLogix(cfg =>
         {

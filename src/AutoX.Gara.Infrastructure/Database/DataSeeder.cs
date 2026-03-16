@@ -84,7 +84,7 @@ public static class DataSeeder
         }
 
         context.Accounts.AddRange(
-            MakeAccount("admin", "Abcd1234@", PermissionLevel.ADMINISTRATOR),
+            MakeAccount("admin", "Abcd1234@", PermissionLevel.OWNER),
             MakeAccount("nhanvien1", "Abcd1234@", PermissionLevel.USER),
             MakeAccount("nhanvien2", "Abcd1234@", PermissionLevel.USER)
         );
