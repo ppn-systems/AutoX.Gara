@@ -65,7 +65,7 @@ public sealed class PartService : IPartService
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             PartQueryRequest packet = new()
             {
@@ -211,7 +211,7 @@ public sealed class PartService : IPartService
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             data.OpCode = opcode;
             data.SequenceId = sq;

@@ -9,7 +9,7 @@ namespace AutoX.Gara.Frontend.Abstractions;
 
 /// <summary>
 /// Abstraction cho Tất cả network operations liên quan d?n Customer.
-/// ViewModel ch? phụ thu?c vào interface này — không bi?t vụ <c>ReliableClient</c>.
+/// ViewModel ch? phụ thu?c vào interface này — không bi?t vụ <c>TcpSession</c>.
 /// </summary>
 public interface ICustomerService
 {

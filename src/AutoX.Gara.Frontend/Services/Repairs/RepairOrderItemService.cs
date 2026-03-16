@@ -49,7 +49,7 @@ public sealed class RepairOrderItemService
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             RepairOrderItemQueryRequest packet = new()
             {
@@ -141,7 +141,7 @@ public sealed class RepairOrderItemService
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             data.OpCode = opcode;
             data.SequenceId = sq;

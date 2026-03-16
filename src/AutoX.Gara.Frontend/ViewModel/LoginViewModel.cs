@@ -107,7 +107,7 @@ public sealed partial class LoginViewModel : ObservableObject
 
             if (result.IsSuccess)
             {
-                ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+                TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
                 InstanceManager.Instance.GetOrCreateInstance<TaskManager>().ScheduleRecurring(
                     "KeepAlive", System.TimeSpan.FromSeconds(30),
                     async (ct) => await client.SendAsync(new Directive(), ct)

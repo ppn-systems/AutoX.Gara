@@ -54,7 +54,7 @@ public sealed class VehicleService
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             // VehicleId == null ? server x? lý nhu list request theo CustomerId
             // Page du?c encode vào Year field (xem VehicleOps.GetListByCustomerAsync)
@@ -207,7 +207,7 @@ public sealed class VehicleService
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             data.OpCode = opcode;
             data.SequenceId = sq;

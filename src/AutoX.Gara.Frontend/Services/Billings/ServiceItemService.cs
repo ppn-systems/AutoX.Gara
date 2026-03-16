@@ -48,7 +48,7 @@ public sealed class ServiceItemService
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             ServiceItemQueryRequest packet = new()
             {
@@ -201,7 +201,7 @@ public sealed class ServiceItemService
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             data.OpCode = opcode;
             data.SequenceId = sq;

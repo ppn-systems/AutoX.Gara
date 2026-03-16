@@ -56,7 +56,7 @@ public sealed class InvoiceService
             Stopwatch sw = Stopwatch.StartNew();
 
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             InvoiceQueryRequest packet = new()
             {
@@ -158,7 +158,7 @@ public sealed class InvoiceService
             Stopwatch sw = Stopwatch.StartNew();
 
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             data.OpCode = opcode;
             data.SequenceId = sq;

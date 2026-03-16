@@ -18,7 +18,7 @@ namespace AutoX.Gara.Frontend.Services.Accounts;
 
 /// <summary>
 /// Implementation th?c t?: k?t n?i ? handshake ? g?i LOGIN packet ? đổi phụn h?i.
-/// Toàn b? network I/O n?m ? dây, ViewModel không bi?t gì vụ ReliableClient.
+/// Toàn b? network I/O n?m ? dây, ViewModel không bi?t gì vụ TcpSession.
 /// </summary>
 public sealed class AccountService : IAccountService
 {
@@ -36,7 +36,7 @@ public sealed class AccountService : IAccountService
     {
         try
         {
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             await client.ConnectAsync(ServerHost, ServerPort, ct);
 
@@ -61,7 +61,7 @@ public sealed class AccountService : IAccountService
     {
         try
         {
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             // 1. Build packet
             LoginPacket packet = new();

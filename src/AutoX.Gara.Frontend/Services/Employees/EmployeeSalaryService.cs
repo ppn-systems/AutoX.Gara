@@ -53,7 +53,7 @@ public sealed class EmployeeSalaryService
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             EmployeeSalaryQueryRequest packet = new()
             {
@@ -147,7 +147,7 @@ public sealed class EmployeeSalaryService
             data.SequenceId = data.SequenceId == 0 ? Csprng.NextUInt32() : data.SequenceId;
             System.UInt32 sq = data.SequenceId;
 
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             System.Threading.Tasks.TaskCompletionSource<EmployeeSalaryWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);

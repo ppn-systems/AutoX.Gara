@@ -57,7 +57,7 @@ public sealed class RepairOrderService
             Stopwatch sw = Stopwatch.StartNew();
 
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             RepairOrderQueryRequest packet = new()
             {
@@ -164,7 +164,7 @@ public sealed class RepairOrderService
             Stopwatch sw = Stopwatch.StartNew();
 
             System.UInt32 sq = Csprng.NextUInt32();
-            ReliableClient client = InstanceManager.Instance.GetOrCreateInstance<ReliableClient>();
+            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             data.OpCode = opcode;
             data.SequenceId = sq;
