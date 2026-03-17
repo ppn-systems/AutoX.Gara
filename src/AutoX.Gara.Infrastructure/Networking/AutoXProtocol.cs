@@ -28,6 +28,7 @@ public sealed class AutoXProtocol : Protocol
     public override void OnAccept(IConnection connection, System.Threading.CancellationToken cancellationToken = default)
     {
         base.OnAccept(connection, cancellationToken);
+        InstanceManager.Instance.GetExistingInstance<ILogger>()?.Info($"[SERVER] New TCP connection accepted from {connection.RemoteEndPoint}");
 
         InstanceManager.Instance.GetExistingInstance<ConnectionHub>()?
                                 .RegisterConnection(connection);

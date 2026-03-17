@@ -55,6 +55,25 @@ public static class Program
     {
         try
         {
+            InstanceManager.Instance.LogEvent += (sender, e) =>
+            {
+                if (e.Level >= LogLevel.Error)
+                {
+                    System.Console.Error.WriteLine($"[{e.Level}] {e.Message}");
+                    if (e.Exception is not null)
+                    {
+                        System.Console.Error.WriteLine(e.Exception);
+                    }
+                }
+                else
+                {
+                    System.Console.WriteLine($"[{e.Level}] {e.Message}");
+                    if (e.Exception is not null)
+                    {
+                        System.Console.WriteLine(e.Exception);
+                    }
+                }
+            };
             InitializeComponent();
 
             InstanceManager.Instance.GetExistingInstance<IListener>()?
@@ -98,6 +117,9 @@ public static class Program
                                     .Info("Server is running. Press Ctrl+C to exit.");
 
             QuitEvent.WaitOne();
+
+            InstanceManager.Instance.GetExistingInstance<IListener>()?
+                                    .Deactivate();
         }
         catch (System.Exception ex)
         {

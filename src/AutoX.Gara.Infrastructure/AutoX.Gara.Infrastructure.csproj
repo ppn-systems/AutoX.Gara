@@ -25,15 +25,15 @@
 
 	<!-- Nalix Framework -->
 	<ItemGroup>
-		<PackageReference Include="Nalix.Logging" Version="11.6.1" />
-		<PackageReference Include="Nalix.Network" Version="11.6.2" />
+		<PackageReference Include="Nalix.Logging" Version="11.7.1" />
+		<PackageReference Include="Nalix.Network" Version="11.7.1" />
 	</ItemGroup>
 
 	<!-- EF SQL -->
 	<ItemGroup>
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.5" />
-		<PackageReference Include="Nalix.Shared" Version="11.6.1" />
+		<PackageReference Include="Nalix.Shared" Version="11.7.1" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
 		
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.5">

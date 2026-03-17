@@ -30,30 +30,54 @@ public sealed class AccountService : IAccountService
     private const System.Int32 LoginTimeoutMs = 5_000;
     private const System.Int32 HandshakeTimeoutMs = 5_000;
 
-    // --- ConnectAsync ---------------------------------------------------------
+    // --- Logger (lazy + GetOrCreate để an toàn) ------------------------------
+    private ILogger Logger => InstanceManager.Instance.GetOrCreateInstance<ILogger>();
 
+    // --- ConnectAsync ---------------------------------------------------------
     public async System.Threading.Tasks.Task<ConnectionResult> ConnectAsync(System.Threading.CancellationToken ct = default)
     {
         try
         {
+            Logger.Debug($"[AccountService] ConnectAsync started → {ServerHost}:{ServerPort}");
+
             TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             await client.ConnectAsync(ServerHost, ServerPort, ct);
+            Logger.Debug("[AccountService] TCP connection established successfully.");
 
-            System.Boolean ok = await client.HandshakeAsync((System.UInt16)OpCommand.HANDSHAKE, timeoutMs: HandshakeTimeoutMs, ct: ct);
+            Logger.Debug($"[AccountService] Starting HandshakeAsync (opCode = {(System.UInt16)OpCommand.HANDSHAKE}, timeout = {HandshakeTimeoutMs}ms)");
 
-            return ok
-                ? ConnectionResult.Success()
-                : ConnectionResult.Failure("Handshake thất bại, không thiết lập được kênh mã hóa.");
+            System.Boolean ok = await client.HandshakeAsync(
+                (System.UInt16)OpCommand.HANDSHAKE,
+                timeoutMs: HandshakeTimeoutMs,
+                ct: ct);
+
+            Logger.Debug($"[AccountService] HandshakeAsync completed → Success = {ok}");
+
+            if (ok)
+            {
+                Logger.Info("[AccountService] Handshake successful → encryption channel ready.");
+                return ConnectionResult.Success();
+            }
+            else
+            {
+                Logger.Warn("[AccountService] Handshake failed (check SDK.HandshakeAsync log for SocketException 10054 or other details).");
+                return ConnectionResult.Failure("Handshake thất bại, không thiết lập được kênh mã hóa.");
+            }
         }
         catch (System.Exception ex)
         {
+            Logger.Error($"[AccountService] ConnectAsync failed with exception: {ex}");
+            if (ex.InnerException != null)
+            {
+                Logger.Error($"InnerException: {ex.InnerException}");
+            }
+
             return ConnectionResult.Failure(ex.Message);
         }
     }
 
     // --- AuthenticateAsync ----------------------------------------------------
-
     public async System.Threading.Tasks.Task<LoginResult> AuthenticateAsync(
         System.String username,
         System.String password,
@@ -61,19 +85,23 @@ public sealed class AccountService : IAccountService
     {
         try
         {
+            Logger.Debug($"[AccountService] AuthenticateAsync started for user: {username} (password masked)");
+
             TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             // 1. Build packet
             LoginPacket packet = new();
             System.UInt32 sq = Csprng.NextUInt32();
             LoginRequestModel model = new() { Username = username, Password = password };
-
             packet.SequenceId = sq;
             packet.Initialize((System.UInt16)OpCommand.LOGIN, model);
-            LoginPacket.Encrypt(packet, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
-            // 2. TaskCompletionSource d? "await" callback m?t l?n
-            //    Dùng thay Task.Delay polling — không có race condition
+            Logger.Debug($"[AccountService] LoginPacket built → SequenceId = {sq}, OpCode = {(System.UInt16)OpCommand.LOGIN}");
+
+            LoginPacket.Encrypt(packet, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
+            Logger.Debug("[AccountService] Packet encrypted with Salsa20.");
+
+            // 2. TaskCompletionSource + OnOnce
             System.Threading.Tasks.TaskCompletionSource<LoginResult> tcs = new(
                 System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -84,6 +112,8 @@ public sealed class AccountService : IAccountService
                 {
                     sub?.Dispose();
 
+                    Logger.Debug($"[AccountService] Received Directive response (seq {sq}) → Type = {resp.Type}, Reason = {resp.Reason}");
+
                     LoginResult result = resp.Type == ControlType.NONE
                         ? LoginResult.Success()
                         : MapErrorResponse(resp.Reason, resp.Action);
@@ -91,33 +121,38 @@ public sealed class AccountService : IAccountService
                     tcs.TrySetResult(result);
                 });
 
-            // 3. G?i packet
+            // 3. Gửi packet
+            Logger.Debug("[AccountService] Sending encrypted LoginPacket...");
             await client.SendAsync(packet, ct);
+            Logger.Debug("[AccountService] LoginPacket sent → waiting for response...");
 
-            // 4. Ð?i k?t qu? vụi timeout + cancellation
+            // 4. Đợi kết quả với timeout
             using System.Threading.CancellationTokenSource cts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
-
             System.Threading.Tasks.Task timeoutTask = System.Threading.Tasks.Task.Delay(LoginTimeoutMs, cts.Token);
             System.Threading.Tasks.Task winner = await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask);
 
             if (winner != tcs.Task)
             {
                 sub?.Dispose();
+                Logger.Warn($"[AccountService] Login TIMEOUT after {LoginTimeoutMs}ms");
                 return LoginResult.Timeout();
             }
 
-            return await tcs.Task;
+            LoginResult finalResult = await tcs.Task;
+            Logger.Debug($"[AccountService] AuthenticateAsync completed → {(finalResult.IsSuccess ? "SUCCESS" : "FAILURE")}");
+            return finalResult;
         }
         catch (System.OperationCanceledException)
         {
+            Logger.Debug("[AccountService] AuthenticateAsync was canceled by user.");
             return LoginResult.Failure("Đăng nhập bị hủy.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
-            InstanceManager.Instance.GetOrCreateInstance<ILogger>().Error(ex.ToString());
+            Logger.Error($"[AccountService] AuthenticateAsync exception: {ex}");
             if (ex.InnerException != null)
             {
-                InstanceManager.Instance.GetOrCreateInstance<ILogger>().Error("Inner: " + ex.InnerException);
+                Logger.Error($"InnerException: {ex.InnerException}");
             }
 
             return LoginResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
