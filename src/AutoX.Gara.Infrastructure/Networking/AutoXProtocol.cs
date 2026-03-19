@@ -47,7 +47,8 @@ public sealed class AutoXProtocol : Protocol
 
         // TODO: Parse message and implement business logic here
 
-        s_Dispatch.HandlePacket(args.Connection.IncomingPacket, args.Connection);
+        s_Dispatch.HandlePacket(args.Lease, args.Connection);
+        args.Dispose();
     }
 
     /// <summary>
