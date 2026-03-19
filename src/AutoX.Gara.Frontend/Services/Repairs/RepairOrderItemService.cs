@@ -3,11 +3,9 @@
 using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Frontend.Results.Billings;
 using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Billings;
 using AutoX.Gara.Shared.Protocol.Repairs;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
@@ -145,8 +143,6 @@ public sealed class RepairOrderItemService
 
             data.OpCode = opcode;
             data.SequenceId = sq;
-
-            RepairOrderItemDto.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
             System.Threading.Tasks.TaskCompletionSource<RepairOrderItemWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);

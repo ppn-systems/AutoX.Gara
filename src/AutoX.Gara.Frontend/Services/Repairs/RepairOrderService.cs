@@ -3,11 +3,9 @@
 using AutoX.Gara.Domain.Enums.Repairs;
 using AutoX.Gara.Frontend.Results.Billings;
 using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Billings;
 using AutoX.Gara.Shared.Protocol.Invoices;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
@@ -171,8 +169,6 @@ public sealed class RepairOrderService
 
             logger?.Info(
                 $"[FE.{nameof(RepairOrderService)}:{nameof(SendWritePacketAsync)}] send seq={sq} op={opcode} expectEcho={expectEcho} roId={data.RepairOrderId} cust={data.CustomerId} veh={data.VehicleId} inv={data.InvoiceId} status={data.Status}");
-
-            RepairOrderDto.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
             System.Threading.Tasks.TaskCompletionSource<RepairOrderWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);

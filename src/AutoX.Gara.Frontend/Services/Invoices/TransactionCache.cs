@@ -3,7 +3,7 @@
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
 using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Billings;
+using AutoX.Gara.Shared.Protocol.Invoices;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 

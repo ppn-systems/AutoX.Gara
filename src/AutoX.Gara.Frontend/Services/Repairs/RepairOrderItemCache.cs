@@ -1,7 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Billings;
+using AutoX.Gara.Shared.Protocol.Repairs;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 

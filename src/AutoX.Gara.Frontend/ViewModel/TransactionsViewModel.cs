@@ -7,6 +7,7 @@ using AutoX.Gara.Frontend.Messages;
 using AutoX.Gara.Frontend.Results.Billings;
 using AutoX.Gara.Frontend.Services.Invoices;
 using AutoX.Gara.Shared.Protocol.Billings;
+using AutoX.Gara.Shared.Protocol.Invoices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;

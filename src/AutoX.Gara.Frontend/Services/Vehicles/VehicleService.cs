@@ -5,7 +5,6 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
@@ -214,8 +213,6 @@ public sealed class VehicleService
 
             ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
             logger.Info($"[VehicleService] SeqId={sq} OpCode={opcode} expectEcho={expectEcho}");
-
-            VehicleDto.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
             System.Threading.Tasks.TaskCompletionSource<VehicleWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);

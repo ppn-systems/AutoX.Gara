@@ -6,7 +6,6 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Repairs;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
@@ -149,8 +148,6 @@ public sealed class RepairTaskService
 
             data.OpCode = opcode;
             data.SequenceId = sq;
-
-            RepairTaskDto.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
             System.Threading.Tasks.TaskCompletionSource<RepairTaskWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);

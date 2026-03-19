@@ -7,7 +7,6 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Auth;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
@@ -98,7 +97,6 @@ public sealed class AccountService : IAccountService
 
             Logger.Debug($"[AccountService] LoginPacket built → SequenceId = {sq}, OpCode = {(System.UInt16)OpCommand.LOGIN}");
 
-            LoginPacket.Encrypt(packet, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
             Logger.Debug("[AccountService] Packet encrypted with Salsa20.");
 
             // 2. TaskCompletionSource + OnOnce

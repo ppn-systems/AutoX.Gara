@@ -4,11 +4,9 @@ using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
 using AutoX.Gara.Frontend.Results.Billings;
 using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Billings;
 using AutoX.Gara.Shared.Protocol.Invoices;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
@@ -19,19 +17,19 @@ namespace AutoX.Gara.Frontend.Services.Invoices;
 
 public sealed class TransactionService
 {
-    private const int RequestTimeoutMs = 10_000;
+    private const System.Int32 RequestTimeoutMs = 10_000;
     private readonly TransactionQueryCache _cache;
 
     public TransactionService(TransactionQueryCache cache)
         => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
     public async System.Threading.Tasks.Task<TransactionListResult> GetListAsync(
-        int page,
-        int pageSize,
-        int filterInvoiceId,
-        string? searchTerm = null,
+        System.Int32 page,
+        System.Int32 pageSize,
+        System.Int32 filterInvoiceId,
+        System.String? searchTerm = null,
         TransactionSortField sortBy = TransactionSortField.TransactionDate,
-        bool sortDescending = true,
+        System.Boolean sortDescending = true,
         TransactionType? filterType = null,
         TransactionStatus? filterStatus = null,
         PaymentMethod? filterPaymentMethod = null,
@@ -39,20 +37,20 @@ public sealed class TransactionService
     {
         TransactionCacheKey key = new(
             page, pageSize,
-            searchTerm ?? string.Empty,
+            searchTerm ?? System.String.Empty,
             sortBy, sortDescending,
             filterInvoiceId,
             filterType, filterStatus, filterPaymentMethod);
 
         if (_cache.TryGet(key, out TransactionCacheEntry? cached))
         {
-            bool hasMore = page * pageSize < cached!.TotalCount;
+            System.Boolean hasMore = page * pageSize < cached!.TotalCount;
             return TransactionListResult.Success(cached.Transactions, cached.TotalCount, hasMore);
         }
 
         try
         {
-            uint sq = Csprng.NextUInt32();
+            System.UInt32 sq = Csprng.NextUInt32();
             TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             TransactionQueryRequest packet = new()
@@ -60,14 +58,14 @@ public sealed class TransactionService
                 SequenceId = sq,
                 Page = page,
                 PageSize = pageSize,
-                SearchTerm = searchTerm ?? string.Empty,
+                SearchTerm = searchTerm ?? System.String.Empty,
                 SortBy = sortBy,
                 SortDescending = sortDescending,
                 FilterInvoiceId = filterInvoiceId,
                 FilterType = filterType,
                 FilterStatus = filterStatus,
                 FilterPaymentMethod = filterPaymentMethod,
-                OpCode = (ushort)OpCommand.TRANSACTION_GET
+                OpCode = (System.UInt16)OpCommand.TRANSACTION_GET
             };
 
             System.Threading.Tasks.TaskCompletionSource<TransactionListResult> tcs =
@@ -83,7 +81,7 @@ public sealed class TransactionService
                     sub?.Dispose();
                     errSub?.Dispose();
                     _cache.Set(key, resp.Transactions, resp.TotalCount);
-                    bool hasMore = page * pageSize < resp.TotalCount;
+                    System.Boolean hasMore = page * pageSize < resp.TotalCount;
                     tcs.TrySetResult(TransactionListResult.Success(resp.Transactions, resp.TotalCount, hasMore));
                 });
 
@@ -125,29 +123,27 @@ public sealed class TransactionService
     }
 
     public async System.Threading.Tasks.Task<TransactionWriteResult> CreateAsync(TransactionDto data, System.Threading.CancellationToken ct = default)
-        => await SendWritePacketAsync((ushort)OpCommand.TRANSACTION_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
+        => await SendWritePacketAsync((System.UInt16)OpCommand.TRANSACTION_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
 
     public async System.Threading.Tasks.Task<TransactionWriteResult> UpdateAsync(TransactionDto data, System.Threading.CancellationToken ct = default)
-        => await SendWritePacketAsync((ushort)OpCommand.TRANSACTION_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
+        => await SendWritePacketAsync((System.UInt16)OpCommand.TRANSACTION_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
 
     public async System.Threading.Tasks.Task<TransactionWriteResult> DeleteAsync(TransactionDto data, System.Threading.CancellationToken ct = default)
-        => await SendWritePacketAsync((ushort)OpCommand.TRANSACTION_DELETE, data, expectEcho: false, ct).ConfigureAwait(false);
+        => await SendWritePacketAsync((System.UInt16)OpCommand.TRANSACTION_DELETE, data, expectEcho: false, ct).ConfigureAwait(false);
 
     private async System.Threading.Tasks.Task<TransactionWriteResult> SendWritePacketAsync(
-        ushort opcode,
+        System.UInt16 opcode,
         TransactionDto data,
-        bool expectEcho,
+        System.Boolean expectEcho,
         System.Threading.CancellationToken ct)
     {
         try
         {
-            uint sq = Csprng.NextUInt32();
+            System.UInt32 sq = Csprng.NextUInt32();
             TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
             data.OpCode = opcode;
             data.SequenceId = sq;
-
-            TransactionDto.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
             System.Threading.Tasks.TaskCompletionSource<TransactionWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
@@ -212,7 +208,7 @@ public sealed class TransactionService
         }
     }
 
-    private static string MapErrorReason(ProtocolReason reason)
+    private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
             ProtocolReason.NOT_FOUND => "Không tìm thấy giao dịch.",

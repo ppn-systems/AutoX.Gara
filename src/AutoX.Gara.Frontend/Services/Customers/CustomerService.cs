@@ -7,7 +7,6 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Customers;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
@@ -227,8 +226,6 @@ public sealed class CustomerService : ICustomerService
 
             ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
             logger.Info($"Sending packet SeqId={sq} OpCode={opcode} expectEcho={expectEcho}");
-
-            CustomerDto.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
             System.Threading.Tasks.TaskCompletionSource<CustomerWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);

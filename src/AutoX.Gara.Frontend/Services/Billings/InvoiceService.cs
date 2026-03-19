@@ -6,7 +6,6 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Billings;
 using Nalix.Common.Diagnostics.Abstractions;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
@@ -165,8 +164,6 @@ public sealed class InvoiceService
 
             logger?.Info(
                 $"[FE.{nameof(InvoiceService)}:{nameof(SendWritePacketAsync)}] send seq={sq} op={opcode} expectEcho={expectEcho} invoiceId={data.InvoiceId} cust={data.CustomerId} invNo='{data.InvoiceNumber}' roId={data.RepairOrderId} tax={data.TaxRate} discType={data.DiscountType} disc={data.Discount}");
-
-            InvoiceDto.Encrypt(data, client.Options.EncryptionKey, CipherSuiteType.SALSA20);
 
             System.Threading.Tasks.TaskCompletionSource<InvoiceWriteResult> tcs =
                 new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
