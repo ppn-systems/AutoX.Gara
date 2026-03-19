@@ -2,14 +2,11 @@
 
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using AutoX.Gara.Shared.Protocol.Billings;
 using Nalix.Common.Networking.Packets;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
 using Nalix.Framework.Injection;
-using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 using Nalix.Shared.Memory.Pooling;
 using System.Collections.Generic;
@@ -17,7 +14,7 @@ using System.Collections.Generic;
 namespace AutoX.Gara.Shared.Protocol.Repairs;
 
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class RepairOrderItemQueryResponse : PacketBase<RepairOrderItemQueryResponse>, IPacketTransformer<RepairOrderItemQueryResponse>, IPacketSequenced
+public sealed class RepairOrderItemQueryResponse : PacketBase<RepairOrderItemQueryResponse>
 {
     [SerializeIgnore]
     public override System.UInt16 Length
@@ -37,9 +34,6 @@ public sealed class RepairOrderItemQueryResponse : PacketBase<RepairOrderItemQue
             return (System.UInt16)total;
         }
     }
-
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public System.Int32 TotalCount { get; set; }
@@ -68,19 +62,5 @@ public sealed class RepairOrderItemQueryResponse : PacketBase<RepairOrderItemQue
         TotalCount = 0;
         OpCode = OpCommand.NONE.AsUInt16();
         base.ResetForPool();
-    }
-
-    public static RepairOrderItemQueryResponse Compress(RepairOrderItemQueryResponse packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        packet.Flags.AddFlag(PacketFlags.COMPRESSED);
-        return packet;
-    }
-
-    public static RepairOrderItemQueryResponse Decompress(RepairOrderItemQueryResponse packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
-        return packet;
     }
 }

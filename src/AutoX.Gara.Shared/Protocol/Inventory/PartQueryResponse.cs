@@ -3,7 +3,6 @@
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
@@ -23,7 +22,7 @@ namespace AutoX.Gara.Shared.Protocol.Inventory;
 /// Packet trả về danh sách phụ tùng (<c>Part</c>) theo trang.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class PartQueryResponse : PacketBase<PartQueryResponse>, IPacketTransformer<PartQueryResponse>, IPacketSequenced
+public sealed class PartQueryResponse : PacketBase<PartQueryResponse>
 {
     /// <summary>
     /// Tổng byte length của packet, tính bằng tay vì có dynamic list.
@@ -46,10 +45,6 @@ public sealed class PartQueryResponse : PacketBase<PartQueryResponse>, IPacketTr
             return (System.UInt16)total;
         }
     }
-
-    /// <inheritdoc/>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     /// <summary>
     /// Tổng số phụ tùng khớp filter (trước khi phân trang).

@@ -3,11 +3,10 @@
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Caching;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
+using Nalix.Common.Shared.Caching;
 using Nalix.Shared.Frames;
 
 namespace AutoX.Gara.Shared.Protocol.Billings;
@@ -17,11 +16,8 @@ namespace AutoX.Gara.Shared.Protocol.Billings;
 /// co ho tro phan trang, tim kiem, loc va sap xep.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class InvoiceQueryRequest : PacketBase<InvoiceQueryRequest>, IPoolable, IPacketSequenced
+public sealed class InvoiceQueryRequest : PacketBase<InvoiceQueryRequest>, IPoolable
 {
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
-
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public System.Int32 Page { get; set; } = 1;
 

@@ -1,13 +1,9 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Cars;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
-using Nalix.Common.Security.Attributes;
-using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
-using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 
 namespace AutoX.Gara.Shared.Protocol.Vehicles;
@@ -17,12 +13,9 @@ namespace AutoX.Gara.Shared.Protocol.Vehicles;
 /// Sử dụng PacketBase để auto serialize/pooling.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class VehicleDto : PacketBase<VehicleDto>, IPacketTransformer<VehicleDto>, IPacketSequenced
+public sealed class VehicleDto : PacketBase<VehicleDto>
 {
     // ─── Fixed-size fields ───────────────────────────────────────────────
-
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     /// <summary>Id của xe. null khi tạo mới.</summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
@@ -55,19 +48,15 @@ public sealed class VehicleDto : PacketBase<VehicleDto>, IPacketTransformer<Vehi
     // ─── Dynamic fields (string) ─────────────────────────────────────────
     // Theo Pattern, phải đứng sau fixed size field
 
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 10)]
     public System.String Model { get; set; }
 
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 11)]
     public System.String LicensePlate { get; set; }
 
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 12)]
     public System.String EngineNumber { get; set; }
 
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 13)]
     public System.String FrameNumber { get; set; }
 
@@ -108,35 +97,5 @@ public sealed class VehicleDto : PacketBase<VehicleDto>, IPacketTransformer<Vehi
         EngineNumber = System.String.Empty;
         FrameNumber = System.String.Empty;
         OpCode = 0;
-    }
-
-    /// <summary>Compress string fields and mark packet as compressed.</summary>
-    /// <exception cref="System.ArgumentNullException">Thrown when packet is null.</exception>
-    public static VehicleDto Compress(VehicleDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-
-        packet.Model = packet.Model.CompressToBase64();
-        packet.FrameNumber = packet.FrameNumber.CompressToBase64();
-        packet.LicensePlate = packet.LicensePlate.CompressToBase64();
-        packet.EngineNumber = packet.EngineNumber.CompressToBase64();
-
-        packet.Flags.AddFlag(PacketFlags.COMPRESSED);
-        return packet;
-    }
-
-    /// <summary>Decompress string fields and remove compressed flag.</summary>
-    /// <exception cref="System.ArgumentNullException">Thrown when packet is null.</exception>
-    public static VehicleDto Decompress(VehicleDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-
-        packet.Model = packet.Model.DecompressFromBase64();
-        packet.FrameNumber = packet.FrameNumber.DecompressFromBase64();
-        packet.LicensePlate = packet.LicensePlate.DecompressFromBase64();
-        packet.EngineNumber = packet.EngineNumber.DecompressFromBase64();
-
-        packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
-        return packet;
     }
 }

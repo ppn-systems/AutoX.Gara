@@ -3,14 +3,10 @@
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
-using Nalix.Common.Security.Attributes;
-using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
 using Nalix.Framework.Injection;
-using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 using Nalix.Shared.Memory.Pooling;
 using System.Collections.Generic;
@@ -26,7 +22,7 @@ namespace AutoX.Gara.Shared.Protocol.Suppliers;
 /// </para>
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class SupplierQueryResponse : PacketBase<SupplierQueryResponse>, IPacketTransformer<SupplierQueryResponse>, IPacketSequenced
+public sealed class SupplierQueryResponse : PacketBase<SupplierQueryResponse>
 {
     /// <summary>
     /// Tổng số byte của packet, tính thủ công để bao gồm child packets.
@@ -58,10 +54,6 @@ public sealed class SupplierQueryResponse : PacketBase<SupplierQueryResponse>, I
         }
     }
 
-    /// <summary>Sequence ID dùng cho ordering và deduplication.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
-
     /// <summary>
     /// Tổng số nhà cung cấp khớp filter trên server (trước phân trang).
     /// Client dùng để tính TotalPages.
@@ -76,7 +68,6 @@ public sealed class SupplierQueryResponse : PacketBase<SupplierQueryResponse>, I
     /// Danh sách nhà cung cấp trên trang hiện tại.
     /// Dynamic field — phải đứng CUỐI CÙNG trong SerializeOrder.
     /// </summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
     public List<SupplierDto> Suppliers { get; set; } = [];
 
@@ -105,35 +96,5 @@ public sealed class SupplierQueryResponse : PacketBase<SupplierQueryResponse>, I
         OpCode = OpCommand.NONE.AsUInt16();
 
         base.ResetForPool();
-    }
-
-    /// <inheritdoc/>
-    /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="packet"/> is null.</exception>
-    public static SupplierQueryResponse Compress(SupplierQueryResponse packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-
-        for (System.Int32 i = 0; i < packet.Suppliers.Count; i++)
-        {
-            packet.Suppliers[i] = SupplierDto.Compress(packet.Suppliers[i]);
-        }
-
-        packet.Flags.AddFlag(PacketFlags.COMPRESSED);
-        return packet;
-    }
-
-    /// <inheritdoc/>
-    /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="packet"/> is null.</exception>
-    public static SupplierQueryResponse Decompress(SupplierQueryResponse packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-
-        for (System.Int32 i = 0; i < packet.Suppliers.Count; i++)
-        {
-            packet.Suppliers[i] = SupplierDto.Decompress(packet.Suppliers[i]);
-        }
-
-        packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
-        return packet;
     }
 }

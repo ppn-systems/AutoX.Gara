@@ -4,14 +4,10 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using AutoX.Gara.Shared.Protocol.Customers;
 using Nalix.Common.Networking.Packets;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
-using Nalix.Common.Security.Attributes;
-using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
 using Nalix.Framework.Injection;
-using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 using Nalix.Shared.Memory.Pooling;
 using System.Collections.Generic;
@@ -24,7 +20,7 @@ namespace AutoX.Gara.Shared.Protocol.Vehicles;
 /// Uses PacketBase for automatic serialization, pooling and metadata handling.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class VehiclesQueryResponse : PacketBase<VehiclesQueryResponse>, IPacketTransformer<VehiclesQueryResponse>, IPacketSequenced
+public sealed class VehiclesQueryResponse : PacketBase<VehiclesQueryResponse>
 {
     /// <summary>
     /// Gets the total byte length of this packet, including the fixed header
@@ -62,12 +58,6 @@ public sealed class VehiclesQueryResponse : PacketBase<VehiclesQueryResponse>, I
     }
 
     /// <summary>
-    /// Gets or sets the sequence identifier used for packet ordering and deduplication.
-    /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
-
-    /// <summary>
     /// Tổng số khách hàng khớp với filter trên server (trước khi phân trang).
     /// Client dùng để tính TotalPages.
     /// <para>
@@ -83,7 +73,6 @@ public sealed class VehiclesQueryResponse : PacketBase<VehiclesQueryResponse>, I
     /// Gets or sets the list of customer records for the current page.
     /// Dynamic field — phải đứng CUỐI CÙNG trong SerializeOrder.
     /// </summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
     public List<VehicleDto> Vehicles { get; set; } = [];
 
@@ -118,39 +107,5 @@ public sealed class VehiclesQueryResponse : PacketBase<VehiclesQueryResponse>, I
 
         // Let base reset other serializable properties/header if needed.
         base.ResetForPool();
-    }
-
-    /// <inheritdoc/>
-    /// <exception cref="System.ArgumentNullException">
-    /// Thrown when <paramref name="packet"/> is <see langword="null"/>.
-    /// </exception>
-    public static VehiclesQueryResponse Compress(VehiclesQueryResponse packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-
-        for (System.Int32 i = 0; i < packet.Vehicles.Count; i++)
-        {
-            packet.Vehicles[i] = VehicleDto.Compress(packet.Vehicles[i]);
-        }
-
-        packet.Flags.AddFlag(PacketFlags.COMPRESSED);
-        return packet;
-    }
-
-    /// <inheritdoc/>
-    /// <exception cref="System.ArgumentNullException">
-    /// Thrown when <paramref name="packet"/> is <see langword="null"/>.
-    /// </exception>
-    public static VehiclesQueryResponse Decompress(VehiclesQueryResponse packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-
-        for (System.Int32 i = 0; i < packet.Vehicles.Count; i++)
-        {
-            packet.Vehicles[i] = VehicleDto.Decompress(packet.Vehicles[i]);
-        }
-
-        packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
-        return packet;
     }
 }

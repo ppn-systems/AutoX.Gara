@@ -4,13 +4,9 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
-using Nalix.Common.Security.Attributes;
-using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
-using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 
 namespace AutoX.Gara.Shared.Protocol.Employees;
@@ -22,13 +18,9 @@ namespace AutoX.Gara.Shared.Protocol.Employees;
 /// </para>
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class EmployeeDto : PacketBase<EmployeeDto>, IPacketTransformer<EmployeeDto>, IPacketSequenced
+public sealed class EmployeeDto : PacketBase<EmployeeDto>
 {
     // ─── Fixed-size fields ────────────────────────────────────────────────────
-
-    /// <summary>Sequence ID dùng cho ordering và deduplication.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     /// <summary>ID nhân viên. Null khi tạo mới.</summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
@@ -61,22 +53,18 @@ public sealed class EmployeeDto : PacketBase<EmployeeDto>, IPacketTransformer<Em
     // ─── Dynamic-size fields ──────────────────────────────────────────────────
 
     /// <summary>Tên nhân viên.</summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 8)]
     public System.String Name { get; set; }
 
     /// <summary>Địa chỉ nhân viên.</summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 9)]
     public System.String Address { get; set; }
 
     /// <summary>Số điện thoại nhân viên.</summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 10)]
     public System.String PhoneNumber { get; set; }
 
     /// <summary>Email nhân viên.</summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 11)]
     public System.String Email { get; set; }
 
@@ -110,33 +98,5 @@ public sealed class EmployeeDto : PacketBase<EmployeeDto>, IPacketTransformer<Em
         PhoneNumber = System.String.Empty;
         Email = System.String.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
-    }
-
-    // ─── Compression ──────────────────────────────────────────────────────────
-
-    public static EmployeeDto Compress(EmployeeDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-
-        packet.Name = packet.Name.CompressToBase64();
-        packet.Address = packet.Address.CompressToBase64();
-        packet.PhoneNumber = packet.PhoneNumber.CompressToBase64();
-        packet.Email = packet.Email.CompressToBase64();
-
-        packet.Flags.AddFlag(PacketFlags.COMPRESSED);
-        return packet;
-    }
-
-    public static EmployeeDto Decompress(EmployeeDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-
-        packet.Name = packet.Name.DecompressFromBase64();
-        packet.Address = packet.Address.DecompressFromBase64();
-        packet.PhoneNumber = packet.PhoneNumber.DecompressFromBase64();
-        packet.Email = packet.Email.DecompressFromBase64();
-
-        packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
-        return packet;
     }
 }

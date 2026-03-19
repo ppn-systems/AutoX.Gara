@@ -24,7 +24,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Nalix.Shared" Version="11.7.1" />
+	  <PackageReference Include="Nalix.Shared" Version="11.7.2" />
 	</ItemGroup>
 
 	<ItemGroup>

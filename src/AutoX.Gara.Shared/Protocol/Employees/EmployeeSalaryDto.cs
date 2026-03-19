@@ -3,22 +3,17 @@
 using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
-using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 
 namespace AutoX.Gara.Shared.Protocol.Employees;
 
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class EmployeeSalaryDto : PacketBase<EmployeeSalaryDto>, IPacketTransformer<EmployeeSalaryDto>, IPacketSequenced
+public sealed class EmployeeSalaryDto : PacketBase<EmployeeSalaryDto>
 {
     // Fixed-size fields
-
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public System.Int32? EmployeeSalaryId { get; set; }
@@ -62,21 +57,5 @@ public sealed class EmployeeSalaryDto : PacketBase<EmployeeSalaryDto>, IPacketTr
         EffectiveTo = null;
         Note = System.String.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
-    }
-
-    public static EmployeeSalaryDto Compress(EmployeeSalaryDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        packet.Note = packet.Note.CompressToBase64();
-        packet.Flags.AddFlag(PacketFlags.COMPRESSED);
-        return packet;
-    }
-
-    public static EmployeeSalaryDto Decompress(EmployeeSalaryDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        packet.Note = packet.Note.DecompressFromBase64();
-        packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
-        return packet;
     }
 }

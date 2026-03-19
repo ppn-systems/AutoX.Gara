@@ -4,7 +4,6 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
@@ -16,12 +15,12 @@ namespace AutoX.Gara.Shared.Protocol.Billings;
 /// Packet mang du lieu hoa don (Invoice), dung cho create/update va query response.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class InvoiceDto : PacketBase<InvoiceDto>, IPacketTransformer<InvoiceDto>, IPacketSequenced
+public sealed class InvoiceDto : PacketBase<InvoiceDto>
 {
     // Fixed-size fields
 
     [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
+    public new System.UInt32 SequenceId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public System.Int32? InvoiceId { get; set; }
@@ -114,17 +113,5 @@ public sealed class InvoiceDto : PacketBase<InvoiceDto>, IPacketTransformer<Invo
         RepairOrderId = 0;
         InvoiceNumber = System.String.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
-    }
-
-    public static InvoiceDto Compress(InvoiceDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        return packet;
-    }
-
-    public static InvoiceDto Decompress(InvoiceDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        return packet;
     }
 }

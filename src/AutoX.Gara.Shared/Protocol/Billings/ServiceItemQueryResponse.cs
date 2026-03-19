@@ -3,7 +3,6 @@
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
@@ -16,7 +15,7 @@ using System.Collections.Generic;
 namespace AutoX.Gara.Shared.Protocol.Billings;
 
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class ServiceItemQueryResponse : PacketBase<ServiceItemQueryResponse>, IPacketTransformer<ServiceItemQueryResponse>, IPacketSequenced
+public sealed class ServiceItemQueryResponse : PacketBase<ServiceItemQueryResponse>
 {
     [SerializeIgnore]
     public override System.UInt16 Length
@@ -36,9 +35,6 @@ public sealed class ServiceItemQueryResponse : PacketBase<ServiceItemQueryRespon
             return (System.UInt16)total;
         }
     }
-
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public System.Int32 TotalCount { get; set; }

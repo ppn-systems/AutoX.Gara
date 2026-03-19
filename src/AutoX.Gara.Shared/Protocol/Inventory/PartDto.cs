@@ -3,7 +3,6 @@
 using AutoX.Gara.Domain.Enums.Parts;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
@@ -16,13 +15,9 @@ namespace AutoX.Gara.Shared.Protocol.Inventory;
 /// dùng cho các thao tác create, update, và query response.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class PartDto : PacketBase<PartDto>, IPacketTransformer<PartDto>, IPacketSequenced
+public sealed class PartDto : PacketBase<PartDto>
 {
     // ─── Fixed-size fields ────────────────────────────────────────────────────
-
-    /// <inheritdoc/>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     /// <summary>Id phụ tùng. Null khi tạo mới.</summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]

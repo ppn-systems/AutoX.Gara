@@ -4,19 +4,16 @@ using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
 using Nalix.Shared.Frames;
 
-namespace AutoX.Gara.Shared.Protocol.Billings;
+namespace AutoX.Gara.Shared.Protocol.Invoices;
 
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class TransactionDto : PacketBase<TransactionDto>, IPacketTransformer<TransactionDto>, IPacketSequenced
+public sealed class TransactionDto : PacketBase<TransactionDto>
 {
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public System.Int32? TransactionId { get; set; }
@@ -82,18 +79,6 @@ public sealed class TransactionDto : PacketBase<TransactionDto>, IPacketTransfor
         IsReversed = false;
         Description = System.String.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
-    }
-
-    public static TransactionDto Compress(TransactionDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        return packet;
-    }
-
-    public static TransactionDto Decompress(TransactionDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        return packet;
     }
 }
 

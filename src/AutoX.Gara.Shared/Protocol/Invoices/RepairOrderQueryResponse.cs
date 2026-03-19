@@ -3,12 +3,10 @@
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
 using Nalix.Framework.Injection;
-using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 using Nalix.Shared.Memory.Pooling;
 using System.Collections.Generic;
@@ -16,7 +14,7 @@ using System.Collections.Generic;
 namespace AutoX.Gara.Shared.Protocol.Invoices;
 
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class RepairOrderQueryResponse : PacketBase<RepairOrderQueryResponse>, IPacketTransformer<RepairOrderQueryResponse>, IPacketSequenced
+public sealed class RepairOrderQueryResponse : PacketBase<RepairOrderQueryResponse>
 {
     [SerializeIgnore]
     public override System.UInt16 Length
@@ -37,8 +35,6 @@ public sealed class RepairOrderQueryResponse : PacketBase<RepairOrderQueryRespon
         }
     }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public System.Int32 TotalCount { get; set; }
@@ -67,20 +63,6 @@ public sealed class RepairOrderQueryResponse : PacketBase<RepairOrderQueryRespon
         TotalCount = 0;
         OpCode = OpCommand.NONE.AsUInt16();
         base.ResetForPool();
-    }
-
-    public static RepairOrderQueryResponse Compress(RepairOrderQueryResponse packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        packet.Flags.AddFlag(PacketFlags.COMPRESSED);
-        return packet;
-    }
-
-    public static RepairOrderQueryResponse Decompress(RepairOrderQueryResponse packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-        packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
-        return packet;
     }
 }
 

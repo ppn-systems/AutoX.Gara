@@ -4,8 +4,6 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Caching;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
@@ -18,13 +16,9 @@ namespace AutoX.Gara.Shared.Protocol.Suppliers;
 /// có hỗ trợ phân trang, tìm kiếm, lọc theo trạng thái/điều khoản và sắp xếp.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class SupplierQueryRequest : PacketBase<SupplierQueryRequest>, IPoolable, IPacketSequenced
+public sealed class SupplierQueryRequest : PacketBase<SupplierQueryRequest>
 {
     // ─── Fixed-size fields (đặt trước) ───────────────────────────────────────
-
-    /// <inheritdoc/>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     /// <summary>Số trang cần lấy (bắt đầu từ 1).</summary>
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]

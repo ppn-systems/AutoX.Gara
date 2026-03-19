@@ -2,19 +2,16 @@
 
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
 using Nalix.Shared.Frames;
 
-namespace AutoX.Gara.Shared.Protocol.Billings;
+namespace AutoX.Gara.Shared.Protocol.Repairs;
 
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class RepairOrderItemDto : PacketBase<RepairOrderItemDto>, IPacketTransformer<RepairOrderItemDto>, IPacketSequenced
+public sealed class RepairOrderItemDto : PacketBase<RepairOrderItemDto>
 {
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public System.Int32? RepairOrderItemId { get; set; }

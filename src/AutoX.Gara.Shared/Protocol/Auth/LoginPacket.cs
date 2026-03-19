@@ -2,13 +2,9 @@
 
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
-using Nalix.Common.Security.Attributes;
-using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
-using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 
 namespace AutoX.Gara.Shared.Protocol.Auth;
@@ -19,18 +15,11 @@ namespace AutoX.Gara.Shared.Protocol.Auth;
 /// Uses PacketBase for automatic serialization, pooling and metadata handling.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class LoginPacket : PacketBase<LoginPacket>, IPacketTransformer<LoginPacket>, IPacketSequenced
+public sealed class LoginPacket : PacketBase<LoginPacket>
 {
-    /// <summary>
-    /// Gets or sets the sequence identifier used for packet ordering and deduplication.
-    /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
-
     /// <summary>
     /// Gets or sets the login credentials model (username, hashed password, metadata).
     /// </summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
     public LoginRequestModel Account { get; set; }
 
@@ -69,41 +58,5 @@ public sealed class LoginPacket : PacketBase<LoginPacket>, IPacketTransformer<Lo
 
         // OpCode already reset by base.ResetForPool(), but keep explicit reset for clarity.
         OpCode = OpCommand.LOGIN.AsUInt16();
-    }
-
-    /// <summary>
-    /// Compress username/password fields and mark packet as compressed.
-    /// </summary>
-    /// <exception cref="System.ArgumentNullException">Thrown when packet or its Account is null.</exception>
-    public static LoginPacket Compress(LoginPacket packet)
-    {
-        if (packet?.Account is null)
-        {
-            throw new System.ArgumentNullException(nameof(packet));
-        }
-
-        packet.Account.Username = packet.Account.Username.CompressToBase64();
-        packet.Account.Password = packet.Account.Password.CompressToBase64();
-        packet.Flags.AddFlag(PacketFlags.COMPRESSED);
-
-        return packet;
-    }
-
-    /// <summary>
-    /// Decompress username/password fields and remove compressed flag.
-    /// </summary>
-    /// <exception cref="System.ArgumentNullException">Thrown when packet or its Account is null.</exception>
-    public static LoginPacket Decompress(LoginPacket packet)
-    {
-        if (packet?.Account is null)
-        {
-            throw new System.ArgumentNullException(nameof(packet));
-        }
-
-        packet.Account.Username = packet.Account.Username.DecompressFromBase64();
-        packet.Account.Password = packet.Account.Password.DecompressFromBase64();
-        packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
-
-        return packet;
     }
 }

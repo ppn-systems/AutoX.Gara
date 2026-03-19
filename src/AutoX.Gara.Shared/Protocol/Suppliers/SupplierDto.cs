@@ -4,13 +4,9 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets.Abstractions;
 using Nalix.Common.Networking.Packets.Enums;
-using Nalix.Common.Security.Attributes;
-using Nalix.Common.Security.Enums;
 using Nalix.Common.Serialization;
 using Nalix.Common.Serialization.Attributes;
-using Nalix.Shared.Extensions;
 using Nalix.Shared.Frames;
 
 namespace AutoX.Gara.Shared.Protocol.Suppliers;
@@ -23,13 +19,9 @@ namespace AutoX.Gara.Shared.Protocol.Suppliers;
 /// </para>
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class SupplierDto : PacketBase<SupplierDto>, IPacketTransformer<SupplierDto>, IPacketSequenced
+public sealed class SupplierDto : PacketBase<SupplierDto>
 {
     // ─── Fixed-size fields ────────────────────────────────────────────────────
-
-    /// <summary>Sequence ID dùng cho ordering và deduplication.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public System.UInt32 SequenceId { get; set; }
 
     /// <summary>
     /// ID nhà cung cấp. <c>null</c> khi tạo mới.
@@ -56,27 +48,22 @@ public sealed class SupplierDto : PacketBase<SupplierDto>, IPacketTransformer<Su
     // ─── Dynamic-size fields ──────────────────────────────────────────────────
 
     /// <summary>Tên nhà cung cấp.</summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
     public System.String Name { get; set; }
 
     /// <summary>Email nhà cung cấp.</summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
     public System.String Email { get; set; }
 
     /// <summary>Địa chỉ nhà cung cấp.</summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 8)]
     public System.String Address { get; set; }
 
     /// <summary>Mã số thuế.</summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 9)]
     public System.String TaxCode { get; set; }
 
     /// <summary>Tài khoản ngân hàng.</summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 10)]
     public System.String BankAccount { get; set; }
 
@@ -84,12 +71,10 @@ public sealed class SupplierDto : PacketBase<SupplierDto>, IPacketTransformer<Su
     /// Danh sách SĐT liên hệ, phân cách bằng dấu phẩy.
     /// VD: "0901234567,0912345678"
     /// </summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 11)]
     public System.String PhoneNumbers { get; set; }
 
     /// <summary>Ghi chú nội bộ. Tối đa 500 ký tự.</summary>
-    [SensitiveData(DataSensitivityLevel.Internal)]
     [SerializeOrder(PacketHeaderOffset.DATA_REGION + 12)]
     public System.String Notes { get; set; }
 
@@ -129,42 +114,5 @@ public sealed class SupplierDto : PacketBase<SupplierDto>, IPacketTransformer<Su
         PhoneNumbers = System.String.Empty;
         Notes = System.String.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
-    }
-
-    // ─── Compression ─────────────────────────────────────────────────────────
-
-    /// <summary>Nén các string field và đánh dấu packet là COMPRESSED.</summary>
-    /// <exception cref="System.ArgumentNullException">Thrown when packet is null.</exception>
-    public static SupplierDto Compress(SupplierDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-
-        packet.Name = packet.Name.CompressToBase64();
-        packet.Email = packet.Email.CompressToBase64();
-        packet.Address = packet.Address.CompressToBase64();
-        packet.TaxCode = packet.TaxCode.CompressToBase64();
-        packet.BankAccount = packet.BankAccount.CompressToBase64();
-        packet.PhoneNumbers = packet.PhoneNumbers.CompressToBase64();
-        // Notes không compress vì thường ngắn, tránh overhead
-
-        packet.Flags.AddFlag(PacketFlags.COMPRESSED);
-        return packet;
-    }
-
-    /// <summary>Giải nén các string field và xóa flag COMPRESSED.</summary>
-    /// <exception cref="System.ArgumentNullException">Thrown when packet is null.</exception>
-    public static SupplierDto Decompress(SupplierDto packet)
-    {
-        System.ArgumentNullException.ThrowIfNull(packet);
-
-        packet.Name = packet.Name.DecompressFromBase64();
-        packet.Email = packet.Email.DecompressFromBase64();
-        packet.Address = packet.Address.DecompressFromBase64();
-        packet.TaxCode = packet.TaxCode.DecompressFromBase64();
-        packet.BankAccount = packet.BankAccount.DecompressFromBase64();
-        packet.PhoneNumbers = packet.PhoneNumbers.DecompressFromBase64();
-
-        packet.Flags.RemoveFlag(PacketFlags.COMPRESSED);
-        return packet;
     }
 }
