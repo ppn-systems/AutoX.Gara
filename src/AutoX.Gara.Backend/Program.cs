@@ -26,7 +26,6 @@ using Nalix.Logging.Sinks;
 using Nalix.Network.Abstractions;
 using Nalix.Network.Connections;
 using Nalix.Network.Middleware.Inbound;
-using Nalix.Network.Middleware.Outbound;
 using Nalix.Network.Routing;
 using Nalix.Shared.Extensions;
 using Nalix.Shared.Memory.Pooling;
@@ -236,11 +235,7 @@ public static class Program
             dispatchOptions.WithMiddleware(new PermissionMiddleware());
             dispatchOptions.WithMiddleware(new ConcurrencyMiddleware());
             dispatchOptions.WithMiddleware(new RateLimitMiddleware());
-            dispatchOptions.WithMiddleware(new UnwrapPacketMiddleware());
             dispatchOptions.WithMiddleware(new TimeoutMiddleware());
-
-            // Outbound
-            dispatchOptions.WithMiddleware(new WrapPacketMiddleware());
 
             // Logging
             dispatchOptions.WithLogging(InstanceManager.Instance.GetExistingInstance<ILogger>());
