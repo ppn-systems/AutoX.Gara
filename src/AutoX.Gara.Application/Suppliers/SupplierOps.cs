@@ -8,15 +8,14 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Suppliers;
 using Microsoft.EntityFrameworkCore;
-using Nalix.Common.Diagnostics.Abstractions;
-using Nalix.Common.Networking.Abstractions;
-using Nalix.Common.Networking.Packets.Abstractions;
-using Nalix.Common.Networking.Packets.Attributes;
+using Nalix.Common.Diagnostics;
+using Nalix.Common.Networking;
+using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
+using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
-using Nalix.Shared.Memory.Pooling;
+using Nalix.Shared.Memory.Objects;
 using Nalix.Shared.Serialization;
 using System.Diagnostics;
 
@@ -45,7 +44,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             logger?.Warn(
-                $"[APP.{nameof(SupplierOps)}:{nameof(GetAsync)}] malformed-packet ep={connection.RemoteEndPoint} seq={fallbackSeq}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(GetAsync)}] malformed-packet ep={connection.NetworkEndpoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
@@ -58,7 +57,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         try
         {
             logger?.Info(
-                $"[APP.{nameof(SupplierOps)}:{nameof(GetAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} page={packet.Page}/{packet.PageSize} status={packet.FilterStatus} terms={packet.FilterPaymentTerms}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(GetAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} page={packet.Page}/{packet.PageSize} status={packet.FilterStatus} terms={packet.FilterPaymentTerms}");
 
             SupplierListQuery query = new(
                 Page: packet.Page,
@@ -88,7 +87,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             if (!sent)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(SupplierOps)}:{nameof(GetAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} items={response.Suppliers.Count} total={totalCount} ms={sw.ElapsedMilliseconds}");
+                    $"[APP.{nameof(SupplierOps)}:{nameof(GetAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} items={response.Suppliers.Count} total={totalCount} ms={sw.ElapsedMilliseconds}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
@@ -97,13 +96,13 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             else
             {
                 logger?.Info(
-                    $"[APP.{nameof(SupplierOps)}:{nameof(GetAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} items={response.Suppliers.Count} total={totalCount} ms={sw.ElapsedMilliseconds}");
+                    $"[APP.{nameof(SupplierOps)}:{nameof(GetAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} items={response.Suppliers.Count} total={totalCount} ms={sw.ElapsedMilliseconds}");
             }
         }
         catch (System.Exception ex)
         {
             logger?.Error(
-                $"[APP.{nameof(SupplierOps)}:{nameof(GetAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(GetAsync)}] failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -135,7 +134,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         if (!TryParseSupplierPacket(p, out SupplierDto packet, out System.UInt32 fallbackSeq))
         {
             logger?.Warn(
-                $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] malformed-packet ep={connection.RemoteEndPoint} seq={fallbackSeq}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] malformed-packet ep={connection.NetworkEndpoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
@@ -163,7 +162,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         try
         {
             logger?.Info(
-                $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} name={packet.Name} email={packet.Email}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} name={packet.Name} email={packet.Email}");
 
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
             var suppliers = new SupplierRepository(db);
@@ -174,7 +173,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             if (existed)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] already-exists ep={connection.RemoteEndPoint} seq={packet.SequenceId} email={packet.Email} tax={packet.TaxCode}");
+                    $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] already-exists ep={connection.NetworkEndpoint} seq={packet.SequenceId} email={packet.Email} tax={packet.TaxCode}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.ALREADY_EXISTS,
@@ -223,7 +222,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             if (!sent)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} name={packet.Name}");
+                    $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} name={packet.Name}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
@@ -232,13 +231,13 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             else
             {
                 logger?.Info(
-                    $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} supplierId={newSupplier.Id} ms={sw.ElapsedMilliseconds}");
+                    $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} supplierId={newSupplier.Id} ms={sw.ElapsedMilliseconds}");
             }
         }
         catch (System.Exception ex)
         {
             logger?.Error(
-                $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -266,7 +265,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         if (!TryParseSupplierPacket(p, out SupplierDto packet, out System.UInt32 fallbackSeq))
         {
             logger?.Warn(
-                $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] malformed-packet ep={connection.RemoteEndPoint} seq={fallbackSeq}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] malformed-packet ep={connection.NetworkEndpoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
@@ -303,7 +302,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         try
         {
             logger?.Info(
-                $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} supplierId={packet.SupplierId} email={packet.Email}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} supplierId={packet.SupplierId} email={packet.Email}");
 
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
             if (await db.Suppliers
@@ -313,7 +312,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
                     .ConfigureAwait(false))
             {
                 logger?.Warn(
-                    $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] conflict ep={connection.RemoteEndPoint} seq={packet.SequenceId} email={packet.Email} tax={packet.TaxCode}");
+                    $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] conflict ep={connection.NetworkEndpoint} seq={packet.SequenceId} email={packet.Email} tax={packet.TaxCode}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.ALREADY_EXISTS,
@@ -329,7 +328,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             if (existing is null)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] not-found ep={connection.RemoteEndPoint} seq={packet.SequenceId} supplierId={packet.SupplierId}");
+                    $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] not-found ep={connection.NetworkEndpoint} seq={packet.SequenceId} supplierId={packet.SupplierId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
@@ -382,7 +381,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             if (!sent)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} supplierId={packet.SupplierId}");
+                    $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} supplierId={packet.SupplierId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
@@ -391,13 +390,13 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             else
             {
                 logger?.Info(
-                    $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} supplierId={packet.SupplierId} ms={sw.ElapsedMilliseconds}");
+                    $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} supplierId={packet.SupplierId} ms={sw.ElapsedMilliseconds}");
             }
         }
         catch (System.Exception ex)
         {
             logger?.Error(
-                $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -428,7 +427,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         {
             System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
             logger?.Warn(
-                $"[APP.{nameof(SupplierOps)}:{nameof(ChangeStatusAsync)}] malformed-packet ep={connection.RemoteEndPoint} seq={fallbackSeq}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(ChangeStatusAsync)}] malformed-packet ep={connection.NetworkEndpoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
@@ -439,7 +438,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         try
         {
             logger?.Info(
-                $"[APP.{nameof(SupplierOps)}:{nameof(ChangeStatusAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} supplierId={packet.SupplierId} status={packet.Status}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(ChangeStatusAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} supplierId={packet.SupplierId} status={packet.Status}");
 
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
             var suppliers = new SupplierRepository(db);
@@ -450,7 +449,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             if (existing is null)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(SupplierOps)}:{nameof(ChangeStatusAsync)}] not-found ep={connection.RemoteEndPoint} seq={packet.SequenceId} supplierId={packet.SupplierId}");
+                    $"[APP.{nameof(SupplierOps)}:{nameof(ChangeStatusAsync)}] not-found ep={connection.NetworkEndpoint} seq={packet.SequenceId} supplierId={packet.SupplierId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
@@ -469,12 +468,12 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
                 ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
 
             logger?.Info(
-                $"[APP.{nameof(SupplierOps)}:{nameof(ChangeStatusAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} supplierId={packet.SupplierId} ms={sw.ElapsedMilliseconds}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(ChangeStatusAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} supplierId={packet.SupplierId} ms={sw.ElapsedMilliseconds}");
         }
         catch (System.Exception ex)
         {
             logger?.Error(
-                $"[APP.{nameof(SupplierOps)}:{nameof(ChangeStatusAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+                $"[APP.{nameof(SupplierOps)}:{nameof(ChangeStatusAsync)}] failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,

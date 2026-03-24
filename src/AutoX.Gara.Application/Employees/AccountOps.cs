@@ -7,12 +7,11 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Auth;
 using AutoX.Gara.Shared.Validation;
 using Microsoft.EntityFrameworkCore;
-using Nalix.Common.Diagnostics.Abstractions;
-using Nalix.Common.Networking.Abstractions;
-using Nalix.Common.Networking.Packets.Abstractions;
-using Nalix.Common.Networking.Packets.Attributes;
+using Nalix.Common.Diagnostics;
+using Nalix.Common.Networking;
+using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
+using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
 using Nalix.Shared.Security.Credentials;
@@ -31,15 +30,24 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
         IPacket p,
         IConnection connection)
     {
+        System.UInt32 s = p.OpCode;
+        if (p == null)
+        {
+            System.Console.WriteLine("[ERROR] Received null packet for LOGIN");
+        }
+
         if (p is not LoginPacket packet)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, 0).ConfigureAwait(false);
             return;
         }
+
+
+        System.Console.WriteLine("[DEBUG] Login name: " + packet.Account.Username);
+        System.Console.WriteLine("[DEBUG] Password: " + packet.Account.Password);
 
         await using var context = _dbContextFactory.CreateDbContext();
         var account = await context.Set<Account>().FirstOrDefaultAsync(a => a.Username == packet.Account.Username.Trim().ToLower());
@@ -63,6 +71,13 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             return;
         }
 
+
+        System.Console.WriteLine("[DEBUG] Account active status: " + account.IsActive);
+        System.Console.WriteLine("[DEBUG] Failed login attempts: " + account.FailedLoginAttempts);
+        System.Console.WriteLine("[DEBUG] Last failed login: " + account.LastFailedLogin);
+        System.Console.WriteLine("[DEBUG] Last login: " + account.LastLogin);
+        System.Console.WriteLine("[DEBUG] Current UTC time: " + System.DateTime.UtcNow);
+
         if (!Pbkdf2.Verify(packet.Account.Password, account.Salt, account.Hash))
         {
             account.FailedLoginAttempts++;
@@ -76,6 +91,8 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
                 ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
             return;
         }
+
+
 
         if (account.IsActive)
         {
@@ -107,7 +124,7 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
         catch (System.Exception ex)
         {
             InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[APP.{nameof(HandshakeOps)}] failed-login ep={connection.RemoteEndPoint} ex={ex.Message}");
+                                    .Error($"[APP.{nameof(HandshakeOps)}] failed-login ep={connection.NetworkEndpoint} ex={ex.Message}");
 
             await connection.SendAsync(
                 ControlType.ERROR,

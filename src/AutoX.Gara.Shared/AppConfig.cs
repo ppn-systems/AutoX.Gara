@@ -9,9 +9,9 @@ using AutoX.Gara.Shared.Protocol.Invoices;
 using AutoX.Gara.Shared.Protocol.Repairs;
 using AutoX.Gara.Shared.Protocol.Suppliers;
 using AutoX.Gara.Shared.Protocol.Vehicles;
-using Nalix.Common.Networking.Packets.Abstractions;
+using Nalix.Common.Networking.Packets;
 using Nalix.Framework.Injection;
-using Nalix.Shared.Registry;
+using Nalix.Shared.Frames;
 
 namespace AutoX.Gara.Shared;
 

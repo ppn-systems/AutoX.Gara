@@ -1,9 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Cars;
-using Nalix.Common.Networking.Packets.Enums;
+using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Common.Serialization.Attributes;
 using Nalix.Shared.Frames;
 
 namespace AutoX.Gara.Shared.Protocol.Vehicles;

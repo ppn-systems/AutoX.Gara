@@ -7,16 +7,14 @@ using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Invoices;
-using Microsoft.EntityFrameworkCore;
-using Nalix.Common.Diagnostics.Abstractions;
-using Nalix.Common.Networking.Abstractions;
-using Nalix.Common.Networking.Packets.Abstractions;
-using Nalix.Common.Networking.Packets.Attributes;
+using Nalix.Common.Diagnostics;
+using Nalix.Common.Networking;
+using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
+using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
-using Nalix.Shared.Memory.Pooling;
+using Nalix.Shared.Memory.Objects;
 using Nalix.Shared.Serialization;
 using System.Diagnostics;
 
@@ -171,7 +169,7 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
             if (!sent)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(TransactionOps)}:{nameof(CreateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={entity.Id} invoiceId={packet.InvoiceId}");
+                    $"[APP.{nameof(TransactionOps)}:{nameof(CreateAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={entity.Id} invoiceId={packet.InvoiceId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
@@ -180,7 +178,7 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
             else
             {
                 logger?.Info(
-                    $"[APP.{nameof(TransactionOps)}:{nameof(CreateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={entity.Id} invoiceId={packet.InvoiceId} amt={packet.Amount} type={packet.Type} status={packet.Status}");
+                    $"[APP.{nameof(TransactionOps)}:{nameof(CreateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={entity.Id} invoiceId={packet.InvoiceId} amt={packet.Amount} type={packet.Type} status={packet.Status}");
             }
         }
         catch (System.ArgumentException)
@@ -193,7 +191,7 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         catch (System.Exception ex)
         {
             logger?.Error(
-                $"[APP.{nameof(TransactionOps)}:{nameof(CreateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+                $"[APP.{nameof(TransactionOps)}:{nameof(CreateAsync)}] failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -260,7 +258,9 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
             await repo.SaveChangesAsync().ConfigureAwait(false);
 
             if (oldInvoiceId != existing.InvoiceId)
+            {
                 await RecalculateInvoiceAsync(db, invoices, oldInvoiceId).ConfigureAwait(false);
+            }
 
             await RecalculateInvoiceAsync(db, invoices, existing.InvoiceId).ConfigureAwait(false);
 
@@ -269,7 +269,7 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
             if (!sent)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(TransactionOps)}:{nameof(UpdateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={existing.Id} invoiceId={existing.InvoiceId}");
+                    $"[APP.{nameof(TransactionOps)}:{nameof(UpdateAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={existing.Id} invoiceId={existing.InvoiceId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
@@ -278,7 +278,7 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
             else
             {
                 logger?.Info(
-                    $"[APP.{nameof(TransactionOps)}:{nameof(UpdateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={existing.Id} invoiceId={existing.InvoiceId} amt={existing.Amount} type={existing.Type} status={existing.Status}");
+                    $"[APP.{nameof(TransactionOps)}:{nameof(UpdateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={existing.Id} invoiceId={existing.InvoiceId} amt={existing.Amount} type={existing.Type} status={existing.Status}");
             }
         }
         catch (System.ArgumentException)
@@ -291,7 +291,7 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         catch (System.Exception ex)
         {
             logger?.Error(
-                $"[APP.{nameof(TransactionOps)}:{nameof(UpdateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+                $"[APP.{nameof(TransactionOps)}:{nameof(UpdateAsync)}] failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -355,7 +355,7 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         catch (System.Exception ex)
         {
             logger?.Error(
-                $"[APP.{nameof(TransactionOps)}:{nameof(DeleteAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+                $"[APP.{nameof(TransactionOps)}:{nameof(DeleteAsync)}] failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,

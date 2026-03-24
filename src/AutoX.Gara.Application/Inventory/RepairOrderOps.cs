@@ -8,14 +8,13 @@ using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Invoices;
-using Nalix.Common.Networking.Abstractions;
-using Nalix.Common.Networking.Packets.Abstractions;
-using Nalix.Common.Networking.Packets.Attributes;
+using Nalix.Common.Networking;
+using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
+using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
-using Nalix.Shared.Memory.Pooling;
+using Nalix.Shared.Memory.Objects;
 using Nalix.Shared.Serialization;
 
 namespace AutoX.Gara.Application.Inventory;

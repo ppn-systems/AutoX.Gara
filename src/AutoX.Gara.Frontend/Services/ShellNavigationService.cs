@@ -2,9 +2,6 @@
 
 using AutoX.Gara.Frontend.Abstractions;
 using Microsoft.Maui.Controls;
-using Nalix.Framework.Injection;
-using Nalix.SDK.Transport;
-using Nalix.SDK.Transport.Extensions;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -26,9 +23,6 @@ public sealed class ShellNavigationService : INavigationService
         {
             Shell.Current.Items.Remove(loginItem);
         }
-
-        _ = Task.Run(async () =>
-            await InstanceManager.Instance.GetOrCreateInstance<TcpSession>().HeartbeatLoopAsync(default));
 
         // Resize window vụ kích thu?c app chính (Windows/Mac)
         if (Application.Current?.Windows[0] is { } window)

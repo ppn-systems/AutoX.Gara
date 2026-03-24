@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using Nalix.Common.Serialization;
-using Nalix.Common.Serialization.Attributes;
 
 namespace AutoX.Gara.Shared.Protocol.Auth;
 

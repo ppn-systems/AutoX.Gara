@@ -12,7 +12,7 @@ using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Domain.Enums.Parts;
 using AutoX.Gara.Domain.Enums.Payments;
 using Microsoft.EntityFrameworkCore;
-using Nalix.Common.Security.Enums;
+using Nalix.Common.Security;
 using Nalix.Shared.Security.Credentials;
 using System;
 using System.Collections.Generic;

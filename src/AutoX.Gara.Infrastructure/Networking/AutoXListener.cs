@@ -1,6 +1,6 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using Nalix.Network.Abstractions;
+using Nalix.Common.Networking;
 using Nalix.Network.Listeners.Tcp;
 
 namespace AutoX.Gara.Infrastructure.Networking;

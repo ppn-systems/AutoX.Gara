@@ -5,7 +5,7 @@ using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Models.Results.Customer;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Customers;
-using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Common.Diagnostics;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;

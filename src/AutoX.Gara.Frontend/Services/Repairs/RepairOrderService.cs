@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Enums.Repairs;
 using AutoX.Gara.Frontend.Results.Billings;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Invoices;
-using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Common.Diagnostics;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;

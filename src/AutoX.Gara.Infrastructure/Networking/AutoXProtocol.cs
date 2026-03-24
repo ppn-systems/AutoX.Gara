@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using Nalix.Common.Diagnostics.Abstractions;
-using Nalix.Common.Networking.Abstractions;
+using Nalix.Common.Diagnostics;
+using Nalix.Common.Networking;
 using Nalix.Framework.Injection;
-using Nalix.Network.Abstractions;
 using Nalix.Network.Connections;
 using Nalix.Network.Protocols;
+using Nalix.Network.Routing;
 
 namespace AutoX.Gara.Infrastructure.Networking;
 
@@ -28,7 +28,7 @@ public sealed class AutoXProtocol : Protocol
     public override void OnAccept(IConnection connection, System.Threading.CancellationToken cancellationToken = default)
     {
         base.OnAccept(connection, cancellationToken);
-        InstanceManager.Instance.GetExistingInstance<ILogger>()?.Info($"[SERVER] New TCP connection accepted from {connection.RemoteEndPoint}");
+        InstanceManager.Instance.GetExistingInstance<ILogger>()?.Info($"[SERVER] New TCP connection accepted from {connection.NetworkEndpoint}");
 
         InstanceManager.Instance.GetExistingInstance<ConnectionHub>()?
                                 .RegisterConnection(connection);
@@ -44,6 +44,16 @@ public sealed class AutoXProtocol : Protocol
     {
         // Validate arguments and protocol state
         System.ArgumentNullException.ThrowIfNull(args);
+
+        if (args.Lease == null)
+        {
+            System.Console.WriteLine("[ERROR] args.Lease is null (buffer)!");
+        }
+
+        if (args.Connection == null)
+        {
+            System.Console.WriteLine("[ERROR] args.Connection is null!");
+        }
 
         // TODO: Parse message and implement business logic here
 

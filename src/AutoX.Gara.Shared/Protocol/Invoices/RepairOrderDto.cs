@@ -3,9 +3,8 @@
 using AutoX.Gara.Domain.Enums.Repairs;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets.Enums;
+using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Common.Serialization.Attributes;
 using Nalix.Shared.Frames;
 
 namespace AutoX.Gara.Shared.Protocol.Invoices;

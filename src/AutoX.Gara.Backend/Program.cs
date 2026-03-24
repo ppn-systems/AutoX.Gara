@@ -13,8 +13,8 @@ using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Networking;
 using AutoX.Gara.Shared;
 using Nalix.Common.Concurrency;
-using Nalix.Common.Diagnostics.Abstractions;
-using Nalix.Common.Diagnostics.Enums;
+using Nalix.Common.Diagnostics;
+using Nalix.Common.Networking;
 using Nalix.Framework.Configuration;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Options;
@@ -23,12 +23,11 @@ using Nalix.Framework.Time;
 using Nalix.Logging;
 using Nalix.Logging.Configuration;
 using Nalix.Logging.Sinks;
-using Nalix.Network.Abstractions;
 using Nalix.Network.Connections;
-using Nalix.Network.Middleware.Inbound;
 using Nalix.Network.Routing;
 using Nalix.Shared.Extensions;
-using Nalix.Shared.Memory.Pooling;
+using Nalix.Shared.Memory.Buffers;
+using Nalix.Shared.Memory.Objects;
 
 [assembly: System.Reflection.AssemblyMetadata("Version", "1.0.0")]
 [assembly: System.Reflection.AssemblyMetadata("Author", "PPN Corporation")]
@@ -54,25 +53,25 @@ public static class Program
     {
         try
         {
-            InstanceManager.Instance.LogEvent += (sender, e) =>
-            {
-                if (e.Level >= LogLevel.Error)
-                {
-                    System.Console.Error.WriteLine($"[{e.Level}] {e.Message}");
-                    if (e.Exception is not null)
-                    {
-                        System.Console.Error.WriteLine(e.Exception);
-                    }
-                }
-                else
-                {
-                    System.Console.WriteLine($"[{e.Level}] {e.Message}");
-                    if (e.Exception is not null)
-                    {
-                        System.Console.WriteLine(e.Exception);
-                    }
-                }
-            };
+            //InstanceManager.Instance.LogEvent += (sender, e) =>
+            //{
+            //    if (e.Level >= LogLevel.Error)
+            //    {
+            //        System.Console.Error.WriteLine($"[{e.Level}] {e.Message}");
+            //        if (e.Exception is not null)
+            //        {
+            //            System.Console.Error.WriteLine(e.Exception);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        System.Console.WriteLine($"[{e.Level}] {e.Message}");
+            //        if (e.Exception is not null)
+            //        {
+            //            System.Console.WriteLine(e.Exception);
+            //        }
+            //    }
+            //};
             InitializeComponent();
 
             InstanceManager.Instance.GetExistingInstance<IListener>()?
@@ -188,12 +187,12 @@ public static class Program
     {
 #if DEBUG
         ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Meta;
+                            .MinLevel = LogLevel.Trace;
 
         ILogger logger = new NLogix(cfg => cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = true)));
 #else
         ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Meta;
+                            .MinLevel = LogLevel.Trace;
 
         ILogger logger = new NLogix(cfg =>
         {
@@ -232,10 +231,10 @@ public static class Program
         PacketDispatchChannel channel = new(dispatchOptions =>
         {
             // Inbound
-            dispatchOptions.WithMiddleware(new PermissionMiddleware());
-            dispatchOptions.WithMiddleware(new ConcurrencyMiddleware());
-            dispatchOptions.WithMiddleware(new RateLimitMiddleware());
-            dispatchOptions.WithMiddleware(new TimeoutMiddleware());
+            //dispatchOptions.WithMiddleware(new PermissionMiddleware());
+            //dispatchOptions.WithMiddleware(new ConcurrencyMiddleware());
+            //dispatchOptions.WithMiddleware(new RateLimitMiddleware());
+            //dispatchOptions.WithMiddleware(new TimeoutMiddleware());
 
             // Logging
             dispatchOptions.WithLogging(InstanceManager.Instance.GetExistingInstance<ILogger>());

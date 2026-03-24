@@ -5,7 +5,7 @@ using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Frontend.Results.Suppliers;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Suppliers;
-using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Common.Diagnostics;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;

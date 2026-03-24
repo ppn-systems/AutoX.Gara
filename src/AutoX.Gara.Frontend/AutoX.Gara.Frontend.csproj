@@ -67,8 +67,11 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.50" />
 		
-		<PackageReference Include="Nalix.SDK" Version="11.7.2" />
-		<PackageReference Include="Nalix.Logging" Version="11.7.2" />
+		<PackageReference Include="Nalix.SDK" Version="11.8.0" />
+		<PackageReference Include="Nalix.Logging" Version="11.8.0" />
+		<PackageReference Include="Nalix.Common" Version="11.8.0" />
+		<PackageReference Include="Nalix.Shared" Version="11.8.0" />
+		<PackageReference Include="Nalix.Framework" Version="11.8.0" />
 	</ItemGroup>
 
 	<ItemGroup>

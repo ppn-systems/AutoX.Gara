@@ -10,7 +10,7 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Employees;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Common.Diagnostics;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
 using System;

@@ -8,15 +8,14 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Billings;
 using Microsoft.EntityFrameworkCore;
-using Nalix.Common.Diagnostics.Abstractions;
-using Nalix.Common.Networking.Abstractions;
-using Nalix.Common.Networking.Packets.Abstractions;
-using Nalix.Common.Networking.Packets.Attributes;
+using Nalix.Common.Diagnostics;
+using Nalix.Common.Networking;
+using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
+using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
-using Nalix.Shared.Memory.Pooling;
+using Nalix.Shared.Memory.Objects;
 using Nalix.Shared.Serialization;
 using System.Diagnostics;
 using System.Linq;
@@ -84,7 +83,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             if (!sent)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
@@ -93,13 +92,13 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             else
             {
                 logger?.Info(
-                    $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} items={items.Count} total={totalCount} cust={packet.FilterCustomerId} term='{packet.SearchTerm}'");
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} items={items.Count} total={totalCount} cust={packet.FilterCustomerId} term='{packet.SearchTerm}'");
             }
         }
         catch (System.Exception ex)
         {
             logger?.Error(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -129,7 +128,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         if (!TryParseInvoicePacket(p, out InvoiceDto packet, out System.UInt32 fallbackSeq) || packet.InvoiceId is not null)
         {
             logger?.Warn(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] malformed-packet ep={connection.RemoteEndPoint} seq={fallbackSeq}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] malformed-packet ep={connection.NetworkEndpoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
@@ -148,7 +147,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         try
         {
             logger?.Info(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} cust={packet.CustomerId} invNo='{packet.InvoiceNumber}' roId={packet.RepairOrderId} tax={packet.TaxRate} discType={packet.DiscountType} disc={packet.Discount}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} cust={packet.CustomerId} invNo='{packet.InvoiceNumber}' roId={packet.RepairOrderId} tax={packet.TaxRate} discType={packet.DiscountType} disc={packet.Discount}");
 
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
             InvoiceRepository invoices = new(db);
@@ -162,7 +161,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             if (existed)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] already-exists ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invNo='{packet.InvoiceNumber}'");
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] already-exists ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invNo='{packet.InvoiceNumber}'");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.ALREADY_EXISTS,
@@ -201,7 +200,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 if (roInfo is null || roInfo.CustomerId != packet.CustomerId)
                 {
                     logger?.Warn(
-                        $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-not-found-or-mismatch ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} cust={packet.CustomerId}");
+                        $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-not-found-or-mismatch ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} cust={packet.CustomerId}");
 
                     // Rollback created invoice to avoid orphan records.
                     db.Invoices.Remove(invoice);
@@ -218,7 +217,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 if (roInfo.InvoiceId.HasValue)
                 {
                     logger?.Warn(
-                        $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-already-invoiced ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} roInvoiceId={roInfo.InvoiceId.Value}");
+                        $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-already-invoiced ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} roInvoiceId={roInfo.InvoiceId.Value}");
 
                     db.Invoices.Remove(invoice);
                     await db.SaveChangesAsync().ConfigureAwait(false);
@@ -242,7 +241,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 if (affected <= 0)
                 {
                     logger?.Warn(
-                        $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-not-found-or-mismatch ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} cust={packet.CustomerId}");
+                        $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-not-found-or-mismatch ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} cust={packet.CustomerId}");
 
                     // Rollback created invoice to avoid orphan records.
                     db.Invoices.Remove(invoice);
@@ -284,7 +283,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             if (!sent)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={invoice.Id}");
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={invoice.Id}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
@@ -294,12 +293,12 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             }
 
             logger?.Info(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={confirmed.InvoiceId} total={confirmed.TotalAmount} due={confirmed.BalanceDue} tDb={tDb} tExists={tExists} tSave={tSaveInvoice} tLink={tLink} tReload={tReload} tRecalcSave={tRecalcSave}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={confirmed.InvoiceId} total={confirmed.TotalAmount} due={confirmed.BalanceDue} tDb={tDb} tExists={tExists} tSave={tSaveInvoice} tLink={tLink} tReload={tReload} tRecalcSave={tRecalcSave}");
         }
         catch (System.ArgumentException)
         {
             logger?.Warn(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] validation-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] validation-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.VALIDATION_FAILED,
@@ -308,7 +307,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         catch (System.Exception ex)
         {
             logger?.Error(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
@@ -334,7 +333,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         if (!TryParseInvoicePacket(p, out InvoiceDto packet, out System.UInt32 fallbackSeq) || packet.InvoiceId is null)
         {
             logger?.Warn(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] malformed-packet ep={connection.RemoteEndPoint} seq={fallbackSeq}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] malformed-packet ep={connection.NetworkEndpoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
@@ -353,7 +352,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         try
         {
             logger?.Info(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] start ep={connection.RemoteEndPoint} seq={packet.SequenceId} invoiceId={packet.InvoiceId} cust={packet.CustomerId} invNo='{packet.InvoiceNumber}' roId={packet.RepairOrderId} tax={packet.TaxRate} discType={packet.DiscountType} disc={packet.Discount} status={packet.PaymentStatus}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} invoiceId={packet.InvoiceId} cust={packet.CustomerId} invNo='{packet.InvoiceNumber}' roId={packet.RepairOrderId} tax={packet.TaxRate} discType={packet.DiscountType} disc={packet.Discount} status={packet.PaymentStatus}");
 
             await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
             var invoices = new InvoiceRepository(db);
@@ -366,7 +365,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             if (existing is null)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] not-found ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={packet.InvoiceId}");
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] not-found ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={packet.InvoiceId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
@@ -385,7 +384,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 if (existed)
                 {
                     logger?.Warn(
-                        $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] already-exists ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={existing.Id} invNo='{packet.InvoiceNumber}'");
+                        $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] already-exists ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={existing.Id} invNo='{packet.InvoiceNumber}'");
                     await connection.SendAsync(
                         ControlType.ERROR,
                         ProtocolReason.ALREADY_EXISTS,
@@ -470,7 +469,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 else
                 {
                     logger?.Warn(
-                        $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] ro-race ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} cust={packet.CustomerId}");
+                        $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] ro-race ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} cust={packet.CustomerId}");
 
                     await tx.RollbackAsync().ConfigureAwait(false);
                     await connection.SendAsync(
@@ -510,7 +509,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             if (!sent)
             {
                 logger?.Warn(
-                    $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] send-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={packet.InvoiceId}");
+                    $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={packet.InvoiceId}");
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
@@ -520,12 +519,12 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             }
 
             logger?.Info(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] ok ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={confirmed.InvoiceId} total={confirmed.TotalAmount} due={confirmed.BalanceDue} tDb={tDb} tLoad={tLoad} tExists={tExistsCheck} tLink={tLink} tReload={tReload} tRecalcSave={tRecalcSave}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={confirmed.InvoiceId} total={confirmed.TotalAmount} due={confirmed.BalanceDue} tDb={tDb} tLoad={tLoad} tExists={tExistsCheck} tLink={tLink} tReload={tReload} tRecalcSave={tRecalcSave}");
         }
         catch (System.ArgumentException)
         {
             logger?.Warn(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] validation-failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] validation-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.VALIDATION_FAILED,
@@ -534,7 +533,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
         {
             logger?.Warn(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] concurrency ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] concurrency ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.VALIDATION_FAILED,
@@ -544,7 +543,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         catch (System.Exception ex)
         {
             logger?.Error(
-                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] failed ep={connection.RemoteEndPoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
+                $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}\n{ex}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,

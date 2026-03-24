@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Frontend.Results.Employees;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Employees;
-using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Common.Diagnostics;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;

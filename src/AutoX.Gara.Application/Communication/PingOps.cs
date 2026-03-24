@@ -1,16 +1,15 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using Nalix.Common.Diagnostics.Abstractions;
-using Nalix.Common.Networking.Abstractions;
-using Nalix.Common.Networking.Packets.Abstractions;
-using Nalix.Common.Networking.Packets.Attributes;
+using Nalix.Common.Diagnostics;
+using Nalix.Common.Networking;
+using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
+using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Time;
 using Nalix.Network.Connections;
 using Nalix.Shared.Frames.Controls;
-using Nalix.Shared.Memory.Pooling;
+using Nalix.Shared.Memory.Objects;
 
 namespace AutoX.Gara.Application.Communication;
 
@@ -61,7 +60,7 @@ public sealed class PingOps
         catch (System.Exception ex)
         {
             InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[APP.{nameof(PingOps)}] failed ep={connection.RemoteEndPoint} ex={ex.Message}");
+                                    .Error($"[APP.{nameof(PingOps)}] failed ep={connection.NetworkEndpoint} ex={ex.Message}");
 
             await connection.SendAsync(
                 ControlType.ERROR,

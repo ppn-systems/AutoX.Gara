@@ -2,10 +2,10 @@
 
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
-using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Common.Diagnostics;
 using Nalix.Framework.Injection;
-using System.IO;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace AutoX.Gara.Frontend;
@@ -61,7 +61,7 @@ public partial class App : Application
     {
         try
         {
-            string path = Microsoft.Maui.Storage.FileSystem.AppDataDirectory;
+            System.String path = Microsoft.Maui.Storage.FileSystem.AppDataDirectory;
             ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
             logger?.Info($"[FE.{nameof(App)}] AppDataDirectory={path}");
             Debug.WriteLine($"[FE.{nameof(App)}] AppDataDirectory={path}");

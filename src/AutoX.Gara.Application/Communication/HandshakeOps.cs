@@ -1,16 +1,15 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Diagnostics.Abstractions;
-using Nalix.Common.Networking.Abstractions;
-using Nalix.Common.Networking.Packets.Abstractions;
-using Nalix.Common.Networking.Packets.Attributes;
+using Nalix.Common.Diagnostics;
+using Nalix.Common.Networking;
+using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Common.Security.Enums;
+using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
 using Nalix.Shared.Frames.Controls;
-using Nalix.Shared.Memory.Pooling;
+using Nalix.Shared.Memory.Objects;
 using Nalix.Shared.Security.Asymmetric;
 using Nalix.Shared.Security.Hashing;
 
@@ -96,7 +95,7 @@ public sealed class HandshakeOps
         {
             // Error handling theo security best practices
             InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[APP.{nameof(HandshakeOps)}] failed ep={connection.RemoteEndPoint} ex={ex.Message}");
+                                    .Error($"[APP.{nameof(HandshakeOps)}] failed ep={connection.NetworkEndpoint} ex={ex.Message}");
 
             // Reset connection state nếu có lỗi
             connection.Secret = null;
@@ -123,7 +122,7 @@ public sealed class HandshakeOps
                 connection.Secret = null;
                 connection.Level = PermissionLevel.GUEST;
                 InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Warn($"[APP.{nameof(HandshakeOps)}] send-failed ep={connection.RemoteEndPoint}");
+                                        .Warn($"[APP.{nameof(HandshakeOps)}] send-failed ep={connection.NetworkEndpoint}");
                 return;
             }
         }

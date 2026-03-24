@@ -9,7 +9,7 @@ using AutoX.Gara.Shared.Protocol.Invoices;
 using AutoX.Gara.Shared.Protocol.Repairs;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Common.Diagnostics;
 using Nalix.Framework.Injection;
 using System.Collections.ObjectModel;
 using System.Linq;

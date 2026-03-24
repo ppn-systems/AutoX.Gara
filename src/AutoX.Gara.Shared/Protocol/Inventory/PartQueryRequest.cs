@@ -3,10 +3,9 @@
 using AutoX.Gara.Domain.Enums.Parts;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets.Enums;
+using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Common.Serialization.Attributes;
-using Nalix.Common.Shared.Caching;
+using Nalix.Common.Shared;
 using Nalix.Shared.Frames;
 
 namespace AutoX.Gara.Shared.Protocol.Inventory;

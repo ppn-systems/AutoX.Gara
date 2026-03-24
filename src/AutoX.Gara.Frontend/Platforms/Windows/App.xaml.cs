@@ -3,7 +3,7 @@
 using Microsoft.Maui;
 using Microsoft.Maui.Hosting;
 using Microsoft.UI.Xaml;
-using Nalix.Common.Diagnostics.Abstractions;
+using Nalix.Common.Diagnostics;
 using Nalix.Framework.Injection;
 using System.Diagnostics;
 using System.IO;
@@ -30,11 +30,11 @@ public partial class App : MauiWinUIApplication
 
     protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
 
-    private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    private static void OnUnhandledException(System.Object sender, UnhandledExceptionEventArgs e)
     {
         try
         {
-            string message = $"[CRASH] source=WinUI.UnhandledException\nmsg={e.Message}\n{e.Exception}";
+            System.String message = $"[CRASH] source=WinUI.UnhandledException\nmsg={e.Message}\n{e.Exception}";
 
             ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
             if (logger is not null)
@@ -50,7 +50,7 @@ public partial class App : MauiWinUIApplication
 
             try
             {
-                string path = Path.Combine(Microsoft.Maui.Storage.FileSystem.AppDataDirectory, "crash.log");
+                System.String path = Path.Combine(Microsoft.Maui.Storage.FileSystem.AppDataDirectory, "crash.log");
                 File.AppendAllText(path, $"{System.DateTimeOffset.Now:o}\n{message}\n\n");
             }
             catch

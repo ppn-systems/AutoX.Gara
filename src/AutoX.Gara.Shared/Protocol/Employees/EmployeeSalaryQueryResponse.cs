@@ -3,12 +3,10 @@
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
-using Nalix.Common.Networking.Packets.Enums;
 using Nalix.Common.Serialization;
-using Nalix.Common.Serialization.Attributes;
 using Nalix.Framework.Injection;
 using Nalix.Shared.Frames;
-using Nalix.Shared.Memory.Pooling;
+using Nalix.Shared.Memory.Objects;
 using System.Collections.Generic;
 
 namespace AutoX.Gara.Shared.Protocol.Employees;
