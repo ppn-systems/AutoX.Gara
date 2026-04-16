@@ -1,45 +1,46 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Repairs;
 
 /// <summary>
-/// Enum đại diện cho các trạng thái của đơn sửa chữa.
+/// Enum d?i di?n cho c�c tr?ng th�i c?a don s?a ch?a.
 /// </summary>
 public enum RepairOrderStatus
 {
-    [Display(Name = "Không xác định")]
+    [Display(Name = "Kh�ng x�c d?nh")]
     None = 0,
 
-    [Display(Name = "Chờ xác nhận")]
+    [Display(Name = "Ch? x�c nh?n")]
     Pending = 1,
 
-    [Display(Name = "Đang kiểm tra xe")]
-    Inspecting = 2,  // 🚗 Giai đoạn kiểm tra ban đầu
+    [Display(Name = "�ang ki?m tra xe")]
+    Inspecting = 2,  // ?? Giai do?n ki?m tra ban d?u
 
-    [Display(Name = "Chờ báo giá")]
-    QuotationPending = 3,  // 💰 Chờ khách duyệt báo giá
+    [Display(Name = "Ch? b�o gi�")]
+    QuotationPending = 3,  // ?? Ch? kh�ch duy?t b�o gi�
 
-    [Display(Name = "Khách hàng từ chối sửa chữa")]
-    RejectedByCustomer = 4,  // ❌ Khách từ chối sau khi báo giá
+    [Display(Name = "Kh�ch h�ng t? ch?i s?a ch?a")]
+    RejectedByCustomer = 4,  // ? Kh�ch t? ch?i sau khi b�o gi�
 
-    [Display(Name = "Đang chờ phụ tùng")]
+    [Display(Name = "�ang ch? ph? t�ng")]
     WaitingForParts = 5,
 
-    [Display(Name = "Đang sửa chữa")]
+    [Display(Name = "�ang s?a ch?a")]
     InProgress = 6,
 
-    [Display(Name = "Chờ kiểm tra sau sửa chữa")]
-    PostRepairInspection = 7,  // ✅ Kiểm tra lần cuối trước khi bàn giao
+    [Display(Name = "Ch? ki?m tra sau s?a ch?a")]
+    PostRepairInspection = 7,  // ? Ki?m tra l?n cu?i tru?c khi b�n giao
 
-    [Display(Name = "Hoàn thành (chưa thanh toán)")]
+    [Display(Name = "Ho�n th�nh (chua thanh to�n)")]
     Completed = 8,
 
-    [Display(Name = "Đã thanh toán")]
+    [Display(Name = "�� thanh to�n")]
     Paid = 9,
 
-    [Display(Name = "Bị từ chối bảo hiểm")]
-    InsuranceRejected = 10,  // 🚨 Bảo hiểm không duyệt
+    [Display(Name = "B? t? ch?i b?o hi?m")]
+    InsuranceRejected = 10,  // ?? B?o hi?m kh�ng duy?t
 
-    [Display(Name = "Đã hủy")]
+    [Display(Name = "�� h?y")]
     Canceled = 11
 }

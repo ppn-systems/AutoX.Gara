@@ -1,32 +1,33 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Customers;
 
 /// <summary>
-/// Enum đại diện cho cấp độ thành viên trong hệ thống.
+/// Enum d?i di?n cho c?p d? th�nh vi�n trong h? th?ng.
 /// </summary>
-public enum MembershipLevel : System.Byte
+public enum MembershipLevel : byte
 {
-    [Display(Name = "Không xác định / Chưa đăng ký")]
+    [Display(Name = "Kh�ng x�c d?nh / Chua dang k�")]
     None = 0,
 
-    [Display(Name = "Khách dùng thử")]
+    [Display(Name = "Kh�ch d�ng th?")]
     Trial = 1,
 
-    [Display(Name = "Khách thường")]
+    [Display(Name = "Kh�ch thu?ng")]
     Standard = 2,
 
-    [Display(Name = "Thành viên bạc")]
+    [Display(Name = "Th�nh vi�n b?c")]
     Silver = 3,
 
-    [Display(Name = "Thành viên vàng")]
+    [Display(Name = "Th�nh vi�n v�ng")]
     Gold = 4,
 
-    [Display(Name = "Thành viên bạch kim")]
+    [Display(Name = "Th�nh vi�n b?ch kim")]
     Platinum = 5,
 
-    [Display(Name = "Thành viên kim cương")]
+    [Display(Name = "Th�nh vi�n kim cuong")]
     Diamond = 6
 }

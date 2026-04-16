@@ -1,8 +1,8 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Customers;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -13,38 +13,30 @@ namespace AutoX.Gara.Domain.Entities.Customers;
 /// Lớp đại diện cho khách hàng.
 /// </summary>
 [Table(nameof(Customer))]
-public class Customer
+public class Customer : AuditEntity<int>
 {
     #region Fields
 
-    private System.DateTime? _dateOfBirth;
-
-    private System.String _email = System.String.Empty;
-    private System.String _address = System.String.Empty;
-    private System.String _taxCode = System.String.Empty;
-    private System.String _fullName = System.String.Empty;
-    private System.String _phoneNumber = System.String.Empty;
+    private DateTime? _dateOfBirth;
+    private string _email = string.Empty;
+    private string _address = string.Empty;
+    private string _taxCode = string.Empty;
+    private string _fullName = string.Empty;
+    private string _phoneNumber = string.Empty;
 
     #endregion
 
     #region Identification Properties
 
     /// <summary>
-    /// Mã khách hàng.
-    /// </summary>
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.Int32 Id { get; set; }
-
-    /// <summary>
     /// Họ và tên khách hàng.
     /// </summary>
     [Required(ErrorMessage = "Full name is required.")]
     [MaxLength(100, ErrorMessage = "Full name must not exceed 100 characters.")]
-    public System.String Name
+    public string Name
     {
         get => _fullName;
-        set => _fullName = value.Trim() ?? System.String.Empty;
+        set => _fullName = value?.Trim() ?? string.Empty;
     }
 
     #endregion
@@ -58,10 +50,10 @@ public class Customer
     [MaxLength(12, ErrorMessage = "Phone number must not exceed 30 characters.")]
     [Phone(ErrorMessage = "Invalid phone number format.")]
     [RegularExpression(@"^\d{10,12}$", ErrorMessage = "Phone number must be 10-12 digits.")]
-    public System.String PhoneNumber
+    public string PhoneNumber
     {
         get => _phoneNumber;
-        set => _phoneNumber = value?.Trim() ?? System.String.Empty;
+        set => _phoneNumber = value?.Trim() ?? string.Empty;
     }
 
     /// <summary>
@@ -69,20 +61,20 @@ public class Customer
     /// </summary>
     [EmailAddress(ErrorMessage = "Invalid email format.")]
     [StringLength(100, ErrorMessage = "Email must not exceed 100 characters.")]
-    public System.String Email
+    public string Email
     {
         get => _email;
-        set => _email = value?.Trim() ?? System.String.Empty;
+        set => _email = value?.Trim() ?? string.Empty;
     }
 
     /// <summary>
     /// Địa chỉ của khách hàng.
     /// </summary>
     [MaxLength(255, ErrorMessage = "Address must not exceed 255 characters.")]
-    public System.String Address
+    public string Address
     {
         get => _address;
-        set => _address = value.Trim() ?? System.String.Empty;
+        set => _address = value?.Trim() ?? string.Empty;
     }
 
     /// <summary>
@@ -93,7 +85,7 @@ public class Customer
     /// <summary>
     /// Thông tin bổ sung về khách hàng (nếu có).
     /// </summary>
-    public System.String Notes { get; set; }
+    public string Notes { get; set; }
 
     #endregion
 
@@ -102,14 +94,14 @@ public class Customer
     /// <summary>
     /// Sinh nhật của khách hàng.
     /// </summary>
-    public System.DateTime? DateOfBirth
+    public DateTime? DateOfBirth
     {
         get => _dateOfBirth;
         set
         {
-            if (value.HasValue && value > System.DateTime.UtcNow)
+            if (value.HasValue && value > DateTime.UtcNow)
             {
-                throw new System.ArgumentException("Date of birth cannot be in the future.");
+                throw new ArgumentException("Date of birth cannot be in the future.");
             }
 
             _dateOfBirth = value;
@@ -120,10 +112,10 @@ public class Customer
     /// Mã số thuế của khách hàng (nếu có).
     /// </summary>
     [MaxLength(13, ErrorMessage = "Tax code must not exceed 20 characters.")]
-    public System.String TaxCode
+    public string TaxCode
     {
         get => _taxCode;
-        set => _taxCode = value.Trim() ?? System.String.Empty;
+        set => _taxCode = value?.Trim() ?? string.Empty;
     }
 
     #endregion
@@ -144,27 +136,8 @@ public class Customer
     /// Công nợ của khách hàng.
     /// </summary>
     [Column(TypeName = "decimal(18,2)")]
-    [Range(0, System.Double.MaxValue, ErrorMessage = "Debt cannot be negative.")]
-    public System.Decimal Debt { get; set; } = 0;
-
-    #endregion
-
-    #region Audit Properties
-
-    /// <summary>
-    /// Người đã tạo khách hàng trong hệ thống
-    /// </summary>
-    public System.DateTime CreatedAt { get; set; } = System.DateTime.UtcNow;
-
-    /// <summary>
-    /// Người gần nhất chỉnh sửa thông tin khách hàng.
-    /// </summary>
-    public System.DateTime UpdatedAt { get; set; } = System.DateTime.UtcNow;
-
-    /// <summary>
-    /// Dấu hiệu xóa mềm: nếu có giá trị, khách hàng đã bị xóa và không nên hiển thị trong các danh sách khách hàng đang hoạt động.
-    /// </summary>
-    public System.DateTime? DeletedAt { get; set; }
+    [Range(0, double.MaxValue, ErrorMessage = "Debt cannot be negative.")]
+    public decimal Debt { get; set; } = 0;
 
     #endregion
 

@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using System;
+using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums.Cars;
 using System.Collections.Generic;
@@ -12,30 +12,24 @@ namespace AutoX.Gara.Domain.Entities.Customers;
 /// Lớp đại diện cho xe.
 /// </summary>
 [Table(nameof(Vehicle))]
-public class Vehicle
+public class Vehicle : AuditEntity<int>
 {
     #region Fields
 
-    private System.String _carLicensePlate = System.String.Empty;
-    private System.String _engineNumber = System.String.Empty;
-    private System.String _frameNumber = System.String.Empty;
-    private System.String _carModel = System.String.Empty;
+    private string _carLicensePlate = string.Empty;
+    private string _engineNumber = string.Empty;
+    private string _frameNumber = string.Empty;
+    private string _carModel = string.Empty;
 
     #endregion
 
     #region Identification Properties
 
     /// <summary>
-    /// Mã xe.
-    /// </summary>
-    [Key]
-    public System.Int32 Id { get; set; }
-
-    /// <summary>
     /// Id chủ xe.
     /// </summary>
     [Required]
-    public System.Int32 CustomerId { get; set; }
+    public int CustomerId { get; set; }
 
     /// <summary>
     /// Thông tin chủ xe (Navigation Property).
@@ -51,7 +45,7 @@ public class Vehicle
     /// Năm sản xuất.
     /// </summary>
     [Range(1900, 2100)]
-    public System.Int32 Year { get; set; } = 1900;
+    public int Year { get; set; } = 1900;
 
     /// <summary>
     /// Loại xe (Sedan, SUV, Hatchback, ...).
@@ -72,16 +66,11 @@ public class Vehicle
     /// Model xe.
     /// </summary>
     [MaxLength(50, ErrorMessage = "Vehicle model must not exceed 50 characters.")]
-    public System.String Model
+    public string Model
     {
         get => _carModel;
-        set => _carModel = value.Trim();
+        set => _carModel = value?.Trim() ?? string.Empty;
     }
-
-    /// <summary>
-    /// Dấu hiệu xóa mềm: nếu có giá trị, khách hàng đã bị xóa và không nên hiển thị trong các danh sách khách hàng đang hoạt động.
-    /// </summary>
-    public System.DateTime? DeletedAt { get; set; }
 
     #endregion
 
@@ -93,36 +82,36 @@ public class Vehicle
     [Required(ErrorMessage = "Vehicle license plate is required.")]
     [MaxLength(9)]
     [RegularExpression(@"^[0-9]{2}[A-Z]{1,2}-[0-9]{3,5}$", ErrorMessage = "Invalid license plate format.")]
-    public System.String LicensePlate
+    public string LicensePlate
     {
         get => _carLicensePlate;
-        set => _carLicensePlate = value?.Trim().ToUpper() ?? System.String.Empty;
+        set => _carLicensePlate = value?.Trim().ToUpper() ?? string.Empty;
     }
 
     /// <summary>
     /// Số khung.
     /// </summary>
     [MaxLength(17, ErrorMessage = "Frame number must not exceed 17 characters.")]
-    public System.String FrameNumber
+    public string FrameNumber
     {
         get => _frameNumber;
-        set => _frameNumber = value.Trim();
+        set => _frameNumber = value?.Trim() ?? string.Empty;
     }
 
     /// <summary>
     /// Số máy.
     /// </summary>
     [MaxLength(17, ErrorMessage = "Engine number must not exceed 17 characters.")]
-    public System.String EngineNumber
+    public string EngineNumber
     {
         get => _engineNumber;
-        set => _engineNumber = value.Trim();
+        set => _engineNumber = value?.Trim() ?? string.Empty;
     }
 
     /// <summary>
     /// Ngày đăng ký xe.
     /// </summary>
-    public System.DateTime RegistrationDate { get; set; } = System.DateTime.UtcNow;
+    public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
 
     #endregion
 
@@ -132,17 +121,17 @@ public class Vehicle
     /// Quá trình lái xe (Km đã đi).
     /// </summary>
     [Range(0, 1000000, ErrorMessage = "Mileage must be between 0 and 1,000,000 km.")]
-    public System.Double Mileage { get; set; } = 0;
+    public double Mileage { get; set; } = 0;
 
     /// <summary>
     /// Ngày hết hạn bảo hiểm.
     /// </summary>
-    public System.DateTime? InsuranceExpiryDate { get; set; }
+    public DateTime? InsuranceExpiryDate { get; set; }
 
     /// <summary>
     /// Lịch sử sửa chữa của xe.
     /// </summary>
-    public virtual ICollection<RepairOrder> RepairOrder { get; set; } = [];
+    public virtual ICollection<RepairOrder> RepairOrders { get; set; } = [];
 
     #endregion
 }

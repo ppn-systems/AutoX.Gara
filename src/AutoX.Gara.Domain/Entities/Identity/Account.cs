@@ -1,6 +1,6 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using AutoX.Gara.Domain.Abstractions;
 using Nalix.Common.Security;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -10,22 +10,15 @@ namespace AutoX.Gara.Domain.Entities.Identity;
 /// Entity đại diện cho tài khoản người dùng trong hệ thống.
 /// </summary>
 [Table(nameof(Account))]
-public sealed class Account
+public sealed class Account : AuditEntity<int>
 {
     #region Fields
 
-    private System.String _username;
+    private string _username = string.Empty;
 
     #endregion Fields
 
     #region Identification Properties
-
-    /// <summary>
-    /// Khóa chính (ID tài khoản, tự động tạo).
-    /// </summary>
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.Int32 Id { get; set; }
 
     /// <summary>
     /// Tên đăng nhập (username). Dùng để đăng nhập hệ thống.
@@ -34,10 +27,10 @@ public sealed class Account
     [MaxLength(50)]
     [RegularExpression(@"^[a-zA-Z0-9_-]+$",
         ErrorMessage = "Username can only contain letters, numbers, underscores, and hyphens.")]
-    public System.String Username
+    public string Username
     {
         get => _username;
-        set => _username = value?.Trim().ToLower() ?? System.String.Empty;
+        set => _username = value?.Trim().ToLower() ?? string.Empty;
     }
 
     /// <summary>
@@ -47,7 +40,7 @@ public sealed class Account
     [Required]
     [MaxLength(64)]
     [Column(TypeName = "binary(64)")]
-    public System.Byte[] Salt { get; set; }
+    public byte[] Salt { get; set; }
 
     /// <summary>
     /// Mật khẩu sau khi được băm bằng thuật toán PBKDF2.
@@ -56,7 +49,7 @@ public sealed class Account
     [Required]
     [MaxLength(64)]
     [Column(TypeName = "binary(64)")]
-    public System.Byte[] Hash { get; set; }
+    public byte[] Hash { get; set; }
 
     #endregion Identification Properties
 
@@ -71,7 +64,7 @@ public sealed class Account
     /// <summary>
     /// Trạng thái hoạt động của tài khoản.
     /// </summary>
-    public System.Boolean IsActive { get; private set; }
+    public bool IsActive { get; private set; }
 
     #endregion Role and Status Properties
 
@@ -81,29 +74,19 @@ public sealed class Account
     /// Số lần đăng nhập thất bại.
     /// </summary>
     [Required]
-    public System.Byte FailedLoginAttempts { get; set; } = 0;
+    public byte FailedLoginAttempts { get; set; } = 0;
 
     /// <summary>
     /// Thời gian đăng nhập thất bại gần nhất.
     /// </summary>
-    public System.DateTime? LastFailedLogin { get; set; }
+    public DateTime? LastFailedLogin { get; set; }
 
     /// <summary>
     /// Thời gian đăng nhập gần nhất.
     /// </summary>
-    public System.DateTime? LastLogin { get; set; }
+    public DateTime? LastLogin { get; set; }
 
     #endregion Login Tracking Properties
-
-    #region Audit Properties
-
-    /// <summary>
-    /// Ngày tạo tài khoản.
-    /// </summary>
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.DateTime CreatedAt { get; set; } = System.DateTime.UtcNow;
-
-    #endregion Audit Properties
 
     #region APIs
 

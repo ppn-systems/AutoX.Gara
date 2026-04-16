@@ -1,32 +1,33 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Payments;
 
 /// <summary>
-/// Xác định trạng thái thanh toán của hóa đơn.
+/// X�c d?nh tr?ng th�i thanh to�n c?a h�a don.
 /// </summary>
-public enum PaymentStatus : System.Byte
+public enum PaymentStatus : byte
 {
-    [Display(Name = "Chưa thanh toán")]
+    [Display(Name = "Chua thanh to�n")]
     Unpaid = 0,
 
-    [Display(Name = "Đã thanh toán")]
+    [Display(Name = "�� thanh to�n")]
     Paid = 1,
 
-    [Display(Name = "Đang xử lý")]
+    [Display(Name = "�ang x? l�")]
     Pending = 2,
 
-    [Display(Name = "Quá hạn")]
+    [Display(Name = "Qu� h?n")]
     Overdue = 3,
 
-    [Display(Name = "Đã hủy")]
+    [Display(Name = "�� h?y")]
     Canceled = 4,
 
-    [Display(Name = "Thanh toán một phần")]
+    [Display(Name = "Thanh to�n m?t ph?n")]
     PartiallyPaid = 5,
 
-    [Display(Name = "Đã hoàn tiền")]
+    [Display(Name = "�� ho�n ti?n")]
     Refunded = 6
 }

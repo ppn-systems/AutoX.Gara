@@ -1,45 +1,46 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums;
 
 /// <summary>
-/// Xác định loại giảm giá áp dụng trên hóa đơn.
+/// X�c d?nh lo?i gi?m gi� �p d?ng tr�n h�a don.
 /// </summary>
-public enum DiscountType : System.Byte
+public enum DiscountType : byte
 {
     /// <summary>
-    /// Không áp dụng giảm giá.
+    /// Kh�ng �p d?ng gi?m gi�.
     /// </summary>
-    [Display(Name = "Không áp dụng giảm giá")]
+    [Display(Name = "Kh�ng �p d?ng gi?m gi�")]
     None = 0,
 
     /// <summary>
-    /// Giảm giá theo phần trăm (%) trên tổng hóa đơn.
-    /// Ví dụ: 10% sẽ giảm 10% trên tổng số tiền.
+    /// Gi?m gi� theo ph?n tram (%) tr�n t?ng h�a don.
+    /// V� d?: 10% s? gi?m 10% tr�n t?ng s? ti?n.
     /// </summary>
-    [Display(Name = "Giảm theo phần trăm")]
+    [Display(Name = "Gi?m theo ph?n tram")]
     Percentage = 1,
 
     /// <summary>
-    /// Giảm giá theo một số tiền cố định.
-    /// Ví dụ: Giảm trực tiếp 50,000 VNĐ trên tổng hóa đơn.
+    /// Gi?m gi� theo m?t s? ti?n c? d?nh.
+    /// V� d?: Gi?m tr?c ti?p 50,000 VN� tr�n t?ng h�a don.
     /// </summary>
-    [Display(Name = "Giảm theo số tiền cố định")]
+    [Display(Name = "Gi?m theo s? ti?n c? d?nh")]
     Amount = 2,
 
     /// <summary>
-    /// Giảm giá theo chương trình khuyến mãi đặc biệt.
-    /// - Ví dụ: Giảm giá ngày lễ, sự kiện, flash sale.
+    /// Gi?m gi� theo chuong tr�nh khuy?n m�i d?c bi?t.
+    /// - V� d?: Gi?m gi� ng�y l?, s? ki?n, flash sale.
     /// </summary>
-    [Display(Name = "Giảm giá theo chương trình khuyến mãi")]
+    [Display(Name = "Gi?m gi� theo chuong tr�nh khuy?n m�i")]
     Promotional = 3,
 
     /// <summary>
-    /// Giảm giá theo mã giảm giá hoặc voucher.
-    /// - Ví dụ: Nhập mã "DISCOUNT50" để được giảm 50,000 VNĐ.
+    /// Gi?m gi� theo m� gi?m gi� ho?c voucher.
+    /// - V� d?: Nh?p m� "DISCOUNT50" d? du?c gi?m 50,000 VN�.
     /// </summary>
-    [Display(Name = "Giảm giá theo mã giảm giá")]
+    [Display(Name = "Gi?m gi� theo m� gi?m gi�")]
     Coupon = 4
 }

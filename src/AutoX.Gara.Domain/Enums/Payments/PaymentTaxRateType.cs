@@ -1,20 +1,21 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Payments;
 
-public enum TaxRateType : System.Byte
+public enum TaxRateType : byte
 {
-    [Display(Name = "Không áp dụng thuế VAT (0%)")]
+    [Display(Name = "Kh�ng �p d?ng thu? VAT (0%)")]
     None = 0,
 
-    [Display(Name = "Thuế VAT 5%")]
+    [Display(Name = "Thu? VAT 5%")]
     VAT5 = 5,
 
-    [Display(Name = "Thuế VAT 8% (hỗ trợ kinh tế)")]
+    [Display(Name = "Thu? VAT 8% (h? tr? kinh t?)")]
     VAT8 = 8,
 
-    [Display(Name = "Thuế VAT 10% (mặc định)")]
+    [Display(Name = "Thu? VAT 10% (m?c d?nh)")]
     VAT10 = 10
 }

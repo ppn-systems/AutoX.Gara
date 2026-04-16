@@ -1,89 +1,87 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums.Repairs;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutoX.Gara.Domain.Entities.Repairs;
 
 /// <summary>
-/// Lớp đại diện cho công việc sửa chữa.
+/// Lop dai dien cho cong viec sua chua.
 /// </summary>
 [Table(nameof(RepairTask))]
-public class RepairTask
+public class RepairTask : AuditEntity<int>
 {
     #region Fields
 
-    private System.DateTime? _startDate;
-    private System.DateTime? _completionDate;
+    private DateTime? _startDate;
+    private DateTime? _completionDate;
 
     #endregion
 
     #region Identification Properties
 
     /// <summary>
-    /// Mã công việc sửa chữa.
+    /// Nhan vien thuc hien cong viec sua chua.
     /// </summary>
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.Int32 Id { get; set; }
+    public int EmployeeId { get; set; }
 
     /// <summary>
-    /// Nhân viên thực hiện công việc sửa chữa.
+    /// Cac dich vu su dung.
     /// </summary>
-    public System.Int32 EmployeeId { get; set; }
+    public int ServiceItemId { get; set; }
 
     /// <summary>
-    /// Các dịch vụ sử dụng.
+    /// Id don sua chua lien quan.
     /// </summary>
-    public System.Int32 ServiceItemId { get; set; }
+    public int RepairOrderId { get; set; }
 
     /// <summary>
-    /// Id đơn sửa chữa liên quan.
-    /// </summary>
-    public System.Int32 RepairOrderId { get; set; }
-
-    /// <summary>
-    /// Thông tin nhân viên liên quan (Navigation Property).
+    /// Thong tin nhan vien lien quan (Navigation Property).
     /// </summary>
     [ForeignKey(nameof(EmployeeId))]
     public virtual Employee Employee { get; set; } = null!;
 
     /// <summary>
-    /// Thông tin dịch vụ liên quan (Navigation Property).
+    /// Thong tin dich vu lien quan (Navigation Property).
     /// </summary>
     [ForeignKey(nameof(ServiceItemId))]
-    public virtual ServiceItem ServiceItem { get; set; }
+    public virtual ServiceItem ServiceItem { get; set; } = null!;
 
     /// <summary>
-    /// Thông tin đơn sửa chữa liên quan (Navigation Property).
+    /// Thong tin don sua chua lien quan (Navigation Property).
     /// </summary>
     [ForeignKey(nameof(RepairOrderId))]
-    public virtual RepairOrder RepairOrder { get; set; }
+    public virtual RepairOrder RepairOrder { get; set; } = null!;
 
     #endregion
 
     #region Task Details Properties
 
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public decimal BasePrice { get; set; }
+    public bool IsActive { get; set; } = true;
+
     /// <summary>
-    /// Trạng thái công việc sửa chữa.
+    /// Trang thai cong viec sua chua.
     /// </summary>
     public RepairOrderStatus Status { get; set; } = RepairOrderStatus.Pending;
 
     /// <summary>
-    /// Ngày bắt đầu công việc.
+    /// Ngay bat dau cong viec.
     /// </summary>
-    public System.DateTime? StartDate
+    public DateTime? StartDate
     {
         get => _startDate;
         set
         {
-            if (value.HasValue && value > System.DateTime.UtcNow)
+            if (value.HasValue && value > DateTime.UtcNow)
             {
-                throw new System.ArgumentException("Start date cannot be in the future.");
+                throw new ArgumentException("Start date cannot be in the future.");
             }
 
             _startDate = value;
@@ -91,22 +89,22 @@ public class RepairTask
     }
 
     /// <summary>
-    /// Thời gian ước tính để hoàn thành công việc (tính bằng giờ).
+    /// Thoi gian uoc tinh de hoan thanh cong viec (tinh bang gio).
     /// </summary>
     [Range(0, 1000, ErrorMessage = "Estimated duration must be between 0 and 1000 hours.")]
-    public System.Double EstimatedDuration { get; set; } = 1.0;
+    public double EstimatedDuration { get; set; } = 1.0;
 
     /// <summary>
-    /// Ngày hoàn thành công việc sửa chữa (nếu đã xong).
+    /// Ngay hoan thanh cong viec sua chua (neu da xong).
     /// </summary>
-    public System.DateTime? CompletionDate
+    public DateTime? CompletionDate
     {
         get => _completionDate;
         set
         {
             if (value.HasValue && StartDate.HasValue && value < StartDate)
             {
-                throw new System.ArgumentException("Completion date cannot be earlier than start date.");
+                throw new ArgumentException("Completion date cannot be earlier than start date.");
             }
 
             _completionDate = value;
@@ -114,9 +112,9 @@ public class RepairTask
     }
 
     /// <summary>
-    /// Công việc đã hoàn thành chưa.
+    /// Cong viec da hoan thanh chua.
     /// </summary>
-    public System.Boolean IsCompleted => Status == RepairOrderStatus.Completed;
+    public bool IsCompleted => Status == RepairOrderStatus.Completed;
 
     #endregion
 }

@@ -1,103 +1,104 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums;
 
 /// <summary>
-/// Enum đại diện cho các loại dịch vụ trong gara ô tô.
+/// Enum d?i di?n cho c�c lo?i d?ch v? trong gara � t�.
 /// </summary>
-public enum ServiceType : System.Byte
+public enum ServiceType : byte
 {
-    [Display(Name = "Không xác định")]
+    [Display(Name = "Kh�ng x�c d?nh")]
     None = 0,
 
-    // 🔧 **Bảo trì & bảo dưỡng**
-    [Display(Name = "Bảo dưỡng định kỳ")]
+    // ?? **B?o tr� & b?o du?ng**
+    [Display(Name = "B?o du?ng d?nh k?")]
     Maintenance = 1,
 
-    [Display(Name = "Kiểm tra xe")]
+    [Display(Name = "Ki?m tra xe")]
     Inspection = 2,
 
-    [Display(Name = "Thay dầu & bộ lọc")]
+    [Display(Name = "Thay d?u & b? l?c")]
     OilChange = 3,
 
-    [Display(Name = "Dịch vụ lốp xe (Thay, vá, cân bằng)")]
+    [Display(Name = "D?ch v? l?p xe (Thay, v�, c�n b?ng)")]
     TireService = 4,
 
-    [Display(Name = "Cân chỉnh góc đặt bánh xe (Alignment)")]
+    [Display(Name = "C�n ch?nh g�c d?t b�nh xe (Alignment)")]
     WheelAlignment = 5,
 
-    [Display(Name = "Dịch vụ điều hòa không khí")]
+    [Display(Name = "D?ch v? di?u h�a kh�ng kh�")]
     ACService = 6,
 
-    // 🚗 **Sửa chữa chung**
-    [Display(Name = "Dịch vụ sửa chữa")]
+    // ?? **S?a ch?a chung**
+    [Display(Name = "D?ch v? s?a ch?a")]
     Repair = 10,
 
-    [Display(Name = "Sửa chữa động cơ")]
+    [Display(Name = "S?a ch?a d?ng co")]
     EngineRepair = 11,
 
-    [Display(Name = "Sửa chữa hộp số & truyền động")]
+    [Display(Name = "S?a ch?a h?p s? & truy?n d?ng")]
     TransmissionRepair = 12,
 
-    [Display(Name = "Sửa chữa hệ thống phanh")]
+    [Display(Name = "S?a ch?a h? th?ng phanh")]
     BrakeRepair = 13,
 
-    [Display(Name = "Sửa chữa hệ thống lái & treo")]
+    [Display(Name = "S?a ch?a h? th?ng l�i & treo")]
     SuspensionRepair = 14,
 
-    [Display(Name = "Sửa chữa hệ thống nhiên liệu")]
+    [Display(Name = "S?a ch?a h? th?ng nhi�n li?u")]
     FuelSystemRepair = 15,
 
-    [Display(Name = "Dịch vụ điện & ắc quy")]
+    [Display(Name = "D?ch v? di?n & ?c quy")]
     ElectricalService = 16,
 
-    [Display(Name = "Sửa chữa hệ thống đánh lửa")]
+    [Display(Name = "S?a ch?a h? th?ng d�nh l?a")]
     IgnitionRepair = 17,
 
-    // 🎨 **Làm đẹp & phục hồi xe**
-    [Display(Name = "Rửa xe & chăm sóc nội thất")]
+    // ?? **L�m d?p & ph?c h?i xe**
+    [Display(Name = "R?a xe & cham s�c n?i th?t")]
     CarWashAndDetailing = 20,
 
-    [Display(Name = "Sơn & làm đẹp xe")]
+    [Display(Name = "Son & l�m d?p xe")]
     Painting = 21,
 
-    [Display(Name = "Phục hồi đèn pha & kính xe")]
+    [Display(Name = "Ph?c h?i d�n pha & k�nh xe")]
     HeadlightRestoration = 22,
 
-    [Display(Name = "Dán phim cách nhiệt & bảo vệ sơn")]
+    [Display(Name = "D�n phim c�ch nhi?t & b?o v? son")]
     WindowTintingAndPPF = 23,
 
-    [Display(Name = "Dịch vụ phủ ceramic & nano coating")]
+    [Display(Name = "D?ch v? ph? ceramic & nano coating")]
     CeramicCoating = 24,
 
-    // 🛡 **Dịch vụ an toàn & kiểm định**
-    [Display(Name = "Dịch vụ kiểm định xe")]
+    // ?? **D?ch v? an to�n & ki?m d?nh**
+    [Display(Name = "D?ch v? ki?m d?nh xe")]
     VehicleInspection = 30,
 
-    [Display(Name = "Kiểm tra & lắp đặt camera hành trình")]
+    [Display(Name = "Ki?m tra & l?p d?t camera h�nh tr�nh")]
     DashcamInstallation = 31,
 
-    [Display(Name = "Lắp đặt & sửa chữa hệ thống cảm biến hỗ trợ lái")]
+    [Display(Name = "L?p d?t & s?a ch?a h? th?ng c?m bi?n h? tr? l�i")]
     ParkingSensorAndADAS = 32,
 
-    // 🚨 **Dịch vụ khẩn cấp**
-    [Display(Name = "Dịch vụ cứu hộ xe khẩn cấp")]
+    // ?? **D?ch v? kh?n c?p**
+    [Display(Name = "D?ch v? c?u h? xe kh?n c?p")]
     EmergencyRoadsideAssistance = 40,
 
-    [Display(Name = "Dịch vụ kéo xe")]
+    [Display(Name = "D?ch v? k�o xe")]
     TowingService = 41,
 
-    [Display(Name = "Hỗ trợ khởi động xe (Nhảy bình)")]
+    [Display(Name = "H? tr? kh?i d?ng xe (Nh?y b�nh)")]
     JumpStartService = 42,
 
-    [Display(Name = "Hỗ trợ mở khóa xe")]
+    [Display(Name = "H? tr? m? kh�a xe")]
     LockoutAssistance = 43,
 
-    [Display(Name = "Cung cấp nhiên liệu khẩn cấp")]
+    [Display(Name = "Cung c?p nhi�n li?u kh?n c?p")]
     EmergencyFuelDelivery = 44,
 
-    [Display(Name = "Khác")]
+    [Display(Name = "Kh�c")]
     Other = 255
 }

@@ -1,29 +1,30 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums;
 
 /// <summary>
-/// Đại diện cho giới tính của nhân viên.
+/// �?i di?n cho gi?i t�nh c?a nh�n vi�n.
 /// </summary>
-public enum Gender : System.Byte
+public enum Gender : byte
 {
     /// <summary>
-    /// Giới tính không xác định hoặc không cung cấp.
+    /// Gi?i t�nh kh�ng x�c d?nh ho?c kh�ng cung c?p.
     /// </summary>
-    [Display(Name = "Không xác định")]
+    [Display(Name = "Kh�ng x�c d?nh")]
     None = 0,
 
     /// <summary>
-    /// Giới tính nam.
+    /// Gi?i t�nh nam.
     /// </summary>
     [Display(Name = "Nam")]
     Male = 1,
 
     /// <summary>
-    /// Giới tính nữ.
+    /// Gi?i t�nh n?.
     /// </summary>
-    [Display(Name = "Nữ")]
+    [Display(Name = "N?")]
     Female = 2
 }

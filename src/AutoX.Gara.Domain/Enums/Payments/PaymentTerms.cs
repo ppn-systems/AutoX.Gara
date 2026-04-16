@@ -1,29 +1,30 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Payments;
 
 /// <summary>
-/// Enum đại diện cho các điều khoản thanh toán.
+/// Enum d?i di?n cho c�c di?u kho?n thanh to�n.
 /// </summary>
-public enum PaymentTerms : System.Byte
+public enum PaymentTerms : byte
 {
-    [Display(Name = "Không xác định")]
+    [Display(Name = "Kh�ng x�c d?nh")]
     None = 0,
 
-    [Display(Name = "Thanh toán ngay khi nhận hàng")]
+    [Display(Name = "Thanh to�n ngay khi nh?n h�ng")]
     DueOnReceipt = 1,
 
-    [Display(Name = "Thanh toán trong 7 ngày")]
+    [Display(Name = "Thanh to�n trong 7 ng�y")]
     Net7 = 2,
 
-    [Display(Name = "Thanh toán trong 15 ngày")]
+    [Display(Name = "Thanh to�n trong 15 ng�y")]
     Net15 = 3,
 
-    [Display(Name = "Thanh toán trong 30 ngày")]
+    [Display(Name = "Thanh to�n trong 30 ng�y")]
     Net30 = 4,
 
-    [Display(Name = "Thỏa thuận riêng")]
+    [Display(Name = "Th?a thu?n ri�ng")]
     Custom = 255
 }

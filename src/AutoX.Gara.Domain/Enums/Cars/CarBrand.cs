@@ -1,15 +1,16 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Cars;
 
 /// <summary>
-/// Enum định nghĩa các hãng xe.
+/// Enum d?nh nghia c�c h�ng xe.
 /// </summary>
-public enum CarBrand : System.Byte
+public enum CarBrand : byte
 {
-    [Display(Name = "Không xác định")]
+    [Display(Name = "Kh�ng x�c d?nh")]
     None = 0,
 
     [Display(Name = "Audi")]
@@ -108,6 +109,6 @@ public enum CarBrand : System.Byte
     [Display(Name = "Volkswagen")]
     Volkswagen = 116,
 
-    [Display(Name = "Khác")]
+    [Display(Name = "Kh�c")]
     Other = 255
 }

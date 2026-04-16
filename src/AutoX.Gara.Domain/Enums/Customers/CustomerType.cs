@@ -1,47 +1,48 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Customers;
 
 /// <summary>
-/// Enum đại diện cho loại khách hàng trong hệ thống.
+/// Enum d?i di?n cho lo?i kh�ch h�ng trong h? th?ng.
 /// </summary>
-public enum CustomerType : System.Byte
+public enum CustomerType : byte
 {
-    [Display(Name = "Không xác định")]
+    [Display(Name = "Kh�ng x�c d?nh")]
     None = 0,
 
-    [Display(Name = "Khách hàng cá nhân")]
+    [Display(Name = "Kh�ch h�ng c� nh�n")]
     Individual = 1,
 
-    [Display(Name = "Doanh nghiệp")]
+    [Display(Name = "Doanh nghi?p")]
     Business = 2,
 
-    [Display(Name = "Cơ quan chính phủ")]
+    [Display(Name = "Co quan ch�nh ph?")]
     Government = 3,
 
-    [Display(Name = "Khách hàng sở hữu nhiều xe")]
+    [Display(Name = "Kh�ch h�ng s? h?u nhi?u xe")]
     Fleet = 4,
 
-    [Display(Name = "Công ty bảo hiểm")]
+    [Display(Name = "C�ng ty b?o hi?m")]
     InsuranceCompany = 5,
 
-    [Display(Name = "Khách hàng VIP")]
+    [Display(Name = "Kh�ch h�ng VIP")]
     VIP = 6,
 
-    [Display(Name = "Khách hàng tiềm năng")]
+    [Display(Name = "Kh�ch h�ng ti?m nang")]
     Potential = 7,
 
-    [Display(Name = "Nhà cung cấp")]
+    [Display(Name = "Nh� cung c?p")]
     Supplier = 8,
 
-    [Display(Name = "Tổ chức phi lợi nhuận")]
+    [Display(Name = "T? ch?c phi l?i nhu?n")]
     NonProfit = 9,
 
-    [Display(Name = "Đại lý")]
+    [Display(Name = "�?i l�")]
     Dealer = 10,
 
-    [Display(Name = "Loại khách hàng khác")]
+    [Display(Name = "Lo?i kh�ch h�ng kh�c")]
     Other = 255
 }

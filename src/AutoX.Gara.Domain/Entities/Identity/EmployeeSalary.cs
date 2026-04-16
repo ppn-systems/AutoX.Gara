@@ -1,50 +1,46 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Enums.Employees;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutoX.Gara.Domain.Entities.Identity;
 
 /// <summary>
-/// Lớp đại diện cho thông tin lương của nhân viên theo từng đợt với nhiều loại.
+/// Lop dai dien cho thong tin luong cua nhan vien.
 /// </summary>
 [Table(nameof(EmployeeSalary))]
-public class EmployeeSalary
+public class EmployeeSalary : AuditEntity<int>
 {
     // Fields  
-    private System.Decimal _salary;
-    private System.DateTime _effectiveFrom = System.DateTime.UtcNow;
-    private System.DateTime? _effectiveTo;
-    private System.String _note = System.String.Empty;
+    private decimal _salary;
+    private DateTime _effectiveFrom = DateTime.UtcNow;
+    private DateTime? _effectiveTo;
+    private string _note = string.Empty;
 
     // Identification Properties
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.Int32 Id { get; protected set; }
-
     [Required]
-    public System.Int32 EmployeeId { get; set; }
+    public int EmployeeId { get; set; }
 
     [ForeignKey(nameof(EmployeeId))]
-    public Employee Employee { get; set; } = default!;
+    public virtual Employee Employee { get; set; } = default!;
 
     // Salary Information Properties
 
     /// <summary>
-    /// Mức lương cho một đơn vị (tháng/ngày/giờ).
+    /// Muc luong cho mot don vi (thang/ngay/gio).
     /// </summary>
     [Required(ErrorMessage = "Salary is required.")]
-    [Range(0, System.Double.MaxValue, ErrorMessage = "Salary must be >= 0.")]
+    [Range(0, double.MaxValue, ErrorMessage = "Salary must be >= 0.")]
     [Column(TypeName = "decimal(18,2)")]
-    public System.Decimal Salary
+    public decimal Salary
     {
         get => _salary;
         set
         {
             if (value < 0)
             {
-                throw new System.ArgumentException("Salary must be >= 0.");
+                throw new ArgumentException("Salary must be >= 0.");
             }
 
             _salary = value;
@@ -52,35 +48,35 @@ public class EmployeeSalary
     }
 
     /// <summary>
-    /// Loại lương (tháng/ngày/giờ).
+    /// Loai luong (thang/ngay/gio).
     /// </summary>
     [Required]
     public SalaryType SalaryType { get; set; } = SalaryType.Monthly;
 
     /// <summary>
-    /// Số đơn vị (giờ/ngày/tháng) áp dụng trong đợt này.
+    /// So don vi (gio/ngay/thang) ap dung trong dot nay.
     /// </summary>
-    [Range(0, System.Double.MaxValue, ErrorMessage = "Salary unit must be >= 0.")]
-    public System.Decimal SalaryUnit { get; set; } = 1;
+    [Range(0, double.MaxValue, ErrorMessage = "Salary unit must be >= 0.")]
+    public decimal SalaryUnit { get; set; } = 1;
 
     /// <summary>
-    /// Tổng lương thực tế (áp dụng cho Daily/Hourly).
+    /// Tong luong thuc te.
     /// </summary>
     [NotMapped]
-    public System.Decimal TotalSalary => SalaryType == SalaryType.Monthly ? Salary : Salary * SalaryUnit;
+    public decimal TotalSalary => SalaryType == SalaryType.Monthly ? Salary : Salary * SalaryUnit;
 
     /// <summary>
-    /// Ngày bắt đầu hiệu lực mức lương này.
+    /// Ngay bat dau hieu luc.
     /// </summary>
     [Required(ErrorMessage = "Effective date is required.")]
-    public System.DateTime EffectiveFrom
+    public DateTime EffectiveFrom
     {
         get => _effectiveFrom;
         set
         {
-            if (value > (_effectiveTo ?? System.DateTime.MaxValue))
+            if (value > (_effectiveTo ?? DateTime.MaxValue))
             {
-                throw new System.ArgumentException("EffectiveFrom cannot be later than EffectiveTo.");
+                throw new ArgumentException("EffectiveFrom cannot be later than EffectiveTo.");
             }
 
             _effectiveFrom = value;
@@ -88,16 +84,16 @@ public class EmployeeSalary
     }
 
     /// <summary>
-    /// Ngày kết thúc hiệu lực (null nếu vẫn đang áp dụng).
+    /// Ngay ket thuc hieu luc.
     /// </summary>
-    public System.DateTime? EffectiveTo
+    public DateTime? EffectiveTo
     {
         get => _effectiveTo;
         set
         {
             if (value.HasValue && value < EffectiveFrom)
             {
-                throw new System.ArgumentException("EffectiveTo cannot be earlier than EffectiveFrom.");
+                throw new ArgumentException("EffectiveTo cannot be earlier than EffectiveFrom.");
             }
 
             _effectiveTo = value;
@@ -105,12 +101,12 @@ public class EmployeeSalary
     }
 
     /// <summary>
-    /// Ghi chú về mức lương (phụ cấp, thưởng...)
+    /// Ghi chu ve muc luong.
     /// </summary>
     [MaxLength(200)]
-    public System.String Note
+    public string Note
     {
         get => _note;
-        set => _note = value?.Trim() ?? System.String.Empty;
+        set => _note = value?.Trim() ?? string.Empty;
     }
 }

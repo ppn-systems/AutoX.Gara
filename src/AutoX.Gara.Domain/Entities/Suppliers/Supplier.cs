@@ -1,8 +1,8 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -13,29 +13,22 @@ namespace AutoX.Gara.Domain.Entities.Suppliers;
 /// Lớp đại diện cho nhà cung cấp.
 /// </summary>
 [Table(nameof(Supplier))]
-public class Supplier
+public class Supplier : AuditEntity<int>
 {
     #region Fields
 
-    private System.DateTime? _contractEndDate;
+    private DateTime? _contractEndDate;
 
     #endregion
 
     #region Identification Properties
 
     /// <summary>
-    /// Mã nhà cung cấp (Unique identifier).
-    /// </summary>
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.Int32 Id { get; set; }
-
-    /// <summary>
     /// Tên nhà cung cấp.
     /// </summary>
     [Required(ErrorMessage = "Supplier name is required.")]
     [MaxLength(100, ErrorMessage = "Supplier name must not exceed 100 characters.")]
-    public System.String Name { get; set; } = System.String.Empty;
+    public string Name { get; set; } = string.Empty;
 
     #endregion
 
@@ -46,13 +39,13 @@ public class Supplier
     /// </summary>
     [EmailAddress(ErrorMessage = "Invalid email format.")]
     [MaxLength(100, ErrorMessage = "Email must not exceed 100 characters.")]
-    public System.String Email { get; set; } = System.String.Empty;
+    public string Email { get; set; } = string.Empty;
 
     /// <summary>
     /// Địa chỉ của nhà cung cấp.
     /// </summary>
     [MaxLength(255, ErrorMessage = "Address must not exceed 255 characters.")]
-    public System.String Address { get; set; } = System.String.Empty;
+    public string Address { get; set; } = string.Empty;
 
     /// <summary>
     /// Danh sách số điện thoại của nhà cung cấp (Quan hệ 1-N với `SupplierPhone`).
@@ -66,19 +59,19 @@ public class Supplier
     /// <summary>
     /// Ngày bắt đầu hợp tác với nhà cung cấp.
     /// </summary>
-    public System.DateTime ContractStartDate { get; set; } = System.DateTime.UtcNow;
+    public DateTime ContractStartDate { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Ngày kết thúc hợp tác (nếu có).
     /// </summary>
-    public System.DateTime? ContractEndDate
+    public DateTime? ContractEndDate
     {
         get => _contractEndDate;
         set
         {
             if (value.HasValue && value < ContractStartDate)
             {
-                throw new System.ArgumentException("Contract end date cannot be earlier than start date.");
+                throw new ArgumentException("Contract end date cannot be earlier than start date.");
             }
 
             _contractEndDate = value;
@@ -88,7 +81,7 @@ public class Supplier
     /// <summary>
     /// Ghi chú về nhà cung cấp.
     /// </summary>
-    public System.String Notes { get; set; } = System.String.Empty;
+    public string Notes { get; set; } = string.Empty;
 
     #endregion
 
@@ -98,13 +91,13 @@ public class Supplier
     /// Tài khoản ngân hàng để thanh toán.
     /// </summary>
     [MaxLength(20, ErrorMessage = "Bank account must not exceed 50 characters.")]
-    public System.String BankAccount { get; set; } = System.String.Empty;
+    public string BankAccount { get; set; } = string.Empty;
 
     /// <summary>
     /// Mã số thuế của nhà cung cấp.
     /// </summary>
     [MaxLength(13, ErrorMessage = "Tax code must not exceed 20 characters.")]
-    public System.String TaxCode { get; set; } = System.String.Empty;
+    public string TaxCode { get; set; } = string.Empty;
 
     /// <summary>
     /// Điều khoản thanh toán.
@@ -114,6 +107,10 @@ public class Supplier
     #endregion
 
     #region Status and Relationships Properties
+
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string ContactPerson { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
 
     /// <summary>
     /// Trạng thái của nhà cung cấp (Hoạt động, Ngừng hợp tác,...).

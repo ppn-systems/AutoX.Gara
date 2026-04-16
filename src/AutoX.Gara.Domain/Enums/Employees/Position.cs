@@ -1,131 +1,132 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Employees;
 
 /// <summary>
-/// Đại diện cho các vị trí công việc trong hệ thống quản lý gara ô tô.
+/// �?i di?n cho c�c v? tr� c�ng vi?c trong h? th?ng qu?n l� gara � t�.
 /// </summary>
-public enum Position : System.Byte
+public enum Position : byte
 {
-    [Display(Name = "Không xác định")]
+    [Display(Name = "Kh�ng x�c d?nh")]
     None = 0,
 
-    [Display(Name = "Nhân viên học việc")]
+    [Display(Name = "Nh�n vi�n h?c vi?c")]
     Apprentice = 1,
 
-    [Display(Name = "Thợ rửa xe")]
+    [Display(Name = "Th? r?a xe")]
     CarWasher = 2,
 
-    [Display(Name = "Thợ điện ô tô")]
+    [Display(Name = "Th? di?n � t�")]
     AutoElectrician = 3,
 
-    [Display(Name = "Thợ máy gầm")]
+    [Display(Name = "Th? m�y g?m")]
     UnderCarMechanic = 4,
 
-    [Display(Name = "Thợ đồng")]
+    [Display(Name = "Th? d?ng")]
     BodyworkMechanic = 5,
 
-    [Display(Name = "Kỹ thuật viên sửa chữa chung")]
+    [Display(Name = "K? thu?t vi�n s?a ch?a chung")]
     Technician = 6,
 
-    [Display(Name = "Nhân viên tiếp nhận xe")]
+    [Display(Name = "Nh�n vi�n ti?p nh?n xe")]
     Receptionist = 7,
 
-    [Display(Name = "Nhân viên tư vấn dịch vụ")]
+    [Display(Name = "Nh�n vi�n tu v?n d?ch v?")]
     Advisor = 8,
 
-    [Display(Name = "Nhân viên hỗ trợ kỹ thuật")]
+    [Display(Name = "Nh�n vi�n h? tr? k? thu?t")]
     Support = 9,
 
-    [Display(Name = "Nhân viên kế toán")]
+    [Display(Name = "Nh�n vi�n k? to�n")]
     Accountant = 10,
 
-    [Display(Name = "Quản lý gara")]
+    [Display(Name = "Qu?n l� gara")]
     Manager = 11,
 
-    [Display(Name = "Nhân viên bảo trì thiết bị")]
+    [Display(Name = "Nh�n vi�n b?o tr� thi?t b?")]
     MaintenanceStaff = 12,
 
-    [Display(Name = "Điều phối viên kho")]
+    [Display(Name = "�i?u ph?i vi�n kho")]
     InventoryCoordinator = 13,
 
-    [Display(Name = "Giám sát kho")]
+    [Display(Name = "Gi�m s�t kho")]
     WarehouseSupervisor = 14,
 
-    [Display(Name = "Thợ sơn xe")]
+    [Display(Name = "Th? son xe")]
     Painter = 15,
 
-    [Display(Name = "Chuyên viên chẩn đoán lỗi xe")]
+    [Display(Name = "Chuy�n vi�n ch?n do�n l?i xe")]
     DiagnosticSpecialist = 16,
 
-    [Display(Name = "Chuyên viên sửa chữa động cơ")]
+    [Display(Name = "Chuy�n vi�n s?a ch?a d?ng co")]
     EngineSpecialist = 17,
 
-    [Display(Name = "Chuyên viên sửa chữa hộp số")]
+    [Display(Name = "Chuy�n vi�n s?a ch?a h?p s?")]
     TransmissionSpecialist = 18,
 
-    [Display(Name = "Chuyên viên sửa chữa điều hòa ô tô")]
+    [Display(Name = "Chuy�n vi�n s?a ch?a di?u h�a � t�")]
     ACSpecialist = 19,
 
-    [Display(Name = "Thợ mài bề mặt xe")]
+    [Display(Name = "Th? m�i b? m?t xe")]
     Grinder = 20,
 
-    [Display(Name = "Nhân viên bảo hiểm xe")]
+    [Display(Name = "Nh�n vi�n b?o hi?m xe")]
     InsuranceStaff = 21,
 
-    [Display(Name = "Nhân viên tư vấn phụ tùng")]
+    [Display(Name = "Nh�n vi�n tu v?n ph? t�ng")]
     PartsConsultant = 22,
 
-    [Display(Name = "Nhân viên giao nhận xe")]
+    [Display(Name = "Nh�n vi�n giao nh?n xe")]
     VehicleDeliveryStaff = 23,
 
-    [Display(Name = "Nhân viên vệ sinh gara")]
+    [Display(Name = "Nh�n vi�n v? sinh gara")]
     CleaningStaff = 24,
 
-    [Display(Name = "Nhân viên bảo vệ")]
+    [Display(Name = "Nh�n vi�n b?o v?")]
     Security = 25,
 
-    [Display(Name = "Nhân viên marketing")]
+    [Display(Name = "Nh�n vi�n marketing")]
     MarketingStaff = 26,
 
-    [Display(Name = "Nhân viên chăm sóc khách hàng")]
+    [Display(Name = "Nh�n vi�n cham s�c kh�ch h�ng")]
     CustomerService = 27,
 
-    [Display(Name = "Giám đốc kỹ thuật")]
+    [Display(Name = "Gi�m d?c k? thu?t")]
     TechnicalDirector = 28,
 
-    [Display(Name = "Giám đốc dịch vụ")]
+    [Display(Name = "Gi�m d?c d?ch v?")]
     ServiceDirector = 29,
 
-    [Display(Name = "Giám đốc điều hành")]
+    [Display(Name = "Gi�m d?c di?u h�nh")]
     ExecutiveDirector = 30,
 
-    [Display(Name = "Kỹ thuật viên điện tử và lập trình ô tô")]
+    [Display(Name = "K? thu?t vi�n di?n t? v� l?p tr�nh � t�")]
     ElectronicsAndProgrammingTechnician = 31,
 
-    [Display(Name = "Chuyên viên kiểm tra chất lượng xe")]
+    [Display(Name = "Chuy�n vi�n ki?m tra ch?t lu?ng xe")]
     QualityControlSpecialist = 32,
 
-    [Display(Name = "Nhân viên đặt hàng phụ tùng")]
+    [Display(Name = "Nh�n vi�n d?t h�ng ph? t�ng")]
     PartsOrderingStaff = 33,
 
-    [Display(Name = "Chuyên viên bảo hành xe")]
+    [Display(Name = "Chuy�n vi�n b?o h�nh xe")]
     WarrantySpecialist = 34,
 
-    [Display(Name = "Nhân viên thu ngân")]
+    [Display(Name = "Nh�n vi�n thu ng�n")]
     Cashier = 35,
 
-    [Display(Name = "Trưởng ca làm việc")]
+    [Display(Name = "Tru?ng ca l�m vi?c")]
     ShiftSupervisor = 36,
 
-    [Display(Name = "Lái thử xe sau sửa chữa")]
+    [Display(Name = "L�i th? xe sau s?a ch?a")]
     TestDriver = 37,
 
-    [Display(Name = "Chuyên viên lốp xe")]
+    [Display(Name = "Chuy�n vi�n l?p xe")]
     TireSpecialist = 38,
 
-    [Display(Name = "Kỹ thuật viên hệ thống thủy lực")]
+    [Display(Name = "K? thu?t vi�n h? th?ng th?y l?c")]
     HydraulicTechnician = 39
 }

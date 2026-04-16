@@ -1,5 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Domain.Enums.Parts;
 using System;
@@ -12,21 +11,14 @@ namespace AutoX.Gara.Domain.Entities.Inventory;
 /// Represents a spare or replacement part in the inventory.
 /// </summary>
 [Table(nameof(Part))]
-public class Part
+public class Part : AuditEntity<int>
 {
     #region Identification Properties
 
     /// <summary>
-    /// Unique identifier for the part.
-    /// </summary>
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.Int32 Id { get; set; }
-
-    /// <summary>
     /// Supplier identifier for the part.
     /// </summary>
-    public System.Int32 SupplierId { get; set; }
+    public int SupplierId { get; set; }
 
     /// <summary>
     /// Navigation property to the supplier entity.
@@ -40,21 +32,21 @@ public class Part
     [Required]
     [StringLength(12, ErrorMessage = "Part code must not exceed 12 characters.")]
     [RegularExpression(@"^[A-Za-z0-9]+$", ErrorMessage = "Part code must contain only letters and numbers.")]
-    public System.String PartCode { get; set; } = System.String.Empty;
+    public string PartCode { get; set; } = string.Empty;
 
     /// <summary>
     /// Name of the part.
     /// </summary>
     [Required]
     [StringLength(100, ErrorMessage = "Part name must not exceed 100 characters.")]
-    public System.String PartName { get; set; } = System.String.Empty;
+    public string PartName { get; set; } = string.Empty;
 
     /// <summary>
     /// Manufacturer or brand of the part.
     /// </summary>
     [Required]
     [StringLength(75, ErrorMessage = "Manufacturer must not exceed 75 characters.")]
-    public System.String Manufacturer { get; set; } = System.String.Empty;
+    public string Manufacturer { get; set; } = string.Empty;
 
     #endregion
 
@@ -72,22 +64,22 @@ public class Part
     /// <summary>
     /// Inventory quantity of the part.
     /// </summary>
-    [Range(0, System.Int32.MaxValue, ErrorMessage = "Inventory quantity must be non-negative.")]
-    public System.Int32 InventoryQuantity { get; set; }
+    [Range(0, int.MaxValue, ErrorMessage = "Inventory quantity must be non-negative.")]
+    public int InventoryQuantity { get; set; }
 
     /// <summary>
     /// Purchase price of the part.
     /// </summary>
     [Column(TypeName = "decimal(18,2)")]
-    [Range(0.01, System.Double.MaxValue, ErrorMessage = "Purchase price must be greater than 0.")]
-    public System.Decimal PurchasePrice { get; set; }
+    [Range(0.01, double.MaxValue, ErrorMessage = "Purchase price must be greater than 0.")]
+    public decimal PurchasePrice { get; set; }
 
     /// <summary>
     /// Selling price of the part (must be greater than or equal to purchase price).
     /// </summary>
     [Column(TypeName = "decimal(18,2)")]
-    [Range(0.01, System.Double.MaxValue, ErrorMessage = "Selling price must be greater than 0.")]
-    public System.Decimal SellingPrice
+    [Range(0.01, double.MaxValue, ErrorMessage = "Selling price must be greater than 0.")]
+    public decimal SellingPrice
     {
         get => _sellingPrice;
         set
@@ -99,13 +91,13 @@ public class Part
             _sellingPrice = value;
         }
     }
-    private System.Decimal _sellingPrice;
+    private decimal _sellingPrice;
 
     /// <summary>
     /// Total value of the part in stock. (InventoryQuantity * PurchasePrice)
     /// </summary>
     [NotMapped]
-    public System.Decimal TotalValue => InventoryQuantity * PurchasePrice;
+    public decimal TotalValue => InventoryQuantity * PurchasePrice;
 
     #endregion
 
@@ -115,12 +107,12 @@ public class Part
     /// Indicates whether the part is currently in stock.
     /// </summary>
     [NotMapped]
-    public System.Boolean IsInStock => InventoryQuantity > 0;
+    public bool IsInStock => InventoryQuantity > 0;
 
     /// <summary>
     /// Indicates whether the part is defective.
     /// </summary>
-    public System.Boolean IsDefective { get; set; } = false;
+    public bool IsDefective { get; set; } = false;
 
     /// <summary>
     /// Marks the part as defective.
@@ -135,7 +127,7 @@ public class Part
     /// <summary>
     /// Indicates whether the part is discontinued.
     /// </summary>
-    public System.Boolean IsDiscontinued { get; set; } = false;
+    public bool IsDiscontinued { get; set; } = false;
 
     /// <summary>
     /// The date when the part was added to the inventory.
@@ -168,7 +160,7 @@ public class Part
     /// </summary>
     /// <param name="amount">Amount to increase.</param>
     /// <exception cref="ArgumentException">If amount is not positive.</exception>
-    public void IncreaseQuantity(System.Int32 amount)
+    public void IncreaseQuantity(int amount)
     {
         if (amount <= 0)
         {
@@ -183,7 +175,7 @@ public class Part
     /// </summary>
     /// <param name="amount">Amount to decrease.</param>
     /// <exception cref="ArgumentException">If amount is not positive or insufficient stock.</exception>
-    public void DecreaseQuantity(System.Int32 amount)
+    public void DecreaseQuantity(int amount)
     {
         if (amount <= 0)
         {

@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using System;
+using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Domain.Entities.Invoices;
 using System.ComponentModel.DataAnnotations;
@@ -8,56 +8,43 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AutoX.Gara.Domain.Entities.Repairs;
 
 /// <summary>
-/// Bảng trung gian giữa RepairOrder và SparePart.
+/// Bang trung gian giua RepairOrder va Part.
 /// </summary>
 [Table(nameof(RepairOrderItem))]
-public class RepairOrderItem
+public class RepairOrderItem : Entity<int>
 {
-    #region Fields
-
-    // Hiện tại không có private fields, để lại region này cho tính nhất quán.
-
-    #endregion
-
     #region Foreign Key Properties
 
     /// <summary>
-    /// Primary key property
+    /// Khoa ngoai toi Part.
     /// </summary>
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.Int32 Id { get; set; }
+    public int PartId { get; set; }
 
     /// <summary>
-    /// Khóa ngoại tới SparePart.
+    /// Khoa ngoai toi RepairOrder.
     /// </summary>
-    public System.Int32 PartId { get; set; }
+    public int RepairOrderId { get; set; }
 
     /// <summary>
-    /// Khóa ngoại tới RepairOrder.
-    /// </summary>
-    public System.Int32 RepairOrderId { get; set; }
-
-    /// <summary>
-    /// Thông tin phụ tùng liên quan (Navigation Property).
+    /// Thong tin phu tung lien quan (Navigation Property).
     /// </summary>
     [ForeignKey(nameof(PartId))]
-    public Part SparePart { get; set; } = null!;
+    public virtual Part SparePart { get; set; } = null!;
 
     /// <summary>
-    /// Thông tin đơn sửa chữa liên quan (Navigation Property).
+    /// Thong tin don sua chua lien quan (Navigation Property).
     /// </summary>
     [ForeignKey(nameof(RepairOrderId))]
-    public RepairOrder RepairOrder { get; set; } = null!;
+    public virtual RepairOrder RepairOrder { get; set; } = null!;
 
     #endregion
 
     #region Additional Properties
 
     /// <summary>
-    /// Số lượng phụ tùng sử dụng trong đơn sửa chữa.
+    /// So luong phu tung su dung trong don sua chua.
     /// </summary>
-    public System.Int32 Quantity { get; set; }
+    public int Quantity { get; set; }
 
     #endregion
 }

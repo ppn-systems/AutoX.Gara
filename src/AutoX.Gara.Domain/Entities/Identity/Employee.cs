@@ -1,7 +1,7 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -11,39 +11,32 @@ namespace AutoX.Gara.Domain.Entities.Identity;
 /// Lớp đại diện cho nhân viên.
 /// </summary>
 [Table(nameof(Employee))]
-public class Employee
+public class Employee : AuditEntity<int>
 {
     #region Fields
 
-    private System.String _name;
-    private System.String _email;
-    private System.String _address;
-    private System.String _phoneNumber;
+    private string _name = string.Empty;
+    private string _email = string.Empty;
+    private string _address = string.Empty;
+    private string _phoneNumber = string.Empty;
 
-    private System.DateTime? _dateOfBirth;
-    private System.DateTime? _endDate;
-    private System.DateTime _startDate = System.DateTime.UtcNow;
+    private DateTime? _dateOfBirth;
+    private DateTime? _endDate;
+    private DateTime _startDate = DateTime.UtcNow;
 
     #endregion
 
     #region Identification Properties
 
     /// <summary>
-    /// Mã nhân viên.
-    /// </summary>
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.Int32 Id { get; protected set; }
-
-    /// <summary>
     /// Tên nhân viên.
     /// </summary>
     [Required(ErrorMessage = "Employee name is required.")]
     [MaxLength(50)]
-    public System.String Name
+    public string Name
     {
         get => _name;
-        set => _name = value?.Trim() ?? System.String.Empty;
+        set => _name = value?.Trim() ?? string.Empty;
     }
 
     #endregion
@@ -58,14 +51,14 @@ public class Employee
     /// <summary>
     /// Ngày sinh.
     /// </summary>
-    public System.DateTime? DateOfBirth
+    public DateTime? DateOfBirth
     {
         get => _dateOfBirth;
         set
         {
-            if (value.HasValue && value > System.DateTime.UtcNow)
+            if (value.HasValue && value > DateTime.UtcNow)
             {
-                throw new System.ArgumentException("Date of birth cannot be in the future.");
+                throw new ArgumentException("Date of birth cannot be in the future.");
             }
 
             _dateOfBirth = value;
@@ -80,10 +73,10 @@ public class Employee
     /// Địa chỉ nhân viên.
     /// </summary>
     [MaxLength(200)]
-    public System.String Address
+    public string Address
     {
         get => _address;
-        set => _address = value?.Trim() ?? System.String.Empty;
+        set => _address = value?.Trim() ?? string.Empty;
     }
 
     /// <summary>
@@ -91,10 +84,10 @@ public class Employee
     /// </summary>
     [MaxLength(14)]
     [RegularExpression(@"^\d{10,14}$", ErrorMessage = "Phone number must be 10-14 digits.")]
-    public System.String PhoneNumber
+    public string PhoneNumber
     {
         get => _phoneNumber;
-        set => _phoneNumber = value?.Trim() ?? System.String.Empty;
+        set => _phoneNumber = value?.Trim() ?? string.Empty;
     }
 
     /// <summary>
@@ -102,10 +95,10 @@ public class Employee
     /// </summary>
     [MaxLength(50)]
     [EmailAddress]
-    public System.String Email
+    public string Email
     {
         get => _email;
-        set => _email = value?.Trim() ?? System.String.Empty;
+        set => _email = value?.Trim() ?? string.Empty;
     }
 
     #endregion
@@ -120,14 +113,14 @@ public class Employee
     /// <summary>
     /// Ngày bắt đầu làm việc.
     /// </summary>
-    public System.DateTime StartDate
+    public DateTime StartDate
     {
         get => _startDate;
         set
         {
-            if (value > (EndDate ?? System.DateTime.MaxValue))
+            if (value > (EndDate ?? DateTime.MaxValue))
             {
-                throw new System.ArgumentException("Start date cannot be later than end date.");
+                throw new ArgumentException("Start date cannot be later than end date.");
             }
 
             _startDate = value;
@@ -138,7 +131,7 @@ public class Employee
     /// <summary>
     /// Ngày kết thúc hợp đồng.
     /// </summary>
-    public System.DateTime? EndDate
+    public DateTime? EndDate
     {
         get => _endDate;
         set
@@ -162,9 +155,9 @@ public class Employee
     /// </summary>
     public void UpdateStatus()
     {
-        Status = EndDate < System.DateTime.UtcNow
+        Status = EndDate < DateTime.UtcNow
             ? EmploymentStatus.Inactive
-            : StartDate > System.DateTime.UtcNow ? EmploymentStatus.Pending : EmploymentStatus.Active;
+            : StartDate > DateTime.UtcNow ? EmploymentStatus.Pending : EmploymentStatus.Active;
     }
 
     #endregion

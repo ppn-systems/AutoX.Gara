@@ -1,64 +1,65 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Transactions;
 
 /// <summary>
-/// Xác định các loại giao dịch tài chính trong hệ thống.
+/// X�c d?nh c�c lo?i giao d?ch t�i ch�nh trong h? th?ng.
 /// </summary>
 public enum TransactionType
 {
     /// <summary>
-    /// Giao dịch thu tiền từ khách hàng hoặc các nguồn khác.
-    /// - Ví dụ: Thanh toán hóa đơn dịch vụ, bán phụ tùng.
+    /// Giao d?ch thu ti?n t? kh�ch h�ng ho?c c�c ngu?n kh�c.
+    /// - V� d?: Thanh to�n h�a don d?ch v?, b�n ph? t�ng.
     /// </summary>
-    [Display(Name = "Thu tiền")]
+    [Display(Name = "Thu ti?n")]
     Revenue = 1,
 
     /// <summary>
-    /// Giao dịch chi tiền cho các khoản chi phí.
-    /// - Ví dụ: Mua vật tư, trả lương nhân viên.
+    /// Giao d?ch chi ti?n cho c�c kho?n chi ph�.
+    /// - V� d?: Mua v?t tu, tr? luong nh�n vi�n.
     /// </summary>
-    [Display(Name = "Chi tiền")]
+    [Display(Name = "Chi ti?n")]
     Expense = 2,
 
     /// <summary>
-    /// Giao dịch trả nợ, thanh toán các khoản vay hoặc công nợ.
-    /// - Ví dụ: Thanh toán công nợ nhà cung cấp.
+    /// Giao d?ch tr? n?, thanh to�n c�c kho?n vay ho?c c�ng n?.
+    /// - V� d?: Thanh to�n c�ng n? nh� cung c?p.
     /// </summary>
-    [Display(Name = "Thanh toán công nợ")]
+    [Display(Name = "Thanh to�n c�ng n?")]
     DebtPayment = 3,
 
     /// <summary>
-    /// Chi phí sửa chữa, bảo trì phương tiện hoặc thiết bị.
-    /// - Ví dụ: Chi phí thay thế linh kiện, sửa chữa xe.
+    /// Chi ph� s?a ch?a, b?o tr� phuong ti?n ho?c thi?t b?.
+    /// - V� d?: Chi ph� thay th? linh ki?n, s?a ch?a xe.
     /// </summary>
-    [Display(Name = "Chi phí sửa chữa")]
+    [Display(Name = "Chi ph� s?a ch?a")]
     RepairCost = 4,
 
     /// <summary>
-    /// Giao dịch tạm ứng tiền cho nhân viên hoặc các khoản chi chưa hoàn tất.
+    /// Giao d?ch t?m ?ng ti?n cho nh�n vi�n ho?c c�c kho?n chi chua ho�n t?t.
     /// </summary>
-    [Display(Name = "Tạm ứng")]
+    [Display(Name = "T?m ?ng")]
     AdvancePayment = 5,
 
     /// <summary>
-    /// Giao dịch hoàn tiền cho khách hàng.
-    /// - Ví dụ: Hoàn tiền do lỗi dịch vụ, chính sách bảo hành.
+    /// Giao d?ch ho�n ti?n cho kh�ch h�ng.
+    /// - V� d?: Ho�n ti?n do l?i d?ch v?, ch�nh s�ch b?o h�nh.
     /// </summary>
-    [Display(Name = "Hoàn tiền")]
+    [Display(Name = "Ho�n ti?n")]
     Refund = 6,
 
     /// <summary>
-    /// Giao dịch chuyển tiền giữa các tài khoản nội bộ.
-    /// - Ví dụ: Chuyển tiền từ quỹ tiền mặt sang tài khoản ngân hàng.
+    /// Giao d?ch chuy?n ti?n gi?a c�c t�i kho?n n?i b?.
+    /// - V� d?: Chuy?n ti?n t? qu? ti?n m?t sang t�i kho?n ng�n h�ng.
     /// </summary>
-    [Display(Name = "Chuyển khoản nội bộ")]
+    [Display(Name = "Chuy?n kho?n n?i b?")]
     InternalTransfer = 7,
 
     /// <summary>
-    /// Thu tiền đặt cọc từ khách hàng.
-    /// - Ví dụ: Khách hàng đặt cọc cho dịch vụ lớn hoặc mua hàng trước.
+    /// Thu ti?n d?t c?c t? kh�ch h�ng.
+    /// - V� d?: Kh�ch h�ng d?t c?c cho d?ch v? l?n ho?c mua h�ng tru?c.
     /// </summary>
-    [Display(Name = "Tiền đặt cọc")]
+    [Display(Name = "Ti?n d?t c?c")]
     Deposit = 8
 }

@@ -1,50 +1,51 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Transactions;
 
 /// <summary>
-/// Trạng thái của một giao dịch tài chính.
+/// Tr?ng th�i c?a m?t giao d?ch t�i ch�nh.
 /// </summary>
 public enum TransactionStatus
 {
     /// <summary>
-    /// Giao dịch đang chờ xử lý.
-    /// - Hệ thống chưa hoàn tất việc xác nhận hoặc chưa nhận được phản hồi từ cổng thanh toán.
+    /// Giao d?ch dang ch? x? l�.
+    /// - H? th?ng chua ho�n t?t vi?c x�c nh?n ho?c chua nh?n du?c ph?n h?i t? c?ng thanh to�n.
     /// </summary>
-    [Display(Name = "Đang chờ xử lý")]
+    [Display(Name = "�ang ch? x? l�")]
     Pending = 1,
 
     /// <summary>
-    /// Giao dịch đã được xử lý thành công.
-    /// - Tiền đã được chuyển hoặc nhận đúng như yêu cầu.
+    /// Giao d?ch d� du?c x? l� th�nh c�ng.
+    /// - Ti?n d� du?c chuy?n ho?c nh?n d�ng nhu y�u c?u.
     /// </summary>
-    [Display(Name = "Hoàn tất")]
+    [Display(Name = "Ho�n t?t")]
     Completed = 2,
 
     /// <summary>
-    /// Giao dịch không thành công.
-    /// - Có thể do lỗi hệ thống, không đủ tiền, hoặc bị từ chối bởi cổng thanh toán.
+    /// Giao d?ch kh�ng th�nh c�ng.
+    /// - C� th? do l?i h? th?ng, kh�ng d? ti?n, ho?c b? t? ch?i b?i c?ng thanh to�n.
     /// </summary>
-    [Display(Name = "Thất bại")]
+    [Display(Name = "Th?t b?i")]
     Failed = 3,
 
     /// <summary>
-    /// Giao dịch đã bị hủy bởi khách hàng hoặc hệ thống trước khi xử lý xong.
+    /// Giao d?ch d� b? h?y b?i kh�ch h�ng ho?c h? th?ng tru?c khi x? l� xong.
     /// </summary>
-    [Display(Name = "Đã hủy")]
+    [Display(Name = "�� h?y")]
     Canceled = 4,
 
     /// <summary>
-    /// Giao dịch đã được hoàn tiền cho khách hàng.
-    /// - Áp dụng khi có lỗi hoặc khách hàng yêu cầu hoàn tiền.
+    /// Giao d?ch d� du?c ho�n ti?n cho kh�ch h�ng.
+    /// - �p d?ng khi c� l?i ho?c kh�ch h�ng y�u c?u ho�n ti?n.
     /// </summary>
-    [Display(Name = "Đã hoàn tiền")]
+    [Display(Name = "�� ho�n ti?n")]
     Refunded = 5,
 
     /// <summary>
-    /// Giao dịch bị tạm giữ để kiểm tra thêm.
-    /// - Có thể do nghi ngờ gian lận hoặc cần xác minh thêm thông tin.
+    /// Giao d?ch b? t?m gi? d? ki?m tra th�m.
+    /// - C� th? do nghi ng? gian l?n ho?c c?n x�c minh th�m th�ng tin.
     /// </summary>
-    [Display(Name = "Đang xem xét")]
+    [Display(Name = "�ang xem x�t")]
     UnderReview = 6
 }

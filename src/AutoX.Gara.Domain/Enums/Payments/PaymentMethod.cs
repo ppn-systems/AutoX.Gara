@@ -1,38 +1,39 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Payments;
 
 /// <summary>
-/// Xác định các phương thức thanh toán có thể sử dụng.
+/// X�c d?nh c�c phuong th?c thanh to�n c� th? s? d?ng.
 /// </summary>
-public enum PaymentMethod : System.Byte
+public enum PaymentMethod : byte
 {
-    [Display(Name = "Không có phương thức thanh toán")]
+    [Display(Name = "Kh�ng c� phuong th?c thanh to�n")]
     None = 0,
 
-    [Display(Name = "Tiền mặt")]
+    [Display(Name = "Ti?n m?t")]
     Cash = 1,
 
-    [Display(Name = "Chuyển khoản ngân hàng")]
+    [Display(Name = "Chuy?n kho?n ng�n h�ng")]
     BankTransfer = 2,
 
-    [Display(Name = "Thẻ tín dụng")]
+    [Display(Name = "Th? t�n d?ng")]
     CreditCard = 3,
 
-    [Display(Name = "Ví điện tử Momo")]
+    [Display(Name = "V� di?n t? Momo")]
     Momo = 4,
 
-    [Display(Name = "Ví điện tử ZaloPay")]
+    [Display(Name = "V� di?n t? ZaloPay")]
     ZaloPay = 5,
 
-    [Display(Name = "VNPay - Cổng thanh toán")]
+    [Display(Name = "VNPay - C?ng thanh to�n")]
     VNPay = 6,
 
-    [Display(Name = "PayPal - Thanh toán quốc tế")]
+    [Display(Name = "PayPal - Thanh to�n qu?c t?")]
     PayPal = 7,
 
-    [Display(Name = "Khác")]
+    [Display(Name = "Kh�c")]
     Other = 255
 }

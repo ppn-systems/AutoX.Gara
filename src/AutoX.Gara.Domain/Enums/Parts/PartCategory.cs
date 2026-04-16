@@ -1,169 +1,170 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Parts;
 
 /// <summary>
-/// Danh mục phụ tùng ô tô.
+/// Danh m?c ph? t�ng � t�.
 /// </summary>
-public enum PartCategory : System.Byte
+public enum PartCategory : byte
 {
-    [Display(Name = "Không xác định")]
+    [Display(Name = "Kh�ng x�c d?nh")]
     None = 0,
 
-    // 🔥 Động cơ & truyền động
-    [Display(Name = "Phụ tùng động cơ")]
+    // ?? �?ng co & truy?n d?ng
+    [Display(Name = "Ph? t�ng d?ng co")]
     Engine = 1,
 
-    [Display(Name = "Phụ tùng truyền động")]
+    [Display(Name = "Ph? t�ng truy?n d?ng")]
     Transmission = 2,
 
-    [Display(Name = "Hệ thống phun nhiên liệu")]
+    [Display(Name = "H? th?ng phun nhi�n li?u")]
     FuelInjection = 3,
 
-    [Display(Name = "Bộ tăng áp")]
+    [Display(Name = "B? tang �p")]
     Turbocharger = 4,
 
-    [Display(Name = "Hệ thống bôi trơn")]
+    [Display(Name = "H? th?ng b�i tron")]
     Lubrication = 5,
 
-    [Display(Name = "Hệ thống làm mát")]
+    [Display(Name = "H? th?ng l�m m�t")]
     Cooling = 6,
 
-    [Display(Name = "Hệ thống nhiên liệu")]
+    [Display(Name = "H? th?ng nhi�n li?u")]
     Fuel = 7,
 
-    [Display(Name = "Hệ thống xả")]
+    [Display(Name = "H? th?ng x?")]
     Exhaust = 8,
 
-    [Display(Name = "Hệ thống đánh lửa")]
+    [Display(Name = "H? th?ng d�nh l?a")]
     Ignition = 9,
 
-    // ⚡ Hệ thống điện & điều khiển
-    [Display(Name = "Phụ tùng điện")]
+    // ? H? th?ng di?n & di?u khi?n
+    [Display(Name = "Ph? t�ng di?n")]
     Electrical = 10,
 
-    [Display(Name = "Cảm biến và mô-đun điều khiển")]
+    [Display(Name = "C?m bi?n v� m�-dun di?u khi?n")]
     SensorsAndModules = 11,
 
-    [Display(Name = "Hệ thống chống bó cứng phanh")]
+    [Display(Name = "H? th?ng ch?ng b� c?ng phanh")]
     ABS = 12,
 
-    [Display(Name = "Hệ thống ổn định điện tử")]
+    [Display(Name = "H? th?ng ?n d?nh di?n t?")]
     ESC = 13,
 
-    [Display(Name = "Hệ thống chiếu sáng")]
+    [Display(Name = "H? th?ng chi?u s�ng")]
     Lighting = 14,
 
-    // 🚗 Hệ thống an toàn
-    [Display(Name = "Phụ tùng phanh")]
+    // ?? H? th?ng an to�n
+    [Display(Name = "Ph? t�ng phanh")]
     Brake = 15,
 
-    [Display(Name = "Hệ thống an toàn")]
+    [Display(Name = "H? th?ng an to�n")]
     Safety = 16,
 
-    [Display(Name = "Túi khí và thiết bị an toàn")]
+    [Display(Name = "T�i kh� v� thi?t b? an to�n")]
     Airbags = 17,
 
-    [Display(Name = "Hệ thống khóa và an ninh")]
+    [Display(Name = "H? th?ng kh�a v� an ninh")]
     SecurityAndLocking = 18,
 
-    // 🔧 Khung gầm & treo
-    [Display(Name = "Hệ thống treo")]
+    // ?? Khung g?m & treo
+    [Display(Name = "H? th?ng treo")]
     Suspension = 19,
 
-    [Display(Name = "Hệ thống lái")]
+    [Display(Name = "H? th?ng l�i")]
     Steering = 20,
 
-    [Display(Name = "Bánh xe và lốp")]
+    [Display(Name = "B�nh xe v� l?p")]
     WheelAndTire = 21,
 
-    // 🏠 Nội thất & tiện nghi
-    [Display(Name = "Hệ thống điều hòa")]
+    // ?? N?i th?t & ti?n nghi
+    [Display(Name = "H? th?ng di?u h�a")]
     AirConditioning = 22,
 
-    [Display(Name = "Nội thất xe")]
+    [Display(Name = "N?i th?t xe")]
     Interior = 23,
 
-    [Display(Name = "Hệ thống giải trí")]
+    [Display(Name = "H? th?ng gi?i tr�")]
     Entertainment = 24,
 
-    [Display(Name = "Hệ thống định vị")]
+    [Display(Name = "H? th?ng d?nh v?")]
     Navigation = 25,
 
-    [Display(Name = "Hệ thống sưởi ghế")]
+    [Display(Name = "H? th?ng su?i gh?")]
     SeatHeating = 26,
 
-    [Display(Name = "Hệ thống làm mát ghế")]
+    [Display(Name = "H? th?ng l�m m�t gh?")]
     SeatCooling = 27,
 
-    // 🎭 Ngoại thất & phụ kiện
-    [Display(Name = "Phụ tùng thân xe")]
+    // ?? Ngo?i th?t & ph? ki?n
+    [Display(Name = "Ph? t�ng th�n xe")]
     Body = 28,
 
-    [Display(Name = "Gương và kính")]
+    [Display(Name = "Guong v� k�nh")]
     MirrorsAndGlass = 29,
 
-    [Display(Name = "Phụ kiện ngoại thất")]
+    [Display(Name = "Ph? ki?n ngo?i th?t")]
     ExteriorAccessories = 30,
 
-    [Display(Name = "Phụ kiện nội thất")]
+    [Display(Name = "Ph? ki?n n?i th?t")]
     InteriorAccessories = 31,
 
-    // 🚀 Công nghệ hỗ trợ lái xe
-    [Display(Name = "Hệ thống điều khiển hành trình")]
+    // ?? C�ng ngh? h? tr? l�i xe
+    [Display(Name = "H? th?ng di?u khi?n h�nh tr�nh")]
     CruiseControl = 32,
 
-    [Display(Name = "Camera và cảm biến đỗ xe")]
+    [Display(Name = "Camera v� c?m bi?n d? xe")]
     ParkingAssist = 33,
 
-    [Display(Name = "Hệ thống khởi động từ xa")]
+    [Display(Name = "H? th?ng kh?i d?ng t? xa")]
     RemoteStart = 34,
 
-    // 🛠 Bảo trì & bảo dưỡng
-    [Display(Name = "Phụ tùng bảo dưỡng")]
+    // ?? B?o tr� & b?o du?ng
+    [Display(Name = "Ph? t�ng b?o du?ng")]
     Maintenance = 35,
 
-    [Display(Name = "Hệ thống chống ồn")]
+    [Display(Name = "H? th?ng ch?ng ?n")]
     SoundDampening = 36,
 
-    // 🌱 Hệ thống nhiên liệu tiên tiến (EV & Hybrid)
-    [Display(Name = "Pin và mô-đun điện")]
+    // ?? H? th?ng nhi�n li?u ti�n ti?n (EV & Hybrid)
+    [Display(Name = "Pin v� m�-dun di?n")]
     BatteryAndModules = 37,
 
-    [Display(Name = "Bộ sạc và hệ thống quản lý pin")]
+    [Display(Name = "B? s?c v� h? th?ng qu?n l� pin")]
     ChargingSystem = 38,
 
-    // 🛰 Hệ thống điều hướng & viễn thông
-    [Display(Name = "Hệ thống viễn thông & Internet")]
+    // ?? H? th?ng di?u hu?ng & vi?n th�ng
+    [Display(Name = "H? th?ng vi?n th�ng & Internet")]
     Telematics = 39,
 
-    [Display(Name = "Màn hình hiển thị HUD")]
+    [Display(Name = "M�n h�nh hi?n th? HUD")]
     HUD = 40,
 
-    // 🏎 Hệ thống khí động học
-    [Display(Name = "Cánh gió và bộ khuếch tán")]
+    // ?? H? th?ng kh� d?ng h?c
+    [Display(Name = "C�nh gi� v� b? khu?ch t�n")]
     Aerodynamics = 41,
 
-    // 🔇 Hệ thống cách âm & cách nhiệt
-    [Display(Name = "Cách âm & chống rung")]
+    // ?? H? th?ng c�ch �m & c�ch nhi?t
+    [Display(Name = "C�ch �m & ch?ng rung")]
     SoundProofing = 42,
 
-    [Display(Name = "Kính chống UV và cách nhiệt")]
+    [Display(Name = "K�nh ch?ng UV v� c�ch nhi?t")]
     UVGlass = 43,
 
-    // 🏕 Phụ kiện chuyên dụng
-    [Display(Name = "Giá nóc và hộp chứa đồ")]
+    // ?? Ph? ki?n chuy�n d?ng
+    [Display(Name = "Gi� n�c v� h?p ch?a d?")]
     RoofRack = 44,
 
-    [Display(Name = "Bộ móc kéo xe")]
+    [Display(Name = "B? m�c k�o xe")]
     TowHitch = 45,
 
-    [Display(Name = "Bộ lọc không khí và nhiên liệu")]
+    [Display(Name = "B? l?c kh�ng kh� v� nhi�n li?u")]
     Filter = 46,
 
-    // ❓ Khác
-    [Display(Name = "Phụ tùng khác")]
+    // ? Kh�c
+    [Display(Name = "Ph? t�ng kh�c")]
     Other = 255
 }

@@ -1,44 +1,45 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Domain.Enums.Employees;
 
 /// <summary>
-/// Trạng thái làm việc của nhân viên.
+/// Tr?ng th�i l�m vi?c c?a nh�n vi�n.
 /// </summary>
-public enum EmploymentStatus : System.Byte
+public enum EmploymentStatus : byte
 {
-    [Display(Name = "Không xác định")]
+    [Display(Name = "Kh�ng x�c d?nh")]
     None = 0,
 
     /// <summary>
-    /// Nhân viên đang làm việc.
+    /// Nh�n vi�n dang l�m vi?c.
     /// </summary>
-    [Display(Name = "Đang làm việc")]
+    [Display(Name = "�ang l�m vi?c")]
     Active = 1,
 
     /// <summary>
-    /// Nhân viên đã nghỉ việc.
+    /// Nh�n vi�n d� ngh? vi?c.
     /// </summary>
-    [Display(Name = "Đã nghỉ việc")]
+    [Display(Name = "�� ngh? vi?c")]
     Inactive = 2,
 
     /// <summary>
-    /// Nhân viên đang nghỉ phép.
+    /// Nh�n vi�n dang ngh? ph�p.
     /// </summary>
-    [Display(Name = "Đang nghỉ phép")]
+    [Display(Name = "�ang ngh? ph�p")]
     OnLeave = 3,
 
     /// <summary>
-    /// Nhân viên bị chấm dứt hợp đồng.
+    /// Nh�n vi�n b? ch?m d?t h?p d?ng.
     /// </summary>
-    [Display(Name = "Bị sa thải")]
+    [Display(Name = "B? sa th?i")]
     Terminated = 4,
 
     /// <summary>
-    /// Nhân viên đã được tuyển dụng nhưng chưa bắt đầu làm việc.
+    /// Nh�n vi�n d� du?c tuy?n d?ng nhung chua b?t d?u l�m vi?c.
     /// </summary>
-    [Display(Name = "Chờ bắt đầu")]
+    [Display(Name = "Ch? b?t d?u")]
     Pending = 5,
 }

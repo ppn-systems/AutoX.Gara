@@ -1,5 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
@@ -16,48 +15,32 @@ namespace AutoX.Gara.Domain.Entities.Billings;
 /// Lớp đại diện cho hóa đơn gara ô tô.
 /// </summary>
 [Table(nameof(Invoice))]
-public class Invoice
+public class Invoice : AuditEntity<int>
 {
     #region Fields
 
-    private System.Decimal _discount;
-    private System.String _invoiceNumber = System.String.Empty;
+    private decimal _discount;
+    private string _invoiceNumber = string.Empty;
 
     #endregion
 
     #region Identification Properties
 
     /// <summary>
-    /// Mã hóa đơn.
-    /// </summary>
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public System.Int32 Id { get; set; }
-
-    /// <summary>
     /// Id chủ xe.
     /// </summary>
-    public System.Int32 CustomerId { get; set; }
+    public int CustomerId { get; set; }
 
     /// <summary>
     /// Số hóa đơn (mã duy nhất).
     /// </summary>
     [Required(ErrorMessage = "Invoice number is required.")]
     [MaxLength(30, ErrorMessage = "Invoice number must not exceed 30 characters.")]
-    public System.String InvoiceNumber
+    public string InvoiceNumber
     {
         get => _invoiceNumber;
-        set => _invoiceNumber = value?.Trim() ?? System.String.Empty;
+        set => _invoiceNumber = value?.Trim() ?? string.Empty;
     }
-
-    #endregion
-
-    #region Audit Properties
-
-    /// <summary>
-    /// Ngày lập hóa đơn.
-    /// </summary>
-    public System.DateTime InvoiceDate { get; set; } = System.DateTime.UtcNow;
 
     #endregion
 
@@ -81,15 +64,15 @@ public class Invoice
     /// <summary>
     /// Giá trị giảm giá.
     /// </summary>
-    [Range(0, System.Double.MaxValue, ErrorMessage = "Discount must be a positive value.")]
-    public System.Decimal Discount
+    [Range(0, double.MaxValue, ErrorMessage = "Discount must be a positive value.")]
+    public decimal Discount
     {
         get => _discount;
         set
         {
             if (DiscountType == DiscountType.Percentage && (value < 0 || value > 100))
             {
-                throw new System.ArgumentException("Discount percentage must be between 0 and 100.");
+                throw new ArgumentException("Discount percentage must be between 0 and 100.");
             }
 
             _discount = value;
@@ -99,7 +82,6 @@ public class Invoice
     #endregion
 
     #region Related Entities Properties
-
 
     /// <summary>
     /// Danh sách cho đơn sửa chữa.
@@ -115,52 +97,60 @@ public class Invoice
 
     #region Calculated Properties
 
+    public DateTime InvoiceDate 
+    { 
+        get => CreatedAt; 
+        set => CreatedAt = value; 
+    }
+
     /// <summary>
     /// Tính tổng tiền trước thuế và giảm giá.
     /// </summary>
     [Column(TypeName = "decimal(18,2)")]
-    public System.Decimal Subtotal { get; private set; }
+    public decimal Subtotal { get; private set; }
 
     /// <summary>
     /// Số tiền giảm giá thực tế.
     /// </summary>
     [Column(TypeName = "decimal(18,2)")]
-    public System.Decimal DiscountAmount { get; private set; }
+    public decimal DiscountAmount { get; private set; }
 
     /// <summary>
     /// Số tiền thuế thực tế.
     /// </summary>
     [Column(TypeName = "decimal(18,2)")]
-    public System.Decimal TaxAmount { get; private set; }
+    public decimal TaxAmount { get; private set; }
 
     /// <summary>
     /// Tổng số tiền cần thanh toán sau thuế và giảm giá.
     /// </summary>
     [Column(TypeName = "decimal(18,2)")]
-    public System.Decimal TotalAmount { get; private set; }
+    public decimal TotalAmount { get; private set; }
 
     /// <summary>
     /// Số tiền còn nợ.
     /// </summary>
     [Column(TypeName = "decimal(18,2)")]
-    public System.Decimal BalanceDue { get; private set; }
+    public decimal BalanceDue { get; private set; }
 
     /// <summary>
     /// Tiền dịch vụ
     /// </summary>
     [Column(TypeName = "decimal(18,2)")]
-    public System.Decimal ServiceSubtotal { get; private set; }
+    public decimal ServiceSubtotal { get; private set; }
 
     /// <summary>
     /// Tiền phụ tùng
     /// </summary>
     [Column(TypeName = "decimal(18,2)")]
-    public System.Decimal PartsSubtotal { get; private set; }
+    public decimal PartsSubtotal { get; private set; }
 
     /// <summary>
-    /// Hóa đơn đã thanh toán đủ chưa?
+    /// Ghi chú của hóa đơn.
     /// </summary>
-    public System.Boolean IsFullyPaid => BalanceDue <= 0;
+    public string Notes { get; set; } = string.Empty;
+
+    public bool IsFullyPaid => BalanceDue <= 0;
 
     #endregion
 
@@ -169,7 +159,7 @@ public class Invoice
     /// <summary>
     /// Số tiền khách đã thanh toán.
     /// </summary>
-    public System.Decimal AmountPaid() =>
+    public decimal AmountPaid() =>
         Transactions?
             .Where(t => t.Type == TransactionType.Revenue && !t.IsReversed)
             .Sum(t => t.Amount) ?? 0;
@@ -198,7 +188,7 @@ public class Invoice
             : Discount;
 
         // Tính thuế
-        TaxAmount = (Subtotal - DiscountAmount) * ((System.Decimal)TaxRate / 100);
+        TaxAmount = (Subtotal - DiscountAmount) * ((decimal)TaxRate / 100);
 
         // Tổng sau thuế và giảm giá
         TotalAmount = Subtotal - DiscountAmount + TaxAmount;
