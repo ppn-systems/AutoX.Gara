@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<!-- Build & Lang -->
@@ -25,6 +25,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Nalix.Framework" Version="12.0.8" />
+		<PackageReference Include="Nalix.Network" Version="12.0.8" />
 		<PackageReference Include="Nalix.Runtime" Version="12.0.8" />
 		<ProjectReference Include="..\AutoX.Gara.Domain\AutoX.Gara.Domain.csproj" />
 		<ProjectReference Include="..\AutoX.Gara.Shared\AutoX.Gara.Shared.csproj" />

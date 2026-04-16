@@ -1,3 +1,5 @@
+﻿using System;
+using System.Collections.Generic;
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Shared.Models;
 
@@ -5,11 +7,11 @@ namespace AutoX.Gara.Application.Abstractions.Repositories;
 
 public interface IInvoiceRepository
 {
-    System.Threading.Tasks.Task<Invoice> GetInvoiceWithFullGraphTrackedAsync(System.Int32 id);
-    System.Threading.Tasks.Task<(System.Collections.Generic.List<Invoice> Items, System.Int32 TotalCount)> GetPageAsync(InvoiceListQuery query);
-    System.Threading.Tasks.Task<Invoice> GetByIdAsync(System.Int32 id);
-    System.Threading.Tasks.Task<System.Boolean> ExistsByInvoiceNumberAsync(System.String invoiceNumber, System.Int32? excludeId = null);
-    System.Threading.Tasks.Task<Invoice> GetByIdWithDetailsAsync(System.Int32 id);
+    System.Threading.Tasks.Task<Invoice> GetInvoiceWithFullGraphTrackedAsync(int id);
+    System.Threading.Tasks.Task<(List<Invoice> Items, int TotalCount)> GetPageAsync(InvoiceListQuery query);
+    System.Threading.Tasks.Task<Invoice> GetByIdAsync(int id);
+    System.Threading.Tasks.Task<bool> ExistsByInvoiceNumberAsync(string invoiceNumber, int? excludeId = null);
+    System.Threading.Tasks.Task<Invoice> GetByIdWithDetailsAsync(int id);
     System.Threading.Tasks.Task AddAsync(Invoice invoice);
     void Update(Invoice invoice);
     void Delete(Invoice invoice);
