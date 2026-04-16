@@ -1,4 +1,6 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+using System.Collections.Generic;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -7,10 +9,10 @@ using System.Linq;
 namespace AutoX.Gara.Infrastructure.Repositories;
 
 /// <summary>
-/// Repository chung cho tất cả entity.
-/// Sử dụng Entity Framework Core.
+/// Repository chung cho t?t c? entity.
+/// S? d?ng Entity Framework Core.
 /// </summary>
-/// <typeparam name="T">Kiểu entity.</typeparam>
+/// <typeparam name="T">Ki?u entity.</typeparam>
 public class DataRepository<T>(AutoXDbContext context) where T : class
 {
     #region Fields
@@ -25,23 +27,23 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
     #region Query APIs
 
     /// <summary>
-    /// Trả về <see cref="IQueryable{T}"/> của DbSet để caller tự compose
-    /// thêm filter / sort / projection trước khi thực thi.
+    /// Tr? v? <see cref="IQueryable{T}"/> c?a DbSet d? caller t? compose
+    /// th�m filter / sort / projection tru?c khi th?c thi.
     /// <para>
-    /// Dùng <see cref="AsNoTracking"/> để tránh tracking overhead trên read-only queries.
+    /// D�ng <see cref="AsNoTracking"/> d? tr�nh tracking overhead tr�n read-only queries.
     /// </para>
     /// </summary>
     public IQueryable<T> AsQueryable() => _dbSet.AsNoTracking().AsQueryable();
 
     /// <summary>
-    /// Lấy tất cả entity theo trang (không filter, không sort).
+    /// L?y t?t c? entity theo trang (kh�ng filter, kh�ng sort).
     /// </summary>
-    /// <param name="pageNumber">Số trang (bắt đầu từ 1).</param>
-    /// <param name="pageSize">Số phần tử trên mỗi trang.</param>
-    /// <param name="cancellationToken">Token hủy thực thi.</param>
-    public System.Threading.Tasks.Task<System.Collections.Generic.List<T>> GetAllAsync(
-        System.Int32 pageNumber = 1,
-        System.Int32 pageSize = 10,
+    /// <param name="pageNumber">S? trang (b?t d?u t? 1).</param>
+    /// <param name="pageSize">S? ph?n t? tr�n m?i trang.</param>
+    /// <param name="cancellationToken">Token h?y th?c thi.</param>
+    public System.Threading.Tasks.Task<List<T>> GetAllAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.AsNoTracking()
                  .Skip((pageNumber - 1) * pageSize)
@@ -49,15 +51,15 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
                  .ToListAsync(cancellationToken);
 
     /// <summary>
-    /// Thực thi phân trang trên một <see cref="IQueryable{T}"/> đã được compose sẵn
-    /// (filter + sort áp dụng bên ngoài).
-    /// Dùng kết hợp với <see cref="AsQueryable"/> để tách biệt concern.
+    /// Th?c thi ph�n trang tr�n m?t <see cref="IQueryable{T}"/> d� du?c compose s?n
+    /// (filter + sort �p d?ng b�n ngo�i).
+    /// D�ng k?t h?p v?i <see cref="AsQueryable"/> d? t�ch bi?t concern.
     /// </summary>
-    /// <param name="query">Query đã có filter và sort.</param>
-    /// <param name="pageNumber">Số trang (bắt đầu từ 1).</param>
-    /// <param name="pageSize">Số phần tử trên mỗi trang.</param>
-    /// <param name="cancellationToken">Token hủy.</param>
-    /// <returns>Trang dữ liệu tương ứng.</returns>
+    /// <param name="query">Query d� c� filter v� sort.</param>
+    /// <param name="pageNumber">S? trang (b?t d?u t? 1).</param>
+    /// <param name="pageSize">S? ph?n t? tr�n m?i trang.</param>
+    /// <param name="cancellationToken">Token h?y.</param>
+    /// <returns>Trang d? li?u tuong ?ng.</returns>
     /// <example>
     /// <code>
     /// IQueryable&lt;Customer&gt; q = _repo.AsQueryable()
@@ -68,69 +70,69 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
     /// var page    = await _repo.GetPagedAsync(q, page: 2, pageSize: 20);
     /// </code>
     /// </example>
-    public System.Threading.Tasks.Task<System.Collections.Generic.List<T>> GetPagedAsync(
+    public System.Threading.Tasks.Task<List<T>> GetPagedAsync(
         IQueryable<T> query,
-        System.Int32 pageNumber = 1,
-        System.Int32 pageSize = 10,
+        int pageNumber = 1,
+        int pageSize = 10,
         System.Threading.CancellationToken cancellationToken = default)
         => query.Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
 
     /// <summary>
-    /// Đếm tổng số entity trong toàn bộ bảng (không filter).
+    /// �?m t?ng s? entity trong to�n b? b?ng (kh�ng filter).
     /// </summary>
-    public System.Threading.Tasks.Task<System.Int32> CountAsync(
+    public System.Threading.Tasks.Task<int> CountAsync(
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.CountAsync(cancellationToken);
 
     /// <summary>
-    /// Đếm số entity khớp với một <see cref="IQueryable{T}"/> đã được compose sẵn.
-    /// Dùng để lấy <c>TotalCount</c> trước khi phân trang.
+    /// �?m s? entity kh?p v?i m?t <see cref="IQueryable{T}"/> d� du?c compose s?n.
+    /// D�ng d? l?y <c>TotalCount</c> tru?c khi ph�n trang.
     /// </summary>
-    /// <param name="query">Query đã có filter (chưa Skip/Take).</param>
-    /// <param name="cancellationToken">Token hủy.</param>
-    public System.Threading.Tasks.Task<System.Int32> CountAsync(
+    /// <param name="query">Query d� c� filter (chua Skip/Take).</param>
+    /// <param name="cancellationToken">Token h?y.</param>
+    public System.Threading.Tasks.Task<int> CountAsync(
         IQueryable<T> query,
         System.Threading.CancellationToken cancellationToken = default)
         => query.CountAsync(cancellationToken);
 
     /// <summary>
-    /// Kiểm tra có entity nào thỏa mãn điều kiện không.
+    /// Ki?m tra c� entity n�o th?a m�n di?u ki?n kh�ng.
     /// </summary>
-    public System.Threading.Tasks.Task<System.Boolean> AnyAsync(
-        System.Linq.Expressions.Expression<System.Func<T, System.Boolean>> predicate,
+    public System.Threading.Tasks.Task<bool> AnyAsync(
+        System.Linq.Expressions.Expression<System.Func<T, bool>> predicate,
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.AnyAsync(predicate, cancellationToken);
 
     /// <summary>
-    /// Lấy entity theo khóa chính.
+    /// L?y entity theo kh�a ch�nh.
     /// </summary>
-    /// <param name="id">Giá trị khóa chính.</param>
-    /// <param name="cancellationToken">Token hủy.</param>
-    /// <returns>Entity tìm thấy, hoặc <c>null</c> nếu không có.</returns>
+    /// <param name="id">Gi� tr? kh�a ch�nh.</param>
+    /// <param name="cancellationToken">Token h?y.</param>
+    /// <returns>Entity t�m th?y, ho?c <c>null</c> n?u kh�ng c�.</returns>
     public System.Threading.Tasks.Task<T> GetByIdAsync(
         System.Object id,
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.FindAsync([id], cancellationToken).AsTask();
-    // ↑ Fix bug: cancellationToken KHÔNG được nhét vào mảng keyValues.
-    //   FindAsync([id, ct]) khiến EF dùng ct như một composite key — runtime error.
+    // ? Fix bug: cancellationToken KH�NG du?c nh�t v�o m?ng keyValues.
+    //   FindAsync([id, ct]) khi?n EF d�ng ct nhu m?t composite key � runtime error.
 
     /// <summary>
-    /// Lấy danh sách entity với filter + sort + include + phân trang tùy chọn.
+    /// L?y danh s�ch entity v?i filter + sort + include + ph�n trang t�y ch?n.
     /// </summary>
-    /// <param name="filter">Biểu thức lọc (nullable).</param>
-    /// <param name="orderBy">Biểu thức sắp xếp (nullable).</param>
-    /// <param name="includeProperties">Tên navigation property, phân cách bằng dấu phẩy.</param>
-    /// <param name="pageNumber">Số trang (bắt đầu từ 1).</param>
-    /// <param name="pageSize">Số phần tử/trang.</param>
-    /// <param name="cancellationToken">Token hủy.</param>
-    public System.Threading.Tasks.Task<System.Collections.Generic.List<T>> GetAsync(
-        System.Linq.Expressions.Expression<System.Func<T, System.Boolean>> filter = null,
+    /// <param name="filter">Bi?u th?c l?c (nullable).</param>
+    /// <param name="orderBy">Bi?u th?c s?p x?p (nullable).</param>
+    /// <param name="includeProperties">T�n navigation property, ph�n c�ch b?ng d?u ph?y.</param>
+    /// <param name="pageNumber">S? trang (b?t d?u t? 1).</param>
+    /// <param name="pageSize">S? ph?n t?/trang.</param>
+    /// <param name="cancellationToken">Token h?y.</param>
+    public System.Threading.Tasks.Task<List<T>> GetAsync(
+        System.Linq.Expressions.Expression<System.Func<T, bool>> filter = null,
         System.Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
-        System.String includeProperties = "",
-        System.Int32 pageNumber = 1,
-        System.Int32 pageSize = 10,
+        string includeProperties = "",
+        int pageNumber = 1,
+        int pageSize = 10,
         System.Threading.CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsQueryable();
@@ -140,8 +142,8 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
             query = query.Where(filter);
         }
 
-        foreach (System.String prop in includeProperties.Split(
-            ',', System.StringSplitOptions.RemoveEmptyEntries))
+        foreach (string prop in includeProperties.Split(
+            ',', StringSplitOptions.RemoveEmptyEntries))
         {
             query = query.Include(prop.Trim());
         }
@@ -159,10 +161,10 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
     }
 
     /// <summary>
-    /// Tìm entity đầu tiên thỏa mãn predicate, hoặc <c>null</c>.
+    /// T�m entity d?u ti�n th?a m�n predicate, ho?c <c>null</c>.
     /// </summary>
     public System.Threading.Tasks.Task<T> GetFirstOrDefaultAsync(
-        System.Linq.Expressions.Expression<System.Func<T, System.Boolean>> predicate,
+        System.Linq.Expressions.Expression<System.Func<T, bool>> predicate,
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.AsNoTracking().FirstOrDefaultAsync(predicate, cancellationToken);
 
@@ -170,27 +172,27 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
 
     #region Modification APIs
 
-    /// <summary>Thêm mới một entity.</summary>
+    /// <summary>Th�m m?i m?t entity.</summary>
     public System.Threading.Tasks.Task AddAsync(
         T entity,
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.AddAsync(entity, cancellationToken).AsTask();
 
-    /// <summary>Thêm mới nhiều entity.</summary>
+    /// <summary>Th�m m?i nhi?u entity.</summary>
     public System.Threading.Tasks.Task AddRangeAsync(
-        System.Collections.Generic.IEnumerable<T> entities,
+        IEnumerable<T> entities,
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.AddRangeAsync(entities, cancellationToken);
 
-    /// <summary>Cập nhật một entity (đưa vào trạng thái Modified).</summary>
+    /// <summary>C?p nh?t m?t entity (dua v�o tr?ng th�i Modified).</summary>
     public void Update(T entity) => _dbSet.Update(entity);
 
-    /// <summary>Xóa entity theo khóa chính.</summary>
+    /// <summary>X�a entity theo kh�a ch�nh.</summary>
     public async System.Threading.Tasks.Task DeleteAsync(
         System.Object id,
         System.Threading.CancellationToken cancellationToken = default)
     {
-        // Fix bug: cancellationToken không được nhét vào keyValues array
+        // Fix bug: cancellationToken kh�ng du?c nh�t v�o keyValues array
         T entity = await _dbSet.FindAsync([id], cancellationToken);
         if (entity is not null)
         {
@@ -198,15 +200,15 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
         }
     }
 
-    /// <summary>Xóa một entity đã được tracked.</summary>
+    /// <summary>X�a m?t entity d� du?c tracked.</summary>
     public void Delete(T entity) => _dbSet.Remove(entity);
 
-    /// <summary>Xóa nhiều entity.</summary>
-    public void DeleteRange(System.Collections.Generic.IEnumerable<T> entities)
+    /// <summary>X�a nhi?u entity.</summary>
+    public void DeleteRange(IEnumerable<T> entities)
         => _dbSet.RemoveRange(entities);
 
-    /// <summary>Lưu tất cả thay đổi vào database.</summary>
-    public System.Threading.Tasks.Task<System.Int32> SaveChangesAsync(
+    /// <summary>Luu t?t c? thay d?i v�o database.</summary>
+    public System.Threading.Tasks.Task<int> SaveChangesAsync(
         System.Threading.CancellationToken cancellationToken = default)
         => _context.SaveChangesAsync(cancellationToken);
 

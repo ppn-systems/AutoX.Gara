@@ -1,4 +1,5 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Shared.Models;
@@ -10,47 +11,47 @@ namespace AutoX.Gara.Infrastructure.Abstractions.Repositories;
 
 /// <summary>
 /// Repository interface cho Customer domain.
-/// Tách biệt domain/application logic khỏi EF Core chi tiết.
+/// T�ch bi?t domain/application logic kh?i EF Core chi ti?t.
 /// <para>
-/// Nguyên tắc DDD: Application layer chỉ gọi interface này,
-/// không import Microsoft.EntityFrameworkCore hay AutoXDbContext.
+/// Nguy�n t?c DDD: Application layer ch? g?i interface n�y,
+/// kh�ng import Microsoft.EntityFrameworkCore hay AutoXDbContext.
 /// </para>
 /// </summary>
 public interface ICustomerRepository
 {
-    // ─── Query ────────────────────────────────────────────────────────────────
+    // --- Query ----------------------------------------------------------------
 
     /// <summary>
-    /// Lấy một trang khách hàng với filter / sort / phân trang.
-    /// Trả về tuple gồm danh sách và tổng số bản ghi khớp filter (trước phân trang).
+    /// L?y m?t trang kh�ch h�ng v?i filter / sort / ph�n trang.
+    /// Tr? v? tuple g?m danh s�ch v� t?ng s? b?n ghi kh?p filter (tru?c ph�n trang).
     /// </summary>
-    Task<(List<Customer> Items, System.Int32 TotalCount)> GetPageAsync(
+    Task<(List<Customer> Items, int TotalCount)> GetPageAsync(
         CustomerListQuery query,
         CancellationToken ct = default);
 
     /// <summary>
-    /// Lấy thông tin đầy đủ của một khách hàng theo Id.
-    /// Trả về <c>null</c> nếu không tìm thấy hoặc đã bị soft-delete.
+    /// L?y th�ng tin d?y d? c?a m?t kh�ch h�ng theo Id.
+    /// Tr? v? <c>null</c> n?u kh�ng t�m th?y ho?c d� b? soft-delete.
     /// </summary>
-    Task<Customer> GetByIdAsync(System.Int32 id, CancellationToken ct = default);
+    Task<Customer> GetByIdAsync(int id, CancellationToken ct = default);
 
     /// <summary>
-    /// Kiểm tra xem email hoặc số điện thoại đã tồn tại trong DB chưa
-    /// (chỉ xét bản ghi chưa bị soft-delete).
+    /// Ki?m tra xem email ho?c s? di?n tho?i d� t?n t?i trong DB chua
+    /// (ch? x�t b?n ghi chua b? soft-delete).
     /// </summary>
-    Task<System.Boolean> ExistsByContactAsync(
-        System.String email,
-        System.String phoneNumber,
+    Task<bool> ExistsByContactAsync(
+        string email,
+        string phoneNumber,
         CancellationToken ct = default);
 
-    // ─── Write ────────────────────────────────────────────────────────────────
+    // --- Write ----------------------------------------------------------------
 
-    /// <summary>Thêm mới entity vào DbSet (chưa SaveChanges).</summary>
+    /// <summary>Th�m m?i entity v�o DbSet (chua SaveChanges).</summary>
     Task AddAsync(Customer customer, CancellationToken ct = default);
 
-    /// <summary>Đánh dấu entity là Modified (chưa SaveChanges).</summary>
+    /// <summary>��nh d?u entity l� Modified (chua SaveChanges).</summary>
     void Update(Customer customer);
 
-    /// <summary>Persist tất cả thay đổi đang chờ xuống DB.</summary>
+    /// <summary>Persist t?t c? thay d?i dang ch? xu?ng DB.</summary>
     Task SaveChangesAsync(CancellationToken ct = default);
 }

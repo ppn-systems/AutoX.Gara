@@ -1,5 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using System;
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Identity;
@@ -8,89 +7,31 @@ using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Domain.Entities.Suppliers;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AutoX.Gara.Infrastructure.Abstractions;
 
 /// <summary>
-/// Định nghĩa abstraction cho DbContext của hệ thống gara AutoX.
+/// Dinh nghia abstraction cho DbContext cua he thong gara AutoX.
 /// </summary>
 public interface IAutoXDbContext
 {
-    /// <summary>
-    /// Tập hợp các phương tiện (xe) trong hệ thống.
-    /// </summary>
-    DbSet<Vehicle> Vehicles { get; set; }
+    DbSet<Vehicle> Vehicles { get; }
+    DbSet<Account> Accounts { get; }
+    DbSet<Invoice> Invoices { get; }
+    DbSet<Customer> Customers { get; }
+    DbSet<Employee> Employees { get; }
+    DbSet<EmployeeSalary> EmployeeSalaries { get; }
+    DbSet<Supplier> Suppliers { get; }
+    DbSet<Part> Parts { get; }
+    DbSet<RepairTask> RepairTasks { get; }
+    DbSet<ServiceItem> ServiceItems { get; }
+    DbSet<RepairOrder> RepairOrders { get; }
+    DbSet<Transaction> Transactions { get; }
+    DbSet<RepairOrderItem> RepairOrderItems { get; }
+    DbSet<SupplierContactPhone> SupplierContactPhones { get; }
 
-    /// <summary>
-    /// Tập hợp các tài khoản người dùng (đăng nhập, phân quyền).
-    /// </summary>
-    DbSet<Account> Accounts { get; set; }
-
-    /// <summary>
-    /// Tập hợp các hóa đơn thanh toán.
-    /// </summary>
-    DbSet<Invoice> Invoices { get; set; }
-
-    /// <summary>
-    /// Tập hợp thông tin khách hàng.
-    /// </summary>
-    DbSet<Customer> Customers { get; set; }
-
-    /// <summary>
-    /// Tập hợp nhân viên làm việc tại gara.
-    /// </summary>
-    DbSet<Employee> Employees { get; set; }
-
-    /// <summary>
-    /// Tập hợp lịch sử lương của nhân viên.
-    /// </summary>
-    DbSet<EmployeeSalary> EmployeeSalaries { get; set; }
-
-    /// <summary>
-    /// Tập hợp nhà cung cấp phụ tùng / dịch vụ.
-    /// </summary>
-    DbSet<Supplier> Suppliers { get; set; }
-
-    /// <summary>
-    /// Tập hợp các phụ tùng trong kho.
-    /// </summary>
-    DbSet<Part> Parts { get; set; }
-
-    /// <summary>
-    /// Tập hợp các công việc sửa chữa (task).
-    /// </summary>
-    DbSet<RepairTask> RepairTasks { get; set; }
-
-    /// <summary>
-    /// Tập hợp các hạng mục dịch vụ (công, phí, dịch vụ).
-    /// </summary>
-    DbSet<ServiceItem> ServiceItems { get; set; }
-
-    /// <summary>
-    /// Tập hợp các lệnh sửa chữa (Repair Order).
-    /// </summary>
-    DbSet<RepairOrder> RepairOrders { get; set; }
-
-    /// <summary>
-    /// Tập hợp các giao dịch tài chính.
-    /// </summary>
-    DbSet<Transaction> Transactions { get; set; }
-
-    /// <summary>
-    /// Tập hợp các dòng chi tiết trong lệnh sửa chữa.
-    /// </summary>
-    DbSet<RepairOrderItem> RepairOrderItems { get; set; }
-
-    /// <summary>
-    /// Tập hợp số điện thoại liên hệ của nhà cung cấp.
-    /// </summary>
-    DbSet<SupplierContactPhone> SupplierContactPhones { get; set; }
-
-    /// <summary>
-    /// Lưu tất cả các thay đổi được theo dõi vào cơ sở dữ liệu.
-    /// </summary>
-    /// <returns>
-    /// Số lượng bản ghi bị ảnh hưởng.
-    /// </returns>
-    System.Int32 SaveChanges();
+    int SaveChanges();
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

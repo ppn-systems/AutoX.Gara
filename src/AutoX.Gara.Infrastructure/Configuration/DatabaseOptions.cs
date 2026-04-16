@@ -1,4 +1,5 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using Nalix.Framework.Configuration.Binding;
 using Nalix.Framework.Environment;
@@ -13,10 +14,10 @@ public sealed class DatabaseOptions : ConfigurationLoader
     /// <summary>
     /// Database type (PostgreSQL | SQLite).
     /// </summary>
-    public System.String DatabaseType { get; init; } = "SQLite";
+    public string DatabaseType { get; init; } = "SQLite";
 
     /// <summary>
     /// Default database connection string.
     /// </summary>
-    public System.String ConnectionString { get; init; } = $"Data Source={System.IO.Path.Combine(Directories.DatabaseDirectory, "AutoX.db")}";
+    public string ConnectionString { get; init; } = $"Data Source={System.IO.Path.Combine(Directories.DatabaseDirectory, "AutoX.db")}";
 }

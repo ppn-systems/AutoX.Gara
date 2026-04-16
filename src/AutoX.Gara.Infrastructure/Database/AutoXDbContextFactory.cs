@@ -1,68 +1,43 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
-using AutoX.Gara.Infrastructure.Configuration;
+﻿using AutoX.Gara.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
 using Nalix.Framework.Configuration;
 using Nalix.Framework.Injection;
+using System;
+using System.Net.NetworkInformation;
 
 namespace AutoX.Gara.Infrastructure.Database;
 
 /// <summary>
-/// Factory dùng cho design-time để tạo <see cref="AutoXDbContext"/>.
-/// <para>
-/// Class này được Entity Framework Core sử dụng khi:
-/// <list type="bullet">
-/// <item>Chạy lệnh migration</item>
-/// <item>Cập nhật database schema</item>
-/// <item>Scaffold DbContext ở design-time</item>
-/// </list>
-/// </para>
+/// Factory dung cho design-time de tao <see cref="AutoXDbContext"/>.
 /// </summary>
-/// <remarks>
-/// Factory này không phụ thuộc vào ASP.NET runtime pipeline
-/// và sử dụng cấu hình được cung cấp từ <see cref="DatabaseOptions"/>.
-/// </remarks>
 public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbContext>
 {
     private static readonly DbContextOptionsBuilder<AutoXDbContext> OptionsBuilder = new();
 
     static AutoXDbContextFactory()
     {
-        InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Start initialization sequence.");
+        ILogger logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+        logger?.Debug($"[DB.{nameof(AutoXDbContextFactory)}] Start initialization sequence.");
 
-        // Load cấu hình từ DatabaseOptions
-        InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Loading DatabaseOptions...");
         DatabaseOptions configuration = ConfigurationManager.Instance.Get<DatabaseOptions>();
 
-        InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] DatabaseType = {configuration.DatabaseType}, ConnectionString = {configuration.ConnectionString}");
-
-        // Kiểm tra kết nối đến database
-        if (!configuration.DatabaseType.Equals("SQLite", System.StringComparison.OrdinalIgnoreCase) &&
+        // Kiem tra ket noi den database
+        if (!configuration.DatabaseType.Equals("SQLite", StringComparison.OrdinalIgnoreCase) &&
             !CAN_CONNECT_TO_DATABASE(configuration.ConnectionString))
         {
-            InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Cannot connect to the database at {configuration.ConnectionString}");
-            throw new System.InvalidOperationException($"Cannot connect to the database at {configuration.ConnectionString}");
+            logger?.Error($"[DB.{nameof(AutoXDbContextFactory)}] Cannot connect to the database at {configuration.ConnectionString}");
+            throw new InvalidOperationException($"Cannot connect to the database at {configuration.ConnectionString}");
         }
-
-        InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Database connectivity check passed.");
 
         try
         {
-            if (configuration.DatabaseType.Equals("PostgreSQL", System.StringComparison.OrdinalIgnoreCase))
+            if (configuration.DatabaseType.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
             {
-                InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Configuring DbContext for PostgreSQL.");
-
                 OptionsBuilder.UseNpgsql(configuration.ConnectionString, npgsqlOptions =>
                 {
-                    npgsqlOptions.EnableRetryOnFailure(5, System.TimeSpan.FromSeconds(30), null);
+                    npgsqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(30), null);
                     npgsqlOptions.CommandTimeout(60);
                     npgsqlOptions.MigrationsHistoryTable("__MigrationsHistory", "public");
                     npgsqlOptions.UseRelationalNulls();
@@ -70,105 +45,49 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
                 })
                 .EnableSensitiveDataLogging(false)
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-                .EnableDetailedErrors(false)
-                .EnableServiceProviderCaching();
-
-                InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] DbContext configured for PostgreSQL.");
+                .EnableDetailedErrors(false);
             }
-            else if (configuration.DatabaseType.Equals("SQLite", System.StringComparison.OrdinalIgnoreCase))
+            else if (configuration.DatabaseType.Equals("SQLite", StringComparison.OrdinalIgnoreCase))
             {
-                InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Configuring DbContext for SQLite.");
-
                 OptionsBuilder.UseSqlite(configuration.ConnectionString, sqliteOptions =>
                 {
                     sqliteOptions.CommandTimeout(60);
                     sqliteOptions.MigrationsHistoryTable("__MigrationsHistory");
                 })
-                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-                .EnableServiceProviderCaching();
-
-                InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Debug($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] DbContext configured for SQLite.");
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             }
             else
             {
-                InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Warn($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Unsupported database type: {configuration.DatabaseType}");
-
-                throw new System.InvalidOperationException($"Unsupported database type: {configuration.DatabaseType}");
+                throw new InvalidOperationException($"Unsupported database type: {configuration.DatabaseType}");
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] Error configuring DbContext for {configuration.DatabaseType}.", ex);
+            logger?.Error($"[DB.{nameof(AutoXDbContextFactory)}] Error configuring DbContext.", ex);
             throw;
         }
     }
 
-    /// <summary>
-    /// Tạo mới một instance của <see cref="AutoXDbContext"/> tại design-time.
-    /// </summary>
-    /// <param name="args">
-    /// Tham số dòng lệnh được EF Core truyền vào (hiện tại không sử dụng).
-    /// </param>
-    /// <returns>
-    /// Một instance đã được cấu hình hoàn chỉnh của <see cref="AutoXDbContext"/>.
-    /// </returns>
-    /// <exception cref="System.InvalidOperationException">
-    /// Ném ra khi:
-    /// <list type="bullet">
-    /// <item>Không thể kết nối tới database</item>
-    /// <item>Loại database không được hỗ trợ</item>
-    /// </list>
-    /// </exception>
-    public AutoXDbContext CreateDbContext(System.String[] args = null)
+    public AutoXDbContext CreateDbContext(string[] args = null)
     {
-        AutoXDbContext dbContext = new(OptionsBuilder.Options);
-
-        InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                .Trace($"[DB.{nameof(AutoXDbContextFactory)}:{nameof(CreateDbContext)}] AutoDbContext successfully created.");
-
-        return dbContext;
+        return new AutoXDbContext(OptionsBuilder.Options);
     }
 
-    #region Private Methods
-
-    private static System.Boolean CAN_CONNECT_TO_DATABASE(System.String connectionString)
+    private static bool CAN_CONNECT_TO_DATABASE(string connectionString)
     {
         try
         {
             Npgsql.NpgsqlConnectionStringBuilder builder = new(connectionString);
+            string host = builder.Host;
+            
+            using Ping ping = new();
+            PingReply reply = ping.Send(host, 3000);
 
-            System.String host = builder.Host;
-            System.Int32 port = builder.Port;
-
-            InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Info($"[DB.{nameof(AutoXDbContextFactory)}:Internal] Pinging database server {host}:{port}...");
-
-            using System.Net.NetworkInformation.Ping ping = new();
-            System.Net.NetworkInformation.PingReply reply = ping.Send(host, 3000); // Timeout 1 giây
-
-            if (reply.Status == System.Net.NetworkInformation.IPStatus.Success)
-            {
-                InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Info($"[DB.{nameof(AutoXDbContextFactory)}:Internal] Ping to {host} successful.");
-                return true;
-            }
-
-            InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[DB.{nameof(AutoXDbContextFactory)}:Internal] Ping to {host} failed: {reply.Status}");
-            return false;
+            return reply.Status == IPStatus.Success;
         }
-        catch (System.Exception ex)
+        catch (Exception)
         {
-            InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[DB.{nameof(AutoXDbContextFactory)}:Internal] Error pinging database server.", ex);
             return false;
         }
     }
-
-    #endregion Private Methods
 }

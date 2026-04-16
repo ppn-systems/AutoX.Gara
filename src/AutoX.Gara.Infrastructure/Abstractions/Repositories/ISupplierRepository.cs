@@ -1,4 +1,6 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+using System.Collections.Generic;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Shared.Models;
@@ -6,50 +8,50 @@ using AutoX.Gara.Shared.Models;
 namespace AutoX.Gara.Infrastructure.Abstractions.Repositories;
 
 /// <summary>
-/// Định nghĩa contract cho tất cả thao tác dữ liệu liên quan đến <see cref="Supplier"/>.
+/// �?nh nghia contract cho t?t c? thao t�c d? li?u li�n quan d?n <see cref="Supplier"/>.
 /// <para>
-/// Application layer chỉ phụ thuộc vào interface này — không biết gì về EF Core.
+/// Application layer ch? ph? thu?c v�o interface n�y � kh�ng bi?t g� v? EF Core.
 /// </para>
 /// </summary>
 public interface ISupplierRepository
 {
-    // ─── Query ────────────────────────────────────────────────────────────────
+    // --- Query ----------------------------------------------------------------
 
     /// <summary>
-    /// Lấy danh sách nhà cung cấp có phân trang, tìm kiếm, lọc và sắp xếp.
+    /// L?y danh s�ch nh� cung c?p c� ph�n trang, t�m ki?m, l?c v� s?p x?p.
     /// </summary>
-    System.Threading.Tasks.Task<(System.Collections.Generic.List<Supplier> Items, System.Int32 TotalCount)> GetPageAsync(
+    System.Threading.Tasks.Task<(List<Supplier> Items, int TotalCount)> GetPageAsync(
         SupplierListQuery query,
         System.Threading.CancellationToken ct = default);
 
     /// <summary>
-    /// Lấy chi tiết một nhà cung cấp theo ID,
-    /// bao gồm navigation property <c>PhoneNumbers</c>.
+    /// L?y chi ti?t m?t nh� cung c?p theo ID,
+    /// bao g?m navigation property <c>PhoneNumbers</c>.
     /// </summary>
     System.Threading.Tasks.Task<Supplier> GetByIdAsync(
-        System.Int32 id,
+        int id,
         System.Threading.CancellationToken ct = default);
 
     /// <summary>
-    /// Kiểm tra nhà cung cấp đã tồn tại theo email hoặc mã số thuế.
-    /// Dùng để tránh tạo trùng khi Create.
+    /// Ki?m tra nh� cung c?p d� t?n t?i theo email ho?c m� s? thu?.
+    /// D�ng d? tr�nh t?o tr�ng khi Create.
     /// </summary>
-    System.Threading.Tasks.Task<System.Boolean> ExistsByContactAsync(
-        System.String email,
-        System.String taxCode,
+    System.Threading.Tasks.Task<bool> ExistsByContactAsync(
+        string email,
+        string taxCode,
         System.Threading.CancellationToken ct = default);
 
-    // ─── Write ────────────────────────────────────────────────────────────────
+    // --- Write ----------------------------------------------------------------
 
-    /// <summary>Thêm mới một nhà cung cấp (chưa SaveChanges).</summary>
+    /// <summary>Th�m m?i m?t nh� cung c?p (chua SaveChanges).</summary>
     System.Threading.Tasks.Task AddAsync(
         Supplier supplier,
         System.Threading.CancellationToken ct = default);
 
-    /// <summary>Đánh dấu entity là Modified (chưa SaveChanges).</summary>
+    /// <summary>��nh d?u entity l� Modified (chua SaveChanges).</summary>
     void Update(Supplier supplier);
 
-    /// <summary>Lưu tất cả thay đổi vào database.</summary>
+    /// <summary>Luu t?t c? thay d?i v�o database.</summary>
     System.Threading.Tasks.Task SaveChangesAsync(
         System.Threading.CancellationToken ct = default);
 }

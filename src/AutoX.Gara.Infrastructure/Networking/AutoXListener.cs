@@ -1,4 +1,5 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using Nalix.Common.Networking;
 using Nalix.Network.Listeners.Tcp;
