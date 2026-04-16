@@ -5,9 +5,6 @@
 		<IncludeSymbols>false</IncludeSymbols>
 		<PublishRepositoryUrl>false</PublishRepositoryUrl>
 		<EmbedUntrackedSources>false</EmbedUntrackedSources>
-	  
-		<OutputPath>..\..\build\bin\Debug\</OutputPath>
-		<IntermediateOutputPath>..\..\build\obj\Debug\</IntermediateOutputPath>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -20,8 +17,5 @@
 		<MaxParallelProjectBuilds>10</MaxParallelProjectBuilds>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
-
-		<OutputPath>..\..\build\bin\Release\</OutputPath>
-		<IntermediateOutputPath>..\..\build\obj\Release\</IntermediateOutputPath>
 	</PropertyGroup>
 </Project>

@@ -31,7 +31,6 @@ using Nalix.Logging.Sinks;
 using Nalix.Network.Connections;
 using Nalix.Network.Hosting;
 using Nalix.Network.Options;
-using Nalix.Runtime.Dispatching;
 
 [assembly: System.Reflection.AssemblyMetadata("Version", "1.0.0")]
 [assembly: System.Reflection.AssemblyMetadata("Author", "PPN Corporation")]
@@ -144,25 +143,15 @@ public static class Program
                                 .Info(InstanceManager.Instance
                                 .GenerateReport());
 
+        ConnectionHub hub = (ConnectionHub)InstanceManager.Instance.GetExistingInstance<IConnectionHub>();
         InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                .Info(InstanceManager.Instance
-                                .GetExistingInstance<ConnectionHub>()
-                                .GenerateReport());
+                                .Info(hub.GenerateReport());
 
-        InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                .Info(InstanceManager.Instance
-                                .GetExistingInstance<PacketDispatchChannel>()
-                                .GenerateReport());
-
-        InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                .Info(InstanceManager.Instance
-                                .GetExistingInstance<IProtocol>()
-                                .GenerateReport());
-
-        InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                .Info(InstanceManager.Instance
-                                .GetExistingInstance<IListener>()
-                                .GenerateReport());
+        // Wait update from Nalix.Framework > v12.0.8 to support report for dispatchers
+        //InstanceManager.Instance.GetExistingInstance<ILogger>()
+        //                        .Info(InstanceManager.Instance
+        //                        .GetExistingInstance<IPacketDispatch>()
+        //                        .GenerateReport());
 
         InstanceManager.Instance.GetExistingInstance<ILogger>()
                                 .Info(InstanceManager.Instance
@@ -178,7 +167,6 @@ public static class Program
                                 .Info(InstanceManager.Instance
                                 .GetExistingInstance<TaskManager>()
                                 .GenerateReport());
-
     }
 
     public static void InitializeComponent()
@@ -229,11 +217,10 @@ public static class Program
 
         App = NetworkApplication.CreateBuilder()
             .ConfigureLogging(logger)
-            .ConfigureConnectionHub(new ConnectionHub())
-            .ConfigureBufferPoolManager(new BufferPoolManager())
+            .ConfigureConnectionHub(new ConnectionHub(null, logger))
+            .ConfigureBufferPoolManager(new BufferPoolManager(logger))
             .Configure<NetworkSocketOptions>(options => { options.Port = 57206; })
             .AddPacket<LoginPacket>()
-            .AddHandlers<AccountOps>()
             .ConfigureDispatch(dispatchOptions =>
             {
                 dispatchOptions.WithLogging(InstanceManager.Instance.GetExistingInstance<ILogger>());
@@ -345,6 +332,17 @@ public static class Program
                             GenerateReport();
                             lastReportTime = now;
 
+                            ctx.Advance(1);
+                        }
+                    }
+
+                    if (key.Key == System.ConsoleKey.R && (key.Modifiers & System.ConsoleModifiers.Control) != 0)
+                    {
+                        // Kiểm tra cooldown để tránh spam
+                        if ((now - lastReportTime).TotalSeconds >= ReportCooldownSeconds)
+                        {
+                            ConfigurationManager.Instance.Flush();
+                            lastReportTime = now;
                             ctx.Advance(1);
                         }
                     }
