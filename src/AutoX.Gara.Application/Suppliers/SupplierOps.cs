@@ -2,8 +2,6 @@
 
 using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using Microsoft.Extensions.Logging;
 using AutoX.Gara.Shared.Models;
@@ -15,10 +13,12 @@ using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
-using Nalix.Network.Connections;
+using Nalix.Runtime.Extensions;
 using Nalix.Framework.Memory.Objects;
 using Nalix.Framework.Serialization;
 using System.Diagnostics;
+
+using AutoX.Gara.Application.Abstractions.Persistence;
 
 namespace AutoX.Gara.Application.Suppliers;
 
@@ -26,10 +26,10 @@ namespace AutoX.Gara.Application.Suppliers;
 /// Packet controller handling all CRUD operations for Supplier.
 /// </summary>
 [PacketController]
-public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
+public sealed class SupplierOps(IDataSessionFactory dataSessionFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory
+        ?? throw new System.ArgumentNullException(nameof(dataSessionFactory));
 
     // ─── GET LIST ─────────────────────────────────────────────────────────────
 
@@ -69,8 +69,8 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
                 FilterStatus: packet.FilterStatus,
                 FilterPaymentTerms: packet.FilterPaymentTerms);
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var suppliers = new SupplierRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var suppliers = session.Suppliers;
 
             (System.Collections.Generic.List<Supplier> items, System.Int32 totalCount)
                 = await suppliers.GetPageAsync(query).ConfigureAwait(false);
@@ -153,8 +153,8 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             logger?.Info(
                 $"[APP.{nameof(SupplierOps)}:{nameof(CreateAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} name={packet.Name} email={packet.Email}");
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var suppliers = new SupplierRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var suppliers = session.Suppliers;
 
             System.Boolean existed = await suppliers
                 .ExistsByContactAsync(packet.Email, packet.TaxCode).ConfigureAwait(false);
@@ -281,8 +281,8 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             logger?.Info(
                 $"[APP.{nameof(SupplierOps)}:{nameof(UpdateAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} supplierId={packet.SupplierId} email={packet.Email}");
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            if (await db.Suppliers
+            await using var session = _dataSessionFactory.Create();
+            if (await session.Context.Set<Supplier>()
                     .AsNoTracking()
                     .AnyAsync(s => (s.Email == packet.Email || s.TaxCode == packet.TaxCode)
                                    && s.Id != packet.SupplierId.Value)
@@ -297,7 +297,7 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
                 return;
             }
 
-            var suppliers = new SupplierRepository(db);
+            var suppliers = session.Suppliers;
 
             Supplier existing = await suppliers
                 .GetByIdAsync(packet.SupplierId.Value).ConfigureAwait(false);
@@ -405,8 +405,8 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
             logger?.Info(
                 $"[APP.{nameof(SupplierOps)}:{nameof(ChangeStatusAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} supplierId={packet.SupplierId} status={packet.Status}");
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var suppliers = new SupplierRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var suppliers = session.Suppliers;
 
             Supplier existing = await suppliers
                 .GetByIdAsync(packet.SupplierId.Value).ConfigureAwait(false);
@@ -494,6 +494,9 @@ public sealed class SupplierOps(AutoXDbContextFactory dbContextFactory)
         return data;
     }
 }
+
+
+
 
 
 

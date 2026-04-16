@@ -1,23 +1,21 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
-using Microsoft.Extensions.Logging;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Employees;
-
+using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
-using Nalix.Network.Connections;
 using Nalix.Framework.Memory.Objects;
 using Nalix.Framework.Serialization;
+using Nalix.Runtime.Extensions;
 using System.Diagnostics;
 
 namespace AutoX.Gara.Application.Employees;
@@ -26,10 +24,10 @@ namespace AutoX.Gara.Application.Employees;
 /// Packet controller xử lý tất cả nghiệp vụ CRUD cho Employee.
 /// </summary>
 [PacketController]
-public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
+public sealed class EmployeeOps(IDataSessionFactory dataSessionFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory
+        ?? throw new System.ArgumentNullException(nameof(dataSessionFactory));
 
     // ─── GET LIST ─────────────────────────────────────────────────────────────
 
@@ -55,8 +53,8 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
         try
         {
             EmployeeListQuery query = BuildListQuery(packet);
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var employees = new EmployeeRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var employees = session.Employees;
 
             (System.Collections.Generic.List<Employee> items, System.Int32 totalCount)
                 = await employees.GetPageAsync(query).ConfigureAwait(false);
@@ -141,8 +139,8 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var employees = new EmployeeRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var employees = session.Employees;
 
             System.Boolean emailExists = await employees
                 .ExistsByEmailAsync(packet.Email).ConfigureAwait(false);
@@ -249,8 +247,8 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var employees = new EmployeeRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var employees = session.Employees;
 
             Employee existing = await employees
                 .GetByIdAsync(packet.EmployeeId.Value).ConfigureAwait(false);
@@ -342,8 +340,8 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var employees = new EmployeeRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var employees = session.Employees;
 
             Employee existing = await employees
                 .GetByIdAsync(packet.EmployeeId.Value).ConfigureAwait(false);
@@ -460,6 +458,9 @@ public sealed class EmployeeOps(AutoXDbContextFactory dbContextFactory)
             advice, new ControlDirectiveOptions(ControlFlags.NONE, sequenceId, 0u, 0u, 0)).ConfigureAwait(false);
     }
 }
+
+
+
 
 
 

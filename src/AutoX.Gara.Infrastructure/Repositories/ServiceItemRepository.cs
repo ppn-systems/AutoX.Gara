@@ -9,9 +9,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using AutoX.Gara.Application.Abstractions.Repositories;
+
 namespace AutoX.Gara.Infrastructure.Repositories;
 
-public sealed class ServiceItemRepository
+public sealed class ServiceItemRepository : IServiceItemRepository
 {
     private readonly AutoXDbContext _dbContext;
 
@@ -91,4 +93,5 @@ public sealed class ServiceItemRepository
 
     public Task SaveChangesAsync() => _dbContext.SaveChangesAsync();
 }
+
 

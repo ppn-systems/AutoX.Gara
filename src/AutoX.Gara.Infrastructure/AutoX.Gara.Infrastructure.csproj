@@ -49,6 +49,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\AutoX.Gara.Application\AutoX.Gara.Application.csproj" />
 		<ProjectReference Include="..\AutoX.Gara.Domain\AutoX.Gara.Domain.csproj" />
 		<ProjectReference Include="..\AutoX.Gara.Shared\AutoX.Gara.Shared.csproj" />
 	</ItemGroup>

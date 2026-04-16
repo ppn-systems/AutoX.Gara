@@ -9,9 +9,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using AutoX.Gara.Application.Abstractions.Repositories;
+
 namespace AutoX.Gara.Infrastructure.Repositories;
 
-public sealed class RepairOrderRepository
+public sealed class RepairOrderRepository : IRepairOrderRepository
 {
     private readonly AutoXDbContext _dbContext;
 
@@ -122,4 +124,5 @@ public sealed class RepairOrderRepository
 
     public Task SaveChangesAsync() => _dbContext.SaveChangesAsync();
 }
+
 

@@ -9,12 +9,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using AutoX.Gara.Application.Abstractions.Repositories;
+
 namespace AutoX.Gara.Infrastructure.Repositories;
 
 /// <summary>
 /// Repository for managing Invoice entities.
 /// </summary>
-public sealed class InvoiceRepository
+public sealed class InvoiceRepository : IInvoiceRepository
 {
     private readonly AutoXDbContext _dbContext;
 
@@ -160,3 +162,4 @@ public sealed class InvoiceRepository
 
     public Task SaveChangesAsync() => _dbContext.SaveChangesAsync();
 }
+

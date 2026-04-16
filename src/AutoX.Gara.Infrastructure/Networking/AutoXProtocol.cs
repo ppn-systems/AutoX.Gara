@@ -3,7 +3,6 @@
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Framework.Injection;
-using Nalix.Network.Connections;
 using Nalix.Network.Protocols;
 using Nalix.Runtime.Dispatching;
 
@@ -29,9 +28,6 @@ public sealed class AutoXProtocol : Protocol
     {
         base.OnAccept(connection, cancellationToken);
         InstanceManager.Instance.GetExistingInstance<ILogger>()?.Info($"[SERVER] New TCP connection accepted from {connection.NetworkEndpoint}");
-
-        InstanceManager.Instance.GetExistingInstance<ConnectionHub>()?
-                                .RegisterConnection(connection);
     }
 
     /// <summary>

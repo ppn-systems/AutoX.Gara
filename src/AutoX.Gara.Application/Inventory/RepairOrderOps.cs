@@ -1,10 +1,9 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums.Repairs;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Invoices;
@@ -13,17 +12,17 @@ using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
-using Nalix.Network.Connections;
 using Nalix.Framework.Memory.Objects;
 using Nalix.Framework.Serialization;
+using Nalix.Runtime.Extensions;
 
 namespace AutoX.Gara.Application.Inventory;
 
 [PacketController]
-public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
+public sealed class RepairOrderOps(IDataSessionFactory dataSessionFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory
+        ?? throw new System.ArgumentNullException(nameof(dataSessionFactory));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -57,8 +56,8 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                 FilterFromDate: packet.FilterFromDate,
                 FilterToDate: packet.FilterToDate);
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairOrders;
 
             (System.Collections.Generic.List<RepairOrder> items, System.Int32 totalCount) =
                 await repo.GetPageAsync(query).ConfigureAwait(false);
@@ -109,10 +108,10 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
         RepairOrderDto confirmed = null;
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderRepository(db);
-            var invoices = new InvoiceRepository(db);
-            await using var tx = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairOrders;
+            var invoices = session.Invoices;
+            await using var tx = await session.Context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
             RepairOrder ro = new()
             {
@@ -125,7 +124,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             };
 
             await repo.AddAsync(ro).ConfigureAwait(false);
-            await db.SaveChangesAsync().ConfigureAwait(false);
+            await session.Context.SaveChangesAsync().ConfigureAwait(false);
 
             if (ro.InvoiceId.HasValue)
             {
@@ -143,7 +142,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
 
                     inv.Recalculate();
                     invoices.Update(inv);
-                    await db.SaveChangesAsync().ConfigureAwait(false);
+                    await session.Context.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
 
@@ -185,10 +184,10 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
         RepairOrderDto confirmed = null;
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderRepository(db);
-            var invoices = new InvoiceRepository(db);
-            await using var tx = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairOrders;
+            var invoices = session.Invoices;
+            await using var tx = await session.Context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
             RepairOrder existing = await repo.GetByIdAsync(packet.RepairOrderId.Value).ConfigureAwait(false);
             if (existing is null)
@@ -219,7 +218,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             existing.Status = packet.Status;
 
             repo.Update(existing);
-            await db.SaveChangesAsync().ConfigureAwait(false);
+            await session.Context.SaveChangesAsync().ConfigureAwait(false);
 
             if (oldInvoiceId.HasValue && (!existing.InvoiceId.HasValue || existing.InvoiceId.Value != oldInvoiceId.Value))
             {
@@ -228,7 +227,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                 {
                     invOld.Recalculate();
                     invoices.Update(invOld);
-                    await db.SaveChangesAsync().ConfigureAwait(false);
+                    await session.Context.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
 
@@ -248,7 +247,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
 
                     inv.Recalculate();
                     invoices.Update(inv);
-                    await db.SaveChangesAsync().ConfigureAwait(false);
+                    await session.Context.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
 
@@ -298,10 +297,10 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderRepository(db);
-            var invoices = new InvoiceRepository(db);
-            await using var tx = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairOrders;
+            var invoices = session.Invoices;
+            await using var tx = await session.Context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
             RepairOrder existing = await repo.GetByIdAsync(packet.RepairOrderId.Value).ConfigureAwait(false);
             if (existing is null)
@@ -316,7 +315,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
             System.Int32? invoiceId = existing.InvoiceId;
 
             repo.Delete(existing);
-            await db.SaveChangesAsync().ConfigureAwait(false);
+            await session.Context.SaveChangesAsync().ConfigureAwait(false);
 
             if (invoiceId.HasValue)
             {
@@ -325,7 +324,7 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
                 {
                     inv.Recalculate();
                     invoices.Update(inv);
-                    await db.SaveChangesAsync().ConfigureAwait(false);
+                    await session.Context.SaveChangesAsync().ConfigureAwait(false);
                 }
             }
 
@@ -390,6 +389,9 @@ public sealed class RepairOrderOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+
+
+
 
 
 

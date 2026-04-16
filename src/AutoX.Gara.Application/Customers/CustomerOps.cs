@@ -1,24 +1,21 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Infrastructure.Abstractions.Repositories;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Customers;
 using AutoX.Gara.Shared.Validation;
 using Microsoft.Extensions.Logging;
-
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
-using Nalix.Network.Connections;
 using Nalix.Framework.Memory.Objects;
 using Nalix.Framework.Serialization;
+using Nalix.Runtime.Extensions;
 using System.Diagnostics;
 
 namespace AutoX.Gara.Application.Customers;
@@ -36,10 +33,10 @@ namespace AutoX.Gara.Application.Customers;
 /// </para>
 /// </summary>
 [PacketController]
-public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
+public sealed class CustomerOps(IDataSessionFactory dataSessionFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory
+        ?? throw new System.ArgumentNullException(nameof(dataSessionFactory));
 
     // ─── GET LIST ─────────────────────────────────────────────────────────────
 
@@ -69,8 +66,8 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
         {
             CustomerListQuery query = BuildCustomerListQuery(packet);
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var customers = new CustomerRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var customers = session.Customers;
             (System.Collections.Generic.List<Customer> items, System.Int32 totalCount) =
                 await customers.GetPageAsync(query).ConfigureAwait(false);
 
@@ -147,8 +144,8 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
         CustomerDto confirmed = null;
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var customers = new CustomerRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var customers = session.Customers;
 
             System.Boolean existed = await customers.ExistsByContactAsync(packet.Email, packet.PhoneNumber).ConfigureAwait(false);
 
@@ -219,8 +216,8 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
         CustomerDto confirmed = null;
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var customers = new CustomerRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var customers = session.Customers;
 
             var existing = await customers.GetByIdAsync(packet.CustomerId!.Value).ConfigureAwait(false);
 
@@ -279,8 +276,8 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var customers = new CustomerRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var customers = session.Customers;
 
             var existing = await customers.GetByIdAsync(packet.CustomerId.Value).ConfigureAwait(false);
 
@@ -443,6 +440,9 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
         return data;
     }
 }
+
+
+
 
 
 

@@ -1,13 +1,14 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Enums.Customers;
-using AutoX.Gara.Infrastructure.Abstractions.Repositories;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+
+using AutoX.Gara.Application.Abstractions.Repositories;
 
 namespace AutoX.Gara.Infrastructure.Repositories;
 

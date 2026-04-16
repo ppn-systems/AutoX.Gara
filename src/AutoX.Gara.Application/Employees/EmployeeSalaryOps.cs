@@ -1,31 +1,29 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Identity;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
-using Microsoft.Extensions.Logging;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Employees;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
-using Nalix.Network.Connections;
 using Nalix.Framework.Memory.Objects;
 using Nalix.Framework.Serialization;
+using Nalix.Runtime.Extensions;
 using System.Diagnostics;
 
 namespace AutoX.Gara.Application.Employees;
 
 [PacketController]
-public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
+public sealed class EmployeeSalaryOps(IDataSessionFactory dataSessionFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory
+        ?? throw new System.ArgumentNullException(nameof(dataSessionFactory));
 
     // ─── GET LIST ─────────────────────────────────────────────────────────────
 
@@ -67,8 +65,8 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 FilterFromDate: packet.FilterFromDate,
                 FilterToDate: packet.FilterToDate);
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new EmployeeSalaryRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.EmployeeSalaries;
 
             (System.Collections.Generic.List<EmployeeSalary> items, System.Int32 totalCount)
                 = await repo.GetPageAsync(query).ConfigureAwait(false);
@@ -83,8 +81,8 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             await connection.TCP
                 .SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
 
-                logger?.Info(
-                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(GetAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} items={response.Salaries.Count} total={totalCount} ms={sw.ElapsedMilliseconds}");
+            logger?.Info(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(GetAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} items={response.Salaries.Count} total={totalCount} ms={sw.ElapsedMilliseconds}");
         }
         catch (System.Exception ex)
         {
@@ -153,8 +151,8 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 return;
             }
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            if (!await db.Employees.AsNoTracking().AnyAsync(e => e.Id == packet.EmployeeId).ConfigureAwait(false))
+            await using var session = _dataSessionFactory.Create();
+            if (!await session.Context.Set<Employee>().AsNoTracking().AnyAsync(e => e.Id == packet.EmployeeId).ConfigureAwait(false))
             {
                 logger?.Warn(
                     $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] employee-not-found ep={connection.NetworkEndpoint} seq={packet.SequenceId} emp={packet.EmployeeId}");
@@ -165,7 +163,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 return;
             }
 
-            var repo = new EmployeeSalaryRepository(db);
+            var repo = session.EmployeeSalaries;
 
             EmployeeSalary entity = new()
             {
@@ -187,8 +185,8 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             await connection.TCP
                 .SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
-                logger?.Info(
-                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} salaryId={entity.Id} ms={sw.ElapsedMilliseconds}");
+            logger?.Info(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} salaryId={entity.Id} ms={sw.ElapsedMilliseconds}");
         }
         catch (System.Exception ex)
         {
@@ -254,8 +252,8 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 return;
             }
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            if (!await db.Employees.AsNoTracking().AnyAsync(e => e.Id == packet.EmployeeId).ConfigureAwait(false))
+            await using var session = _dataSessionFactory.Create();
+            if (!await session.Context.Set<Employee>().AsNoTracking().AnyAsync(e => e.Id == packet.EmployeeId).ConfigureAwait(false))
             {
                 logger?.Warn(
                     $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] employee-not-found ep={connection.NetworkEndpoint} seq={packet.SequenceId} emp={packet.EmployeeId}");
@@ -266,7 +264,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 return;
             }
 
-            var repo = new EmployeeSalaryRepository(db);
+            var repo = session.EmployeeSalaries;
 
             EmployeeSalary existing = await repo
                 .GetByIdAsync(packet.EmployeeSalaryId.Value).ConfigureAwait(false);
@@ -299,8 +297,8 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             await connection.TCP
                 .SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
-                logger?.Info(
-                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId} ms={sw.ElapsedMilliseconds}");
+            logger?.Info(
+                $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId} ms={sw.ElapsedMilliseconds}");
         }
         catch (System.Exception ex)
         {
@@ -348,8 +346,8 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             logger?.Info(
                 $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(DeleteAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId}");
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new EmployeeSalaryRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.EmployeeSalaries;
 
             EmployeeSalary existing = await repo
                 .GetByIdAsync(packet.EmployeeSalaryId.Value).ConfigureAwait(false);
@@ -425,6 +423,9 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+
+
+
 
 
 

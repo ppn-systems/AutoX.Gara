@@ -8,9 +8,11 @@ using AutoX.Gara.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
+using AutoX.Gara.Application.Abstractions.Repositories;
+
 namespace AutoX.Gara.Infrastructure.Repositories;
 
-public sealed class EmployeeSalaryRepository(AutoXDbContext context)
+public sealed class EmployeeSalaryRepository(AutoXDbContext context) : IEmployeeSalaryRepository
 {
     private readonly AutoXDbContext _context = context
         ?? throw new System.ArgumentNullException(nameof(context));
@@ -85,3 +87,4 @@ public sealed class EmployeeSalaryRepository(AutoXDbContext context)
     public System.Threading.Tasks.Task SaveChangesAsync(System.Threading.CancellationToken ct = default)
         => _context.SaveChangesAsync(ct);
 }
+

@@ -1,5 +1,6 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Repositories;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace AutoX.Gara.Infrastructure.Repositories;
 
-public sealed class TransactionRepository
+public sealed class TransactionRepository : ITransactionRepository
 {
     private readonly AutoXDbContext _dbContext;
 
@@ -121,4 +122,5 @@ public sealed class TransactionRepository
 
     public Task SaveChangesAsync() => _dbContext.SaveChangesAsync();
 }
+
 

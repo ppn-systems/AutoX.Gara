@@ -1,9 +1,8 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Repairs;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Repairs;
@@ -12,17 +11,17 @@ using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
-using Nalix.Network.Connections;
 using Nalix.Framework.Memory.Objects;
 using Nalix.Framework.Serialization;
+using Nalix.Runtime.Extensions;
 
 namespace AutoX.Gara.Application.Repairs;
 
 [PacketController]
-public sealed class RepairOrderItemOps(AutoXDbContextFactory dbContextFactory)
+public sealed class RepairOrderItemOps(IDataSessionFactory dataSessionFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory
+        ?? throw new System.ArgumentNullException(nameof(dataSessionFactory));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -52,8 +51,8 @@ public sealed class RepairOrderItemOps(AutoXDbContextFactory dbContextFactory)
                 FilterRepairOrderId: packet.FilterRepairOrderId <= 0 ? null : packet.FilterRepairOrderId,
                 FilterPartId: packet.FilterPartId <= 0 ? null : packet.FilterPartId);
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderItemRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairOrderItems;
 
             (System.Collections.Generic.List<RepairOrderItem> items, System.Int32 totalCount) =
                 await repo.GetPageAsync(query).ConfigureAwait(false);
@@ -111,10 +110,10 @@ public sealed class RepairOrderItemOps(AutoXDbContextFactory dbContextFactory)
         RepairOrderItemDto confirmed = null;
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderItemRepository(db);
-            var repairOrders = new RepairOrderRepository(db);
-            var invoices = new InvoiceRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairOrderItems;
+            var repairOrders = session.RepairOrders;
+            var invoices = session.Invoices;
 
             RepairOrderItem entity = new()
             {
@@ -181,10 +180,10 @@ public sealed class RepairOrderItemOps(AutoXDbContextFactory dbContextFactory)
         RepairOrderItemDto confirmed = null;
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderItemRepository(db);
-            var repairOrders = new RepairOrderRepository(db);
-            var invoices = new InvoiceRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairOrderItems;
+            var repairOrders = session.RepairOrders;
+            var invoices = session.Invoices;
 
             RepairOrderItem existing = await repo.GetByIdAsync(packet.RepairOrderItemId.Value).ConfigureAwait(false);
             if (existing is null)
@@ -275,10 +274,10 @@ public sealed class RepairOrderItemOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairOrderItemRepository(db);
-            var repairOrders = new RepairOrderRepository(db);
-            var invoices = new InvoiceRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairOrderItems;
+            var repairOrders = session.RepairOrders;
+            var invoices = session.Invoices;
 
             RepairOrderItem existing = await repo.GetByIdAsync(packet.RepairOrderItemId.Value).ConfigureAwait(false);
             if (existing is null)
@@ -354,6 +353,9 @@ public sealed class RepairOrderItemOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+
+
+
 
 
 

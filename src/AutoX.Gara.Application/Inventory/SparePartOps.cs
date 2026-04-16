@@ -1,8 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Inventory;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Inventory;
@@ -11,9 +10,9 @@ using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
-using Nalix.Network.Connections;
 using Nalix.Framework.Memory.Objects;
 using Nalix.Framework.Serialization;
+using Nalix.Runtime.Extensions;
 
 namespace AutoX.Gara.Application.Inventory;
 
@@ -32,10 +31,10 @@ namespace AutoX.Gara.Application.Inventory;
 /// </para>
 /// </summary>
 [PacketController]
-public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
+public sealed class PartOps(IDataSessionFactory dataSessionFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory
+        ?? throw new System.ArgumentNullException(nameof(dataSessionFactory));
 
     // ─── GET LIST ─────────────────────────────────────────────────────────────
 
@@ -74,8 +73,8 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
                 FilterExpired: packet.FilterExpired,
                 FilterDiscontinued: packet.FilterDiscontinued);
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var partRepository = new PartRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var partRepository = session.Parts;
 
             (System.Collections.Generic.List<Part> items, System.Int32 totalCount)
                 = await partRepository.GetPageAsync(query).ConfigureAwait(false);
@@ -158,8 +157,8 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var partRepository = new PartRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var partRepository = session.Parts;
 
             // Check if PartCode already exists
             System.Boolean existed = await partRepository
@@ -259,8 +258,8 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var partRepository = new PartRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var partRepository = session.Parts;
 
             Part existing = await partRepository
                 .GetByIdAsync(packet.PartId.Value).ConfigureAwait(false);
@@ -343,8 +342,8 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var partRepository = new PartRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var partRepository = session.Parts;
 
             Part existing = await partRepository
                 .GetByIdAsync(packet.PartId.Value).ConfigureAwait(false);
@@ -410,5 +409,8 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+
+
+
 
 

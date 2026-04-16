@@ -1,23 +1,22 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Billings;
+using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
-using Microsoft.Extensions.Logging;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Billings;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
-using Nalix.Network.Connections;
 using Nalix.Framework.Memory.Objects;
 using Nalix.Framework.Serialization;
+using Nalix.Runtime.Extensions;
 using System.Diagnostics;
 using System.Linq;
 
@@ -27,10 +26,10 @@ namespace AutoX.Gara.Application.Billings;
 /// Packet controller xu ly CRUD cho Invoice.
 /// </summary>
 [PacketController]
-public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
+public sealed class InvoiceOps(IDataSessionFactory dataSessionFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory
+        ?? throw new System.ArgumentNullException(nameof(dataSessionFactory));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -66,8 +65,8 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 FilterFromDate: packet.FilterFromDate,
                 FilterToDate: packet.FilterToDate);
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var invoices = new InvoiceRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var invoices = session.Invoices;
 
             (System.Collections.Generic.List<Invoice> items, System.Int32 totalCount) =
                 await invoices.GetPageAsync(query).ConfigureAwait(false);
@@ -138,8 +137,8 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             logger?.Info(
                 $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} cust={packet.CustomerId} invNo='{packet.InvoiceNumber}' roId={packet.RepairOrderId} tax={packet.TaxRate} discType={packet.DiscountType} disc={packet.Discount}");
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            InvoiceRepository invoices = new(db);
+            await using var session = _dataSessionFactory.Create();
+            var invoices = session.Invoices;
             tDb = sw.ElapsedMilliseconds;
 
             System.Boolean existed = await invoices
@@ -179,7 +178,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             if (packet.RepairOrderId > 0)
             {
                 // Enforce: one repair order belongs to at most one invoice.
-                var roInfo = await db.RepairOrders
+                var roInfo = await session.Context.Set<RepairOrder>()
                     .AsNoTracking()
                     .Where(r => r.Id == packet.RepairOrderId)
                     .Select(r => new { r.CustomerId, r.InvoiceId })
@@ -192,8 +191,8 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                         $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-not-found-or-mismatch ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} cust={packet.CustomerId}");
 
                     // Rollback created invoice to avoid orphan records.
-                    db.Invoices.Remove(invoice);
-                    await db.SaveChangesAsync().ConfigureAwait(false);
+                    session.Context.Set<Invoice>().Remove(invoice);
+                    await session.Context.SaveChangesAsync().ConfigureAwait(false);
 
                     await connection.SendAsync(
                         ControlType.ERROR,
@@ -208,8 +207,8 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                     logger?.Warn(
                         $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-already-invoiced ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} roInvoiceId={roInfo.InvoiceId.Value}");
 
-                    db.Invoices.Remove(invoice);
-                    await db.SaveChangesAsync().ConfigureAwait(false);
+                    session.Context.Set<Invoice>().Remove(invoice);
+                    await session.Context.SaveChangesAsync().ConfigureAwait(false);
 
                     await connection.SendAsync(
                         ControlType.ERROR,
@@ -220,7 +219,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 }
 
                 // Fast + safe in a NoTracking DbContext: update FK directly in database.
-                System.Int32 affected = await db.RepairOrders
+                System.Int32 affected = await session.Context.Set<RepairOrder>()
                     .Where(r => r.Id == packet.RepairOrderId
                                 && r.CustomerId == packet.CustomerId
                                 && !r.InvoiceId.HasValue)
@@ -233,8 +232,8 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                         $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ro-not-found-or-mismatch ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} roId={packet.RepairOrderId} cust={packet.CustomerId}");
 
                     // Rollback created invoice to avoid orphan records.
-                    db.Invoices.Remove(invoice);
-                    await db.SaveChangesAsync().ConfigureAwait(false);
+                    session.Context.Set<Invoice>().Remove(invoice);
+                    await session.Context.SaveChangesAsync().ConfigureAwait(false);
 
                     await connection.SendAsync(
                         ControlType.ERROR,
@@ -247,13 +246,13 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             }
 
             // Reload and recalculate with linked data.
-            db.ChangeTracker.Clear();
+            session.Context.ChangeTracker.Clear();
             Invoice withDetails = await invoices.GetInvoiceWithFullGraphTrackedAsync(invoiceId).ConfigureAwait(false);
             tReload = sw.ElapsedMilliseconds;
             if (withDetails is not null)
             {
                 withDetails.Recalculate();
-                await db.SaveChangesAsync().ConfigureAwait(false);
+                await session.Context.SaveChangesAsync().ConfigureAwait(false);
                 tRecalcSave = sw.ElapsedMilliseconds;
                 confirmed = MapToPacket(withDetails, packet.SequenceId);
             }
@@ -331,9 +330,9 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             logger?.Info(
                 $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] start ep={connection.NetworkEndpoint} seq={packet.SequenceId} invoiceId={packet.InvoiceId} cust={packet.CustomerId} invNo='{packet.InvoiceNumber}' roId={packet.RepairOrderId} tax={packet.TaxRate} discType={packet.DiscountType} disc={packet.Discount} status={packet.PaymentStatus}");
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var invoices = new InvoiceRepository(db);
-            await using var tx = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+            await using var session = _dataSessionFactory.Create();
+            var invoices = session.Invoices;
+            await using var tx = await session.Context.Database.BeginTransactionAsync().ConfigureAwait(false);
             tDb = sw.ElapsedMilliseconds;
 
             Invoice existing = await invoices.GetInvoiceWithFullGraphTrackedAsync(packet.InvoiceId.Value).ConfigureAwait(false);
@@ -393,7 +392,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             if (packet.RepairOrderId > 0)
             {
                 // Enforce: 1 invoice links to at most 1 repair order.
-                System.Boolean hasOtherOrders = await db.RepairOrders
+                System.Boolean hasOtherOrders = await session.Context.Set<RepairOrder>()
                     .AsNoTracking()
                     .AnyAsync(r => r.InvoiceId == existing.Id && r.Id != packet.RepairOrderId)
                     .ConfigureAwait(false);
@@ -407,7 +406,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                     return;
                 }
 
-                var roInfo = await db.RepairOrders
+                var roInfo = await session.Context.Set<RepairOrder>()
                     .AsNoTracking()
                     .Where(r => r.Id == packet.RepairOrderId)
                     .Select(r => new { r.CustomerId, r.InvoiceId })
@@ -432,7 +431,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                     return;
                 }
 
-                System.Int32 affected = await db.RepairOrders
+                System.Int32 affected = await session.Context.Set<RepairOrder>()
                     .Where(r => r.Id == packet.RepairOrderId
                                 && r.CustomerId == packet.CustomerId
                                 && (!r.InvoiceId.HasValue || r.InvoiceId == existing.Id))
@@ -458,15 +457,15 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             }
 
             // Reload to ensure RepairOrders collection reflects any new link, then recalc.
-            await db.SaveChangesAsync().ConfigureAwait(false);
+            await session.Context.SaveChangesAsync().ConfigureAwait(false);
 
-            db.ChangeTracker.Clear();
+            session.Context.ChangeTracker.Clear();
             Invoice recalcing = await invoices.GetInvoiceWithFullGraphTrackedAsync(existing.Id).ConfigureAwait(false);
             tReload = sw.ElapsedMilliseconds;
             if (recalcing is not null)
             {
                 recalcing.Recalculate();
-                await db.SaveChangesAsync().ConfigureAwait(false);
+                await session.Context.SaveChangesAsync().ConfigureAwait(false);
                 tRecalcSave = sw.ElapsedMilliseconds;
                 confirmed = MapToPacket(recalcing, packet.SequenceId);
             }
@@ -541,22 +540,22 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
+            await using var session = _dataSessionFactory.Create();
             System.Int32 invoiceId = packet.InvoiceId.Value;
-            await using var tx = await db.Database.BeginTransactionAsync().ConfigureAwait(false);
+            await using var tx = await session.Context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
             // Unlink repair orders first (nullable FK), then delete transactions, then delete invoice.
-            await db.RepairOrders
+            await session.Context.Set<RepairOrder>()
                 .Where(r => r.InvoiceId == invoiceId)
                 .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.InvoiceId, (System.Int32?)null))
                 .ConfigureAwait(false);
 
-            await db.Transactions
+            await session.Context.Set<Transaction>()
                 .Where(t => t.InvoiceId == invoiceId)
                 .ExecuteDeleteAsync()
                 .ConfigureAwait(false);
 
-            Invoice invoice = await db.Invoices
+            Invoice invoice = await session.Context.Set<Invoice>()
                 .FirstOrDefaultAsync(i => i.Id == invoiceId)
                 .ConfigureAwait(false);
 
@@ -570,8 +569,8 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 return;
             }
 
-            db.Invoices.Remove(invoice);
-            System.Int32 saved = await db.SaveChangesAsync().ConfigureAwait(false);
+            session.Context.Set<Invoice>().Remove(invoice);
+            System.Int32 saved = await session.Context.SaveChangesAsync().ConfigureAwait(false);
 
             if (saved <= 0)
             {
@@ -694,6 +693,9 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+
+
+
 
 
 

@@ -1,16 +1,15 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Customers;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
-using Nalix.Network.Connections;
 using Nalix.Framework.Serialization;
+using Nalix.Runtime.Extensions;
 
 namespace AutoX.Gara.Application.Vehicles;
 
@@ -24,10 +23,10 @@ namespace AutoX.Gara.Application.Vehicles;
 /// </list>
 /// </summary>
 [PacketController]
-public sealed class VehicleOps(AutoXDbContextFactory dbContextFactory)
+public sealed class VehicleOps(IDataSessionFactory dataSessionFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory
+        ?? throw new System.ArgumentNullException(nameof(dataSessionFactory));
 
     private const System.Int32 DefaultPageSize = 10;
 
@@ -98,8 +97,8 @@ public sealed class VehicleOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var vehicles = new VehicleRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var vehicles = session.Vehicles;
 
             System.Boolean existed = await vehicles.ExistsAsync(
                 packet.LicensePlate,
@@ -171,8 +170,8 @@ public sealed class VehicleOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var vehicles = new VehicleRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var vehicles = session.Vehicles;
 
             Vehicle existing = await vehicles.GetByIdAsync(packet.VehicleId.Value).ConfigureAwait(false);
 
@@ -236,8 +235,8 @@ public sealed class VehicleOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var vehicles = new VehicleRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var vehicles = session.Vehicles;
 
             Vehicle existing = await vehicles.GetByIdAsync(packet.VehicleId.Value).ConfigureAwait(false);
 
@@ -276,8 +275,8 @@ public sealed class VehicleOps(AutoXDbContextFactory dbContextFactory)
     {
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var vehicles = new VehicleRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var vehicles = session.Vehicles;
 
             Vehicle vehicle = await vehicles.GetByIdAsync(
                 packet.VehicleId!.Value).ConfigureAwait(false);
@@ -313,8 +312,8 @@ public sealed class VehicleOps(AutoXDbContextFactory dbContextFactory)
     {
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var vehicles = new VehicleRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var vehicles = session.Vehicles;
 
             System.Int32 page = packet.Year > 0 ? packet.Year : 1;
 
@@ -369,5 +368,8 @@ public sealed class VehicleOps(AutoXDbContextFactory dbContextFactory)
         Mileage = v.Mileage
     };
 }
+
+
+
 
 

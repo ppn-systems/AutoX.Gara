@@ -1,31 +1,30 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Persistence;
+using AutoX.Gara.Application.Abstractions.Repositories;
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Invoices;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
-using Microsoft.Extensions.Logging;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Invoices;
-
+using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
-using Nalix.Network.Connections;
 using Nalix.Framework.Memory.Objects;
 using Nalix.Framework.Serialization;
+using Nalix.Runtime.Extensions;
 using System.Diagnostics;
 
 namespace AutoX.Gara.Application.Invoices;
 
 [PacketController]
-public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
+public sealed class TransactionOps(IDataSessionFactory dataSessionFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory
+        ?? throw new System.ArgumentNullException(nameof(dataSessionFactory));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -61,8 +60,8 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
                 FilterFromDate: packet.FilterFromDate,
                 FilterToDate: packet.FilterToDate);
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new TransactionRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.Transactions;
 
             (System.Collections.Generic.List<Transaction> items, System.Int32 totalCount) =
                 await repo.GetPageAsync(query).ConfigureAwait(false);
@@ -123,9 +122,9 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         TransactionDto confirmed = null;
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new TransactionRepository(db);
-            var invoices = new InvoiceRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.Transactions;
+            var invoices = session.Invoices;
 
             // Validate invoice exists (lightweight query).
             if (await invoices.GetByIdAsync(packet.InvoiceId).ConfigureAwait(false) is null)
@@ -156,12 +155,12 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
             await repo.SaveChangesAsync().ConfigureAwait(false);
 
             // Recalculate invoice totals after adding a transaction.
-            await RecalculateInvoiceAsync(db, invoices, packet.InvoiceId).ConfigureAwait(false);
+            await RecalculateInvoiceAsync(session, invoices, packet.InvoiceId).ConfigureAwait(false);
 
             confirmed = MapToPacket(entity, packet.SequenceId);
             await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
-                logger?.Info(
-                    $"[APP.{nameof(TransactionOps)}:{nameof(CreateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={entity.Id} invoiceId={packet.InvoiceId} amt={packet.Amount} type={packet.Type} status={packet.Status}");
+            logger?.Info(
+                $"[APP.{nameof(TransactionOps)}:{nameof(CreateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={entity.Id} invoiceId={packet.InvoiceId} amt={packet.Amount} type={packet.Type} status={packet.Status}");
         }
         catch (System.ArgumentException)
         {
@@ -208,9 +207,9 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         TransactionDto confirmed = null;
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new TransactionRepository(db);
-            var invoices = new InvoiceRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.Transactions;
+            var invoices = session.Invoices;
 
             Transaction existing = await repo.GetByIdAsync(packet.TransactionId.Value).ConfigureAwait(false);
             if (existing is null)
@@ -241,15 +240,15 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
 
             if (oldInvoiceId != existing.InvoiceId)
             {
-                await RecalculateInvoiceAsync(db, invoices, oldInvoiceId).ConfigureAwait(false);
+                await RecalculateInvoiceAsync(session, invoices, oldInvoiceId).ConfigureAwait(false);
             }
 
-            await RecalculateInvoiceAsync(db, invoices, existing.InvoiceId).ConfigureAwait(false);
+            await RecalculateInvoiceAsync(session, invoices, existing.InvoiceId).ConfigureAwait(false);
 
             confirmed = MapToPacket(existing, packet.SequenceId);
             await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
-                logger?.Info(
-                    $"[APP.{nameof(TransactionOps)}:{nameof(UpdateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={existing.Id} invoiceId={existing.InvoiceId} amt={existing.Amount} type={existing.Type} status={existing.Status}");
+            logger?.Info(
+                $"[APP.{nameof(TransactionOps)}:{nameof(UpdateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} txId={existing.Id} invoiceId={existing.InvoiceId} amt={existing.Amount} type={existing.Type} status={existing.Status}");
         }
         catch (System.ArgumentException)
         {
@@ -296,9 +295,9 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new TransactionRepository(db);
-            var invoices = new InvoiceRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.Transactions;
+            var invoices = session.Invoices;
 
             Transaction existing = await repo.GetByIdAsync(packet.TransactionId.Value).ConfigureAwait(false);
             if (existing is null)
@@ -315,7 +314,7 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
             repo.Delete(existing);
             await repo.SaveChangesAsync().ConfigureAwait(false);
 
-            await RecalculateInvoiceAsync(db, invoices, invoiceId).ConfigureAwait(false);
+            await RecalculateInvoiceAsync(session, invoices, invoiceId).ConfigureAwait(false);
 
             await connection.SendAsync(
                 ControlType.NONE,
@@ -333,15 +332,13 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         }
     }
 
-    private static async System.Threading.Tasks.Task RecalculateInvoiceAsync(
-        AutoXDbContext db,
-        InvoiceRepository invoices,
+    private static async System.Threading.Tasks.Task RecalculateInvoiceAsync(IDataSession session, IInvoiceRepository invoices,
         System.Int32 invoiceId)
     {
         // AutoXDbContextFactory configures QueryTrackingBehavior.NoTracking.
         // For recalculation we must use a tracked (identity-resolved) graph,
         // otherwise calling Update() on an untracked graph can throw duplicate key tracking exceptions.
-        db.ChangeTracker.Clear();
+        session.ClearTracker();
         Invoice invTracked = await invoices.GetInvoiceWithFullGraphTrackedAsync(invoiceId).ConfigureAwait(false);
         if (invTracked is null)
         {
@@ -349,7 +346,7 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         }
 
         invTracked.Recalculate();
-        await db.SaveChangesAsync().ConfigureAwait(false);
+        await session.SaveChangesAsync().ConfigureAwait(false);
     }
 
     private static System.Boolean TryParseTransactionPacket(
@@ -408,6 +405,10 @@ public sealed class TransactionOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+
+
+
+
 
 
 

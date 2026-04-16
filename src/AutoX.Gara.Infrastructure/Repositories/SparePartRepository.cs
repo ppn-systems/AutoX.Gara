@@ -9,13 +9,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using AutoX.Gara.Application.Abstractions.Repositories;
+
 namespace AutoX.Gara.Infrastructure.Repositories;
 
 /// <summary>
 /// Repository for managing Part entities.
 /// Provides CRUD operations and advanced querying capabilities.
 /// </summary>
-public sealed class PartRepository
+public sealed class PartRepository : IPartRepository
 {
     private readonly AutoXDbContext _dbContext;
 

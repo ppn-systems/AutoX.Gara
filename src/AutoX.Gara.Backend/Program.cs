@@ -1,5 +1,6 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Billings;
 using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Application.Employees;
@@ -10,13 +11,17 @@ using AutoX.Gara.Application.Suppliers;
 using AutoX.Gara.Application.Vehicles;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Networking;
+using AutoX.Gara.Infrastructure.Persistence;
 using AutoX.Gara.Shared;
 using AutoX.Gara.Shared.Protocol.Auth;
-using Nalix.Common.Concurrency;
 using Microsoft.Extensions.Logging;
+using Nalix.Common.Concurrency;
 using Nalix.Common.Networking;
 using Nalix.Framework.Configuration;
+using Nalix.Framework.Extensions;
 using Nalix.Framework.Injection;
+using Nalix.Framework.Memory.Buffers;
+using Nalix.Framework.Memory.Objects;
 using Nalix.Framework.Options;
 using Nalix.Framework.Tasks;
 using Nalix.Framework.Time;
@@ -27,9 +32,6 @@ using Nalix.Network.Connections;
 using Nalix.Network.Hosting;
 using Nalix.Network.Options;
 using Nalix.Runtime.Dispatching;
-using Nalix.Framework.Extensions;
-using Nalix.Framework.Memory.Buffers;
-using Nalix.Framework.Memory.Objects;
 
 [assembly: System.Reflection.AssemblyMetadata("Version", "1.0.0")]
 [assembly: System.Reflection.AssemblyMetadata("Author", "PPN Corporation")]
@@ -50,7 +52,6 @@ public static class Program
     [System.STAThread]
     [System.Diagnostics.DebuggerNonUserCode]
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1163:Unused parameter", Justification = "<Pending>")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "<Pending>")]
     public static void Main(System.String[] args)
     {
@@ -204,6 +205,7 @@ public static class Program
 
         AutoXDbContextFactory factory = new();
         InstanceManager.Instance.Register<AutoXDbContextFactory>(factory);
+        InstanceManager.Instance.Register<IDataSessionFactory>(new DataSessionFactory(factory));
 
         // Seed initial data if necessary
         using (AutoXDbContext context = factory.CreateDbContext())
@@ -241,67 +243,67 @@ public static class Program
 
                 dispatchOptions.WithHandler(() =>
                     new AccountOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new EmployeeOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new EmployeeSalaryOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new CustomerOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new VehicleOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new PartOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new SupplierOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new InvoiceOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new RepairOrderOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new TransactionOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new ServiceItemOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new RepairTaskOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
                 dispatchOptions.WithHandler(() =>
                     new RepairOrderItemOps(
-                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
                     )
                 );
             })
@@ -375,3 +377,5 @@ public static class Program
         }
     }
 }
+
+

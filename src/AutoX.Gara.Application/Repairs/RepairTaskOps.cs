@@ -1,9 +1,8 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Repairs;
-using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Repairs;
@@ -12,17 +11,17 @@ using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
-using Nalix.Network.Connections;
 using Nalix.Framework.Memory.Objects;
 using Nalix.Framework.Serialization;
+using Nalix.Runtime.Extensions;
 
 namespace AutoX.Gara.Application.Repairs;
 
 [PacketController]
-public sealed class RepairTaskOps(AutoXDbContextFactory dbContextFactory)
+public sealed class RepairTaskOps(IDataSessionFactory dataSessionFactory)
 {
-    private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory
-        ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory
+        ?? throw new System.ArgumentNullException(nameof(dataSessionFactory));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -56,8 +55,8 @@ public sealed class RepairTaskOps(AutoXDbContextFactory dbContextFactory)
                 FilterFromDate: packet.FilterFromDate,
                 FilterToDate: packet.FilterToDate);
 
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairTaskRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairTasks;
 
             (System.Collections.Generic.List<RepairTask> items, System.Int32 totalCount) =
                 await repo.GetPageAsync(query).ConfigureAwait(false);
@@ -115,10 +114,10 @@ public sealed class RepairTaskOps(AutoXDbContextFactory dbContextFactory)
         RepairTaskDto confirmed = null;
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairTaskRepository(db);
-            var repairOrders = new RepairOrderRepository(db);
-            var invoices = new InvoiceRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairTasks;
+            var repairOrders = session.RepairOrders;
+            var invoices = session.Invoices;
 
             RepairTask entity = new()
             {
@@ -190,10 +189,10 @@ public sealed class RepairTaskOps(AutoXDbContextFactory dbContextFactory)
         RepairTaskDto confirmed = null;
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairTaskRepository(db);
-            var repairOrders = new RepairOrderRepository(db);
-            var invoices = new InvoiceRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairTasks;
+            var repairOrders = session.RepairOrders;
+            var invoices = session.Invoices;
 
             RepairTask existing = await repo.GetByIdAsync(packet.RepairTaskId.Value).ConfigureAwait(false);
             if (existing is null)
@@ -288,10 +287,10 @@ public sealed class RepairTaskOps(AutoXDbContextFactory dbContextFactory)
 
         try
         {
-            await using AutoXDbContext db = _dbContextFactory.CreateDbContext();
-            var repo = new RepairTaskRepository(db);
-            var repairOrders = new RepairOrderRepository(db);
-            var invoices = new InvoiceRepository(db);
+            await using var session = _dataSessionFactory.Create();
+            var repo = session.RepairTasks;
+            var repairOrders = session.RepairOrders;
+            var invoices = session.Invoices;
 
             RepairTask existing = await repo.GetByIdAsync(packet.RepairTaskId.Value).ConfigureAwait(false);
             if (existing is null)
@@ -390,6 +389,9 @@ public sealed class RepairTaskOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+
+
+
 
 
 
