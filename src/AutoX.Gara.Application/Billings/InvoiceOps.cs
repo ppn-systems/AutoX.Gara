@@ -42,11 +42,11 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
 
         if (p is not InvoiceQueryRequest packet)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
+            System.UInt32 fallbackSeq = p.SequenceId;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
 
             return;
         }
@@ -79,22 +79,10 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 Invoices = items.ConvertAll(i => MapToPacket(i, sequenceId: 0))
             };
 
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
+            await connection.TCP.SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
 
-            if (!sent)
-            {
-                logger?.Warn(
-                    $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds}");
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
-            else
-            {
-                logger?.Info(
-                    $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} items={items.Count} total={totalCount} cust={packet.FilterCustomerId} term='{packet.SearchTerm}'");
-            }
+            logger?.Info(
+                $"[APP.{nameof(InvoiceOps)}:{nameof(GetAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} items={items.Count} total={totalCount} cust={packet.FilterCustomerId} term='{packet.SearchTerm}'");
         }
         catch (System.Exception ex)
         {
@@ -103,7 +91,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         finally
         {
@@ -133,7 +121,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
 
             return;
         }
@@ -166,7 +154,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.ALREADY_EXISTS,
-                    ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
                 return;
             }
@@ -210,7 +198,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                     await connection.SendAsync(
                         ControlType.ERROR,
                         ProtocolReason.NOT_FOUND,
-                        ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                        ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
                     return;
                 }
@@ -226,7 +214,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                     await connection.SendAsync(
                         ControlType.ERROR,
                         ProtocolReason.ALREADY_EXISTS,
-                        ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                        ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
                     return;
                 }
@@ -251,7 +239,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                     await connection.SendAsync(
                         ControlType.ERROR,
                         ProtocolReason.ALREADY_EXISTS,
-                        ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                        ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
                     return;
                 }
@@ -274,24 +262,12 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
                 return;
             }
 
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
-
-            if (!sent)
-            {
-                logger?.Warn(
-                    $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={invoice.Id}");
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-                return;
-            }
+            await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
             logger?.Info(
                 $"[APP.{nameof(InvoiceOps)}:{nameof(CreateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={confirmed.InvoiceId} total={confirmed.TotalAmount} due={confirmed.BalanceDue} tDb={tDb} tExists={tExists} tSave={tSaveInvoice} tLink={tLink} tReload={tReload} tRecalcSave={tRecalcSave}");
@@ -303,7 +279,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.VALIDATION_FAILED,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         catch (System.Exception ex)
         {
@@ -312,7 +288,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         finally
         {
@@ -338,7 +314,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
 
             return;
         }
@@ -370,7 +346,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
                 return;
             }
@@ -389,7 +365,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                     await connection.SendAsync(
                         ControlType.ERROR,
                         ProtocolReason.ALREADY_EXISTS,
-                        ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                        ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
                     return;
                 }
@@ -400,7 +376,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.VALIDATION_FAILED,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
                 return;
             }
@@ -427,7 +403,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                     await connection.SendAsync(
                         ControlType.ERROR,
                         ProtocolReason.VALIDATION_FAILED,
-                        ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                        ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                     return;
                 }
 
@@ -443,7 +419,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                     await connection.SendAsync(
                         ControlType.ERROR,
                         ProtocolReason.NOT_FOUND,
-                        ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                        ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                     return;
                 }
 
@@ -452,7 +428,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                     await connection.SendAsync(
                         ControlType.ERROR,
                         ProtocolReason.ALREADY_EXISTS,
-                        ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                        ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                     return;
                 }
 
@@ -476,7 +452,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                     await connection.SendAsync(
                         ControlType.ERROR,
                         ProtocolReason.ALREADY_EXISTS,
-                        ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                        ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                     return;
                 }
             }
@@ -499,26 +475,14 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
                 return;
             }
 
             await tx.CommitAsync().ConfigureAwait(false);
 
-            System.Boolean sent = await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
-            if (!sent)
-            {
-                logger?.Warn(
-                    $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={packet.InvoiceId}");
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-
-                return;
-            }
-
+            await connection.TCP.SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
             logger?.Info(
                 $"[APP.{nameof(InvoiceOps)}:{nameof(UpdateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} ms={sw.ElapsedMilliseconds} invoiceId={confirmed.InvoiceId} total={confirmed.TotalAmount} due={confirmed.BalanceDue} tDb={tDb} tLoad={tLoad} tExists={tExistsCheck} tLink={tLink} tReload={tReload} tRecalcSave={tRecalcSave}");
         }
@@ -529,7 +493,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.VALIDATION_FAILED,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
         {
@@ -538,7 +502,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.VALIDATION_FAILED,
-                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
         catch (System.Exception ex)
@@ -548,7 +512,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         finally
         {
@@ -566,11 +530,11 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
     {
         if (p is not InvoiceDto packet || packet.InvoiceId is null)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
+            System.UInt32 fallbackSeq = p.SequenceId;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
 
             return;
         }
@@ -601,7 +565,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
                 return;
             }
@@ -614,7 +578,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
                 return;
             }
@@ -624,21 +588,21 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
-                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.NONE, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.VALIDATION_FAILED,
-                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
     }
 
@@ -647,7 +611,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         out InvoiceDto packet,
         out System.UInt32 fallbackSeqId)
     {
-        fallbackSeqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
+        fallbackSeqId = p.SequenceId;
 
         if (p is not InvoiceDto dto)
         {
@@ -730,5 +694,7 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+
+
 
 

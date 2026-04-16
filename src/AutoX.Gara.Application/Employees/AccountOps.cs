@@ -22,6 +22,7 @@ namespace AutoX.Gara.Application.Employees;
 public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
 {
     private readonly AutoXDbContextFactory _dbContextFactory = dbContextFactory ?? throw new System.ArgumentNullException(nameof(dbContextFactory));
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Nalix.Common.Identity.ISnowflake, System.String> ActiveUsers = new();
 
     [PacketPermission(PermissionLevel.NONE)]
     [PacketOpcode((System.UInt16)OpCommand.LOGIN)]
@@ -41,7 +42,7 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, 0).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, 0, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -57,7 +58,7 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.NOT_FOUND,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -67,7 +68,7 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.ACCOUNT_LOCKED,
-                ProtocolAdvice.BACKOFF_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.BACKOFF_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -88,7 +89,7 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.UNAUTHENTICATED,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -99,7 +100,7 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.FORBIDDEN,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -113,23 +114,22 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
 
             connection.Level = account.Role;
             connection.OnCloseEvent += OnAccountLogout;
-            InstanceManager.Instance.GetOrCreateInstance<ConnectionHub>()
-                                    .AssociateUsername(connection, packet.Account.Username);
+            ActiveUsers[connection.ID] = packet.Account.Username;
 
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
-                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.NONE, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         catch (System.Exception ex)
         {
             InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                    .Error($"[APP.{nameof(HandshakeOps)}] failed-login ep={connection.NetworkEndpoint} ex={ex.Message}");
+                                    .Error($"[APP.{nameof(AccountOps)}:{nameof(LoginAsync)}] failed-login ep={connection.NetworkEndpoint} ex={ex.Message}");
 
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
     }
 
@@ -142,11 +142,11 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
     {
         if (p is not LoginPacket packet)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
+            System.UInt32 fallbackSeq = p.SequenceId;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -155,7 +155,7 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INVALID_USERNAME,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -164,7 +164,7 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.WEAK_PASSWORD,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -175,7 +175,7 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.ALREADY_EXISTS,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -207,14 +207,14 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
         await connection.SendAsync(
             ControlType.NONE,
             ProtocolReason.NONE,
-            ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
+            ProtocolAdvice.NONE, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
     }
 
     [System.Diagnostics.StackTraceHidden]
@@ -224,8 +224,7 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
     {
         args.Connection.OnCloseEvent -= OnAccountLogout;
 
-        System.String username = InstanceManager.Instance.GetExistingInstance<ConnectionHub>()?
-                                                     .GetUsername(args.Connection.ID);
+        ActiveUsers.TryRemove(args.Connection.ID, out System.String username);
 
         if (System.String.IsNullOrEmpty(username))
         {
@@ -242,4 +241,5 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
         }
     }
 }
+
 

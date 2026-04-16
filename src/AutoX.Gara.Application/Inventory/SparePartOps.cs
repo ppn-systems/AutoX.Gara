@@ -49,11 +49,11 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
     {
         if (p is not PartQueryRequest packet)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
+            System.UInt32 fallbackSeq = p.SequenceId;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -87,23 +87,16 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
                 Parts = items.ConvertAll(p => MapToPacket(p, sequenceId: 0))
             };
 
-            System.Boolean sent = await connection.TCP
+            await connection.TCP
                 .SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
 
-            if (!sent)
-            {
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
         }
         catch (System.Exception)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         finally
         {
@@ -133,11 +126,11 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
             System.String.IsNullOrWhiteSpace(packet.PartCode) ||
             System.String.IsNullOrWhiteSpace(packet.PartName))
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
+            System.UInt32 fallbackSeq = p.SequenceId;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -147,7 +140,7 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -157,7 +150,7 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -177,7 +170,7 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.ALREADY_EXISTS,
-                    ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                 return;
             }
 
@@ -201,23 +194,16 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
             await partRepository.SaveChangesAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(newPart, packet.SequenceId);
-            System.Boolean sent = await connection.TCP
+            await connection.TCP
                 .SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
-            if (!sent)
-            {
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
         }
         catch (System.Exception)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         finally
         {
@@ -241,11 +227,11 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
         if (p is not PartDto packet || packet.PartId is null ||
             System.String.IsNullOrWhiteSpace(packet.PartName))
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
+            System.UInt32 fallbackSeq = p.SequenceId;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -255,7 +241,7 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -265,7 +251,7 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -284,7 +270,7 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                 return;
             }
 
@@ -313,23 +299,16 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
             await partRepository.SaveChangesAsync().ConfigureAwait(false);
 
             confirmed = MapToPacket(existing, packet.SequenceId);
-            System.Boolean sent = await connection.TCP
+            await connection.TCP
                 .SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
-            if (!sent)
-            {
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
         }
         catch (System.Exception)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         finally
         {
@@ -354,11 +333,11 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
     {
         if (p is not PartDto packet || packet.PartId is null)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
+            System.UInt32 fallbackSeq = p.SequenceId;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -375,7 +354,7 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                 return;
             }
 
@@ -391,14 +370,14 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
-                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.NONE, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         catch (System.Exception)
         {
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
     }
 
@@ -431,3 +410,5 @@ public sealed class PartOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+
+

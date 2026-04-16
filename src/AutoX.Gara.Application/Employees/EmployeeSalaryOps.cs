@@ -39,13 +39,13 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
 
         if (p is not EmployeeSalaryQueryRequest packet)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
+            System.UInt32 fallbackSeq = p.SequenceId;
             logger?.Warn(
                 $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(GetAsync)}] malformed-packet ep={connection.NetworkEndpoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -80,23 +80,11 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 Salaries = items.ConvertAll(es => MapToPacket(es, sequenceId: packet.SequenceId))
             };
 
-            System.Boolean sent = await connection.TCP
+            await connection.TCP
                 .SendAsync(LiteSerializer.Serialize(response)).ConfigureAwait(false);
 
-            if (!sent)
-            {
-                logger?.Warn(
-                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(GetAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} items={response.Salaries.Count} total={totalCount} ms={sw.ElapsedMilliseconds}");
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
-            else
-            {
                 logger?.Info(
                     $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(GetAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} items={response.Salaries.Count} total={totalCount} ms={sw.ElapsedMilliseconds}");
-            }
         }
         catch (System.Exception ex)
         {
@@ -105,7 +93,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         finally
         {
@@ -137,7 +125,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -152,7 +140,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.VALIDATION_FAILED,
-                    ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                 return;
             }
 
@@ -161,7 +149,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.VALIDATION_FAILED,
-                    ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                 return;
             }
 
@@ -173,7 +161,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                 return;
             }
 
@@ -196,23 +184,11 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             confirmed = MapToPacket(entity, packet.SequenceId);
             confirmed.OpCode = (System.UInt16)OpCommand.EMPLOYEE_SALARY_CREATE;
 
-            System.Boolean sent = await connection.TCP
+            await connection.TCP
                 .SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
-            if (!sent)
-            {
-                logger?.Warn(
-                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} emp={packet.EmployeeId}");
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
-            else
-            {
                 logger?.Info(
                     $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(CreateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} salaryId={entity.Id} ms={sw.ElapsedMilliseconds}");
-            }
         }
         catch (System.Exception ex)
         {
@@ -221,7 +197,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         finally
         {
@@ -250,7 +226,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -265,7 +241,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.VALIDATION_FAILED,
-                    ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                 return;
             }
 
@@ -274,7 +250,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.VALIDATION_FAILED,
-                    ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                 return;
             }
 
@@ -286,7 +262,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                 return;
             }
 
@@ -302,7 +278,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                 return;
             }
 
@@ -320,23 +296,11 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             confirmed = MapToPacket(existing, packet.SequenceId);
             confirmed.OpCode = (System.UInt16)OpCommand.EMPLOYEE_SALARY_UPDATE;
 
-            System.Boolean sent = await connection.TCP
+            await connection.TCP
                 .SendAsync(LiteSerializer.Serialize(confirmed)).ConfigureAwait(false);
 
-            if (!sent)
-            {
-                logger?.Warn(
-                    $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] send-failed ep={connection.NetworkEndpoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId}");
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
-            else
-            {
                 logger?.Info(
                     $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(UpdateAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId} ms={sw.ElapsedMilliseconds}");
-            }
         }
         catch (System.Exception ex)
         {
@@ -345,7 +309,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
         finally
         {
@@ -369,13 +333,13 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
         if (p is not EmployeeSalaryDto packet
             || packet.EmployeeSalaryId is null)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps ? ps.SequenceId : 0;
+            System.UInt32 fallbackSeq = p.SequenceId;
             logger?.Warn(
                 $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(DeleteAsync)}] malformed-packet ep={connection.NetworkEndpoint} seq={fallbackSeq}");
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
             return;
         }
 
@@ -397,7 +361,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
                 await connection.SendAsync(
                     ControlType.ERROR,
                     ProtocolReason.NOT_FOUND,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                    ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
                 return;
             }
 
@@ -407,7 +371,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
-                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.NONE, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
             logger?.Info(
                 $"[APP.{nameof(EmployeeSalaryOps)}:{nameof(DeleteAsync)}] ok ep={connection.NetworkEndpoint} seq={packet.SequenceId} salaryId={packet.EmployeeSalaryId} ms={sw.ElapsedMilliseconds}");
@@ -419,7 +383,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.INTERNAL_ERROR,
-                ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
         }
     }
 
@@ -430,7 +394,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
         out EmployeeSalaryDto packet,
         out System.UInt32 fallbackSeqId)
     {
-        fallbackSeqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
+        fallbackSeqId = p.SequenceId;
 
         if (p is not EmployeeSalaryDto dto)
         {
@@ -461,5 +425,7 @@ public sealed class EmployeeSalaryOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+
+
 
 

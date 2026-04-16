@@ -52,11 +52,11 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
     {
         if (p is not CustomerQueryRequest packet)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
+            System.UInt32 fallbackSeq = p.SequenceId;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
 
             return;
         }
@@ -94,17 +94,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
                 await SendErrorAsync(connection, ProtocolReason.INTERNAL_ERROR, ProtocolAdvice.DO_NOT_RETRY, logger, nameof(GetAsync), packet.SequenceId).ConfigureAwait(false);
                 return;
             }
-            System.Boolean sent = await connection.TCP.SendAsync(bytes).ConfigureAwait(false);
-
-            if (!sent)
-            {
-                logger?.Warn($"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] send-failed seq={packet.SequenceId}");
-
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
+            await connection.TCP.SendAsync(bytes).ConfigureAwait(false);
 
             logger?.Info(
                 $"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] ok seq={packet.SequenceId} len={bytes.Length} page={packet.Page} size={packet.PageSize} total={totalCount} returned={payload.Count} ms={sw.ElapsedMilliseconds}");
@@ -135,7 +125,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
 
             return;
         }
@@ -148,7 +138,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
             logger?.Warn($"[APP.{nameof(CustomerOps)}:{nameof(CreateAsync)}] invalid-dob seq={packet.SequenceId}");
             return;
@@ -176,17 +166,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
             confirmed = MapToPacket(newCustomer, packet.SequenceId);
 
             System.Byte[] bytes = LiteSerializer.Serialize(confirmed);
-            System.Boolean sent = await connection.TCP.SendAsync(bytes).ConfigureAwait(false);
-
-            if (!sent)
-            {
-                logger?.Warn($"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] send-failed seq={packet.SequenceId}");
-
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
+            await connection.TCP.SendAsync(bytes).ConfigureAwait(false);
 
             logger?.Info(
                 $"[APP.{nameof(CustomerOps)}:{nameof(CreateAsync)}] ok seq={packet.SequenceId} id={newCustomer.Id} len={bytes.Length} ms={sw.ElapsedMilliseconds}");
@@ -217,7 +197,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
 
             return;
         }
@@ -230,7 +210,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.FIX_AND_RETRY, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.FIX_AND_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
             logger?.Warn($"[APP.{nameof(CustomerOps)}:{nameof(UpdateAsync)}] invalid-dob seq={packet.SequenceId}");
             return;
@@ -257,17 +237,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
             confirmed = MapToPacket(existing, packet.SequenceId);
 
             System.Byte[] bytes = LiteSerializer.Serialize(confirmed);
-            System.Boolean sent = await connection.TCP.SendAsync(bytes).ConfigureAwait(false);
-
-            if (!sent)
-            {
-                logger?.Warn($"[APP.{nameof(CustomerOps)}:{nameof(GetAsync)}] send-failed seq={packet.SequenceId}");
-
-                await connection.SendAsync(
-                    ControlType.ERROR,
-                    ProtocolReason.INTERNAL_ERROR,
-                    ProtocolAdvice.DO_NOT_RETRY, packet.SequenceId).ConfigureAwait(false);
-            }
+            await connection.TCP.SendAsync(bytes).ConfigureAwait(false);
 
             logger?.Info(
                 $"[APP.{nameof(CustomerOps)}:{nameof(UpdateAsync)}] ok seq={packet.SequenceId} id={existing.Id} len={bytes.Length} ms={sw.ElapsedMilliseconds}");
@@ -295,11 +265,11 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
     {
         if (p is not CustomerDto packet || packet.CustomerId == null)
         {
-            System.UInt32 fallbackSeq = p is IPacketSequenced ps0 ? ps0.SequenceId : 0;
+            System.UInt32 fallbackSeq = p.SequenceId;
             await connection.SendAsync(
                 ControlType.ERROR,
                 ProtocolReason.MALFORMED_PACKET,
-                ProtocolAdvice.DO_NOT_RETRY, fallbackSeq).ConfigureAwait(false);
+                ProtocolAdvice.DO_NOT_RETRY, new ControlDirectiveOptions(ControlFlags.NONE, fallbackSeq, 0u, 0u, 0)).ConfigureAwait(false);
 
             return;
         }
@@ -330,7 +300,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
             await connection.SendAsync(
                 ControlType.NONE,
                 ProtocolReason.NONE,
-                ProtocolAdvice.NONE, packet.SequenceId).ConfigureAwait(false);
+                ProtocolAdvice.NONE, new ControlDirectiveOptions(ControlFlags.NONE, packet.SequenceId, 0u, 0u, 0)).ConfigureAwait(false);
 
             logger?.Info(
                 $"[APP.{nameof(CustomerOps)}:{nameof(DeleteAsync)}] ok seq={packet.SequenceId} id={existing.Id} ms={sw.ElapsedMilliseconds}");
@@ -428,7 +398,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
         await connection.SendAsync(
             ControlType.ERROR,
             reason,
-            advice, sequenceId).ConfigureAwait(false);
+            advice, new ControlDirectiveOptions(ControlFlags.NONE, sequenceId, 0u, 0u, 0)).ConfigureAwait(false);
     }
 
     private static System.Boolean TryParseCustomerPacket(
@@ -436,7 +406,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
         out CustomerDto packet,
         out System.UInt32 fallbackSeqId)
     {
-        fallbackSeqId = p is IPacketSequenced ps ? ps.SequenceId : 0;
+        fallbackSeqId = p.SequenceId;
 
         if (p is not CustomerDto cp ||
             !AccountValidation.IsValidEmail(cp.Email) ||
@@ -473,5 +443,7 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
         return data;
     }
 }
+
+
 
 
