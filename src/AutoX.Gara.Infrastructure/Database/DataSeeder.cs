@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Customers;
@@ -13,7 +13,7 @@ using AutoX.Gara.Domain.Enums.Parts;
 using AutoX.Gara.Domain.Enums.Payments;
 using Microsoft.EntityFrameworkCore;
 using Nalix.Common.Security;
-using Nalix.Shared.Security.Credentials;
+using Nalix.Framework.Security.Hashing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,16 +21,16 @@ using System.Linq;
 namespace AutoX.Gara.Infrastructure.Database;
 
 /// <summary>
-/// Class chịu trách nhiệm đổ dữ liệu mẫu (seed data) vào cơ sở dữ liệu.
-/// Chỉ chạy khi database chưa có dữ liệu để tránh trùng lặp.
+/// Class ch?u tr�ch nhi?m d? d? li?u m?u (seed data) v�o co s? d? li?u.
+/// Ch? ch?y khi database chua c� d? li?u d? tr�nh tr�ng l?p.
 /// </summary>
 public static class DataSeeder
 {
     /// <summary>
-    /// Entry point chính: gọi hàm này từ Program.cs khi khởi động ứng dụng.
+    /// Entry point ch�nh: g?i h�m n�y t? Program.cs khi kh?i d?ng ?ng d?ng.
     /// </summary>
     /// <example>
-    /// // Trong Program.cs, gọi sau khi build app và trước app.Run():
+    /// // Trong Program.cs, g?i sau khi build app v� tru?c app.Run():
     /// using (var scope = app.Services.CreateScope())
     /// {
     ///     var db = scope.ServiceProvider.GetRequiredService&lt;AutoXDbContext&gt;();
@@ -50,14 +50,14 @@ public static class DataSeeder
     }
 
     // =========================================================================
-    // ACCOUNT — 1 admin + 2 staff
+    // ACCOUNT � 1 admin + 2 staff
     // =========================================================================
 
     /// <summary>
-    /// Tài khoản mặc định:
-    ///   admin     / Abcd1234@  — ADMINISTRATOR
-    ///   nhanvien1 / Abcd1234@  — STAFF
-    ///   nhanvien2 / Abcd1234@  — STAFF
+    /// T�i kho?n m?c d?nh:
+    ///   admin     / Abcd1234@  � ADMINISTRATOR
+    ///   nhanvien1 / Abcd1234@  � STAFF
+    ///   nhanvien2 / Abcd1234@  � STAFF
     /// </summary>
     private static async System.Threading.Tasks.Task SeedAccountsAsync(AutoXDbContext context)
     {
@@ -68,7 +68,7 @@ public static class DataSeeder
 
         static Account MakeAccount(String username, String password, PermissionLevel role, Boolean active = false)
         {
-            // Pbkdf2.Hash là helper từ Nalix — phải khớp với logic xác thực trong hệ thống
+            // Pbkdf2.Hash l� helper t? Nalix � ph?i kh?p v?i logic x�c th?c trong h? th?ng
             Pbkdf2.Hash(password, out System.Byte[] salt, out System.Byte[] hash);
             var acc = new Account
             {
@@ -93,7 +93,7 @@ public static class DataSeeder
     }
 
     // =========================================================================
-    // CUSTOMER — 10 khách hàng
+    // CUSTOMER � 10 kh�ch h�ng
     // =========================================================================
 
     private static async System.Threading.Tasks.Task SeedCustomersAsync(AutoXDbContext context)
@@ -105,138 +105,138 @@ public static class DataSeeder
 
         var customers = new List<Customer>
         {
-            // --- Khách cá nhân ---
+            // --- Kh�ch c� nh�n ---
             new()
             {
-                Name        = "Nguyễn Văn An",
+                Name        = "Nguy?n Van An",
                 PhoneNumber = "0901234567",
                 Email       = "an.nguyen@email.com",
-                Address     = "123 Lý Thường Kiệt, Q.10, TP.HCM",
+                Address     = "123 L� Thu?ng Ki?t, Q.10, TP.HCM",
                 Gender      = Gender.Male,
                 DateOfBirth = new DateTime(1990, 5, 15, 0, 0, 0, DateTimeKind.Utc),
                 TaxCode     = "0123456789",
                 Type        = CustomerType.Individual,
                 Membership  = MembershipLevel.Standard,
                 Debt        = 0,
-                Notes       = "Khách thân thiện, hay đến vào cuối tuần.",
+                Notes       = "Kh�ch th�n thi?n, hay d?n v�o cu?i tu?n.",
             },
             new()
             {
-                Name        = "Trần Thị Bình",
+                Name        = "Tr?n Th? B�nh",
                 PhoneNumber = "0912345678",
                 Email       = "binh.tran@email.com",
-                Address     = "456 Nguyễn Trãi, Q.5, TP.HCM",
+                Address     = "456 Nguy?n Tr�i, Q.5, TP.HCM",
                 Gender      = Gender.Female,
                 DateOfBirth = new DateTime(1985, 8, 22, 0, 0, 0, DateTimeKind.Utc),
                 Type        = CustomerType.Individual,
                 Membership  = MembershipLevel.Silver,
                 Debt        = 500_000,
-                Notes       = "Thường yêu cầu thay dầu định kỳ mỗi 3 tháng.",
+                Notes       = "Thu?ng y�u c?u thay d?u d?nh k? m?i 3 th�ng.",
             },
             new()
             {
-                Name        = "Lê Hoàng Phúc",
+                Name        = "L� Ho�ng Ph�c",
                 PhoneNumber = "0933456789",
                 Email       = "phuc.le@email.com",
-                Address     = "789 Cách Mạng Tháng 8, Q.3, TP.HCM",
+                Address     = "789 C�ch M?ng Th�ng 8, Q.3, TP.HCM",
                 Gender      = Gender.Male,
                 DateOfBirth = new DateTime(1995, 12, 1, 0, 0, 0, DateTimeKind.Utc),
                 Type        = CustomerType.Individual,
                 Membership  = MembershipLevel.Gold,
                 Debt        = 1_200_000,
-                Notes       = "Khách VIP, thường mang BMW đến bảo dưỡng.",
+                Notes       = "Kh�ch VIP, thu?ng mang BMW d?n b?o du?ng.",
             },
             new()
             {
-                Name        = "Phạm Thị Kim Chi",
+                Name        = "Ph?m Th? Kim Chi",
                 PhoneNumber = "0944567890",
                 Email       = "chi.pham@email.com",
-                Address     = "321 Võ Văn Tần, Q.3, TP.HCM",
+                Address     = "321 V� Van T?n, Q.3, TP.HCM",
                 Gender      = Gender.Female,
                 DateOfBirth = new DateTime(2000, 3, 8, 0, 0, 0, DateTimeKind.Utc),
                 Type        = CustomerType.Individual,
                 Membership  = MembershipLevel.Standard,
                 Debt        = 0,
-                Notes       = "Xe hay bị xịt lốp, cần kiểm tra áp suất định kỳ.",
+                Notes       = "Xe hay b? x?t l?p, c?n ki?m tra �p su?t d?nh k?.",
             },
             new()
             {
-                Name        = "Đặng Quốc Hùng",
+                Name        = "�?ng Qu?c H�ng",
                 PhoneNumber = "0955678901",
                 Email       = "hung.dang@email.com",
-                Address     = "654 Phan Xích Long, Q.Phú Nhuận, TP.HCM",
+                Address     = "654 Phan X�ch Long, Q.Ph� Nhu?n, TP.HCM",
                 Gender      = Gender.Male,
                 DateOfBirth = new DateTime(1978, 7, 19, 0, 0, 0, DateTimeKind.Utc),
                 Type        = CustomerType.Fleet,
                 Membership  = MembershipLevel.Platinum,
                 Debt        = 5_000_000,
-                Notes       = "Sở hữu đội xe 5 chiếc, ký hợp đồng bảo dưỡng hàng tháng.",
+                Notes       = "S? h?u d?i xe 5 chi?c, k� h?p d?ng b?o du?ng h�ng th�ng.",
             },
-            // --- Khách doanh nghiệp ---
+            // --- Kh�ch doanh nghi?p ---
             new()
             {
-                Name        = "Công ty TNHH Vận Tải Phú Thịnh",
+                Name        = "C�ng ty TNHH V?n T?i Ph� Th?nh",
                 PhoneNumber = "0283456789",
                 Email       = "phuthinh.transport@company.vn",
-                Address     = "789 Điện Biên Phủ, Q.Bình Thạnh, TP.HCM",
+                Address     = "789 �i?n Bi�n Ph?, Q.B�nh Th?nh, TP.HCM",
                 Gender      = Gender.None,
                 TaxCode     = "0312345678901",
                 Type        = CustomerType.Business,
                 Membership  = MembershipLevel.Gold,
                 Debt        = 2_000_000,
-                Notes       = "Đội xe tải, bảo dưỡng định kỳ hàng tháng.",
+                Notes       = "�?i xe t?i, b?o du?ng d?nh k? h�ng th�ng.",
             },
             new()
             {
-                Name        = "Công ty CP Grab Việt Nam",
+                Name        = "C�ng ty CP Grab Vi?t Nam",
                 PhoneNumber = "0284567890",
                 Email       = "fleet@grab.vn",
-                Address     = "Tòa nhà Viettel, Mễ Trì, Hà Nội",
+                Address     = "T�a nh� Viettel, M? Tr�, H� N?i",
                 Gender      = Gender.None,
                 TaxCode     = "0106139890001",
                 Type        = CustomerType.Fleet,
                 Membership  = MembershipLevel.Platinum,
                 Debt        = 0,
-                Notes       = "Hợp đồng dài hạn, đội xe GrabCar 200 chiếc.",
+                Notes       = "H?p d?ng d�i h?n, d?i xe GrabCar 200 chi?c.",
             },
             new()
             {
-                Name        = "Nguyễn Văn Xe Tăng",
+                Name        = "Nguy?n Van Xe Tang",
                 PhoneNumber = "0969696969",
                 Email       = "xetang.t54@quandoi.vn",
-                Address     = "Bộ Quốc Phòng, 7 Nguyễn Tri Phương, Hà Nội",
+                Address     = "B? Qu?c Ph�ng, 7 Nguy?n Tri Phuong, H� N?i",
                 Gender      = Gender.Male,
                 DateOfBirth = new DateTime(1975, 4, 30, 0, 0, 0, DateTimeKind.Utc),
                 Type        = CustomerType.Government,
                 Membership  = MembershipLevel.Diamond,
                 Debt        = 0,
-                Notes       = "Mang xe tăng T-54 vào thay nhớt. Thợ bỏ chạy hết. Lần sau báo trước.",
+                Notes       = "Mang xe tang T-54 v�o thay nh?t. Th? b? ch?y h?t. L?n sau b�o tru?c.",
             },
             new()
             {
-                Name        = "Tỉ Phú ElonUsk",
+                Name        = "T? Ph� ElonUsk",
                 PhoneNumber = "0123456789",
                 Email       = "elon.usk@spacex-gara.vn",
-                Address     = "SpaceX HQ, Boca Chica, Texas (chi nhánh TP.HCM)",
+                Address     = "SpaceX HQ, Boca Chica, Texas (chi nh�nh TP.HCM)",
                 Gender      = Gender.Male,
                 DateOfBirth = new DateTime(1971, 6, 28, 0, 0, 0, DateTimeKind.Utc),
                 Type        = CustomerType.VIP,
                 Membership  = MembershipLevel.Diamond,
                 Debt        = 999_999_999,
-                Notes       = "Mang Tesla Roadster đang bay quanh Mặt Trời về gara bảo dưỡng. Hỏi thợ có thể bay lên sửa không.",
+                Notes       = "Mang Tesla Roadster dang bay quanh M?t Tr?i v? gara b?o du?ng. H?i th? c� th? bay l�n s?a kh�ng.",
             },
             new()
             {
                 Name        = "Marty McFly",
                 PhoneNumber = "0888888888",
                 Email       = "marty@delorean-garage.vn",
-                Address     = "Hill Valley, California (Năm 1985)",
+                Address     = "Hill Valley, California (Nam 1985)",
                 Gender      = Gender.Male,
                 DateOfBirth = new DateTime(1968, 6, 9, 0, 0, 0, DateTimeKind.Utc),
                 Type        = CustomerType.Individual,
                 Membership  = MembershipLevel.Diamond,
                 Debt        = 0,
-                Notes       = "Kim tốc độ bị kẹt ở 88mph. Nghi hỏng flux capacitor. Phải sửa trước ngày 26/10.",
+                Notes       = "Kim t?c d? b? k?t ? 88mph. Nghi h?ng flux capacitor. Ph?i s?a tru?c ng�y 26/10.",
             },
         };
 
@@ -245,7 +245,7 @@ public static class DataSeeder
     }
 
     // =========================================================================
-    // EMPLOYEE — 10 nhân viên với các vị trí khác nhau
+    // EMPLOYEE � 10 nh�n vi�n v?i c�c v? tr� kh�c nhau
     // =========================================================================
 
     private static async System.Threading.Tasks.Task SeedEmployeesAsync(AutoXDbContext context)
@@ -257,13 +257,13 @@ public static class DataSeeder
 
         var employees = new List<Employee>
     {
-        // --- Kỹ thuật viên cơ khí cơ bản ---
+        // --- K? thu?t vi�n co kh� co b?n ---
         new()
         {
-            Name = "Trần Minh Hùng",
+            Name = "Tr?n Minh H�ng",
             Gender = Gender.Male,
             DateOfBirth = new DateTime(1990, 3, 15, 0, 0, 0, DateTimeKind.Utc),
-            Address = "234 Nguyễn Huệ, Q.1, TP.HCM",
+            Address = "234 Nguy?n Hu?, Q.1, TP.HCM",
             PhoneNumber = "0901234567",
             Email = "hung.tran@autox-gara.vn",
             Position = Position.Technician,
@@ -272,13 +272,13 @@ public static class DataSeeder
             EndDate = null,
         },
 
-        // --- Thợ máy gầm ---
+        // --- Th? m�y g?m ---
         new()
         {
-            Name = "Lê Văn Phát",
+            Name = "L� Van Ph�t",
             Gender = Gender.Male,
             DateOfBirth = new DateTime(1992, 7, 22, 0, 0, 0, DateTimeKind.Utc),
-            Address = "567 Tô Ký, Q.12, TP.HCM",
+            Address = "567 T� K�, Q.12, TP.HCM",
             PhoneNumber = "0912345678",
             Email = "phat.le@autox-gara.vn",
             Position = Position.UnderCarMechanic,
@@ -287,13 +287,13 @@ public static class DataSeeder
             EndDate = null,
         },
 
-        // --- Chuyên viên chẩn đoán ---
+        // --- Chuy�n vi�n ch?n do�n ---
         new()
         {
-            Name = "Nguyễn Quốc Vinh",
+            Name = "Nguy?n Qu?c Vinh",
             Gender = Gender.Male,
             DateOfBirth = new DateTime(1995, 11, 8, 0, 0, 0, DateTimeKind.Utc),
-            Address = "890 Cách Mạng Tháng 8, Q.3, TP.HCM",
+            Address = "890 C�ch M?ng Th�ng 8, Q.3, TP.HCM",
             PhoneNumber = "0933456789",
             Email = "vinh.nguyen@autox-gara.vn",
             Position = Position.DiagnosticSpecialist,
@@ -302,13 +302,13 @@ public static class DataSeeder
             EndDate = null,
         },
 
-        // --- Thợ điện ô tô ---
+        // --- Th? di?n � t� ---
         new()
         {
-            Name = "Hoàng Văn Đoàn",
+            Name = "Ho�ng Van �o�n",
             Gender = Gender.Male,
             DateOfBirth = new DateTime(1988, 5, 10, 0, 0, 0, DateTimeKind.Utc),
-            Address = "123 Lý Thường Kiệt, Q.10, TP.HCM",
+            Address = "123 L� Thu?ng Ki?t, Q.10, TP.HCM",
             PhoneNumber = "0944567890",
             Email = "doan.hoang@autox-gara.vn",
             Position = Position.AutoElectrician,
@@ -317,13 +317,13 @@ public static class DataSeeder
             EndDate = null,
         },
 
-        // --- Nhân viên tư vấn dịch vụ ---
+        // --- Nh�n vi�n tu v?n d?ch v? ---
         new()
         {
-            Name = "Trương Thị Ngà",
+            Name = "Truong Th? Ng�",
             Gender = Gender.Female,
             DateOfBirth = new DateTime(1991, 2, 28, 0, 0, 0, DateTimeKind.Utc),
-            Address = "456 Nguyễn Trãi, Q.5, TP.HCM",
+            Address = "456 Nguy?n Tr�i, Q.5, TP.HCM",
             PhoneNumber = "0955678901",
             Email = "nga.truong@autox-gara.vn",
             Position = Position.Advisor,
@@ -332,13 +332,13 @@ public static class DataSeeder
             EndDate = null,
         },
 
-        // --- Quản lý ca / Trưởng ca ---
+        // --- Qu?n l� ca / Tru?ng ca ---
         new()
         {
-            Name = "Phan Minh Nhật",
+            Name = "Phan Minh Nh?t",
             Gender = Gender.Male,
             DateOfBirth = new DateTime(1985, 9, 3, 0, 0, 0, DateTimeKind.Utc),
-            Address = "789 Điện Biên Phủ, Q.Bình Thạnh, TP.HCM",
+            Address = "789 �i?n Bi�n Ph?, Q.B�nh Th?nh, TP.HCM",
             PhoneNumber = "0966789012",
             Email = "nhat.phan@autox-gara.vn",
             Position = Position.ShiftSupervisor,
@@ -347,13 +347,13 @@ public static class DataSeeder
             EndDate = null,
         },
 
-        // --- Chuyên viên sơn xe ---
+        // --- Chuy�n vi�n son xe ---
         new()
         {
-            Name = "Đỗ Tiến Dũng",
+            Name = "�? Ti?n Dung",
             Gender = Gender.Male,
             DateOfBirth = new DateTime(1996, 4, 20, 0, 0, 0, DateTimeKind.Utc),
-            Address = "321 Võ Văn Tần, Q.3, TP.HCM",
+            Address = "321 V� Van T?n, Q.3, TP.HCM",
             PhoneNumber = "0977890123",
             Email = "dung.do@autox-gara.vn",
             Position = Position.Painter,
@@ -362,13 +362,13 @@ public static class DataSeeder
             EndDate = null,
         },
 
-        // --- Chuyên viên sửa chữa động cơ ---
+        // --- Chuy�n vi�n s?a ch?a d?ng co ---
         new()
         {
-            Name = "Võ Thanh Sơn",
+            Name = "V� Thanh Son",
             Gender = Gender.Male,
             DateOfBirth = new DateTime(1994, 8, 15, 0, 0, 0, DateTimeKind.Utc),
-            Address = "654 Phan Xích Long, Q.Phú Nhuận, TP.HCM",
+            Address = "654 Phan X�ch Long, Q.Ph� Nhu?n, TP.HCM",
             PhoneNumber = "0988901234",
             Email = "son.vo@autox-gara.vn",
             Position = Position.EngineSpecialist,
@@ -377,13 +377,13 @@ public static class DataSeeder
             EndDate = new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc),
         },
 
-        // --- Nhân viên tư vấn phụ tùng ---
+        // --- Nh�n vi�n tu v?n ph? t�ng ---
         new()
         {
-            Name = "Bùi Thị Hương",
+            Name = "B�i Th? Huong",
             Gender = Gender.Female,
             DateOfBirth = new DateTime(1993, 6, 12, 0, 0, 0, DateTimeKind.Utc),
-            Address = "147 Tân Kỳ Tân Quý, Q.6, TP.HCM",
+            Address = "147 T�n K? T�n Qu�, Q.6, TP.HCM",
             PhoneNumber = "0999012345",
             Email = "huong.bui@autox-gara.vn",
             Position = Position.PartsConsultant,
@@ -392,13 +392,13 @@ public static class DataSeeder
             EndDate = null,
         },
 
-        // --- Nhân viên tiếp nhận xe (Chờ bắt đầu) ---
+        // --- Nh�n vi�n ti?p nh?n xe (Ch? b?t d?u) ---
         new()
         {
-            Name = "Vũ Minh Khoa",
+            Name = "Vu Minh Khoa",
             Gender = Gender.Male,
             DateOfBirth = new DateTime(1998, 10, 25, 0, 0, 0, DateTimeKind.Utc),
-            Address = "963 Ngô Văn Năm, Q.Gò Vấp, TP.HCM",
+            Address = "963 Ng� Van Nam, Q.G� V?p, TP.HCM",
             PhoneNumber = "0910111213",
             Email = "khoa.vu@autox-gara.vn",
             Position = Position.Receptionist,
@@ -407,13 +407,13 @@ public static class DataSeeder
             EndDate = null,
         },
 
-        // --- Nhân viên rửa xe ---
+        // --- Nh�n vi�n r?a xe ---
         new()
         {
-            Name = "Trần Công Sơn",
+            Name = "Tr?n C�ng Son",
             Gender = Gender.Male,
             DateOfBirth = new DateTime(2000, 1, 30, 0, 0, 0, DateTimeKind.Utc),
-            Address = "258 Nguyễn Oanh, Q.Gò Vấp, TP.HCM",
+            Address = "258 Nguy?n Oanh, Q.G� V?p, TP.HCM",
             PhoneNumber = "0911121314",
             Email = "son.tran.cs@autox-gara.vn",
             Position = Position.CarWasher,
@@ -428,7 +428,7 @@ public static class DataSeeder
     }
 
     // =========================================================================
-    // EMPLOYEE SALARY — mỗi nhân viên ít nhất một mức lương mẫu
+    // EMPLOYEE SALARY � m?i nh�n vi�n �t nh?t m?t m?c luong m?u
     // =========================================================================
 
     private static async System.Threading.Tasks.Task SeedEmployeeSalariesAsync(AutoXDbContext context)
@@ -458,7 +458,7 @@ public static class DataSeeder
                 SalaryType = SalaryType.Monthly,
                 SalaryUnit = 1,
                 EffectiveFrom = DateTime.UtcNow.AddMonths(-6),
-                Note = "Cố vấn cấp cao, lương ổn định."
+                Note = "C? v?n c?p cao, luong ?n d?nh."
             },
             new()
             {
@@ -467,7 +467,7 @@ public static class DataSeeder
                 SalaryType = SalaryType.Daily,
                 SalaryUnit = 22,
                 EffectiveFrom = DateTime.UtcNow.AddMonths(-3),
-                Note = "Kỹ thuật viên thay thế mỗi ngày."
+                Note = "K? thu?t vi�n thay th? m?i ng�y."
             },
             new()
             {
@@ -477,7 +477,7 @@ public static class DataSeeder
                 SalaryUnit = 8,
                 EffectiveFrom = DateTime.UtcNow.AddMonths(-1),
                 EffectiveTo = DateTime.UtcNow.AddMonths(2),
-                Note = "Thực tập sinh bảo dưỡng."
+                Note = "Th?c t?p sinh b?o du?ng."
             },
             new()
             {
@@ -486,7 +486,7 @@ public static class DataSeeder
                 SalaryType = SalaryType.Monthly,
                 SalaryUnit = 1,
                 EffectiveFrom = DateTime.UtcNow.AddYears(-1),
-                Note = "Trưởng ca kỹ thuật."
+                Note = "Tru?ng ca k? thu?t."
             },
         };
 
@@ -495,7 +495,7 @@ public static class DataSeeder
     }
 
     // =========================================================================
-    // VEHICLE — nhiều xe
+    // VEHICLE � nhi?u xe
     // =========================================================================
 
     private static async System.Threading.Tasks.Task SeedVehiclesAsync(AutoXDbContext context)
@@ -512,14 +512,14 @@ public static class DataSeeder
         }
 
         Int32 IdOf(String name) => customers.Find(c => c.Name == name)?.Id
-            ?? throw new InvalidOperationException($"Customer '{name}' không tồn tại.");
+            ?? throw new InvalidOperationException($"Customer '{name}' kh�ng t?n t?i.");
 
         var vehicles = new List<Vehicle>
         {
-            // Nguyễn Văn An
+            // Nguy?n Van An
             new()
             {
-                CustomerId          = IdOf("Nguyễn Văn An"),
+                CustomerId          = IdOf("Nguy?n Van An"),
                 LicensePlate        = "51A-12345",
                 Brand               = CarBrand.Toyota,
                 Model               = "Camry 2.5Q",
@@ -532,10 +532,10 @@ public static class DataSeeder
                 RegistrationDate    = new DateTime(2020, 6, 1, 0, 0, 0, DateTimeKind.Utc),
                 InsuranceExpiryDate = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc),
             },
-            // Trần Thị Bình
+            // Tr?n Th? B�nh
             new()
             {
-                CustomerId          = IdOf("Trần Thị Bình"),
+                CustomerId          = IdOf("Tr?n Th? B�nh"),
                 LicensePlate        = "51B-67890",
                 Brand               = CarBrand.Honda,
                 Model               = "CR-V 1.5L Turbo",
@@ -548,10 +548,10 @@ public static class DataSeeder
                 RegistrationDate    = new DateTime(2022, 3, 15, 0, 0, 0, DateTimeKind.Utc),
                 InsuranceExpiryDate = new DateTime(2027, 3, 15, 0, 0, 0, DateTimeKind.Utc),
             },
-            // Lê Hoàng Phúc — 2 xe BMW
+            // L� Ho�ng Ph�c � 2 xe BMW
             new()
             {
-                CustomerId          = IdOf("Lê Hoàng Phúc"),
+                CustomerId          = IdOf("L� Ho�ng Ph�c"),
                 LicensePlate        = "51C-11223",
                 Brand               = CarBrand.BMW,
                 Model               = "3 Series 320i",
@@ -566,7 +566,7 @@ public static class DataSeeder
             },
             new()
             {
-                CustomerId          = IdOf("Lê Hoàng Phúc"),
+                CustomerId          = IdOf("L� Ho�ng Ph�c"),
                 LicensePlate        = "51C-44556",
                 Brand               = CarBrand.BMW,
                 Model               = "X5 xDrive40i",
@@ -579,10 +579,10 @@ public static class DataSeeder
                 RegistrationDate    = new DateTime(2023, 4, 20, 0, 0, 0, DateTimeKind.Utc),
                 InsuranceExpiryDate = new DateTime(2028, 4, 20, 0, 0, 0, DateTimeKind.Utc),
             },
-            // Phạm Thị Kim Chi
+            // Ph?m Th? Kim Chi
             new()
             {
-                CustomerId          = IdOf("Phạm Thị Kim Chi"),
+                CustomerId          = IdOf("Ph?m Th? Kim Chi"),
                 LicensePlate        = "51D-77889",
                 Brand               = CarBrand.KIA,
                 Model               = "Morning 1.25 AT",
@@ -595,13 +595,13 @@ public static class DataSeeder
                 RegistrationDate    = new DateTime(2019, 7, 10, 0, 0, 0, DateTimeKind.Utc),
                 InsuranceExpiryDate = new DateTime(2025, 7, 10, 0, 0, 0, DateTimeKind.Utc),
             },
-            // Đặng Quốc Hùng — đội 3 xe
+            // �?ng Qu?c H�ng � d?i 3 xe
             new()
             {
-                CustomerId          = IdOf("Đặng Quốc Hùng"),
+                CustomerId          = IdOf("�?ng Qu?c H�ng"),
                 LicensePlate        = "51E-00001",
                 Brand               = CarBrand.Ford,
-                Model               = "Transit 16 chỗ",
+                Model               = "Transit 16 ch?",
                 Type                = CarType.Minivan,
                 Color               = CarColor.Silver,
                 Year                = 2020,
@@ -613,7 +613,7 @@ public static class DataSeeder
             },
             new()
             {
-                CustomerId          = IdOf("Đặng Quốc Hùng"),
+                CustomerId          = IdOf("�?ng Qu?c H�ng"),
                 LicensePlate        = "51E-00002",
                 Brand               = CarBrand.Toyota,
                 Model               = "Innova 2.0G",
@@ -628,10 +628,10 @@ public static class DataSeeder
             },
             new()
             {
-                CustomerId          = IdOf("Đặng Quốc Hùng"),
+                CustomerId          = IdOf("�?ng Qu?c H�ng"),
                 LicensePlate        = "51E-00003",
                 Brand               = CarBrand.Hyundai,
-                Model               = "Solati 16 chỗ",
+                Model               = "Solati 16 ch?",
                 Type                = CarType.Minivan,
                 Color               = CarColor.White,
                 Year                = 2022,
@@ -641,10 +641,10 @@ public static class DataSeeder
                 RegistrationDate    = new DateTime(2022, 11, 1, 0, 0, 0, DateTimeKind.Utc),
                 InsuranceExpiryDate = new DateTime(2027, 11, 1, 0, 0, 0, DateTimeKind.Utc),
             },
-            // Công ty Vận Tải Phú Thịnh
+            // C�ng ty V?n T?i Ph� Th?nh
             new()
             {
-                CustomerId          = IdOf("Công ty TNHH Vận Tải Phú Thịnh"),
+                CustomerId          = IdOf("C�ng ty TNHH V?n T?i Ph� Th?nh"),
                 LicensePlate        = "51F-11111",
                 Brand               = CarBrand.Ford,
                 Model               = "Transit Cargo",
@@ -657,10 +657,10 @@ public static class DataSeeder
                 RegistrationDate    = new DateTime(2019, 1, 10, 0, 0, 0, DateTimeKind.Utc),
                 InsuranceExpiryDate = new DateTime(2025, 12, 31, 0, 0, 0, DateTimeKind.Utc),
             },
-            // Grab Việt Nam
+            // Grab Vi?t Nam
             new()
             {
-                CustomerId          = IdOf("Công ty CP Grab Việt Nam"),
+                CustomerId          = IdOf("C�ng ty CP Grab Vi?t Nam"),
                 LicensePlate        = "51G-20240",
                 Brand               = CarBrand.Toyota,
                 Model               = "Vios 1.5G CVT",
@@ -675,10 +675,10 @@ public static class DataSeeder
             },
             new()
             {
-                CustomerId          = IdOf("Nguyễn Văn Xe Tăng"),
+                CustomerId          = IdOf("Nguy?n Van Xe Tang"),
                 LicensePlate        = "QD-54321",
                 Brand               = CarBrand.Other,
-                Model               = "T-54 MBT (Xe Tăng Chiến Đấu Chủ Lực)",
+                Model               = "T-54 MBT (Xe Tang Chi?n �?u Ch? L?c)",
                 Type                = CarType.Other,
                 Color               = CarColor.Green,
                 Year                = 1954,
@@ -686,37 +686,37 @@ public static class DataSeeder
                 EngineNumber        = "V54500HP000001",
                 Mileage             = 999_999,
                 RegistrationDate    = new DateTime(1975, 4, 30, 0, 0, 0, DateTimeKind.Utc),
-                InsuranceExpiryDate = null, // Ai dám đâm vào xe tăng mà cần bảo hiểm
+                InsuranceExpiryDate = null, // Ai d�m d�m v�o xe tang m� c?n b?o hi?m
             },
             new()
             {
-                CustomerId          = IdOf("Tỉ Phú ElonUsk"),
+                CustomerId          = IdOf("T? Ph� ElonUsk"),
                 LicensePlate        = "SX-00001",
                 Brand               = CarBrand.Tesla,
-                Model               = "Roadster Starman Edition — đang bay quanh Mặt Trời",
+                Model               = "Roadster Starman Edition � dang bay quanh M?t Tr?i",
                 Type                = CarType.Coupe,
                 Color               = CarColor.Red,
                 Year                = 2018,
                 FrameNumber         = "5YJ3E1EAXJF000001",
                 EngineNumber        = "ELECTRICMOTOR001",
-                Mileage             = 999_999, // đã đi được hơn 1 tỷ km, capped tại max
+                Mileage             = 999_999, // d� di du?c hon 1 t? km, capped t?i max
                 RegistrationDate    = new DateTime(2018, 2, 6, 0, 0, 0, DateTimeKind.Utc),
                 InsuranceExpiryDate = new DateTime(9999, 12, 31, 0, 0, 0, DateTimeKind.Utc),
             },
             new()
             {
                 CustomerId          = IdOf("Marty McFly"),
-                LicensePlate        = "OUTATIME",  // 8 ký tự, hợp lệ với MaxLength(9)
+                LicensePlate        = "OUTATIME",  // 8 k� t?, h?p l? v?i MaxLength(9)
                 Brand               = CarBrand.Other,
                 Model               = "DeLorean DMC-12 Time Machine",
                 Type                = CarType.Coupe,
                 Color               = CarColor.Silver,
                 Year                = 1985,
-                FrameNumber         = "KNEELBFORE0ZOD01",  // 17 ký tự
-                EngineNumber        = "FLUXCAPACITOR088",  // 17 ký tự
+                FrameNumber         = "KNEELBFORE0ZOD01",  // 17 k� t?
+                EngineNumber        = "FLUXCAPACITOR088",  // 17 k� t?
                 Mileage             = 88,
                 RegistrationDate    = new DateTime(1985, 10, 26, 0, 0, 0, DateTimeKind.Utc),
-                InsuranceExpiryDate = new DateTime(1885, 9, 5, 0, 0, 0, DateTimeKind.Utc), // hết hạn từ... quá khứ
+                InsuranceExpiryDate = new DateTime(1885, 9, 5, 0, 0, 0, DateTimeKind.Utc), // h?t h?n t?... qu� kh?
             },
         };
 
@@ -725,7 +725,7 @@ public static class DataSeeder
     }
 
     // =========================================================================
-    // SUPPLIER — 4 nhà cung cấp
+    // SUPPLIER � 4 nh� cung c?p
     // =========================================================================
 
     private static async System.Threading.Tasks.Task SeedSuppliersAsync(AutoXDbContext context)
@@ -739,15 +739,15 @@ public static class DataSeeder
         {
             new()
             {
-                Name              = "Công ty CP Phụ Tùng Toyota Việt Nam",
+                Name              = "C�ng ty CP Ph? T�ng Toyota Vi?t Nam",
                 Email             = "contact@toyotaparts.vn",
-                Address           = "Khu CN Mỹ Phước, Bình Dương",
+                Address           = "Khu CN M? Phu?c, B�nh Duong",
                 TaxCode           = "0300123456789",
                 BankAccount       = "19033123456789",
                 PaymentTerms      = PaymentTerms.Net30,
                 Status            = SupplierStatus.Active,
                 ContractStartDate = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Notes             = "Nhà cung cấp chính thức phụ tùng Toyota, ưu tiên đặt hàng.",
+                Notes             = "Nh� cung c?p ch�nh th?c ph? t�ng Toyota, uu ti�n d?t h�ng.",
                 PhoneNumbers      =
                 [
                     new SupplierContactPhone { PhoneNumber = "02713456789" },
@@ -756,15 +756,15 @@ public static class DataSeeder
             },
             new()
             {
-                Name              = "Công ty TNHH Phụ Tùng Honda Việt Nam",
+                Name              = "C�ng ty TNHH Ph? T�ng Honda Vi?t Nam",
                 Email             = "sales@hondaparts.vn",
-                Address           = "KCX Tân Thuận, Q.7, TP.HCM",
+                Address           = "KCX T�n Thu?n, Q.7, TP.HCM",
                 TaxCode           = "0300987654321",
                 BankAccount       = "19039876543210",
                 PaymentTerms      = PaymentTerms.Net15,
                 Status            = SupplierStatus.Active,
                 ContractStartDate = new DateTime(2024, 3, 1, 0, 0, 0, DateTimeKind.Utc),
-                Notes             = "Chuyên cung cấp phụ tùng Honda chính hãng.",
+                Notes             = "Chuy�n cung c?p ph? t�ng Honda ch�nh h�ng.",
                 PhoneNumbers      =
                 [
                     new SupplierContactPhone { PhoneNumber = "02838888999" },
@@ -773,15 +773,15 @@ public static class DataSeeder
             },
             new()
             {
-                Name              = "Công ty CP Bosch Việt Nam",
+                Name              = "C�ng ty CP Bosch Vi?t Nam",
                 Email             = "info@bosch.vn",
-                Address           = "Tòa nhà Bitexco Financial Tower, Q.1, TP.HCM",
+                Address           = "T�a nh� Bitexco Financial Tower, Q.1, TP.HCM",
                 TaxCode           = "0300111223344",
                 BankAccount       = "00101234567890",
                 PaymentTerms      = PaymentTerms.Net30,
                 Status            = SupplierStatus.Active,
                 ContractStartDate = new DateTime(2022, 6, 1, 0, 0, 0, DateTimeKind.Utc),
-                Notes             = "Cung cấp bugi, cảm biến, linh kiện điện tử đa hãng.",
+                Notes             = "Cung c?p bugi, c?m bi?n, linh ki?n di?n t? da h�ng.",
                 PhoneNumbers      =
                 [
                     new SupplierContactPhone { PhoneNumber = "02839999000" },
@@ -789,17 +789,17 @@ public static class DataSeeder
             },
             new()
             {
-                Name              = "Tập Đoàn Stark Industries VN",
+                Name              = "T?p �o�n Stark Industries VN",
                 Email             = "tony@starkindustries-vn.com",
-                Address           = "99 Nguyễn Huệ, Q.1, TP.HCM (VP đại diện)",
+                Address           = "99 Nguy?n Hu?, Q.1, TP.HCM (VP d?i di?n)",
                 TaxCode           = "9999999999999",
                 BankAccount       = "99999999999999",
                 PaymentTerms      = PaymentTerms.DueOnReceipt,
                 Status            = SupplierStatus.Active,
                 ContractStartDate = new DateTime(2008, 5, 2, 0, 0, 0, DateTimeKind.Utc),
-                Notes             = "Chuyên cung cấp: động cơ tên lửa thu nhỏ, radar phát hiện địch, " +
-                                    "arc reactor, bộ giáp Iron Man Mk.85. " +
-                                    "LƯU Ý: KHÔNG bán Infinity Gauntlet — đã kiểm tra, hàng bị hỏng sau snap.",
+                Notes             = "Chuy�n cung c?p: d?ng co t�n l?a thu nh?, radar ph�t hi?n d?ch, " +
+                                    "arc reactor, b? gi�p Iron Man Mk.85. " +
+                                    "LUU �: KH�NG b�n Infinity Gauntlet � d� ki?m tra, h�ng b? h?ng sau snap.",
                 PhoneNumbers      =
                 [
                     new SupplierContactPhone { PhoneNumber = "08008008008" },
@@ -812,7 +812,7 @@ public static class DataSeeder
     }
 
     // =========================================================================
-    // SPARE PART — 17 phụ tùng
+    // SPARE PART � 17 ph? t�ng
     // =========================================================================
 
     /// <summary>
@@ -837,7 +837,7 @@ public static class DataSeeder
         /// </summary>
         Int32 IdOf(String keyword) => suppliers
             .FirstOrDefault(s => s.Name.Contains(keyword))?.Id
-            ?? throw new InvalidOperationException($"Supplier có từ khóa '{keyword}' không tồn tại.");
+            ?? throw new InvalidOperationException($"Supplier c� t? kh�a '{keyword}' kh�ng t?n t?i.");
 
         Int32 toyotaId = IdOf("Toyota");
         Int32 hondaId = IdOf("Honda");
@@ -847,7 +847,7 @@ public static class DataSeeder
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var parts = new List<Part>();
 
-        #region Spare Parts - Toyota (Phụ tùng bán)
+        #region Spare Parts - Toyota (Ph? t�ng b�n)
 
         parts.AddRange(
         [
@@ -856,7 +856,7 @@ public static class DataSeeder
             {
                 SupplierId = toyotaId,
                 PartCode = "SP_TOYOTA_001",
-                PartName = "Giảm xóc trước Toyota Fortuner (KYB OEM)",
+                PartName = "Gi?m x�c tru?c Toyota Fortuner (KYB OEM)",
                 Manufacturer = "KYB",
                 PartCategory = PartCategory.Suspension,
                 PurchasePrice = 1_400_000,
@@ -871,7 +871,7 @@ public static class DataSeeder
             {
                 SupplierId = toyotaId,
                 PartCode = "SP_TOYOTA_002",
-                PartName = "Thanh cân bằng Toyota Camry 2.5",
+                PartName = "Thanh c�n b?ng Toyota Camry 2.5",
                 Manufacturer = "Toyota",
                 PartCategory = PartCategory.Steering,
                 PurchasePrice = 620_000,
@@ -886,7 +886,7 @@ public static class DataSeeder
             {
                 SupplierId = toyotaId,
                 PartCode = "SP_TOYOTA_003",
-                PartName = "Két điều hòa Toyota Innova 2.0",
+                PartName = "K�t di?u h�a Toyota Innova 2.0",
                 Manufacturer = "Toyota",
                 PartCategory = PartCategory.AirConditioning,
                 PurchasePrice = 1_850_000,
@@ -901,7 +901,7 @@ public static class DataSeeder
             {
                 SupplierId = toyotaId,
                 PartCode = "SP_TOYOTA_004",
-                PartName = "Lọc dầu Toyota Camry",
+                PartName = "L?c d?u Toyota Camry",
                 Manufacturer = "Toyota",
                 PartCategory = PartCategory.Filter,
                 PurchasePrice = 85_000,
@@ -916,7 +916,7 @@ public static class DataSeeder
             {
                 SupplierId = toyotaId,
                 PartCode = "SP_TOYOTA_005",
-                PartName = "Má phanh trước Toyota Camry",
+                PartName = "M� phanh tru?c Toyota Camry",
                 Manufacturer = "Toyota",
                 PartCategory = PartCategory.Brake,
                 PurchasePrice = 450_000,
@@ -931,7 +931,7 @@ public static class DataSeeder
             {
                 SupplierId = toyotaId,
                 PartCode = "SP_TOYOTA_006",
-                PartName = "Bình ắc quy Toyota Vios 45Ah",
+                PartName = "B�nh ?c quy Toyota Vios 45Ah",
                 Manufacturer = "Toyota",
                 PartCategory = PartCategory.Electrical,
                 PurchasePrice = 1_100_000,
@@ -946,7 +946,7 @@ public static class DataSeeder
             {
                 SupplierId = toyotaId,
                 PartCode = "SP_TOYOTA_007",
-                PartName = "Dây curoa cam Toyota Innova 2.0",
+                PartName = "D�y curoa cam Toyota Innova 2.0",
                 Manufacturer = "Toyota",
                 PartCategory = PartCategory.Engine,
                 PurchasePrice = 320_000,
@@ -961,7 +961,7 @@ public static class DataSeeder
             {
                 SupplierId = toyotaId,
                 PartCode = "SP_TOYOTA_008",
-                PartName = "Bơm nước Toyota Fortuner 2.7",
+                PartName = "Bom nu?c Toyota Fortuner 2.7",
                 Manufacturer = "Toyota",
                 PartCategory = PartCategory.Cooling,
                 PurchasePrice = 850_000,
@@ -976,7 +976,7 @@ public static class DataSeeder
 
         #endregion
 
-        #region Spare Parts - Honda (Phụ tùng bán)
+        #region Spare Parts - Honda (Ph? t�ng b�n)
 
         parts.AddRange(
         [
@@ -985,7 +985,7 @@ public static class DataSeeder
             {
                 SupplierId = hondaId,
                 PartCode = "SP_HONDA_001",
-                PartName = "Đèn pha LED Honda CR-V 2023 (trái)",
+                PartName = "��n pha LED Honda CR-V 2023 (tr�i)",
                 Manufacturer = "Honda",
                 PartCategory = PartCategory.Lighting,
                 PurchasePrice = 3_500_000,
@@ -1000,7 +1000,7 @@ public static class DataSeeder
             {
                 SupplierId = hondaId,
                 PartCode = "SP_HONDA_002",
-                PartName = "Kính chắn gió Honda City (chống UV)",
+                PartName = "K�nh ch?n gi� Honda City (ch?ng UV)",
                 Manufacturer = "Honda",
                 PartCategory = PartCategory.UVGlass,
                 PurchasePrice = 2_200_000,
@@ -1015,7 +1015,7 @@ public static class DataSeeder
             {
                 SupplierId = hondaId,
                 PartCode = "SP_HONDA_003",
-                PartName = "Lốp xe Honda HR-V 215/60R16",
+                PartName = "L?p xe Honda HR-V 215/60R16",
                 Manufacturer = "Michelin",
                 PartCategory = PartCategory.WheelAndTire,
                 PurchasePrice = 1_600_000,
@@ -1045,7 +1045,7 @@ public static class DataSeeder
             {
                 SupplierId = hondaId,
                 PartCode = "SP_HONDA_005",
-                PartName = "Dầu động cơ Honda Ultra 5W-30 (4L)",
+                PartName = "D?u d?ng co Honda Ultra 5W-30 (4L)",
                 Manufacturer = "Honda",
                 PartCategory = PartCategory.Lubrication,
                 PurchasePrice = 280_000,
@@ -1060,7 +1060,7 @@ public static class DataSeeder
             {
                 SupplierId = hondaId,
                 PartCode = "SP_HONDA_006",
-                PartName = "Lọc gió Honda City",
+                PartName = "L?c gi� Honda City",
                 Manufacturer = "Honda",
                 PartCategory = PartCategory.Filter,
                 PurchasePrice = 70_000,
@@ -1075,7 +1075,7 @@ public static class DataSeeder
             {
                 SupplierId = hondaId,
                 PartCode = "SP_HONDA_007",
-                PartName = "Cao su gạt mưa Honda HR-V (cặp)",
+                PartName = "Cao su g?t mua Honda HR-V (c?p)",
                 Manufacturer = "Honda",
                 PartCategory = PartCategory.Maintenance,
                 PurchasePrice = 120_000,
@@ -1090,7 +1090,7 @@ public static class DataSeeder
             {
                 SupplierId = hondaId,
                 PartCode = "SP_HONDA_008",
-                PartName = "Bộ piston và xéc măng Honda Civic 1.8",
+                PartName = "B? piston v� x�c mang Honda Civic 1.8",
                 Manufacturer = "Honda",
                 PartCategory = PartCategory.Engine,
                 PurchasePrice = 3_200_000,
@@ -1105,7 +1105,7 @@ public static class DataSeeder
 
         #endregion
 
-        #region Spare Parts - Bosch (Phụ tùng bán)
+        #region Spare Parts - Bosch (Ph? t�ng b�n)
 
         parts.AddRange(
         [
@@ -1114,7 +1114,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "SP_BOSCH_001",
-                PartName = "Cảm biến ABS Bosch bánh trước (universal)",
+                PartName = "C?m bi?n ABS Bosch b�nh tru?c (universal)",
                 Manufacturer = "Bosch",
                 PartCategory = PartCategory.ABS,
                 PurchasePrice = 480_000,
@@ -1129,7 +1129,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "SP_BOSCH_002",
-                PartName = "Máy phát điện Bosch 14V 90A",
+                PartName = "M�y ph�t di?n Bosch 14V 90A",
                 Manufacturer = "Bosch",
                 PartCategory = PartCategory.Electrical,
                 PurchasePrice = 2_800_000,
@@ -1144,7 +1144,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "SP_BOSCH_003",
-                PartName = "Kim phun nhiên liệu Bosch (universal)",
+                PartName = "Kim phun nhi�n li?u Bosch (universal)",
                 Manufacturer = "Bosch",
                 PartCategory = PartCategory.FuelInjection,
                 PurchasePrice = 750_000,
@@ -1159,7 +1159,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "SP_BOSCH_004",
-                PartName = "Cảm biến oxy Bosch O2 Sensor",
+                PartName = "C?m bi?n oxy Bosch O2 Sensor",
                 Manufacturer = "Bosch",
                 PartCategory = PartCategory.SensorsAndModules,
                 PurchasePrice = 550_000,
@@ -1174,7 +1174,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "SP_BOSCH_005",
-                PartName = "Bugi Bosch Iridium đa hãng",
+                PartName = "Bugi Bosch Iridium da h�ng",
                 Manufacturer = "Bosch",
                 PartCategory = PartCategory.Ignition,
                 PurchasePrice = 95_000,
@@ -1189,7 +1189,7 @@ public static class DataSeeder
 
         #endregion
 
-        #region Spare Parts - Stark Industries (Phụ tùng bán - Fantasy)
+        #region Spare Parts - Stark Industries (Ph? t�ng b�n - Fantasy)
 
         parts.AddRange(
         [
@@ -1198,7 +1198,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "SP_STARK_001",
-                PartName = "HUD Holographic Stark — Hiển Thị 3D Toàn Cảnh 360°",
+                PartName = "HUD Holographic Stark � Hi?n Th? 3D To�n C?nh 360�",
                 Manufacturer = "Stark Industries",
                 PartCategory = PartCategory.HUD,
                 PurchasePrice = 75_000_000,
@@ -1213,7 +1213,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "SP_STARK_002",
-                PartName = "Cánh Gió Điều Khiển Tự Động Stark Aerodynamics Kit",
+                PartName = "C�nh Gi� �i?u Khi?n T? �?ng Stark Aerodynamics Kit",
                 Manufacturer = "Stark Industries",
                 PartCategory = PartCategory.Aerodynamics,
                 PurchasePrice = 200_000_000,
@@ -1228,7 +1228,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "SP_STARK_003",
-                PartName = "Động Cơ Tên Lửa Thu Nhỏ Stark Mk.1",
+                PartName = "�?ng Co T�n L?a Thu Nh? Stark Mk.1",
                 Manufacturer = "Stark Industries",
                 PartCategory = PartCategory.Engine,
                 PurchasePrice = 500_000_000,
@@ -1243,7 +1243,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "SP_STARK_004",
-                PartName = "Radar Phát Hiện Địch Stark (Car Edition)",
+                PartName = "Radar Ph�t Hi?n �?ch Stark (Car Edition)",
                 Manufacturer = "Stark Industries",
                 PartCategory = PartCategory.SensorsAndModules,
                 PurchasePrice = 150_000_000,
@@ -1258,7 +1258,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "SP_STARK_005",
-                PartName = "Arc Reactor Mini (Thay Bình Ắc Quy Thông Thường)",
+                PartName = "Arc Reactor Mini (Thay B�nh ?c Quy Th�ng Thu?ng)",
                 Manufacturer = "Stark Industries",
                 PartCategory = PartCategory.BatteryAndModules,
                 PurchasePrice = 1_000_000_000,
@@ -1273,7 +1273,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "SP_STARK_006",
-                PartName = "Flux Capacitor (Hàng Chính Hãng 1885 — Dành Cho DeLorean)",
+                PartName = "Flux Capacitor (H�ng Ch�nh H�ng 1885 � D�nh Cho DeLorean)",
                 Manufacturer = "Stark Industries",
                 PartCategory = PartCategory.Electrical,
                 PurchasePrice = 88_000_000,
@@ -1288,16 +1288,16 @@ public static class DataSeeder
 
         #endregion
 
-        #region Replacement Parts - Generic (Phụ tùng thay thế)
+        #region Replacement Parts - Generic (Ph? t�ng thay th?)
 
         parts.AddRange(
         [
-            // --- Generic Replacement Parts (Thực tế) ---
+            // --- Generic Replacement Parts (Th?c t?) ---
             new()
             {
                 SupplierId = boschId,
                 PartCode = "RP001",
-                PartName = "Lọc gió động cơ đa năng",
+                PartName = "L?c gi� d?ng co da nang",
                 Manufacturer = "Denso",
                 PartCategory = PartCategory.Filter,
                 PurchasePrice = 150_000,
@@ -1312,7 +1312,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP002",
-                PartName = "Dây curoa dẫn động",
+                PartName = "D�y curoa d?n d?ng",
                 Manufacturer = "Gates",
                 PartCategory = PartCategory.Engine,
                 PurchasePrice = 320_000,
@@ -1327,7 +1327,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP003",
-                PartName = "Má phanh sau đa hãng",
+                PartName = "M� phanh sau da h�ng",
                 Manufacturer = "Brembo",
                 PartCategory = PartCategory.Brake,
                 PurchasePrice = 580_000,
@@ -1342,7 +1342,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP004",
-                PartName = "Bình chứa dầu phanh DOT4 500ml",
+                PartName = "B�nh ch?a d?u phanh DOT4 500ml",
                 Manufacturer = "Castrol",
                 PartCategory = PartCategory.Brake,
                 PurchasePrice = 95_000,
@@ -1357,7 +1357,7 @@ public static class DataSeeder
             {
                 SupplierId = toyotaId,
                 PartCode = "RP005",
-                PartName = "Nước làm mát Ready-to-Use 1L",
+                PartName = "Nu?c l�m m�t Ready-to-Use 1L",
                 Manufacturer = "Prestone",
                 PartCategory = PartCategory.Cooling,
                 PurchasePrice = 75_000,
@@ -1372,7 +1372,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP006",
-                PartName = "Bộ gioăng nắp máy đa dụng",
+                PartName = "B? gioang n?p m�y da d?ng",
                 Manufacturer = "Fel-Pro",
                 PartCategory = PartCategory.Engine,
                 PurchasePrice = 420_000,
@@ -1387,7 +1387,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP007",
-                PartName = "Cao su chắn bùn bộ 4 bánh",
+                PartName = "Cao su ch?n b�n b? 4 b�nh",
                 Manufacturer = "WeatherTech",
                 PartCategory = PartCategory.Maintenance,
                 PurchasePrice = 380_000,
@@ -1402,7 +1402,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP008",
-                PartName = "Bugi NGK Iridium IX hộp 4 cái",
+                PartName = "Bugi NGK Iridium IX h?p 4 c�i",
                 Manufacturer = "NGK",
                 PartCategory = PartCategory.Ignition,
                 PurchasePrice = 380_000,
@@ -1417,7 +1417,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP009",
-                PartName = "Lọc nhiên liệu đa hãng",
+                PartName = "L?c nhi�n li?u da h�ng",
                 Manufacturer = "Bosch",
                 PartCategory = PartCategory.Filter,
                 PurchasePrice = 175_000,
@@ -1432,7 +1432,7 @@ public static class DataSeeder
             {
                 SupplierId = toyotaId,
                 PartCode = "RP013",
-                PartName = "Dầu động cơ tổng hợp 5W-30 4L",
+                PartName = "D?u d?ng co t?ng h?p 5W-30 4L",
                 Manufacturer = "Mobil 1",
                 PartCategory = PartCategory.Lubrication,
                 PurchasePrice = 420_000,
@@ -1447,7 +1447,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP014",
-                PartName = "Ắc quy khô 12V 45Ah",
+                PartName = "?c quy kh� 12V 45Ah",
                 Manufacturer = "Bosch",
                 PartCategory = PartCategory.Electrical,
                 PurchasePrice = 1_350_000,
@@ -1462,7 +1462,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP015",
-                PartName = "Lọc nhớt đa hãng",
+                PartName = "L?c nh?t da h�ng",
                 Manufacturer = "Mann-Filter",
                 PartCategory = PartCategory.Filter,
                 PurchasePrice = 85_000,
@@ -1477,7 +1477,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP016",
-                PartName = "Gạt mưa mềm 24 inch",
+                PartName = "G?t mua m?m 24 inch",
                 Manufacturer = "Bosch",
                 PartCategory = PartCategory.Maintenance,
                 PurchasePrice = 120_000,
@@ -1492,7 +1492,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP017",
-                PartName = "Giảm xóc trước thay thế",
+                PartName = "Gi?m x�c tru?c thay th?",
                 Manufacturer = "KYB",
                 PartCategory = PartCategory.Suspension,
                 PurchasePrice = 1_200_000,
@@ -1507,7 +1507,7 @@ public static class DataSeeder
             {
                 SupplierId = boschId,
                 PartCode = "RP018",
-                PartName = "Bộ lọc cabin khử mùi",
+                PartName = "B? l?c cabin kh? m�i",
                 Manufacturer = "3M",
                 PartCategory = PartCategory.Filter,
                 PurchasePrice = 185_000,
@@ -1522,7 +1522,7 @@ public static class DataSeeder
 
         #endregion
 
-        #region Replacement Parts - Fantasy (Phụ tùng thay thế - Fantasy)
+        #region Replacement Parts - Fantasy (Ph? t�ng thay th? - Fantasy)
 
         parts.AddRange(
         [
@@ -1531,7 +1531,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "RP010",
-                PartName = "Bộ Giáp Iron Man Mk.85 (Thay Cản Trước Xe)",
+                PartName = "B? Gi�p Iron Man Mk.85 (Thay C?n Tru?c Xe)",
                 Manufacturer = "Stark Industries",
                 PartCategory = PartCategory.Engine,
                 PurchasePrice = 9_999_999_999,
@@ -1546,7 +1546,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "RP011",
-                PartName = "Đầu Đạn Tên Lửa RPG Thay Thế Cản Sau Xe Tăng T-54",
+                PartName = "�?u �?n T�n L?a RPG Thay Th? C?n Sau Xe Tang T-54",
                 Manufacturer = "Unknown",
                 PartCategory = PartCategory.Engine,
                 PurchasePrice = 50_000_000,
@@ -1561,7 +1561,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "RP012",
-                PartName = "Xăng Hypersonic Pha Lê Nhiên Liệu Cho Động Cơ Tên Lửa",
+                PartName = "Xang Hypersonic Pha L� Nhi�n Li?u Cho �?ng Co T�n L?a",
                 Manufacturer = "Area 51 Fuel Co.",
                 PartCategory = PartCategory.Lubrication,
                 PurchasePrice = 500_000_000,
@@ -1576,7 +1576,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "RP019",
-                PartName = "Lốp Xe Graphene Siêu Dẫn Nhiệt Chống Nổ Cấp Quân Sự",
+                PartName = "L?p Xe Graphene Si�u D?n Nhi?t Ch?ng N? C?p Qu�n S?",
                 Manufacturer = "MIT Advanced Materials Lab",
                 PartCategory = PartCategory.WheelAndTire,
                 PurchasePrice = 45_000_000,
@@ -1591,7 +1591,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "RP020",
-                PartName = "Bộ Pin Hydrogen Fuel Cell 150kW Thay Thế Động Cơ Đốt Trong",
+                PartName = "B? Pin Hydrogen Fuel Cell 150kW Thay Th? �?ng Co �?t Trong",
                 Manufacturer = "Toyota Research Institute",
                 PartCategory = PartCategory.Electrical,
                 PurchasePrice = 320_000_000,
@@ -1606,7 +1606,7 @@ public static class DataSeeder
             {
                 SupplierId = starkId,
                 PartCode = "RP021",
-                PartName = "Cảm Biến LiDAR 128-Layer Tự Lái Cấp Độ 5",
+                PartName = "C?m Bi?n LiDAR 128-Layer T? L�i C?p �? 5",
                 Manufacturer = "Waymo",
                 PartCategory = PartCategory.SensorsAndModules,
                 PurchasePrice = 180_000_000,
@@ -1626,7 +1626,7 @@ public static class DataSeeder
     }
 
     // =========================================================================
-    // SERVICE ITEM — 15+ dịch vụ
+    // SERVICE ITEM � 15+ d?ch v?
     // =========================================================================
 
     private static async System.Threading.Tasks.Task SeedServiceItemsAsync(AutoXDbContext context)
@@ -1638,246 +1638,246 @@ public static class DataSeeder
 
         var serviceItems = new List<ServiceItem>
     {
-        // --- Bảo dưỡng định kỳ ---
+        // --- B?o du?ng d?nh k? ---
         new()
         {
-            Description = "Bảo dưỡng định kỳ 10,000km (Thay dầu, lọc dầu, kiểm tra chung)",
+            Description = "B?o du?ng d?nh k? 10,000km (Thay d?u, l?c d?u, ki?m tra chung)",
             Type = ServiceType.Maintenance,
             UnitPrice = 450_000,
         },
         new()
         {
-            Description = "Bảo dưỡng định kỳ 20,000km (Kiểm tra toàn bộ, bảo dưỡng hệ thống)",
+            Description = "B?o du?ng d?nh k? 20,000km (Ki?m tra to�n b?, b?o du?ng h? th?ng)",
             Type = ServiceType.Maintenance,
             UnitPrice = 850_000,
         },
         new()
         {
-            Description = "Bảo dưỡng định kỳ 40,000km (Kiểm tra sâu, thay thế linh kiện)",
+            Description = "B?o du?ng d?nh k? 40,000km (Ki?m tra s�u, thay th? linh ki?n)",
             Type = ServiceType.Maintenance,
             UnitPrice = 1_200_000,
         },
         new()
         {
-            Description = "Kiểm tra xe định kỳ (Kiểm tra an toàn, hiệu suất)",
+            Description = "Ki?m tra xe d?nh k? (Ki?m tra an to�n, hi?u su?t)",
             Type = ServiceType.Inspection,
             UnitPrice = 300_000,
         },
 
-        // --- Thay dầu & bộ lọc ---
+        // --- Thay d?u & b? l?c ---
         new()
         {
-            Description = "Thay dầu động cơ + lọc dầu + lọc gió",
+            Description = "Thay d?u d?ng co + l?c d?u + l?c gi�",
             Type = ServiceType.OilChange,
             UnitPrice = 400_000,
         },
         new()
         {
-            Description = "Thay lọc cabin + khử mùi",
+            Description = "Thay l?c cabin + kh? m�i",
             Type = ServiceType.OilChange,
             UnitPrice = 250_000,
         },
         new()
         {
-            Description = "Thay lọc nhiên liệu",
+            Description = "Thay l?c nhi�n li?u",
             Type = ServiceType.OilChange,
             UnitPrice = 180_000,
         },
 
-        // --- Dịch vụ lốp xe ---
+        // --- D?ch v? l?p xe ---
         new()
         {
-            Description = "Thay lốp xe (1 cái)",
+            Description = "Thay l?p xe (1 c�i)",
             Type = ServiceType.TireService,
             UnitPrice = 200_000,
         },
         new()
         {
-            Description = "Vá lốp xe",
+            Description = "V� l?p xe",
             Type = ServiceType.TireService,
             UnitPrice = 50_000,
         },
         new()
         {
-            Description = "Cân bằng lốp xe (bộ 4 cái)",
+            Description = "C�n b?ng l?p xe (b? 4 c�i)",
             Type = ServiceType.TireService,
             UnitPrice = 300_000,
         },
         new()
         {
-            Description = "Cân chỉnh góc đặt bánh xe (Alignment)",
+            Description = "C�n ch?nh g�c d?t b�nh xe (Alignment)",
             Type = ServiceType.WheelAlignment,
             UnitPrice = 350_000,
         },
 
-        // --- Dịch vụ điều hòa ---
+        // --- D?ch v? di?u h�a ---
         new()
         {
-            Description = "Bảo dưỡng điều hòa (Vệ sinh, khử mùi)",
+            Description = "B?o du?ng di?u h�a (V? sinh, kh? m�i)",
             Type = ServiceType.ACService,
             UnitPrice = 400_000,
         },
         new()
         {
-            Description = "Nạp gas điều hòa (R134a)",
+            Description = "N?p gas di?u h�a (R134a)",
             Type = ServiceType.ACService,
             UnitPrice = 300_000,
         },
         new()
         {
-            Description = "Thay dầu điều hòa",
+            Description = "Thay d?u di?u h�a",
             Type = ServiceType.ACService,
             UnitPrice = 250_000,
         },
 
-        // --- Sửa chữa chung ---
+        // --- S?a ch?a chung ---
         new()
         {
-            Description = "Sửa chữa động cơ (theo yêu cầu)",
+            Description = "S?a ch?a d?ng co (theo y�u c?u)",
             Type = ServiceType.EngineRepair,
             UnitPrice = 1_500_000,
         },
         new()
         {
-            Description = "Sửa chữa hộp số tự động",
+            Description = "S?a ch?a h?p s? t? d?ng",
             Type = ServiceType.TransmissionRepair,
             UnitPrice = 2_000_000,
         },
         new()
         {
-            Description = "Sửa chữa hệ thống phanh (Kiểm tra & bảo dưỡng)",
+            Description = "S?a ch?a h? th?ng phanh (Ki?m tra & b?o du?ng)",
             Type = ServiceType.BrakeRepair,
             UnitPrice = 600_000,
         },
         new()
         {
-            Description = "Sửa chữa hệ thống lái & treo",
+            Description = "S?a ch?a h? th?ng l�i & treo",
             Type = ServiceType.SuspensionRepair,
             UnitPrice = 800_000,
         },
         new()
         {
-            Description = "Sửa chữa hệ thống nhiên liệu",
+            Description = "S?a ch?a h? th?ng nhi�n li?u",
             Type = ServiceType.FuelSystemRepair,
             UnitPrice = 700_000,
         },
         new()
         {
-            Description = "Sửa chữa hệ thống điện (Điều tra lỗi)",
+            Description = "S?a ch?a h? th?ng di?n (�i?u tra l?i)",
             Type = ServiceType.ElectricalService,
             UnitPrice = 400_000,
         },
         new()
         {
-            Description = "Thay bình ắc quy",
+            Description = "Thay b�nh ?c quy",
             Type = ServiceType.ElectricalService,
             UnitPrice = 500_000,
         },
         new()
         {
-            Description = "Sửa chữa hệ thống đánh lửa",
+            Description = "S?a ch?a h? th?ng d�nh l?a",
             Type = ServiceType.IgnitionRepair,
             UnitPrice = 300_000,
         },
 
-        // --- Làm đẹp ---
+        // --- L�m d?p ---
         new()
         {
-            Description = "Rửa xe bàn tay",
+            Description = "R?a xe b�n tay",
             Type = ServiceType.CarWashAndDetailing,
             UnitPrice = 150_000,
         },
         new()
         {
-            Description = "Chăm sóc nội thất (Vệ sinh, khử mùi, bảo dưỡng)",
+            Description = "Cham s�c n?i th?t (V? sinh, kh? m�i, b?o du?ng)",
             Type = ServiceType.CarWashAndDetailing,
             UnitPrice = 300_000,
         },
         new()
         {
-            Description = "Đánh bóng & sơn phục hồi",
+            Description = "��nh b�ng & son ph?c h?i",
             Type = ServiceType.Painting,
             UnitPrice = 1_000_000,
         },
         new()
         {
-            Description = "Phục hồi đèn pha (Polishing & coating)",
+            Description = "Ph?c h?i d�n pha (Polishing & coating)",
             Type = ServiceType.HeadlightRestoration,
             UnitPrice = 400_000,
         },
         new()
         {
-            Description = "Dán phim cách nhiệt toàn kính",
+            Description = "D�n phim c�ch nhi?t to�n k�nh",
             Type = ServiceType.WindowTintingAndPPF,
             UnitPrice = 2_000_000,
         },
         new()
         {
-            Description = "Phủ sơn bảo vệ (Paint Protection Film)",
+            Description = "Ph? son b?o v? (Paint Protection Film)",
             Type = ServiceType.WindowTintingAndPPF,
             UnitPrice = 3_000_000,
         },
         new()
         {
-            Description = "Phủ Ceramic coating 9H",
+            Description = "Ph? Ceramic coating 9H",
             Type = ServiceType.CeramicCoating,
             UnitPrice = 2_500_000,
         },
 
-        // --- An toàn & kiểm định ---
+        // --- An to�n & ki?m d?nh ---
         new()
         {
-            Description = "Dịch vụ kiểm định xe (Đăng kiểm)",
+            Description = "D?ch v? ki?m d?nh xe (�ang ki?m)",
             Type = ServiceType.VehicleInspection,
             UnitPrice = 500_000,
         },
         new()
         {
-            Description = "Lắp đặt camera hành trình",
+            Description = "L?p d?t camera h�nh tr�nh",
             Type = ServiceType.DashcamInstallation,
             UnitPrice = 800_000,
         },
         new()
         {
-            Description = "Lắp đặt cảm biến đỗ xe (4 cảm biến)",
+            Description = "L?p d?t c?m bi?n d? xe (4 c?m bi?n)",
             Type = ServiceType.ParkingSensorAndADAS,
             UnitPrice = 600_000,
         },
         new()
         {
-            Description = "Lắp đặt hệ thống hỗ trợ lái (ADAS)",
+            Description = "L?p d?t h? th?ng h? tr? l�i (ADAS)",
             Type = ServiceType.ParkingSensorAndADAS,
             UnitPrice = 1_500_000,
         },
 
-        // --- Dịch vụ khẩn cấp ---
+        // --- D?ch v? kh?n c?p ---
         new()
         {
-            Description = "Dịch vụ cứu hộ xe khẩn cấp (Kéo xe + chẩn đoán)",
+            Description = "D?ch v? c?u h? xe kh?n c?p (K�o xe + ch?n do�n)",
             Type = ServiceType.EmergencyRoadsideAssistance,
             UnitPrice = 2_000_000,
         },
         new()
         {
-            Description = "Dịch vụ kéo xe đến gara",
+            Description = "D?ch v? k�o xe d?n gara",
             Type = ServiceType.TowingService,
             UnitPrice = 1_500_000,
         },
         new()
         {
-            Description = "Hỗ trợ khởi động xe (Nhảy bình)",
+            Description = "H? tr? kh?i d?ng xe (Nh?y b�nh)",
             Type = ServiceType.JumpStartService,
             UnitPrice = 200_000,
         },
         new()
         {
-            Description = "Hỗ trợ mở khóa xe",
+            Description = "H? tr? m? kh�a xe",
             Type = ServiceType.LockoutAssistance,
             UnitPrice = 150_000,
         },
         new()
         {
-            Description = "Cung cấp nhiên liệu khẩn cấp",
+            Description = "Cung c?p nhi�n li?u kh?n c?p",
             Type = ServiceType.EmergencyFuelDelivery,
             UnitPrice = 100_000,
         },

@@ -2,7 +2,7 @@
 
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
-using Nalix.Common.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Nalix.Framework.Injection;
 using System.Diagnostics;
 using System.IO;

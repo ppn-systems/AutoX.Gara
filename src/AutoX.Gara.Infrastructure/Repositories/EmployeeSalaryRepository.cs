@@ -72,7 +72,7 @@ public sealed class EmployeeSalaryRepository(AutoXDbContext context)
         return (items, total);
     }
 
-    public System.Threading.Tasks.Task<EmployeeSalary?> GetByIdAsync(System.Int32 id, System.Threading.CancellationToken ct = default)
+    public System.Threading.Tasks.Task<EmployeeSalary> GetByIdAsync(System.Int32 id, System.Threading.CancellationToken ct = default)
         => _context.EmployeeSalaries.FirstOrDefaultAsync(es => es.Id == id, ct);
 
     public System.Threading.Tasks.Task AddAsync(EmployeeSalary data, System.Threading.CancellationToken ct = default)
@@ -85,4 +85,3 @@ public sealed class EmployeeSalaryRepository(AutoXDbContext context)
     public System.Threading.Tasks.Task SaveChangesAsync(System.Threading.CancellationToken ct = default)
         => _context.SaveChangesAsync(ct);
 }
-

@@ -5,46 +5,46 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Common.Shared;
-using Nalix.Shared.Frames;
+using Nalix.Common.Abstractions;
+using Nalix.Framework.DataFrames;
 
 namespace AutoX.Gara.Shared.Protocol.Invoices;
 
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class RepairOrderQueryRequest : PacketBase<RepairOrderQueryRequest>, IPoolable
+public sealed class RepairOrderQueryRequest : PacketBase<RepairOrderQueryRequest>
 {
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public System.Int32 Page { get; set; } = 1;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public System.Int32 PageSize { get; set; } = 20;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
+    [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public RepairOrderSortField SortBy { get; set; } = RepairOrderSortField.OrderDate;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
+    [SerializeOrder(PacketHeaderOffset.Region + 4)]
     public System.Boolean SortDescending { get; set; } = true;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
+    [SerializeOrder(PacketHeaderOffset.Region + 5)]
     public System.Int32 FilterCustomerId { get; set; } = 0;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
+    [SerializeOrder(PacketHeaderOffset.Region + 6)]
     public System.Int32 FilterVehicleId { get; set; } = 0;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
+    [SerializeOrder(PacketHeaderOffset.Region + 7)]
     public System.Int32 FilterInvoiceId { get; set; } = 0;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 8)]
+    [SerializeOrder(PacketHeaderOffset.Region + 8)]
     public RepairOrderStatus? FilterStatus { get; set; } = null;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 9)]
+    [SerializeOrder(PacketHeaderOffset.Region + 9)]
     public System.DateTime? FilterFromDate { get; set; } = null;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 10)]
+    [SerializeOrder(PacketHeaderOffset.Region + 10)]
     public System.DateTime? FilterToDate { get; set; } = null;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 11)]
+    [SerializeOrder(PacketHeaderOffset.Region + 11)]
     public System.String SearchTerm { get; set; } = System.String.Empty;
 
     public RepairOrderQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();

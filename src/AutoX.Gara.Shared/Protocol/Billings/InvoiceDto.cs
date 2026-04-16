@@ -6,7 +6,7 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Shared.Frames;
+using Nalix.Framework.DataFrames;
 
 namespace AutoX.Gara.Shared.Protocol.Billings;
 
@@ -18,64 +18,61 @@ public sealed class InvoiceDto : PacketBase<InvoiceDto>
 {
     // Fixed-size fields
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION)]
-    public new System.UInt32 SequenceId { get; set; }
-
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public System.Int32? InvoiceId { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public System.Int32 CustomerId { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
+    [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public System.DateTime InvoiceDate { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
+    [SerializeOrder(PacketHeaderOffset.Region + 4)]
     public PaymentStatus PaymentStatus { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
+    [SerializeOrder(PacketHeaderOffset.Region + 5)]
     public TaxRateType TaxRate { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
+    [SerializeOrder(PacketHeaderOffset.Region + 6)]
     public DiscountType DiscountType { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
+    [SerializeOrder(PacketHeaderOffset.Region + 7)]
     public System.Decimal Discount { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 8)]
+    [SerializeOrder(PacketHeaderOffset.Region + 8)]
     public System.Decimal Subtotal { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 9)]
+    [SerializeOrder(PacketHeaderOffset.Region + 9)]
     public System.Decimal DiscountAmount { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 10)]
+    [SerializeOrder(PacketHeaderOffset.Region + 10)]
     public System.Decimal TaxAmount { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 11)]
+    [SerializeOrder(PacketHeaderOffset.Region + 11)]
     public System.Decimal TotalAmount { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 12)]
+    [SerializeOrder(PacketHeaderOffset.Region + 12)]
     public System.Decimal BalanceDue { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 13)]
+    [SerializeOrder(PacketHeaderOffset.Region + 13)]
     public System.Decimal ServiceSubtotal { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 14)]
+    [SerializeOrder(PacketHeaderOffset.Region + 14)]
     public System.Decimal PartsSubtotal { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 15)]
+    [SerializeOrder(PacketHeaderOffset.Region + 15)]
     public System.Boolean IsFullyPaid { get; set; }
 
     /// <summary>
     /// Optional: RepairOrderId to link this invoice with a specific repair order when creating/updating.
     /// 0 means no link request.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 16)]
+    [SerializeOrder(PacketHeaderOffset.Region + 16)]
     public System.Int32 RepairOrderId { get; set; }
 
     // Dynamic-size fields (string) - must be last
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 17)]
+    [SerializeOrder(PacketHeaderOffset.Region + 17)]
     public System.String InvoiceNumber { get; set; }
 
     public InvoiceDto()

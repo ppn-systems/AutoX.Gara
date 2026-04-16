@@ -48,6 +48,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Nalix.Network.Hosting" Version="12.0.8" />
 		<ProjectReference Include="..\AutoX.Gara.Shared\AutoX.Gara.Shared.csproj" />
 		<ProjectReference Include="..\AutoX.Gara.Application\AutoX.Gara.Application.csproj" />
 		<ProjectReference Include="..\AutoX.Gara.Infrastructure\AutoX.Gara.Infrastructure.csproj" />

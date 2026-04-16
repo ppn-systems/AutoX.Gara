@@ -1,24 +1,24 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.Injection;
-using Nalix.Shared.Frames;
-using Nalix.Shared.Memory.Objects;
+using Nalix.Framework.DataFrames;
+using Nalix.Framework.Memory.Objects;
 using System.Collections.Generic;
 
 namespace AutoX.Gara.Shared.Protocol.Employees;
 
 /// <summary>
-/// Packet trả về danh sách nhân viên theo trang từ server xuống client.
+/// Packet tr? v? danh s�ch nh�n vi�n theo trang t? server xu?ng client.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class EmployeeQueryResponse : PacketBase<EmployeeQueryResponse>
 {
     [SerializeIgnore]
-    public override System.UInt16 Length
+    public override System.Int32 Length
     {
         get
         {
@@ -32,14 +32,14 @@ public sealed class EmployeeQueryResponse : PacketBase<EmployeeQueryResponse>
                 total += Employees[i].Length;
             }
 
-            return (System.UInt16)total;
+            return total;
         }
     }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public System.Int32 TotalCount { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public List<EmployeeDto> Employees { get; set; } = [];
 
     public EmployeeQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();

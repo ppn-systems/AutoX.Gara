@@ -1,20 +1,20 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Communication;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Auth;
 using AutoX.Gara.Shared.Validation;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using Nalix.Common.Diagnostics;
+
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
-using Nalix.Shared.Security.Credentials;
+using Nalix.Framework.Security.Hashing;
 
 namespace AutoX.Gara.Application.Employees;
 
@@ -242,3 +242,4 @@ public sealed class AccountOps(AutoXDbContextFactory dbContextFactory)
         }
     }
 }
+

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<!-- Build & Lang -->
@@ -22,6 +22,11 @@
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Nalix.Common" Version="12.0.8" />
+		<PackageReference Include="Nalix.Framework" Version="12.0.8" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\AutoX.Gara.Domain\AutoX.Gara.Domain.csproj" />

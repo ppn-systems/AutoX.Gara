@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
@@ -6,13 +6,13 @@ using AutoX.Gara.Frontend.Models.Results.Employees;
 using AutoX.Gara.Frontend.Results.Employees;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Employees;
-using Nalix.Common.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
-using Nalix.Shared.Frames.Controls;
+using Nalix.Framework.DataFrames.SignalFrames;
 
 namespace AutoX.Gara.Frontend.Services.Employees;
 
@@ -121,13 +121,13 @@ public sealed class EmployeeService : IEmployeeService
         }
         catch (System.OperationCanceledException)
         {
-            return EmployeeListResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return EmployeeListResult.Failure("Y�u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
             return EmployeeListResult.Failure(
-                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+                $"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
@@ -241,28 +241,28 @@ public sealed class EmployeeService : IEmployeeService
         }
         catch (System.OperationCanceledException)
         {
-            return EmployeeWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
+            return EmployeeWriteResult.Failure("Y�u c?u b? h?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
             return EmployeeWriteResult.Failure(
-                $"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+                $"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "Không tìm thấy nhân viên.",
-            ProtocolReason.ALREADY_EXISTS => "Email hoặc số điện thoại đã tồn tại.",
-            ProtocolReason.MALFORMED_PACKET => "Dữ liệu không hợp lệ.",
-            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống, vui lòng thử lại sau.",
-            ProtocolReason.FORBIDDEN => "Bạn không có quyền thực hiện thao tác này.",
-            ProtocolReason.UNAUTHENTICATED => "Bạn không có quyền thực hiện thao tác này.",
-            ProtocolReason.RATE_LIMITED => "Bạn đang thao tác quá nhanh, vui lòng chờ một chút rồi thử lại.",
-            ProtocolReason.TIMEOUT => "Máy chủ phản hồi hết hạn, vui lòng thử lại.",
-            _ => "Thao tác thất bại, vui lòng thử lại."
+            ProtocolReason.NOT_FOUND => "Kh�ng t�m th?y nh�n vi�n.",
+            ProtocolReason.ALREADY_EXISTS => "Email ho?c s? di?n tho?i d� t?n t?i.",
+            ProtocolReason.MALFORMED_PACKET => "D? li?u kh�ng h?p l?.",
+            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng, vui l�ng th? l?i sau.",
+            ProtocolReason.FORBIDDEN => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.UNAUTHENTICATED => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.RATE_LIMITED => "B?n dang thao t�c qu� nhanh, vui l�ng ch? m?t ch�t r?i th? l?i.",
+            ProtocolReason.TIMEOUT => "M�y ch? ph?n h?i h?t h?n, vui l�ng th? l?i.",
+            _ => "Thao t�c th?t b?i, vui l�ng th? l?i."
         };
 
     private static void LogException(System.Exception ex)

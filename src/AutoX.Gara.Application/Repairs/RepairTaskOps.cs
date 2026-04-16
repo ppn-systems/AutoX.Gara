@@ -13,8 +13,8 @@ using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
-using Nalix.Shared.Memory.Objects;
-using Nalix.Shared.Serialization;
+using Nalix.Framework.Memory.Objects;
+using Nalix.Framework.Serialization;
 
 namespace AutoX.Gara.Application.Repairs;
 
@@ -411,3 +411,4 @@ public sealed class RepairTaskOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+

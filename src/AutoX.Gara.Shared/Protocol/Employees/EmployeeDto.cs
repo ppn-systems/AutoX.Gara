@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
@@ -6,68 +6,68 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Shared.Frames;
+using Nalix.Framework.DataFrames;
 
 namespace AutoX.Gara.Shared.Protocol.Employees;
 
 /// <summary>
-/// Packet mang dữ liệu nhân viên, dùng cho các thao tác Create, Update, Query.
+/// Packet mang d? li?u nh�n vi�n, d�ng cho c�c thao t�c Create, Update, Query.
 /// <para>
-/// Fixed-size fields đặt TRƯỚC dynamic string fields để tính đúng wire-size.
+/// Fixed-size fields d?t TRU?C dynamic string fields d? t�nh d�ng wire-size.
 /// </para>
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class EmployeeDto : PacketBase<EmployeeDto>
 {
-    // ─── Fixed-size fields ────────────────────────────────────────────────────
+    // --- Fixed-size fields ----------------------------------------------------
 
-    /// <summary>ID nhân viên. Null khi tạo mới.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    /// <summary>ID nh�n vi�n. Null khi t?o m?i.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public System.Int32? EmployeeId { get; set; }
 
-    /// <summary>Giới tính.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    /// <summary>Gi?i t�nh.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public Gender? Gender { get; set; }
 
-    /// <summary>Chức vụ.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
+    /// <summary>Ch?c v?.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public Position? Position { get; set; }
 
-    /// <summary>Trạng thái làm việc.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
+    /// <summary>Tr?ng th�i l�m vi?c.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 4)]
     public EmploymentStatus? Status { get; set; }
 
-    /// <summary>Ngày sinh.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
+    /// <summary>Ng�y sinh.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 5)]
     public System.DateTime? DateOfBirth { get; set; }
 
-    /// <summary>Ngày bắt đầu làm việc.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
+    /// <summary>Ng�y b?t d?u l�m vi?c.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 6)]
     public System.DateTime? StartDate { get; set; }
 
-    /// <summary>Ngày kết thúc hợp đồng.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
+    /// <summary>Ng�y k?t th�c h?p d?ng.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 7)]
     public System.DateTime? EndDate { get; set; }
 
-    // ─── Dynamic-size fields ──────────────────────────────────────────────────
+    // --- Dynamic-size fields --------------------------------------------------
 
-    /// <summary>Tên nhân viên.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 8)]
+    /// <summary>T�n nh�n vi�n.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 8)]
     public System.String Name { get; set; }
 
-    /// <summary>Địa chỉ nhân viên.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 9)]
+    /// <summary>�?a ch? nh�n vi�n.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 9)]
     public System.String Address { get; set; }
 
-    /// <summary>Số điện thoại nhân viên.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 10)]
+    /// <summary>S? di?n tho?i nh�n vi�n.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 10)]
     public System.String PhoneNumber { get; set; }
 
-    /// <summary>Email nhân viên.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 11)]
+    /// <summary>Email nh�n vi�n.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 11)]
     public System.String Email { get; set; }
 
-    // ─── Constructor ──────────────────────────────────────────────────────────
+    // --- Constructor ----------------------------------------------------------
 
     public EmployeeDto()
     {
@@ -78,7 +78,7 @@ public sealed class EmployeeDto : PacketBase<EmployeeDto>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 
-    // ─── Pool Reset ───────────────────────────────────────────────────────────
+    // --- Pool Reset -----------------------------------------------------------
 
     public override void ResetForPool()
     {

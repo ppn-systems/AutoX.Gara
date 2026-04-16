@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
@@ -6,80 +6,80 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Shared.Frames;
+using Nalix.Framework.DataFrames;
 
 namespace AutoX.Gara.Shared.Protocol.Suppliers;
 
 /// <summary>
-/// Packet mang dữ liệu nhà cung cấp, dùng cho các thao tác Create, Update và Query.
+/// Packet mang d? li?u nh� cung c?p, d�ng cho c�c thao t�c Create, Update v� Query.
 /// <para>
-/// Fixed-size fields (enum, int, DateTime) đặt TRƯỚC dynamic string fields
-/// để <see cref="PacketBase{TSelf}.Length"/> tính đúng wire-size.
+/// Fixed-size fields (enum, int, DateTime) d?t TRU?C dynamic string fields
+/// d? <see cref="PacketBase{TSelf}.Length"/> t�nh d�ng wire-size.
 /// </para>
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class SupplierDto : PacketBase<SupplierDto>
 {
-    // ─── Fixed-size fields ────────────────────────────────────────────────────
+    // --- Fixed-size fields ----------------------------------------------------
 
     /// <summary>
-    /// ID nhà cung cấp. <c>null</c> khi tạo mới.
+    /// ID nh� cung c?p. <c>null</c> khi t?o m?i.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public System.Int32? SupplierId { get; set; }
 
-    /// <summary>Trạng thái nhà cung cấp.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    /// <summary>Tr?ng th�i nh� cung c?p.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public SupplierStatus? Status { get; set; }
 
-    /// <summary>Điều khoản thanh toán.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
+    /// <summary>�i?u kho?n thanh to�n.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public PaymentTerms? PaymentTerms { get; set; }
 
-    /// <summary>Ngày bắt đầu hợp tác.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
+    /// <summary>Ng�y b?t d?u h?p t�c.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 4)]
     public System.DateTime? ContractStartDate { get; set; }
 
-    /// <summary>Ngày kết thúc hợp tác (nếu có).</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
+    /// <summary>Ng�y k?t th�c h?p t�c (n?u c�).</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 5)]
     public System.DateTime? ContractEndDate { get; set; }
 
-    // ─── Dynamic-size fields ──────────────────────────────────────────────────
+    // --- Dynamic-size fields --------------------------------------------------
 
-    /// <summary>Tên nhà cung cấp.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
+    /// <summary>T�n nh� cung c?p.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 6)]
     public System.String Name { get; set; }
 
-    /// <summary>Email nhà cung cấp.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
+    /// <summary>Email nh� cung c?p.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 7)]
     public System.String Email { get; set; }
 
-    /// <summary>Địa chỉ nhà cung cấp.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 8)]
+    /// <summary>�?a ch? nh� cung c?p.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 8)]
     public System.String Address { get; set; }
 
-    /// <summary>Mã số thuế.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 9)]
+    /// <summary>M� s? thu?.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 9)]
     public System.String TaxCode { get; set; }
 
-    /// <summary>Tài khoản ngân hàng.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 10)]
+    /// <summary>T�i kho?n ng�n h�ng.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 10)]
     public System.String BankAccount { get; set; }
 
     /// <summary>
-    /// Danh sách SĐT liên hệ, phân cách bằng dấu phẩy.
+    /// Danh s�ch S�T li�n h?, ph�n c�ch b?ng d?u ph?y.
     /// VD: "0901234567,0912345678"
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 11)]
+    [SerializeOrder(PacketHeaderOffset.Region + 11)]
     public System.String PhoneNumbers { get; set; }
 
-    /// <summary>Ghi chú nội bộ. Tối đa 500 ký tự.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 12)]
+    /// <summary>Ghi ch� n?i b?. T?i da 500 k� t?.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 12)]
     public System.String Notes { get; set; }
 
-    // ─── Constructor ──────────────────────────────────────────────────────────
+    // --- Constructor ----------------------------------------------------------
 
-    /// <summary>Khởi tạo <see cref="SupplierDto"/> với giá trị mặc định rỗng.</summary>
+    /// <summary>Kh?i t?o <see cref="SupplierDto"/> v?i gi� tr? m?c d?nh r?ng.</summary>
     public SupplierDto()
     {
         Name = System.String.Empty;
@@ -92,7 +92,7 @@ public sealed class SupplierDto : PacketBase<SupplierDto>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 
-    // ─── Pool Reset ───────────────────────────────────────────────────────────
+    // --- Pool Reset -----------------------------------------------------------
 
     /// <inheritdoc/>
     public override void ResetForPool()

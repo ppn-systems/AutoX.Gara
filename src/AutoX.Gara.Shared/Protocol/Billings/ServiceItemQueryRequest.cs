@@ -5,7 +5,7 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Shared.Frames;
+using Nalix.Framework.DataFrames;
 
 namespace AutoX.Gara.Shared.Protocol.Billings;
 
@@ -13,28 +13,28 @@ namespace AutoX.Gara.Shared.Protocol.Billings;
 public sealed class ServiceItemQueryRequest : PacketBase<ServiceItemQueryRequest>
 {
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public System.Int32 Page { get; set; } = 1;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public System.Int32 PageSize { get; set; } = 20;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
+    [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public ServiceItemSortField SortBy { get; set; } = ServiceItemSortField.Description;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
+    [SerializeOrder(PacketHeaderOffset.Region + 4)]
     public System.Boolean SortDescending { get; set; } = false;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
+    [SerializeOrder(PacketHeaderOffset.Region + 5)]
     public ServiceType? FilterType { get; set; } = null;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
+    [SerializeOrder(PacketHeaderOffset.Region + 6)]
     public System.Decimal? FilterMinUnitPrice { get; set; } = null;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
+    [SerializeOrder(PacketHeaderOffset.Region + 7)]
     public System.Decimal? FilterMaxUnitPrice { get; set; } = null;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 8)]
+    [SerializeOrder(PacketHeaderOffset.Region + 8)]
     public System.String SearchTerm { get; set; } = System.String.Empty;
 
     public ServiceItemQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();

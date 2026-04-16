@@ -1,15 +1,15 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Results.Vehicles;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Vehicles;
-using Nalix.Common.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
-using Nalix.Shared.Frames.Controls;
+using Nalix.Framework.DataFrames.SignalFrames;
 
 namespace AutoX.Gara.Frontend.Services.Vehicles;
 
@@ -29,7 +29,7 @@ public sealed class VehicleService
 
     // --- GetListAsync ---------------------------------------------------------
 
-    /// <summary>L?y danh sách xe c?a m?t customer (có cache 30s).</summary>
+    /// <summary>L?y danh s�ch xe c?a m?t customer (c� cache 30s).</summary>
     public async System.Threading.Tasks.Task<VehicleListResult> GetListAsync(
         System.Int32 customerId,
         System.Int32 page,
@@ -43,26 +43,26 @@ public sealed class VehicleService
 
         if (_cache.TryGet(key, out VehicleCacheEntry? cached))
         {
-            logger.Info($"[VehicleService.GetListAsync] CACHE HIT — returning {cached!.Vehicles.Count} vehicles, total={cached.TotalCount}");
+            logger.Info($"[VehicleService.GetListAsync] CACHE HIT � returning {cached!.Vehicles.Count} vehicles, total={cached.TotalCount}");
             System.Boolean hasMore = page * pageSize < cached!.TotalCount;
             return VehicleListResult.Success(cached.Vehicles, cached.TotalCount, hasMore);
         }
 
-        logger.Info("[VehicleService.GetListAsync] CACHE MISS — sending request to server");
+        logger.Info("[VehicleService.GetListAsync] CACHE MISS � sending request to server");
 
         try
         {
             System.UInt32 sq = Csprng.NextUInt32();
             TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
 
-            // VehicleId == null ? server x? lý nhu list request theo CustomerId
-            // Page du?c encode vào Year field (xem VehicleOps.GetListByCustomerAsync)
+            // VehicleId == null ? server x? l� nhu list request theo CustomerId
+            // Page du?c encode v�o Year field (xem VehicleOps.GetListByCustomerAsync)
             VehicleDto packet = new()
             {
                 SequenceId = sq,
                 CustomerId = customerId,
                 VehicleId = null,   // null = list mode
-                Year = page,   // encode page number vào Year
+                Year = page,   // encode page number v�o Year
                 OpCode = (System.UInt16)OpCommand.VEHICLE_GET
             };
 
@@ -83,7 +83,7 @@ public sealed class VehicleService
                 },
                 handler: resp =>
                 {
-                    logger.Info($"[VehicleService.GetListAsync] VehiclesQueryResponse MATCHED — vehicles={resp.Vehicles.Count} total={resp.TotalCount}");
+                    logger.Info($"[VehicleService.GetListAsync] VehiclesQueryResponse MATCHED � vehicles={resp.Vehicles.Count} total={resp.TotalCount}");
                     sub?.Dispose();
                     errSub?.Dispose();
                     _cache.Set(key, resp.Vehicles, resp.TotalCount);
@@ -100,7 +100,7 @@ public sealed class VehicleService
                 },
                 handler: resp =>
                 {
-                    logger.Warn($"[VehicleService.GetListAsync] Directive ERROR — Type={resp.Type} Reason={resp.Reason} Action={resp.Action}");
+                    logger.Warn($"[VehicleService.GetListAsync] Directive ERROR � Type={resp.Type} Reason={resp.Reason} Action={resp.Action}");
                     sub?.Dispose();
                     errSub?.Dispose();
                     tcs.TrySetResult(VehicleListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
@@ -122,25 +122,25 @@ public sealed class VehicleService
 
             if (!ReferenceEquals(winner, tcs.Task))
             {
-                logger.Warn($"[VehicleService.GetListAsync] TIMEOUT after {RequestTimeoutMs}ms — SeqId={sq} customerId={customerId} page={page}");
+                logger.Warn($"[VehicleService.GetListAsync] TIMEOUT after {RequestTimeoutMs}ms � SeqId={sq} customerId={customerId} page={page}");
                 sub?.Dispose();
                 errSub?.Dispose();
                 return VehicleListResult.Timeout();
             }
 
             VehicleListResult finalResult = await tcs.Task.ConfigureAwait(false);
-            logger.Info($"[VehicleService.GetListAsync] Done — IsSuccess={finalResult.IsSuccess} count={finalResult.Vehicles.Count} total={finalResult.TotalCount}");
+            logger.Info($"[VehicleService.GetListAsync] Done � IsSuccess={finalResult.IsSuccess} count={finalResult.Vehicles.Count} total={finalResult.TotalCount}");
             return finalResult;
         }
         catch (System.OperationCanceledException)
         {
             logger.Warn("[VehicleService.GetListAsync] Request cancelled by caller.");
-            return VehicleListResult.Failure("Yêu c?u b? Hủy.", ProtocolAdvice.NONE);
+            return VehicleListResult.Failure("Y�u c?u b? H?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return VehicleListResult.Failure($"L?i không xác d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return VehicleListResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
@@ -268,27 +268,27 @@ public sealed class VehicleService
         }
         catch (System.OperationCanceledException)
         {
-            return VehicleWriteResult.Failure("Yêu c?u b? Hủy.", ProtocolAdvice.NONE);
+            return VehicleWriteResult.Failure("Y�u c?u b? H?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return VehicleWriteResult.Failure($"L?i không xác d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return VehicleWriteResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "Không tìm tHủy xe.",
-            ProtocolReason.ALREADY_EXISTS => "Bi?n s? ho?c s? khung/máy dã t?n Tải.",
-            ProtocolReason.MALFORMED_PACKET => "D? li?u không h?p l?.",
-            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui lòng Thử lại sau.",
-            ProtocolReason.FORBIDDEN => "B?n không có quy?n th?c hi?n thao tác này.",
-            ProtocolReason.UNAUTHENTICATED => "B?n không có quy?n th?c hi?n thao tác này.",
-            ProtocolReason.RATE_LIMITED => "B?n dang thao tác quá nhanh. Vui lòng ch? m?t chút.",
-            ProtocolReason.TIMEOUT => "Máy ch? phụn h?i h?t h?n. Vui lòng Thử lại.",
-            _ => "Thao tác thất bại. Vui lòng Thử lại."
+            ProtocolReason.NOT_FOUND => "Kh�ng t�m tH?y xe.",
+            ProtocolReason.ALREADY_EXISTS => "Bi?n s? ho?c s? khung/m�y d� t?n T?i.",
+            ProtocolReason.MALFORMED_PACKET => "D? li?u kh�ng h?p l?.",
+            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui l�ng Th? l?i sau.",
+            ProtocolReason.FORBIDDEN => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.UNAUTHENTICATED => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.RATE_LIMITED => "B?n dang thao t�c qu� nhanh. Vui l�ng ch? m?t ch�t.",
+            ProtocolReason.TIMEOUT => "M�y ch? ph?n h?i h?t h?n. Vui l�ng Th? l?i.",
+            _ => "Thao t�c th?t b?i. Vui l�ng Th? l?i."
         };
 
     private static void LogException(System.Exception ex)

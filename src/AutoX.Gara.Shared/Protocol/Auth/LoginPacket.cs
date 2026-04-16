@@ -1,10 +1,10 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Shared.Frames;
+using Nalix.Framework.DataFrames;
 
 namespace AutoX.Gara.Shared.Protocol.Auth;
 
@@ -19,7 +19,7 @@ public sealed class LoginPacket : PacketBase<LoginPacket>
     /// <summary>
     /// Gets or sets the login credentials model (username, hashed password, metadata).
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public LoginRequestModel Account { get; set; }
 
     /// <summary>

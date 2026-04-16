@@ -1,16 +1,16 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Parts;
 using AutoX.Gara.Frontend.Results.Parts;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Inventory;
-using Nalix.Common.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
-using Nalix.Shared.Frames.Controls;
+using Nalix.Framework.DataFrames.SignalFrames;
 
 namespace AutoX.Gara.Frontend.Services.Inventory;
 
@@ -131,12 +131,12 @@ public sealed class PartService : IPartService
         }
         catch (System.OperationCanceledException)
         {
-            return PartListResult.Failure("Yêu c?u b? Hủy.", ProtocolAdvice.NONE);
+            return PartListResult.Failure("Y�u c?u b? H?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return PartListResult.Failure($"L?i không xác d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return PartListResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
@@ -267,27 +267,27 @@ public sealed class PartService : IPartService
         }
         catch (System.OperationCanceledException)
         {
-            return PartWriteResult.Failure("Yêu c?u b? Hủy.", ProtocolAdvice.NONE);
+            return PartWriteResult.Failure("Y�u c?u b? H?y.", ProtocolAdvice.NONE);
         }
         catch (System.Exception ex)
         {
             LogException(ex);
-            return PartWriteResult.Failure($"L?i không xác d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return PartWriteResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
     private static System.String MapErrorReason(ProtocolReason reason)
         => reason switch
         {
-            ProtocolReason.NOT_FOUND => "Không tìm tHủy phụ tùng.",
-            ProtocolReason.ALREADY_EXISTS => "Mã SKU/phụ tùng dã t?n Tải.",
-            ProtocolReason.MALFORMED_PACKET => "D? li?u không h?p l?.",
-            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui lòng Thử lại sau.",
-            ProtocolReason.FORBIDDEN => "B?n không có quy?n th?c hi?n thao tác này.",
-            ProtocolReason.UNAUTHENTICATED => "B?n không có quy?n th?c hi?n thao tác này.",
-            ProtocolReason.RATE_LIMITED => "B?n dang thao tác quá nhanh. Vui lòng ch? m?t chút r?i Thử lại.",
-            ProtocolReason.TIMEOUT => "Máy ch? phụn h?i h?t h?n. Vui lòng Thử lại.",
-            _ => "Thao tác thất bại. Vui lòng Thử lại."
+            ProtocolReason.NOT_FOUND => "Kh�ng t�m tH?y ph? t�ng.",
+            ProtocolReason.ALREADY_EXISTS => "M� SKU/ph? t�ng d� t?n T?i.",
+            ProtocolReason.MALFORMED_PACKET => "D? li?u kh�ng h?p l?.",
+            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui l�ng Th? l?i sau.",
+            ProtocolReason.FORBIDDEN => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.UNAUTHENTICATED => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
+            ProtocolReason.RATE_LIMITED => "B?n dang thao t�c qu� nhanh. Vui l�ng ch? m?t ch�t r?i Th? l?i.",
+            ProtocolReason.TIMEOUT => "M�y ch? ph?n h?i h?t h?n. Vui l�ng Th? l?i.",
+            _ => "Thao t�c th?t b?i. Vui l�ng Th? l?i."
         };
 
     private static void LogException(System.Exception ex)

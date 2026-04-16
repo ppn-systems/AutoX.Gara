@@ -4,7 +4,7 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Shared.Frames;
+using Nalix.Framework.DataFrames;
 
 namespace AutoX.Gara.Shared.Protocol.Repairs;
 
@@ -12,16 +12,16 @@ namespace AutoX.Gara.Shared.Protocol.Repairs;
 public sealed class RepairOrderItemDto : PacketBase<RepairOrderItemDto>
 {
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public System.Int32? RepairOrderItemId { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public System.Int32 RepairOrderId { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
+    [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public System.Int32 PartId { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
+    [SerializeOrder(PacketHeaderOffset.Region + 4)]
     public System.Int32 Quantity { get; set; }
 
     public RepairOrderItemDto() => OpCode = OpCommand.NONE.AsUInt16();

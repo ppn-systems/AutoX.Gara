@@ -5,16 +5,12 @@ namespace AutoX.Gara.Shared.Enums;
 public enum OpCommand : System.UInt16
 {
     NONE = 0x00,
-
-    HANDSHAKE = 0x01,
-
-    LOGIN = 0x50,
-
-    LOGOUT = 0x51,
-
-    REGISTER = 0x52,
-
-    CHANGE_PASSWORD = 0x53,
+    PING = 0x0200,
+    HANDSHAKE = 0x0201,
+    LOGIN = 0x0210,
+    LOGOUT = 0x0211,
+    REGISTER = 0x0212,
+    CHANGE_PASSWORD = 0x0213,
 
     CUSTOMER_GET = 0x100,
 

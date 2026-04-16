@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Enums;
@@ -9,15 +9,16 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Customers;
 using AutoX.Gara.Shared.Validation;
-using Nalix.Common.Diagnostics;
+using Microsoft.Extensions.Logging;
+
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
-using Nalix.Shared.Memory.Objects;
-using Nalix.Shared.Serialization;
+using Nalix.Framework.Memory.Objects;
+using Nalix.Framework.Serialization;
 using System.Diagnostics;
 
 namespace AutoX.Gara.Application.Customers;
@@ -472,3 +473,5 @@ public sealed class CustomerOps(AutoXDbContextFactory dbContextFactory)
         return data;
     }
 }
+
+

@@ -5,8 +5,8 @@ using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Common.Shared;
-using Nalix.Shared.Frames;
+using Nalix.Common.Abstractions;
+using Nalix.Framework.DataFrames;
 
 namespace AutoX.Gara.Shared.Protocol.Billings;
 
@@ -15,45 +15,45 @@ namespace AutoX.Gara.Shared.Protocol.Billings;
 /// co ho tro phan trang, tim kiem, loc va sap xep.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
-public sealed class InvoiceQueryRequest : PacketBase<InvoiceQueryRequest>, IPoolable
+public sealed class InvoiceQueryRequest : PacketBase<InvoiceQueryRequest>
 {
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public System.Int32 Page { get; set; } = 1;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public System.Int32 PageSize { get; set; } = 20;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
+    [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public InvoiceSortField SortBy { get; set; } = InvoiceSortField.InvoiceDate;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
+    [SerializeOrder(PacketHeaderOffset.Region + 4)]
     public System.Boolean SortDescending { get; set; } = true;
 
     /// <summary>
     /// Loc theo customer id. 0 = khong loc.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
+    [SerializeOrder(PacketHeaderOffset.Region + 5)]
     public System.Int32 FilterCustomerId { get; set; } = 0;
 
     /// <summary>
     /// Loc theo trang thai thanh toan. null = khong loc.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
+    [SerializeOrder(PacketHeaderOffset.Region + 6)]
     public PaymentStatus? FilterPaymentStatus { get; set; } = null;
 
     /// <summary>
     /// Loc theo khoang thoi gian (InvoiceDate). null = khong loc.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
+    [SerializeOrder(PacketHeaderOffset.Region + 7)]
     public System.DateTime? FilterFromDate { get; set; } = null;
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 8)]
+    [SerializeOrder(PacketHeaderOffset.Region + 8)]
     public System.DateTime? FilterToDate { get; set; } = null;
 
     /// <summary>
     /// Tim kiem theo so hoa don. Dynamic field - dat cuoi.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 9)]
+    [SerializeOrder(PacketHeaderOffset.Region + 9)]
     public System.String SearchTerm { get; set; } = System.String.Empty;
 
     public InvoiceQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();

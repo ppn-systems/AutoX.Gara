@@ -1,40 +1,40 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.Injection;
-using Nalix.Shared.Frames;
-using Nalix.Shared.Memory.Objects;
+using Nalix.Framework.DataFrames;
+using Nalix.Framework.Memory.Objects;
 using System.Collections.Generic;
 
 namespace AutoX.Gara.Shared.Protocol.Suppliers;
 
 /// <summary>
-/// Packet trả về danh sách nhà cung cấp theo trang từ server xuống client.
+/// Packet tr? v? danh s�ch nh� cung c?p theo trang t? server xu?ng client.
 /// <para>
-/// Cấu trúc Length tính thủ công vì chứa dynamic list <see cref="Suppliers"/>.
-/// <see cref="TotalCount"/> PHẢI đứng trước <see cref="Suppliers"/> trong
-/// <c>SerializeOrder</c> — fixed field sau dynamic list sẽ bị serializer bỏ qua.
+/// C?u tr�c Length t�nh th? c�ng v� ch?a dynamic list <see cref="Suppliers"/>.
+/// <see cref="TotalCount"/> PH?I d?ng tru?c <see cref="Suppliers"/> trong
+/// <c>SerializeOrder</c> � fixed field sau dynamic list s? b? serializer b? qua.
 /// </para>
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class SupplierQueryResponse : PacketBase<SupplierQueryResponse>
 {
     /// <summary>
-    /// Tổng số byte của packet, tính thủ công để bao gồm child packets.
+    /// T?ng s? byte c?a packet, t�nh th? c�ng d? bao g?m child packets.
     /// </summary>
     /// <remarks>
     /// Layout:
     ///   - Fixed header    (PacketConstants.HeaderSize)
     ///   - SequenceId      (UInt32 = 4 bytes)
     ///   - TotalCount      (Int32  = 4 bytes)
-    ///   - List item-count (Int32  = 4 bytes) ← prefix ghi bởi serializer
-    ///   - Mỗi SupplierDto.Length
+    ///   - List item-count (Int32  = 4 bytes) ? prefix ghi b?i serializer
+    ///   - M?i SupplierDto.Length
     /// </remarks>
     [SerializeIgnore]
-    public override System.UInt16 Length
+    public override System.Int32 Length
     {
         get
         {
@@ -48,34 +48,34 @@ public sealed class SupplierQueryResponse : PacketBase<SupplierQueryResponse>
                 total += Suppliers[i].Length;
             }
 
-            return (System.UInt16)total;
+            return total;
         }
     }
 
     /// <summary>
-    /// Tổng số nhà cung cấp khớp filter trên server (trước phân trang).
-    /// Client dùng để tính TotalPages.
+    /// T?ng s? nh� cung c?p kh?p filter tr�n server (tru?c ph�n trang).
+    /// Client d�ng d? t�nh TotalPages.
     /// <para>
-    /// PHẢI đứng trước <see cref="Suppliers"/> — đây là fixed-size field.
+    /// PH?I d?ng tru?c <see cref="Suppliers"/> � d�y l� fixed-size field.
     /// </para>
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public System.Int32 TotalCount { get; set; }
 
     /// <summary>
-    /// Danh sách nhà cung cấp trên trang hiện tại.
-    /// Dynamic field — phải đứng CUỐI CÙNG trong SerializeOrder.
+    /// Danh s�ch nh� cung c?p tr�n trang hi?n t?i.
+    /// Dynamic field � ph?i d?ng CU?I C�NG trong SerializeOrder.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public List<SupplierDto> Suppliers { get; set; } = [];
 
-    /// <summary>Khởi tạo với giá trị mặc định.</summary>
+    /// <summary>Kh?i t?o v?i gi� tr? m?c d?nh.</summary>
     public SupplierQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();
 
     /// <inheritdoc/>
     public override void ResetForPool()
     {
-        // Trả child packets về pool trước để tránh leak.
+        // Tr? child packets v? pool tru?c d? tr�nh leak.
         if (Suppliers?.Count > 0)
         {
             var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();

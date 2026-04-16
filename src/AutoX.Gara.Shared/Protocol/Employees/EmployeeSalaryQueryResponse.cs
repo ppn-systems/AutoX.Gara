@@ -5,8 +5,8 @@ using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.Injection;
-using Nalix.Shared.Frames;
-using Nalix.Shared.Memory.Objects;
+using Nalix.Framework.DataFrames;
+using Nalix.Framework.Memory.Objects;
 using System.Collections.Generic;
 
 namespace AutoX.Gara.Shared.Protocol.Employees;
@@ -15,7 +15,7 @@ namespace AutoX.Gara.Shared.Protocol.Employees;
 public sealed class EmployeeSalaryQueryResponse : PacketBase<EmployeeSalaryQueryResponse>
 {
     [SerializeIgnore]
-    public override System.UInt16 Length
+    public override System.Int32 Length
     {
         get
         {
@@ -29,14 +29,14 @@ public sealed class EmployeeSalaryQueryResponse : PacketBase<EmployeeSalaryQuery
                 total += Salaries[i].Length;
             }
 
-            return (System.UInt16)total;
+            return total;
         }
     }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public System.Int32 TotalCount { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public List<EmployeeSalaryDto> Salaries { get; set; } = [];
 
     public EmployeeSalaryQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();

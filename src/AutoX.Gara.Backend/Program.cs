@@ -1,7 +1,6 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Billings;
-using AutoX.Gara.Application.Communication;
 using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Application.Employees;
 using AutoX.Gara.Application.Inventory;
@@ -12,8 +11,9 @@ using AutoX.Gara.Application.Vehicles;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Networking;
 using AutoX.Gara.Shared;
+using AutoX.Gara.Shared.Protocol.Auth;
 using Nalix.Common.Concurrency;
-using Nalix.Common.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Framework.Configuration;
 using Nalix.Framework.Injection;
@@ -21,13 +21,15 @@ using Nalix.Framework.Options;
 using Nalix.Framework.Tasks;
 using Nalix.Framework.Time;
 using Nalix.Logging;
-using Nalix.Logging.Configuration;
+using Nalix.Logging.Options;
 using Nalix.Logging.Sinks;
 using Nalix.Network.Connections;
-using Nalix.Network.Routing;
-using Nalix.Shared.Extensions;
-using Nalix.Shared.Memory.Buffers;
-using Nalix.Shared.Memory.Objects;
+using Nalix.Network.Hosting;
+using Nalix.Network.Options;
+using Nalix.Runtime.Dispatching;
+using Nalix.Framework.Extensions;
+using Nalix.Framework.Memory.Buffers;
+using Nalix.Framework.Memory.Objects;
 
 [assembly: System.Reflection.AssemblyMetadata("Version", "1.0.0")]
 [assembly: System.Reflection.AssemblyMetadata("Author", "PPN Corporation")]
@@ -43,6 +45,7 @@ public static class Program
 
     private static readonly System.Threading.ManualResetEvent QuitEvent = new(false);
     private static readonly TaskManager Task = InstanceManager.Instance.GetOrCreateInstance<TaskManager>();
+    private static NetworkApplication App;
 
     [System.STAThread]
     [System.Diagnostics.DebuggerNonUserCode]
@@ -73,12 +76,7 @@ public static class Program
             //    }
             //};
             InitializeComponent();
-
-            InstanceManager.Instance.GetExistingInstance<IListener>()?
-                                    .Activate();
-
-            InstanceManager.Instance.GetExistingInstance<PacketDispatchChannel>()
-                                    .Activate();
+            App.ActivateAsync().GetAwaiter().GetResult();
 
             System.Console.CursorVisible = false;
             System.Console.CancelKeyPress += (sender, e) =>
@@ -116,8 +114,7 @@ public static class Program
 
             QuitEvent.WaitOne();
 
-            InstanceManager.Instance.GetExistingInstance<IListener>()?
-                                    .Deactivate();
+            App.DeactivateAsync().GetAwaiter().GetResult();
         }
         catch (System.Exception ex)
         {
@@ -228,96 +225,88 @@ public static class Program
             }
         }
 
-        PacketDispatchChannel channel = new(dispatchOptions =>
-        {
-            // Inbound
-            //dispatchOptions.WithMiddleware(new PermissionMiddleware());
-            //dispatchOptions.WithMiddleware(new ConcurrencyMiddleware());
-            //dispatchOptions.WithMiddleware(new RateLimitMiddleware());
-            //dispatchOptions.WithMiddleware(new TimeoutMiddleware());
+        App = NetworkApplication.CreateBuilder()
+            .ConfigureLogging(logger)
+            .ConfigureConnectionHub(new ConnectionHub())
+            .ConfigureBufferPoolManager(new BufferPoolManager())
+            .Configure<NetworkSocketOptions>(options => { options.Port = 57206; })
+            .AddPacket<LoginPacket>()
+            .AddHandlers<AccountOps>()
+            .ConfigureDispatch(dispatchOptions =>
+            {
+                dispatchOptions.WithLogging(InstanceManager.Instance.GetExistingInstance<ILogger>());
+                dispatchOptions.WithErrorHandling((exception, command)
+                    => InstanceManager.Instance.GetExistingInstance<ILogger>()
+                                               .Error($"Error handling command: {command}", exception));
 
-            // Logging
-            dispatchOptions.WithLogging(InstanceManager.Instance.GetExistingInstance<ILogger>());
-            dispatchOptions.WithErrorHandling((exception, command)
-                => InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                           .Error($"Error handling command: {command}", exception));
-
-            // OPS
-            dispatchOptions.WithHandler(() => new PingOps());
-            dispatchOptions.WithHandler(() => new HandshakeOps());
-            dispatchOptions.WithHandler(() =>
-                new AccountOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new EmployeeOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new EmployeeSalaryOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new CustomerOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new VehicleOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new PartOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new SupplierOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new InvoiceOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new RepairOrderOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new TransactionOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new ServiceItemOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new RepairTaskOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-            dispatchOptions.WithHandler(() =>
-                new RepairOrderItemOps(
-                    InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
-                )
-            );
-        });
-
-        AutoXProtocol xProtocol = new(channel);
-        AutoXListener xListener = new(xProtocol);
-
-        InstanceManager.Instance.Register<PacketDispatchChannel>(channel);
-        InstanceManager.Instance.RegisterForClassOnly<IProtocol>(xProtocol);
-        InstanceManager.Instance.RegisterForClassOnly<IListener>(xListener);
+                dispatchOptions.WithHandler(() =>
+                    new AccountOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new EmployeeOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new EmployeeSalaryOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new CustomerOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new VehicleOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new PartOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new SupplierOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new InvoiceOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new RepairOrderOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new TransactionOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new ServiceItemOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new RepairTaskOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+                dispatchOptions.WithHandler(() =>
+                    new RepairOrderItemOps(
+                        InstanceManager.Instance.GetExistingInstance<AutoXDbContextFactory>()
+                    )
+                );
+            })
+            .AddTcp<AutoXProtocol>()
+            .Build();
     }
 
     private static System.Threading.Tasks.Task LISTEN_TO_KEYBOARD(IWorkerContext ctx, System.Threading.CancellationToken ct)

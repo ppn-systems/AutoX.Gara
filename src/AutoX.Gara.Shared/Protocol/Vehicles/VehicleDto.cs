@@ -1,65 +1,65 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Cars;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
-using Nalix.Shared.Frames;
+using Nalix.Framework.DataFrames;
 
 namespace AutoX.Gara.Shared.Protocol.Vehicles;
 
 /// <summary>
-/// Packet truyền dữ liệu xe cho các thao tác tạo, cập nhật, truy vấn.
-/// Sử dụng PacketBase để auto serialize/pooling.
+/// Packet truy?n d? li?u xe cho c�c thao t�c t?o, c?p nh?t, truy v?n.
+/// S? d?ng PacketBase d? auto serialize/pooling.
 /// </summary>
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class VehicleDto : PacketBase<VehicleDto>
 {
-    // ─── Fixed-size fields ───────────────────────────────────────────────
+    // --- Fixed-size fields -----------------------------------------------
 
-    /// <summary>Id của xe. null khi tạo mới.</summary>
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 1)]
+    /// <summary>Id c?a xe. null khi t?o m?i.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public System.Int32? VehicleId { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 2)]
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public System.Int32 CustomerId { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 3)]
+    [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public CarType Type { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 4)]
+    [SerializeOrder(PacketHeaderOffset.Region + 4)]
     public CarColor Color { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 5)]
+    [SerializeOrder(PacketHeaderOffset.Region + 5)]
     public CarBrand Brand { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 6)]
+    [SerializeOrder(PacketHeaderOffset.Region + 6)]
     public System.Int32 Year { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 7)]
+    [SerializeOrder(PacketHeaderOffset.Region + 7)]
     public System.Double Mileage { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 8)]
+    [SerializeOrder(PacketHeaderOffset.Region + 8)]
     public System.DateTime RegistrationDate { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 9)]
+    [SerializeOrder(PacketHeaderOffset.Region + 9)]
     public System.DateTime? InsuranceExpiryDate { get; set; }
 
-    // ─── Dynamic fields (string) ─────────────────────────────────────────
-    // Theo Pattern, phải đứng sau fixed size field
+    // --- Dynamic fields (string) -----------------------------------------
+    // Theo Pattern, ph?i d?ng sau fixed size field
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 10)]
+    [SerializeOrder(PacketHeaderOffset.Region + 10)]
     public System.String Model { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 11)]
+    [SerializeOrder(PacketHeaderOffset.Region + 11)]
     public System.String LicensePlate { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 12)]
+    [SerializeOrder(PacketHeaderOffset.Region + 12)]
     public System.String EngineNumber { get; set; }
 
-    [SerializeOrder(PacketHeaderOffset.DATA_REGION + 13)]
+    [SerializeOrder(PacketHeaderOffset.Region + 13)]
     public System.String FrameNumber { get; set; }
 
-    // ─── Constructor ──────────��─────────────────────────────────────────
+    // --- Constructor ----------??-----------------------------------------
 
     public VehicleDto()
     {

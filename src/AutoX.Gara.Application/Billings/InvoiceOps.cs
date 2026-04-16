@@ -5,18 +5,19 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Repositories;
 using AutoX.Gara.Shared.Enums;
+using Microsoft.Extensions.Logging;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Billings;
 using Microsoft.EntityFrameworkCore;
-using Nalix.Common.Diagnostics;
+
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using Nalix.Network.Connections;
-using Nalix.Shared.Memory.Objects;
-using Nalix.Shared.Serialization;
+using Nalix.Framework.Memory.Objects;
+using Nalix.Framework.Serialization;
 using System.Diagnostics;
 using System.Linq;
 
@@ -729,3 +730,5 @@ public sealed class InvoiceOps(AutoXDbContextFactory dbContextFactory)
         return dto;
     }
 }
+
+

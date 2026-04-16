@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Infrastructure.Database;
@@ -10,7 +10,7 @@ using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Network.Connections;
-using Nalix.Shared.Serialization;
+using Nalix.Framework.Serialization;
 
 namespace AutoX.Gara.Application.Vehicles;
 

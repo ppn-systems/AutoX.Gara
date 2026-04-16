@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Models.Results.Accounts;
@@ -10,18 +10,18 @@ using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Tasks;
 using Nalix.SDK.Transport;
-using Nalix.Shared.Frames.Controls;
+using Nalix.Framework.DataFrames.SignalFrames;
 
 namespace AutoX.Gara.UI.ViewModels;
 
 /// <summary>
-/// <para>ViewModel cho màn hình dang nh?p.</para>
+/// <para>ViewModel cho m�n h�nh dang nh?p.</para>
 /// <para>
-/// Trách nhi?m duy nh?t (SRP):
-///   - Qu?n lý tr?ng thái UI (IsLoading, HasError, Popup...)
-///   - Ði?u phụi lu?ng: validate ? connect ? login ? navigate
+/// Tr�ch nhi?m duy nh?t (SRP):
+///   - Qu?n l� tr?ng th�i UI (IsLoading, HasError, Popup...)
+///   - �i?u ph?i lu?ng: validate ? connect ? login ? navigate
 /// </para>
-/// <para>Không ch?a: network code, navigation code, validation rules.</para>
+/// <para>Kh�ng ch?a: network code, navigation code, validation rules.</para>
 /// </summary>
 public sealed partial class LoginViewModel : ObservableObject
 {
@@ -33,7 +33,7 @@ public sealed partial class LoginViewModel : ObservableObject
     // --- Cancellation --------------------------------------------------------
 
     /// <summary>
-    /// Token d? Hủy login dang cHủy khi user b?m nút khác / thoát màn hình.
+    /// Token d? H?y login dang cH?y khi user b?m n�t kh�c / tho�t m�n h�nh.
     /// </summary>
     private System.Threading.CancellationTokenSource? _loginCts;
 
@@ -67,8 +67,8 @@ public sealed partial class LoginViewModel : ObservableObject
     // --- Constructor ---------------------------------------------------------
 
     /// <summary>
-    /// Constructor nhận dependencies qua DI — dễ unit test hơn <c>InstanceManager</c>.
-    /// Nếu chưa dùng DI container, bạn có thể dùng constructor mặc định bên dưới.
+    /// Constructor nh?n dependencies qua DI � d? unit test hon <c>InstanceManager</c>.
+    /// N?u chua d�ng DI container, b?n c� th? d�ng constructor m?c d?nh b�n du?i.
     /// </summary>
     public LoginViewModel(IAccountService loginService, INavigationService navigation)
     {
@@ -87,7 +87,7 @@ public sealed partial class LoginViewModel : ObservableObject
     [RelayCommand]
     private async System.Threading.Tasks.Task LoginAsync()
     {
-        // Hủy login tru?c dó n?u dang cHủy (ví d? user b?m nhanh 2 l?n)
+        // H?y login tru?c d� n?u dang cH?y (v� d? user b?m nhanh 2 l?n)
         _loginCts?.Cancel();
         _loginCts = new System.Threading.CancellationTokenSource();
         var ct = _loginCts.Token;
@@ -121,7 +121,7 @@ public sealed partial class LoginViewModel : ObservableObject
         }
         finally
         {
-            // Ð?m b?o IsLoading luôn du?c reset k? c? khi exception
+            // �?m b?o IsLoading lu�n du?c reset k? c? khi exception
             IsLoading = false;
         }
     }
@@ -152,31 +152,31 @@ public sealed partial class LoginViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Validate username + password client-side, hi?n l?i ngay không c?n g?i network.
+    /// Validate username + password client-side, hi?n l?i ngay kh�ng c?n g?i network.
     /// </summary>
     private System.Boolean ValidateInputs()
     {
         if (System.String.IsNullOrWhiteSpace(Username))
         {
-            SetError("Tên đăng nhập không được để trống.");
+            SetError("T�n dang nh?p kh�ng du?c d? tr?ng.");
             return false;
         }
 
         if (System.String.IsNullOrWhiteSpace(Password))
         {
-            SetError("Mật khẩu không được để trống.");
+            SetError("M?t kh?u kh�ng du?c d? tr?ng.");
             return false;
         }
 
         if (!AccountValidation.IsValidUsername(Username))
         {
-            SetError("Tên đăng nhập không hợp lệ: chỉ cho phép chữ cái, số, '_', '-' và tối đa 50 ký tự.");
+            SetError("T�n dang nh?p kh�ng h?p l?: ch? cho ph�p ch? c�i, s?, '_', '-' v� t?i da 50 k� t?.");
             return false;
         }
 
         if (!AccountValidation.IsValidPassword(Password))
         {
-            SetError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, thường, số và ký tự đặc biệt.");
+            SetError("M?t kh?u ph?i c� �t nh?t 8 k� t?, g?m ch? hoa, thu?ng, s? v� k� t? d?c bi?t.");
             return false;
         }
 
@@ -190,28 +190,28 @@ public sealed partial class LoginViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Xử lý phản hồi từ server theo <see cref="ProtocolAdvice"/>:
-    /// - DO_NOT_RETRY  -> khóa nút đăng nhập
-    /// - BACKOFF_RETRY -> hiện popup có nút retry
-    /// - FIX_AND_RETRY -> chỉ hiện lỗi inline, cho phép nhập lại
+    /// X? l� ph?n h?i t? server theo <see cref="ProtocolAdvice"/>:
+    /// - DO_NOT_RETRY  -> kh�a n�t dang nh?p
+    /// - BACKOFF_RETRY -> hi?n popup c� n�t retry
+    /// - FIX_AND_RETRY -> ch? hi?n l?i inline, cho ph�p nh?p l?i
     /// </summary>
     private void HandleFailedLogin(LoginResult result)
     {
         switch (result.Advice)
         {
             case ProtocolAdvice.DO_NOT_RETRY:
-                // Tài khoản bị cấm / chưa active — show popup, không cho retry
-                ShowPopup("Không thể đăng nhập", result.ErrorMessage!, isRetry: false);
+                // T�i kho?n b? c?m / chua active � show popup, kh�ng cho retry
+                ShowPopup("Kh�ng th? dang nh?p", result.ErrorMessage!, isRetry: false);
                 break;
 
             case ProtocolAdvice.BACKOFF_RETRY:
-                // Tài khoản bị khóa tạm thời — show popup có nút retry
-                ShowPopup("Tài khoản của bạn đã bị khóa tạm thời. Vui lòng thử lại sau.", result.ErrorMessage!, isRetry: true);
+                // T�i kho?n b? kh�a t?m th?i � show popup c� n�t retry
+                ShowPopup("T�i kho?n c?a b?n d� b? kh�a t?m th?i. Vui l�ng th? l?i sau.", result.ErrorMessage!, isRetry: true);
                 break;
 
             case ProtocolAdvice.FIX_AND_RETRY:
             default:
-                // Sai mật khẩu / tài khoản không tồn tại — inline error, cho nhập lại
+                // Sai m?t kh?u / t�i kho?n kh�ng t?n t?i � inline error, cho nh?p l?i
                 SetError(result.ErrorMessage!);
                 break;
         }
@@ -222,12 +222,12 @@ public sealed partial class LoginViewModel : ObservableObject
         PopupTitle = title;
         PopupMessage = message;
         IsPopupRetry = isRetry;
-        PopupButtonText = isRetry ? "Thử lại" : "OK";
+        PopupButtonText = isRetry ? "Th? l?i" : "OK";
         IsPopupVisible = true;
     }
 
     /// <summary>
-    /// K?t n?i m?ng + handshake khi màn hình load.
+    /// K?t n?i m?ng + handshake khi m�n h�nh load.
     /// G?i l?i du?c khi user nh?n "Retry".
     /// </summary>
     private async System.Threading.Tasks.Task InitConnectionAsync()
@@ -245,7 +245,7 @@ public sealed partial class LoginViewModel : ObservableObject
         }
         else
         {
-            ShowPopup("Lỗi kết nối", result.ErrorMessage!, isRetry: true);
+            ShowPopup("L?i k?t n?i", result.ErrorMessage!, isRetry: true);
         }
     }
 }
