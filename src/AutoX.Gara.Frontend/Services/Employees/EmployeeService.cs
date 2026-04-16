@@ -1,298 +1,176 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
+
 using AutoX.Gara.Domain.Enums.Employees;
+
 using AutoX.Gara.Frontend.Models.Results.Employees;
+
 using AutoX.Gara.Frontend.Results.Employees;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Employees;
-using Microsoft.Extensions.Logging;
+
 using Nalix.Common.Networking.Protocols;
+
+using AutoX.Gara.Shared.Protocol.Employees;
+
+using Microsoft.Extensions.Logging;
+
+using Nalix.Common.Networking.Protocols;
+
 using Nalix.Framework.Injection;
+
 using Nalix.Framework.Random;
+
 using Nalix.SDK.Transport;
+
 using Nalix.SDK.Transport.Extensions;
+
 using Nalix.Framework.DataFrames.SignalFrames;
 
 namespace AutoX.Gara.Frontend.Services.Employees;
 
 /// <summary>
+
 /// Frontend service for employee operations.
+
 /// </summary>
+
 public sealed class EmployeeService : IEmployeeService
+
 {
-    private const System.Int32 RequestTimeoutMs = 10_000;
+    private const int RequestTimeoutMs = 10_000;
+
     private readonly IEmployeeQueryCache _cache;
 
     public EmployeeService(IEmployeeQueryCache cache)
+
         => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
     public async System.Threading.Tasks.Task<EmployeeListResult> GetListAsync(
-        System.Int32 page,
-        System.Int32 pageSize,
-        System.String? searchTerm = null,
+
+        int page,
+
+        int pageSize,
+
+        string? searchTerm = null,
+
         EmployeeSortField sortBy = EmployeeSortField.Name,
-        System.Boolean sortDescending = false,
+
+        bool sortDescending = false,
+
         Position filterPosition = Position.None,
+
         EmploymentStatus filterStatus = EmploymentStatus.None,
+
         Gender filterGender = Gender.None,
+
         System.Threading.CancellationToken ct = default)
+
     {
-        EmployeeCacheKey key = new(
-            page, pageSize,
-            searchTerm ?? System.String.Empty,
-            sortBy, sortDescending,
-            filterPosition, filterStatus, filterGender);
+        EmployeeCacheKey key = new(page, pageSize, searchTerm ?? "", sortBy, sortDescending, filterPosition, filterStatus, filterGender);
 
         if (_cache.TryGet(key, out EmployeeCacheEntry? cached))
+
         {
-            System.Boolean hasMore = page * pageSize < cached!.TotalCount;
-            return EmployeeListResult.Success(cached.Employees, cached.TotalCount, hasMore);
+            return EmployeeListResult.Success(cached.Employees, cached.TotalCount, page * pageSize < cached.TotalCount);
+
         }
 
         try
+
         {
-            System.UInt32 sq = Csprng.NextUInt32();
-            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
+            TcpSession client = InstanceManager.Instance.GetExistingInstance<TcpSession>()!;
 
-            EmployeeQueryRequest packet = new()
+            EmployeeQueryRequest packet = new() { Page = page, PageSize = pageSize, SearchTerm = searchTerm ?? "", SortBy = sortBy, SortDescending = sortDescending, FilterPosition = filterPosition, FilterStatus = filterStatus, FilterGender = filterGender, OpCode = (System.UInt16)OpCommand.EMPLOYEE_GET };
+
+            Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(packet, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(RequestTimeoutMs).WithEncrypt(), predicate: p => p is EmployeeQueryResponse or Directive, ct: ct).ConfigureAwait(false);
+
+            if (r is EmployeeQueryResponse resp)
+
             {
-                Page = page,
-                PageSize = pageSize,
-                SequenceId = sq,
-                SearchTerm = searchTerm ?? System.String.Empty,
-                SortBy = sortBy,
-                SortDescending = sortDescending,
-                FilterPosition = filterPosition,
-                FilterStatus = filterStatus,
-                FilterGender = filterGender,
-                OpCode = (System.UInt16)OpCommand.EMPLOYEE_GET
-            };
+                _cache.Set(key, resp.Employees, resp.TotalCount);
 
-            System.Threading.Tasks.TaskCompletionSource<EmployeeListResult> tcs =
-                new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+                return EmployeeListResult.Success(resp.Employees, resp.TotalCount, page * pageSize < resp.TotalCount);
 
-            System.IDisposable? sub = null;
-            System.IDisposable? errSub = null;
-
-            sub = client.OnOnce<EmployeeQueryResponse>(
-                predicate: p => p.SequenceId == sq,
-                handler: resp =>
-                {
-                    sub?.Dispose();
-                    errSub?.Dispose();
-                    _cache.Set(key, resp.Employees, resp.TotalCount);
-                    System.Boolean hasMore = page * pageSize < resp.TotalCount;
-                    tcs.TrySetResult(EmployeeListResult.Success(resp.Employees, resp.TotalCount, hasMore));
-                });
-
-            errSub = client.OnOnce<Directive>(
-                predicate: p => p.SequenceId == sq,
-                handler: resp =>
-                {
-                    sub?.Dispose();
-                    errSub?.Dispose();
-                    if (resp.Type == ControlType.NONE && resp.Reason == ProtocolReason.NONE)
-                    {
-                        return;
-                    }
-
-                    tcs.TrySetResult(EmployeeListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
-                });
-
-            await client.SendAsync(packet, ct).ConfigureAwait(false);
-
-            using System.Threading.CancellationTokenSource cts =
-                System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
-            System.Threading.Tasks.Task timeoutTask =
-                System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
-            System.Threading.Tasks.Task winner =
-                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
-            cts.Cancel();
-
-            if (!ReferenceEquals(winner, tcs.Task))
-            {
-                sub?.Dispose();
-                errSub?.Dispose();
-                return EmployeeListResult.Timeout();
             }
 
-            return await tcs.Task.ConfigureAwait(false);
+            if (r is Directive err) return EmployeeListResult.Failure(err.Reason.ToString(), err.Action);
+
+            return EmployeeListResult.Failure("Unknown response", ProtocolAdvice.NONE);
+
         }
-        catch (System.OperationCanceledException)
-        {
-            return EmployeeListResult.Failure("Y�u c?u b? h?y.", ProtocolAdvice.NONE);
-        }
-        catch (System.Exception ex)
-        {
-            LogException(ex);
-            return EmployeeListResult.Failure(
-                $"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
-        }
+
+        catch (System.TimeoutException) { return EmployeeListResult.Timeout(); }
+
+        catch (Exception ex) { return EmployeeListResult.Failure(ex.Message, ProtocolAdvice.NONE); }
+
     }
 
-    public async System.Threading.Tasks.Task<EmployeeWriteResult> CreateAsync(
-        EmployeeDto data,
-        System.Threading.CancellationToken ct = default)
-    {
-        EmployeeWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.EMPLOYEE_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
+    public async System.Threading.Tasks.Task<EmployeeWriteResult> CreateAsync(EmployeeDto data, System.Threading.CancellationToken ct = default) => await SendWriteAsync((System.UInt16)OpCommand.EMPLOYEE_CREATE, data, true, ct);
 
-        if (result.IsSuccess)
-        {
-            _cache.Invalidate();
-        }
+    public async System.Threading.Tasks.Task<EmployeeWriteResult> UpdateAsync(EmployeeDto data, System.Threading.CancellationToken ct = default) => await SendWriteAsync((System.UInt16)OpCommand.EMPLOYEE_UPDATE, data, true, ct);
 
-        return result;
-    }
+    public async System.Threading.Tasks.Task<EmployeeWriteResult> ChangeStatusAsync(EmployeeDto data, System.Threading.CancellationToken ct = default) => await SendWriteAsync((System.UInt16)OpCommand.EMPLOYEE_CHANGE_STATUS, data, false, ct);
 
-    public async System.Threading.Tasks.Task<EmployeeWriteResult> UpdateAsync(
-        EmployeeDto data,
-        System.Threading.CancellationToken ct = default)
-    {
-        EmployeeWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.EMPLOYEE_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
+    private async System.Threading.Tasks.Task<EmployeeWriteResult> SendWriteAsync(System.UInt16 op, EmployeeDto data, bool echo, System.Threading.CancellationToken ct)
 
-        if (result.IsSuccess)
-        {
-            _cache.Invalidate();
-        }
-
-        return result;
-    }
-
-    public async System.Threading.Tasks.Task<EmployeeWriteResult> ChangeStatusAsync(
-        EmployeeDto data,
-        System.Threading.CancellationToken ct = default)
-    {
-        EmployeeWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.EMPLOYEE_CHANGE_STATUS, data, expectEcho: false, ct).ConfigureAwait(false);
-
-        if (result.IsSuccess)
-        {
-            _cache.Invalidate();
-        }
-
-        return result;
-    }
-
-    private static async System.Threading.Tasks.Task<EmployeeWriteResult> SendWritePacketAsync(
-        System.UInt16 opcode,
-        EmployeeDto data,
-        System.Boolean expectEcho,
-        System.Threading.CancellationToken ct)
     {
         try
+
         {
-            System.UInt32 sq = Csprng.NextUInt32();
-            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
+            data.OpCode = op;
 
-            data.OpCode = opcode;
-            data.SequenceId = sq;
+            TcpSession client = InstanceManager.Instance.GetExistingInstance<TcpSession>()!;
 
-            System.Threading.Tasks.TaskCompletionSource<EmployeeWriteResult> tcs =
-                new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+            Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(data, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(RequestTimeoutMs).WithEncrypt(), predicate: p => (echo && p is EmployeeDto) || p is Directive, ct: ct).ConfigureAwait(false);
 
-            System.IDisposable? echoSub = null;
-            System.IDisposable? errSub = null;
+            if (echo && r is EmployeeDto confirmed) return EmployeeWriteResult.Success(confirmed);
 
-            if (expectEcho)
+            if (r is Directive resp)
+
             {
-                echoSub = client.OnOnce<EmployeeDto>(
-                    predicate: p => p.SequenceId == sq,
-                    handler: confirmed =>
-                    {
-                        echoSub?.Dispose();
-                        errSub?.Dispose();
-                        tcs.TrySetResult(EmployeeWriteResult.Success(confirmed));
-                    });
+                if (resp.Type == ControlType.NONE) { _cache.Invalidate(); return EmployeeWriteResult.Success(); }
+
+                return EmployeeWriteResult.Failure(resp.Reason.ToString(), resp.Action);
+
             }
 
-            errSub = client.OnOnce<Directive>(
-                predicate: p => p.SequenceId == sq,
-                handler: resp =>
-                {
-                    echoSub?.Dispose();
-                    errSub?.Dispose();
-                    EmployeeWriteResult result = resp.Type == ControlType.NONE
-                        ? EmployeeWriteResult.Success()
-                        : EmployeeWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
-                    tcs.TrySetResult(result);
-                });
+            return EmployeeWriteResult.Failure("Unknown", ProtocolAdvice.NONE);
 
-            await client.SendAsync(data, ct).ConfigureAwait(false);
-
-            using System.Threading.CancellationTokenSource cts =
-                System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
-            System.Threading.Tasks.Task timeoutTask =
-                System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
-            System.Threading.Tasks.Task winner =
-                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
-            cts.Cancel();
-
-            if (!ReferenceEquals(winner, tcs.Task))
-            {
-                echoSub?.Dispose();
-                errSub?.Dispose();
-                return EmployeeWriteResult.Timeout();
-            }
-
-            return await tcs.Task.ConfigureAwait(false);
         }
-        catch (System.OperationCanceledException)
-        {
-            return EmployeeWriteResult.Failure("Y�u c?u b? h?y.", ProtocolAdvice.NONE);
-        }
-        catch (System.Exception ex)
-        {
-            LogException(ex);
-            return EmployeeWriteResult.Failure(
-                $"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
-        }
-    }
 
-    private static System.String MapErrorReason(ProtocolReason reason)
-        => reason switch
-        {
-            ProtocolReason.NOT_FOUND => "Kh�ng t�m th?y nh�n vi�n.",
-            ProtocolReason.ALREADY_EXISTS => "Email ho?c s? di?n tho?i d� t?n t?i.",
-            ProtocolReason.MALFORMED_PACKET => "D? li?u kh�ng h?p l?.",
-            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng, vui l�ng th? l?i sau.",
-            ProtocolReason.FORBIDDEN => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
-            ProtocolReason.UNAUTHENTICATED => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
-            ProtocolReason.RATE_LIMITED => "B?n dang thao t�c qu� nhanh, vui l�ng ch? m?t ch�t r?i th? l?i.",
-            ProtocolReason.TIMEOUT => "M�y ch? ph?n h?i h?t h?n, vui l�ng th? l?i.",
-            _ => "Thao t�c th?t b?i, vui l�ng th? l?i."
-        };
+        catch (Exception ex) { return EmployeeWriteResult.Failure(ex.Message, ProtocolAdvice.NONE); }
 
-    private static void LogException(System.Exception ex)
-    {
-        ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
-        logger.Error(ex.ToString());
-        if (ex.InnerException is not null)
-        {
-            logger.Error("Inner: " + ex.InnerException);
-        }
     }
 }
 
-/// <summary>
-/// Abstraction for employee service.
-/// </summary>
 public interface IEmployeeService
+
 {
     System.Threading.Tasks.Task<EmployeeListResult> GetListAsync(
-        System.Int32 page,
-        System.Int32 pageSize,
-        System.String? searchTerm = null,
+
+        int page,
+
+        int pageSize,
+
+        string? searchTerm = null,
+
         EmployeeSortField sortBy = EmployeeSortField.Name,
-        System.Boolean sortDescending = false,
+
+        bool sortDescending = false,
+
         Position filterPosition = Position.None,
+
         EmploymentStatus filterStatus = EmploymentStatus.None,
+
         Gender filterGender = Gender.None,
+
         System.Threading.CancellationToken ct = default);
 
     System.Threading.Tasks.Task<EmployeeWriteResult> CreateAsync(EmployeeDto data, System.Threading.CancellationToken ct = default);
+
     System.Threading.Tasks.Task<EmployeeWriteResult> UpdateAsync(EmployeeDto data, System.Threading.CancellationToken ct = default);
+
     System.Threading.Tasks.Task<EmployeeWriteResult> ChangeStatusAsync(EmployeeDto data, System.Threading.CancellationToken ct = default);
 }

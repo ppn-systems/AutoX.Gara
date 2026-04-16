@@ -1,203 +1,374 @@
 <?xml version="1.0" encoding="utf-8" ?>
+
 <ContentPage
+
     x:Name="PageRoot"
+
     x:Class="AutoX.Gara.Frontend.Views.RepairTasksPage"
+
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+
     xmlns:ctrl="clr-namespace:AutoX.Gara.Frontend.Controllers.Billings"
+
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Billings;assembly=AutoX.Gara.Shared"
+
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
+
     x:DataType="ctrl:RepairTasksViewModel"
+
     Title="{Binding PageTitle}"
+
     BackgroundColor="#0A0A0F">
 
     <ContentPage.Resources>
+
         <ResourceDictionary>
+
             <conv:InverseBoolConverter x:Key="InverseBool" />
+
             <Style x:Key="CardStyle" TargetType="Border">
+
                 <Setter Property="BackgroundColor" Value="#111118" />
+
                 <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+
                 <Setter Property="Stroke" Value="#2A2A38" />
+
                 <Setter Property="StrokeThickness" Value="1" />
+
             </Style>
+
             <Style x:Key="AccentBtn" TargetType="Button">
+
                 <Setter Property="BackgroundColor" Value="#6366F1" />
+
                 <Setter Property="TextColor" Value="White" />
+
                 <Setter Property="FontAttributes" Value="Bold" />
+
                 <Setter Property="CornerRadius" Value="8" />
+
                 <Setter Property="HeightRequest" Value="40" />
+
             </Style>
+
             <Style x:Key="GhostBtn" TargetType="Button">
+
                 <Setter Property="BackgroundColor" Value="#1A1A24" />
+
                 <Setter Property="TextColor" Value="#F1F1F5" />
+
                 <Setter Property="CornerRadius" Value="8" />
+
                 <Setter Property="HeightRequest" Value="40" />
+
                 <Setter Property="BorderColor" Value="#2A2A38" />
+
                 <Setter Property="BorderWidth" Value="1" />
+
             </Style>
+
             <Style x:Key="DangerBtn" TargetType="Button">
+
                 <Setter Property="BackgroundColor" Value="#EF4444" />
+
                 <Setter Property="TextColor" Value="White" />
+
                 <Setter Property="FontAttributes" Value="Bold" />
+
                 <Setter Property="CornerRadius" Value="8" />
+
                 <Setter Property="HeightRequest" Value="40" />
+
             </Style>
+
             <Style x:Key="MutedLabel" TargetType="Label">
+
                 <Setter Property="TextColor" Value="#6B6B80" />
+
                 <Setter Property="FontSize" Value="12" />
+
             </Style>
+
             <Style x:Key="PickerBorder" TargetType="Border">
+
                 <Setter Property="BackgroundColor" Value="#1A1A24" />
+
                 <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+
                 <Setter Property="Stroke" Value="#2A2A38" />
+
                 <Setter Property="StrokeThickness" Value="1" />
+
                 <Setter Property="HeightRequest" Value="44" />
+
             </Style>
+
         </ResourceDictionary>
+
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*" Padding="14">
+
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+
             <Button Text="←" Style="{StaticResource GhostBtn}" WidthRequest="44" Clicked="OnBackClicked" />
+
             <Label Grid.Column="1" Text="{Binding PageTitle}" TextColor="#F1F1F5" FontAttributes="Bold" VerticalOptions="Center" />
+
             <Button Grid.Column="2" Text="+" Style="{StaticResource AccentBtn}" WidthRequest="44" Command="{Binding OpenAddFormCommand}" />
+
         </Grid>
 
         <Grid Grid.Row="1" RowDefinitions="Auto,*" Margin="0,12,0,0">
+
             <Label Text="{Binding ErrorMessage}" TextColor="#EF4444" IsVisible="{Binding HasError}" />
 
             <CollectionView Grid.Row="1" ItemsSource="{Binding RepairTaskRows}">
+
                 <CollectionView.ItemTemplate>
+
                     <DataTemplate x:DataType="ctrl:RepairTasksViewModel+RepairTaskRow">
+
                         <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Padding="12">
+
                             <VerticalStackLayout Spacing="6">
+
                                 <Label Text="{Binding Task.RepairTaskId, StringFormat='Task #{0}'}" TextColor="#F1F1F5" FontAttributes="Bold" />
+
                                 <Label Text="{Binding Task.Status, StringFormat='Trạng thái: {0}'}" Style="{StaticResource MutedLabel}" />
+
                                 <Label Text="{Binding EmployeeName, StringFormat='Nhân viên: {0}'}" Style="{StaticResource MutedLabel}" />
+
                                 <Label Text="{Binding ServiceDescription, StringFormat='Dịch vụ: {0}'}" Style="{StaticResource MutedLabel}" />
 
                                 <HorizontalStackLayout Spacing="8" Margin="0,8,0,0">
+
                                     <Button Text="Sửa" Style="{StaticResource AccentBtn}"
+
                                             Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}"
+
                                             CommandParameter="{Binding Task}" />
+
                                     <Button Text="Xóa" Style="{StaticResource DangerBtn}"
+
                                             Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RequestDeleteCommand}"
+
                                             CommandParameter="{Binding Task}" />
+
                                 </HorizontalStackLayout>
+
                             </VerticalStackLayout>
+
                         </Border>
+
                     </DataTemplate>
+
                 </CollectionView.ItemTemplate>
+
             </CollectionView>
+
         </Grid>
 
         <!-- Form overlay -->
+
         <Grid IsVisible="{Binding IsFormVisible}" BackgroundColor="#70000010" RowSpan="2">
+
             <Border Style="{StaticResource CardStyle}" VerticalOptions="Center" HorizontalOptions="Center" Padding="16" WidthRequest="340">
+
                 <VerticalStackLayout Spacing="10">
+
                     <Label Text="{Binding FormTitle}" TextColor="#F1F1F5" FontAttributes="Bold" />
 
                     <Label Text="Nhân viên" Style="{StaticResource MutedLabel}" />
+
                     <Button Text="{Binding SelectedEmployeeOption.Display, FallbackValue='Chọn nhân viên'}"
+
                             Style="{StaticResource GhostBtn}"
+
                             Command="{Binding OpenEmployeeSelectorCommand}" />
 
                     <Label Text="Dịch vụ" Style="{StaticResource MutedLabel}" />
+
                     <Button Text="{Binding SelectedServiceItemOption.Display, FallbackValue='Chọn dịch vụ'}"
+
                             Style="{StaticResource GhostBtn}"
+
                             Command="{Binding OpenServiceItemSelectorCommand}" />
 
                     <Label Text="Ước tính (giờ)" Style="{StaticResource MutedLabel}" />
+
                     <Entry Text="{Binding FormEstimatedDuration}" Keyboard="Numeric" TextColor="#F1F1F5" />
 
                     <Label Text="Trạng thái" Style="{StaticResource MutedLabel}" />
+
                     <Border Style="{StaticResource PickerBorder}">
+
                         <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+
                             <Label Text="{Binding SelectedStatusText}"
+
                                    TextColor="#F1F1F5"
+
                                    LineBreakMode="TailTruncation"
+
                                    MaxLines="1"
+
                                    VerticalOptions="Center" />
+
                             <Label Grid.Column="1" Text="▾"
+
                                    TextColor="#6B6B80"
+
                                    VerticalOptions="Center" />
+
                             <Grid.GestureRecognizers>
+
                                 <TapGestureRecognizer Tapped="OnFormStatusTapped" />
+
                             </Grid.GestureRecognizers>
+
                         </Grid>
+
                     </Border>
 
                     <HorizontalStackLayout Spacing="10">
+
                         <Label Text="Có StartDate" Style="{StaticResource MutedLabel}" VerticalOptions="Center" />
+
                         <Switch IsToggled="{Binding HasStartDate}" />
+
                     </HorizontalStackLayout>
+
                     <DatePicker Date="{Binding FormStartDateValue}" IsVisible="{Binding HasStartDate}" TextColor="#F1F1F5" />
 
                     <HorizontalStackLayout Spacing="10">
+
                         <Label Text="Có CompletionDate" Style="{StaticResource MutedLabel}" VerticalOptions="Center" />
+
                         <Switch IsToggled="{Binding HasCompletionDate}" />
+
                     </HorizontalStackLayout>
+
                     <DatePicker Date="{Binding FormCompletionDateValue}" IsVisible="{Binding HasCompletionDate}" TextColor="#F1F1F5" />
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
+
                         <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CancelFormCommand}" />
+
                         <Button Grid.Column="1" Text="Lưu" Style="{StaticResource AccentBtn}" Command="{Binding SaveCommand}" />
+
                     </Grid>
+
                 </VerticalStackLayout>
+
             </Border>
+
         </Grid>
 
         <!-- Employee selector overlay -->
+
         <Grid IsVisible="{Binding IsEmployeeSelectorVisible}" BackgroundColor="#70000010" RowSpan="2">
+
             <Border Style="{StaticResource CardStyle}" VerticalOptions="Center" HorizontalOptions="Center" Padding="16" WidthRequest="340" HeightRequest="420">
+
                 <VerticalStackLayout Spacing="10">
+
                     <Label Text="Chọn nhân viên" TextColor="#F1F1F5" FontAttributes="Bold" />
+
                     <Entry Placeholder="Tìm theo tên hoặc id..." Text="{Binding EmployeeSearchTerm}" TextColor="#F1F1F5" />
+
                     <CollectionView ItemsSource="{Binding FilteredEmployeeOptions}">
+
                         <CollectionView.ItemTemplate>
+
                             <DataTemplate x:DataType="ctrl:RepairTasksViewModel+LookupOption">
+
                                 <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"
+
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SelectEmployeeCommand}"
+
                                         CommandParameter="{Binding .}" />
+
                             </DataTemplate>
+
                         </CollectionView.ItemTemplate>
+
                     </CollectionView>
+
                     <Button Text="Đóng" Style="{StaticResource GhostBtn}" Command="{Binding CloseSelectorsCommand}" />
+
                 </VerticalStackLayout>
+
             </Border>
+
         </Grid>
 
         <!-- Service selector overlay -->
+
         <Grid IsVisible="{Binding IsServiceItemSelectorVisible}" BackgroundColor="#70000010" RowSpan="2">
+
             <Border Style="{StaticResource CardStyle}" VerticalOptions="Center" HorizontalOptions="Center" Padding="16" WidthRequest="340" HeightRequest="420">
+
                 <VerticalStackLayout Spacing="10">
+
                     <Label Text="Chọn dịch vụ" TextColor="#F1F1F5" FontAttributes="Bold" />
+
                     <Entry Placeholder="Tìm theo mô tả hoặc id..." Text="{Binding ServiceItemSearchTerm}" TextColor="#F1F1F5" />
+
                     <CollectionView ItemsSource="{Binding FilteredServiceItemOptions}">
+
                         <CollectionView.ItemTemplate>
+
                             <DataTemplate x:DataType="ctrl:RepairTasksViewModel+LookupOption">
+
                                 <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"
+
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SelectServiceItemCommand}"
+
                                         CommandParameter="{Binding .}" />
+
                             </DataTemplate>
+
                         </CollectionView.ItemTemplate>
+
                     </CollectionView>
+
                     <Button Text="Đóng" Style="{StaticResource GhostBtn}" Command="{Binding CloseSelectorsCommand}" />
+
                 </VerticalStackLayout>
+
             </Border>
+
         </Grid>
 
         <!-- Delete confirm overlay -->
+
         <Grid IsVisible="{Binding IsDeleteConfirmVisible}" BackgroundColor="#70000010" RowSpan="2">
+
             <Border Style="{StaticResource CardStyle}" VerticalOptions="Center" HorizontalOptions="Center" Padding="16" WidthRequest="320">
+
                 <VerticalStackLayout Spacing="12">
+
                     <Label Text="Xác nhận xóa" TextColor="#F1F1F5" FontAttributes="Bold" />
+
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+
                         <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CancelDeleteCommand}" />
+
                         <Button Grid.Column="1" Text="Xóa" Style="{StaticResource DangerBtn}" Command="{Binding ConfirmDeleteCommand}" />
+
                     </Grid>
+
                 </VerticalStackLayout>
+
             </Border>
+
         </Grid>
+
     </Grid>
+
 </ContentPage>
+

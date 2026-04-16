@@ -1,340 +1,211 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
+using System.Collections.Generic;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Parts;
+
 using AutoX.Gara.Frontend.Results.Parts;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Inventory;
-using Microsoft.Extensions.Logging;
+
 using Nalix.Common.Networking.Protocols;
+
+using AutoX.Gara.Shared.Protocol.Inventory;
+
+using Microsoft.Extensions.Logging;
+
+using Nalix.Common.Networking.Protocols;
+
 using Nalix.Framework.Injection;
+
 using Nalix.Framework.Random;
+
 using Nalix.SDK.Transport;
+
 using Nalix.SDK.Transport.Extensions;
+
 using Nalix.Framework.DataFrames.SignalFrames;
 
 namespace AutoX.Gara.Frontend.Services.Inventory;
 
 /// <summary>
+
 /// Frontend service communicating with server for part operations.
+
 /// Handles GET/POST/PUT/DELETE for unified Part entity.
+
 /// Cache 30s for GET, invalidate cache after all write operations.
+
 /// </summary>
+
 public sealed class PartService : IPartService
+
 {
-    private const System.Int32 RequestTimeoutMs = 10_000;
+    private const int RequestTimeoutMs = 10_000;
+
     private readonly IPartQueryCache _cache;
 
-    /// <summary>
-    /// Initializes a new instance of PartService.
-    /// </summary>
-    public PartService(IPartQueryCache cache)
-        => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
+    public PartService(IPartQueryCache cache) => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
-    // --- GetListAsync ---------------------------------------------------------
-
-    /// <summary>
-    /// Retrieves a paginated list of parts with filtering and sorting.
-    /// </summary>
     public async System.Threading.Tasks.Task<PartListResult> GetListAsync(
-        System.Int32 page,
-        System.Int32 pageSize,
-        System.String? searchTerm = null,
+
+        int page,
+
+        int pageSize,
+
+        string? searchTerm = null,
+
         PartSortField sortBy = PartSortField.PartName,
-        System.Boolean sortDescending = false,
-        System.Int32? filterSupplierId = null,
+
+        bool sortDescending = false,
+
+        int? filterSupplierId = null,
+
         PartCategory? filterCategory = null,
-        System.Boolean? filterInStock = null,
-        System.Boolean? filterDefective = null,
-        System.Boolean? filterExpired = null,
-        System.Boolean? filterDiscontinued = null,
+
+        bool? filterInStock = null,
+
+        bool? filterDefective = null,
+
+        bool? filterExpired = null,
+
+        bool? filterDiscontinued = null,
+
         System.Threading.CancellationToken ct = default)
+
     {
-        PartCacheKey key = new(
-            page, pageSize,
-            searchTerm ?? System.String.Empty,
-            sortBy, sortDescending,
-            filterSupplierId, filterCategory,
-            filterInStock, filterDefective, filterExpired, filterDiscontinued);
+        PartCacheKey key = new(page, pageSize, searchTerm ?? "", sortBy, sortDescending, filterSupplierId, filterCategory, filterInStock, filterDefective, filterExpired, filterDiscontinued);
 
         if (_cache.TryGet(key, out PartCacheEntry? cached))
+
         {
-            System.Boolean hasMore = page * pageSize < cached!.TotalCount;
-            return PartListResult.Success(cached.Parts, cached.TotalCount, hasMore);
+            return PartListResult.Success(cached.Parts, cached.TotalCount, page * pageSize < cached.TotalCount);
+
         }
 
         try
+
         {
-            System.UInt32 sq = Csprng.NextUInt32();
-            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
+            TcpSession client = InstanceManager.Instance.GetExistingInstance<TcpSession>()!;
 
-            PartQueryRequest packet = new()
+            PartQueryRequest packet = new() { Page = page, PageSize = pageSize, SearchTerm = searchTerm ?? "", SortBy = sortBy, SortDescending = sortDescending, FilterSupplierId = filterSupplierId ?? 0, FilterCategory = filterCategory, FilterInStock = filterInStock, FilterDefective = filterDefective, FilterExpired = filterExpired, FilterDiscontinued = filterDiscontinued, OpCode = (System.UInt16)OpCommand.PART_GET };
+
+            Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(packet, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(RequestTimeoutMs).WithEncrypt(), predicate: p => p is PartQueryResponse or Directive, ct: ct).ConfigureAwait(false);
+
+            if (r is PartQueryResponse resp)
+
             {
-                Page = page,
-                PageSize = pageSize,
-                SequenceId = sq,
-                SearchTerm = searchTerm ?? System.String.Empty,
-                SortBy = sortBy,
-                SortDescending = sortDescending,
-                FilterSupplierId = filterSupplierId ?? 0,
-                FilterCategory = filterCategory,
-                FilterInStock = filterInStock,
-                FilterDefective = filterDefective,
-                FilterExpired = filterExpired,
-                FilterDiscontinued = filterDiscontinued,
-                OpCode = (System.UInt16)OpCommand.PART_GET
-            };
+                _cache.Set(key, resp.Parts, resp.TotalCount);
 
-            System.Threading.Tasks.TaskCompletionSource<PartListResult> tcs =
-                new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+                return PartListResult.Success(resp.Parts, resp.TotalCount, page * pageSize < resp.TotalCount);
 
-            System.IDisposable? sub = null;
-            System.IDisposable? errSub = null;
-
-            sub = client.OnOnce<PartQueryResponse>(
-                predicate: p => p.SequenceId == sq,
-                handler: resp =>
-                {
-                    sub?.Dispose();
-                    errSub?.Dispose();
-                    _cache.Set(key, resp.Parts, resp.TotalCount);
-                    System.Boolean hasMore = page * pageSize < resp.TotalCount;
-                    tcs.TrySetResult(PartListResult.Success(resp.Parts, resp.TotalCount, hasMore));
-                });
-
-            errSub = client.OnOnce<Directive>(
-                predicate: p => p.SequenceId == sq,
-                handler: resp =>
-                {
-                    sub?.Dispose();
-                    errSub?.Dispose();
-                    tcs.TrySetResult(PartListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
-                });
-
-            await client.SendAsync(packet, ct).ConfigureAwait(false);
-
-            using System.Threading.CancellationTokenSource cts =
-                System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
-            System.Threading.Tasks.Task timeoutTask =
-                System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
-            System.Threading.Tasks.Task winner =
-                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
-            cts.Cancel();
-
-            if (!ReferenceEquals(winner, tcs.Task))
-            {
-                sub?.Dispose();
-                errSub?.Dispose();
-                return PartListResult.Timeout();
             }
 
-            return await tcs.Task.ConfigureAwait(false);
+            if (r is Directive err) return PartListResult.Failure(err.Reason.ToString(), err.Action);
+
+            return PartListResult.Failure("Unknown response", ProtocolAdvice.NONE);
+
         }
-        catch (System.OperationCanceledException)
-        {
-            return PartListResult.Failure("Y�u c?u b? H?y.", ProtocolAdvice.NONE);
-        }
-        catch (System.Exception ex)
-        {
-            LogException(ex);
-            return PartListResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
-        }
+
+        catch (System.TimeoutException) { return PartListResult.Timeout(); }
+
+        catch (Exception ex) { return PartListResult.Failure(ex.Message, ProtocolAdvice.NONE); }
+
     }
 
-    // --- CreateAsync ----------------------------------------------------------
+    public async System.Threading.Tasks.Task<PartWriteResult> CreateAsync(PartDto data, System.Threading.CancellationToken ct = default) => await SendWriteAsync((System.UInt16)OpCommand.PART_CREATE, data, true, ct);
 
-    /// <summary>
-    /// Creates a new part.
-    /// </summary>
-    public async System.Threading.Tasks.Task<PartWriteResult> CreateAsync(
-        PartDto data,
-        System.Threading.CancellationToken ct = default)
-    {
-        PartWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.PART_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
+    public async System.Threading.Tasks.Task<PartWriteResult> UpdateAsync(PartDto data, System.Threading.CancellationToken ct = default) => await SendWriteAsync((System.UInt16)OpCommand.PART_UPDATE, data, true, ct);
 
-        if (result.IsSuccess)
-        {
-            _cache.Invalidate();
-        }
+    public async System.Threading.Tasks.Task<PartWriteResult> DeleteAsync(PartDto data, System.Threading.CancellationToken ct = default) => await SendWriteAsync((System.UInt16)OpCommand.PART_DELETE, data, false, ct);
 
-        return result;
-    }
+    private async System.Threading.Tasks.Task<PartWriteResult> SendWriteAsync(System.UInt16 op, PartDto data, bool echo, System.Threading.CancellationToken ct)
 
-    // --- UpdateAsync ----------------------------------------------------------
-
-    /// <summary>
-    /// Updates an existing part.
-    /// </summary>
-    public async System.Threading.Tasks.Task<PartWriteResult> UpdateAsync(
-        PartDto data,
-        System.Threading.CancellationToken ct = default)
-    {
-        PartWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.PART_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
-
-        if (result.IsSuccess)
-        {
-            _cache.Invalidate();
-        }
-
-        return result;
-    }
-
-    // --- DeleteAsync ----------------------------------------------------------
-
-    /// <summary>
-    /// Deletes or discontinues a part (soft delete via IsDiscontinued flag).
-    /// </summary>
-    public async System.Threading.Tasks.Task<PartWriteResult> DeleteAsync(
-        PartDto data,
-        System.Threading.CancellationToken ct = default)
-    {
-        PartWriteResult result = await SendWritePacketAsync(
-            (System.UInt16)OpCommand.PART_DELETE, data, expectEcho: false, ct).ConfigureAwait(false);
-
-        if (result.IsSuccess)
-        {
-            _cache.Invalidate();
-        }
-
-        return result;
-    }
-
-    // --- Private Helpers -----------------------------------------------------
-
-    private static async System.Threading.Tasks.Task<PartWriteResult> SendWritePacketAsync(
-        System.UInt16 opcode,
-        PartDto data,
-        System.Boolean expectEcho,
-        System.Threading.CancellationToken ct)
     {
         try
+
         {
-            System.UInt32 sq = Csprng.NextUInt32();
-            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
+            data.OpCode = op;
 
-            data.OpCode = opcode;
-            data.SequenceId = sq;
+            TcpSession client = InstanceManager.Instance.GetExistingInstance<TcpSession>()!;
 
-            System.Threading.Tasks.TaskCompletionSource<PartWriteResult> tcs =
-                new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+            Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(data, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(RequestTimeoutMs).WithEncrypt(), predicate: p => (echo && p is PartDto) || p is Directive, ct: ct).ConfigureAwait(false);
 
-            System.IDisposable? echoSub = null;
-            System.IDisposable? errSub = null;
+            if (echo && r is PartDto confirmed) return PartWriteResult.Success(confirmed);
 
-            if (expectEcho)
+            if (r is Directive resp)
+
             {
-                echoSub = client.OnOnce<PartDto>(
-                    predicate: p => p.SequenceId == sq,
-                    handler: confirmed =>
-                    {
-                        echoSub?.Dispose();
-                        errSub?.Dispose();
-                        tcs.TrySetResult(PartWriteResult.Success(confirmed));
-                    });
+                if (resp.Type == ControlType.NONE) { _cache.Invalidate(); return PartWriteResult.Success(); }
+
+                return PartWriteResult.Failure(resp.Reason.ToString(), resp.Action);
+
             }
 
-            errSub = client.OnOnce<Directive>(
-                predicate: p => p.SequenceId == sq,
-                handler: resp =>
-                {
-                    echoSub?.Dispose();
-                    errSub?.Dispose();
-                    PartWriteResult result = resp.Type == ControlType.NONE
-                        ? PartWriteResult.Success()
-                        : PartWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
-                    tcs.TrySetResult(result);
-                });
+            return PartWriteResult.Failure("Unknown", ProtocolAdvice.NONE);
 
-            await client.SendAsync(data, ct).ConfigureAwait(false);
-
-            using System.Threading.CancellationTokenSource cts =
-                System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
-            System.Threading.Tasks.Task timeoutTask =
-                System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
-            System.Threading.Tasks.Task winner =
-                await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
-            cts.Cancel();
-
-            if (!ReferenceEquals(winner, tcs.Task))
-            {
-                echoSub?.Dispose();
-                errSub?.Dispose();
-                return PartWriteResult.Timeout();
-            }
-
-            return await tcs.Task.ConfigureAwait(false);
         }
-        catch (System.OperationCanceledException)
-        {
-            return PartWriteResult.Failure("Y�u c?u b? H?y.", ProtocolAdvice.NONE);
-        }
-        catch (System.Exception ex)
-        {
-            LogException(ex);
-            return PartWriteResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
-        }
-    }
 
-    private static System.String MapErrorReason(ProtocolReason reason)
-        => reason switch
-        {
-            ProtocolReason.NOT_FOUND => "Kh�ng t�m tH?y ph? t�ng.",
-            ProtocolReason.ALREADY_EXISTS => "M� SKU/ph? t�ng d� t?n T?i.",
-            ProtocolReason.MALFORMED_PACKET => "D? li?u kh�ng h?p l?.",
-            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng. Vui l�ng Th? l?i sau.",
-            ProtocolReason.FORBIDDEN => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
-            ProtocolReason.UNAUTHENTICATED => "B?n kh�ng c� quy?n th?c hi?n thao t�c n�y.",
-            ProtocolReason.RATE_LIMITED => "B?n dang thao t�c qu� nhanh. Vui l�ng ch? m?t ch�t r?i Th? l?i.",
-            ProtocolReason.TIMEOUT => "M�y ch? ph?n h?i h?t h?n. Vui l�ng Th? l?i.",
-            _ => "Thao t�c th?t b?i. Vui l�ng Th? l?i."
-        };
+        catch (Exception ex) { return PartWriteResult.Failure(ex.Message, ProtocolAdvice.NONE); }
 
-    private static void LogException(System.Exception ex)
-    {
-        ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
-        logger.Error(ex.ToString());
-        if (ex.InnerException is not null)
-        {
-            logger.Error("Inner: " + ex.InnerException);
-        }
     }
 }
 
-/// <summary>
-/// Abstraction for part service.
-/// </summary>
 public interface IPartService
+
 {
     /// <summary>
+
     /// Retrieves a paginated list of parts.
+
     /// </summary>
+
     System.Threading.Tasks.Task<PartListResult> GetListAsync(
-        System.Int32 page,
-        System.Int32 pageSize,
-        System.String? searchTerm = null,
+
+        int page,
+
+        int pageSize,
+
+        string? searchTerm = null,
+
         PartSortField sortBy = PartSortField.PartName,
-        System.Boolean sortDescending = false,
-        System.Int32? filterSupplierId = null,
+
+        bool sortDescending = false,
+
+        int? filterSupplierId = null,
+
         PartCategory? filterCategory = null,
-        System.Boolean? filterInStock = null,
-        System.Boolean? filterDefective = null,
-        System.Boolean? filterExpired = null,
-        System.Boolean? filterDiscontinued = null,
+
+        bool? filterInStock = null,
+
+        bool? filterDefective = null,
+
+        bool? filterExpired = null,
+
+        bool? filterDiscontinued = null,
+
         System.Threading.CancellationToken ct = default);
 
     /// <summary>
+
     /// Creates a new part.
+
     /// </summary>
+
     System.Threading.Tasks.Task<PartWriteResult> CreateAsync(PartDto data, System.Threading.CancellationToken ct = default);
 
     /// <summary>
+
     /// Updates an existing part.
+
     /// </summary>
+
     System.Threading.Tasks.Task<PartWriteResult> UpdateAsync(PartDto data, System.Threading.CancellationToken ct = default);
 
     /// <summary>
+
     /// Deletes or discontinues a part.
+
     /// </summary>
+
     System.Threading.Tasks.Task<PartWriteResult> DeleteAsync(PartDto data, System.Threading.CancellationToken ct = default);
 }

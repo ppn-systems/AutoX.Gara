@@ -1,31 +1,46 @@
+﻿using System;
+using System.Collections.Generic;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Invoices;
+
 using Nalix.Common.Networking.Protocols;
 
 namespace AutoX.Gara.Frontend.Results.Billings;
 
 public sealed class TransactionListResult
-{
-    public System.Boolean IsSuccess { get; private init; }
-    public System.String? ErrorMessage { get; private init; }
-    public ProtocolAdvice Advice { get; private init; }
-    public System.Collections.Generic.List<TransactionDto> Transactions { get; private init; } = [];
-    public System.Int32 TotalCount { get; private init; } = -1;
-    public System.Boolean HasMore { get; private init; }
 
-    public static TransactionListResult Success(System.Collections.Generic.List<TransactionDto> transactions, System.Int32 totalCount, System.Boolean hasMore)
+{
+    public bool IsSuccess { get; private init; }
+
+    public string? ErrorMessage { get; private init; }
+
+    public ProtocolAdvice Advice { get; private init; }
+
+    public List<TransactionDto> Transactions { get; private init; } = [];
+
+    public int TotalCount { get; private init; } = -1;
+
+    public bool HasMore { get; private init; }
+
+    public static TransactionListResult Success(List<TransactionDto> transactions, int totalCount, bool hasMore)
+
         => new() { IsSuccess = true, Transactions = transactions, TotalCount = totalCount, HasMore = hasMore };
 
-    public static TransactionListResult Failure(System.String message, ProtocolAdvice advice = ProtocolAdvice.FIX_AND_RETRY)
+    public static TransactionListResult Failure(string message, ProtocolAdvice advice = ProtocolAdvice.FIX_AND_RETRY)
+
         => new() { IsSuccess = false, ErrorMessage = message, Advice = advice };
 
     public static TransactionListResult Timeout()
+
         => new()
+
         {
             IsSuccess = false,
-            ErrorMessage = "Yêu cầu hết thời gian chờ. Vui lòng thử lại.",
+
+            ErrorMessage = "Y�u c?u h?t th?i gian ch?. Vui l�ng th? l?i.",
+
             Advice = ProtocolAdvice.BACKOFF_RETRY
+
         };
 }
-

@@ -1,23 +1,33 @@
+ï»¿using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 namespace AutoX.Gara.Frontend.Results.Accounts;
 
 /// <summary>
+
 /// K?t qu? k?t n?i + handshake.
-/// Dùng static factory methods thay vì constructor d? ý nghia rõ ràng hon.
+
+/// Dï¿½ng static factory methods thay vï¿½ constructor d? ï¿½ nghia rï¿½ rï¿½ng hon.
+
 /// </summary>
+
 public sealed class ConnectionResult
+
 {
-    public System.Boolean IsSuccess { get; private init; }
-    public System.String? ErrorMessage { get; private init; }
+    public bool IsSuccess { get; private init; }
+
+    public string? ErrorMessage { get; private init; }
 
     private ConnectionResult() { }
 
     public static ConnectionResult Success() => new() { IsSuccess = true };
 
-    public static ConnectionResult Failure(System.String message) => new()
+    public static ConnectionResult Failure(string message) => new()
+
     {
         IsSuccess = false,
+
         ErrorMessage = message
+
     };
 }

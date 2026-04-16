@@ -1,648 +1,1180 @@
 <?xml version="1.0" encoding="utf-8" ?>
+
 <!--
-    VehiclesPage.xaml — Minimal / Modern Dark  (same palette as CustomersPage)
-    ──────────────────────────────────────────────────────────────────────────
+
+    VehiclesPage.xaml â€” Minimal / Modern Dark  (same palette as CustomersPage)
+
+    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
     Palette:
+
       Background    #0A0A0F    Surface  #111118    Surface2  #1A1A24
+
       Border        #2A2A38    Accent   #6366F1    Text      #F1F1F5
+
       Muted         #6B6B80    Danger   #EF4444    Success   #22C55E
+
 -->
+
 <ContentPage
+
     x:Name="PageRoot"
+
     x:Class="AutoX.Gara.Frontend.Views.VehiclesPage"
+
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+
     xmlns:ctrl="clr-namespace:AutoX.Gara.Frontend.Controllers"
+
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Vehicles;assembly=AutoX.Gara.Shared"
+
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
+
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+
     x:DataType="ctrl:VehiclesViewModel"
+
     Title="{Binding PageTitle}"
+
     BackgroundColor="#0A0A0F">
 
     <ContentPage.Resources>
+
         <ResourceDictionary>
+
             <conv:InverseBoolConverter           x:Key="InverseBool"   />
+
             <conv:StringNotEmptyConverter        x:Key="NotEmpty"      />
+
             <conv:DateTimeToShortStringConverter x:Key="ToShortDate"   />
+
             <conv:EnumTextConverter              x:Key="EnumText"      />
 
             <Style x:Key="CardStyle" TargetType="Border">
+
                 <Setter Property="BackgroundColor" Value="#111118" />
+
                 <Setter Property="StrokeShape"     Value="RoundRectangle 10" />
+
                 <Setter Property="Stroke"          Value="#2A2A38" />
+
                 <Setter Property="StrokeThickness" Value="1" />
+
             </Style>
 
             <Style x:Key="BackBtn" TargetType="Button">
+
                 <Setter Property="BackgroundColor" Value="#1A1A24" />
+
                 <Setter Property="TextColor"       Value="#818CF8" />
+
                 <Setter Property="FontSize"        Value="14" />
+
                 <Setter Property="FontAttributes"  Value="Bold" />
+
                 <Setter Property="CornerRadius"    Value="8" />
+
                 <Setter Property="HeightRequest"   Value="38" />
+
                 <Setter Property="BorderColor"     Value="#2A2A38" />
+
                 <Setter Property="BorderWidth"     Value="1" />
+
                 <Setter Property="Padding"         Value="14,0" />
+
             </Style>
 
             <Style x:Key="InputBorder" TargetType="Border">
+
                 <Setter Property="BackgroundColor" Value="#1A1A24" />
+
                 <Setter Property="StrokeShape"     Value="RoundRectangle 8" />
+
                 <Setter Property="Stroke"          Value="#2A2A38" />
+
                 <Setter Property="StrokeThickness" Value="1" />
+
                 <Setter Property="HeightRequest"   Value="44" />
+
             </Style>
 
             <Style x:Key="PickerBorder" TargetType="Border">
+
                 <Setter Property="BackgroundColor" Value="#1A1A24" />
+
                 <Setter Property="StrokeShape"     Value="RoundRectangle 8" />
+
                 <Setter Property="Stroke"          Value="#2A2A38" />
+
                 <Setter Property="StrokeThickness" Value="1" />
+
                 <Setter Property="HeightRequest"   Value="44" />
+
             </Style>
 
             <Style x:Key="MutedLabel" TargetType="Label">
+
                 <Setter Property="FontSize"   Value="13" />
+
                 <Setter Property="TextColor"  Value="#6B6B80" />
+
                 <Setter Property="VerticalOptions" Value="Center" />
+
             </Style>
 
             <Style x:Key="FieldLabel" TargetType="Label">
+
                 <Setter Property="FontSize"         Value="12" />
+
                 <Setter Property="FontAttributes"   Value="Bold" />
+
                 <Setter Property="TextColor"        Value="#6B6B80" />
+
                 <Setter Property="Margin"           Value="0,12,0,5" />
+
                 <Setter Property="CharacterSpacing" Value="0.5" />
+
             </Style>
 
             <Style x:Key="FormEntry" TargetType="Entry">
+
                 <Setter Property="BackgroundColor"  Value="Transparent" />
+
                 <Setter Property="TextColor"        Value="#F1F1F5" />
+
                 <Setter Property="PlaceholderColor" Value="#3A3A50" />
+
                 <Setter Property="HeightRequest"    Value="44" />
+
             </Style>
 
             <Style x:Key="AccentBtn" TargetType="Button">
+
                 <Setter Property="BackgroundColor" Value="#6366F1" />
+
                 <Setter Property="TextColor"       Value="White" />
+
                 <Setter Property="FontAttributes"  Value="Bold" />
+
                 <Setter Property="FontSize"        Value="14" />
+
                 <Setter Property="CornerRadius"    Value="8" />
+
                 <Setter Property="HeightRequest"   Value="42" />
+
             </Style>
 
             <Style x:Key="GhostBtn" TargetType="Button">
+
                 <Setter Property="BackgroundColor" Value="#1A1A24" />
+
                 <Setter Property="TextColor"       Value="#9999B0" />
+
                 <Setter Property="FontAttributes"  Value="Bold" />
+
                 <Setter Property="FontSize"        Value="14" />
+
                 <Setter Property="CornerRadius"    Value="8" />
+
                 <Setter Property="HeightRequest"   Value="42" />
+
                 <Setter Property="BorderColor"     Value="#2A2A38" />
+
                 <Setter Property="BorderWidth"     Value="1" />
+
             </Style>
 
             <Style x:Key="RowEdit" TargetType="Button">
+
                 <Setter Property="HeightRequest"   Value="32" />
+
                 <Setter Property="WidthRequest"    Value="100" />
+
                 <Setter Property="CornerRadius"    Value="8" />
+
                 <Setter Property="FontSize"        Value="13" />
+
                 <Setter Property="FontAttributes"  Value="Bold" />
+
                 <Setter Property="Padding"         Value="10,0" />
+
                 <Setter Property="BackgroundColor" Value="#1E1E2E" />
+
                 <Setter Property="TextColor"       Value="#818CF8" />
+
                 <Setter Property="BorderColor"     Value="#2A2A38" />
+
                 <Setter Property="BorderWidth"     Value="1" />
+
             </Style>
 
             <Style x:Key="RowDelete" TargetType="Button">
+
                 <Setter Property="HeightRequest"   Value="32" />
+
                 <Setter Property="WidthRequest"    Value="100" />
+
                 <Setter Property="CornerRadius"    Value="8" />
+
                 <Setter Property="FontSize"        Value="13" />
+
                 <Setter Property="FontAttributes"  Value="Bold" />
+
                 <Setter Property="Padding"         Value="10,0" />
+
                 <Setter Property="BackgroundColor" Value="#1E1014" />
+
                 <Setter Property="TextColor"       Value="#EF4444" />
+
                 <Setter Property="BorderColor"     Value="#3A1A1A" />
+
                 <Setter Property="BorderWidth"     Value="1" />
+
             </Style>
 
         </ResourceDictionary>
+
     </ContentPage.Resources>
 
     <Grid>
 
-        <!-- ══════════════════════════════════════════════════
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
              MAIN
-             ══════════════════════════════════════════════════ -->
+
+             â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+
         <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="0">
 
-            <!-- ─── ROW 0: HEADER ─────────────────────────── -->
+            <!-- â”€â”€â”€ ROW 0: HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+
             <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto"
+
                   Padding="16,18,16,12" ColumnSpacing="12">
 
                 <!-- Back button -->
+
                 <Button Grid.Column="0"
-                        Text="← Quay lại"
+
+                        Text="â† Quay lại"
+
                         Style="{StaticResource BackBtn}"
+
                         Clicked="OnBackClicked" />
 
                 <!-- Owner info -->
+
                 <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+
                     <Label Text="{Binding PageTitle}"
+
                            FontSize="17" FontAttributes="Bold"
+
                            TextColor="#F1F1F5"
+
                            LineBreakMode="TailTruncation" MaxLines="1" />
+
                     <Label FontSize="12" TextColor="#6B6B80">
+
                         <Label.FormattedText>
+
                             <FormattedString>
+
                                 <Span Text="{Binding TotalCount}" FontAttributes="Bold" TextColor="#818CF8" />
+
                                 <Span Text=" chiếc xe" TextColor="#6B6B80" />
+
                             </FormattedString>
+
                         </Label.FormattedText>
+
                     </Label>
+
                 </VerticalStackLayout>
 
-                <!-- Nút Thêm -->
+                <!-- NÃºt ThÃªm -->
+
                 <Button Grid.Column="2"
-                        Text="＋ Thêm xe"
+
+                        Text="ï¼‹ ThÃªm xe"
+
                         Style="{StaticResource AccentBtn}"
+
                         Command="{Binding OpenCreateFormCommand}"
+
                         Padding="20,0" />
+
             </Grid>
 
-            <!-- ─── ROW 1: OWNER CARD ──────────────────────── -->
+            <!-- â”€â”€â”€ ROW 1: OWNER CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+
             <Border Grid.Row="1"
+
                     Style="{StaticResource CardStyle}"
+
                     Margin="16,0,16,14" Padding="14,10">
+
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                    <Label Grid.Column="0" Text="👤"
+
+                    <Label Grid.Column="0" Text="ðŸ‘¤"
+
                            FontSize="22" VerticalOptions="Center" />
+
                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+
                         <Label Text="{Binding Owner.Name}"
+
                                FontSize="14" FontAttributes="Bold"
+
                                TextColor="#F1F1F5" />
+
                         <HorizontalStackLayout Spacing="12">
+
                             <Label Text="{Binding Owner.PhoneNumber}"
+
                                    Style="{StaticResource MutedLabel}" />
+
                             <Label Text="{Binding Owner.Email}"
+
                                    Style="{StaticResource MutedLabel}"
+
                                    LineBreakMode="TailTruncation" MaxLines="1" />
+
                         </HorizontalStackLayout>
+
                     </VerticalStackLayout>
+
                 </Grid>
+
             </Border>
 
-            <!-- ─── ROW 2: LIST ────────────────────────────── -->
+            <!-- â”€â”€â”€ ROW 2: LIST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+
             <Grid Grid.Row="2">
 
                 <!-- Loading spinner -->
+
                 <VerticalStackLayout IsVisible="{Binding IsLoading}"
+
                                      VerticalOptions="Center" HorizontalOptions="Center" Spacing="12">
+
                     <ActivityIndicator IsRunning="{Binding IsLoading}" Color="#6366F1" WidthRequest="36" HeightRequest="36" />
+
                     <Label Text="Đang tải..." TextColor="#6B6B80" FontSize="13" HorizontalOptions="Center" />
+
                 </VerticalStackLayout>
 
                 <!-- Empty state -->
+
                 <VerticalStackLayout IsVisible="{Binding IsEmpty}"
+
                                      VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
-                    <Label Text="🚗" FontSize="48" HorizontalOptions="Center" />
-                    <Label Text="Chưa có xe nào" TextColor="#6B6B80" FontSize="15"
+
+                    <Label Text="ðŸš—" FontSize="48" HorizontalOptions="Center" />
+
+                    <Label Text="ChÆ°a cÃ³ xe nÃ o" TextColor="#6B6B80" FontSize="15"
+
                            HorizontalOptions="Center" />
+
                 </VerticalStackLayout>
 
                 <!-- Error banner -->
+
                 <Border IsVisible="{Binding HasError}"
+
                         BackgroundColor="#1E1014"
+
                         StrokeShape="RoundRectangle 8"
+
                         StrokeThickness="1" Stroke="#3A1A1A"
+
                         Margin="16,0" Padding="14,10"
+
                         VerticalOptions="Start">
+
                     <Label Text="{Binding ErrorMessage}"
+
                            TextColor="#EF4444" FontSize="13" />
+
                 </Border>
 
                 <!-- Vehicle list -->
+
                 <CollectionView ItemsSource="{Binding Vehicles}"
+
                                 IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}"
+
                                 Margin="16,0" VerticalOptions="Fill">
+
                     <CollectionView.ItemTemplate>
+
                         <DataTemplate x:DataType="pkt:VehicleDto">
+
                             <Border Style="{StaticResource CardStyle}"
+
                                     Margin="0,0,0,8" Padding="14,12">
+
                                 <Grid ColumnDefinitions="44,*,Auto" ColumnSpacing="12">
 
                                     <!-- Icon xe -->
+
                                     <Border Grid.Column="0"
+
                                             BackgroundColor="#1A1A2E"
+
                                             StrokeShape="RoundRectangle 10"
+
                                             StrokeThickness="0"
+
                                             WidthRequest="44" HeightRequest="44"
+
                                             VerticalOptions="Center"
+
                                             InputTransparent="True">
-                                        <Label Text="🚗"
+
+                                        <Label Text="ðŸš—"
+
                                                FontSize="20"
+
                                                HorizontalOptions="Center"
+
                                                VerticalOptions="Center" />
+
                                     </Border>
 
                                     <!-- Info -->
+
                                     <VerticalStackLayout Grid.Column="1"
+
                                                          Spacing="3" VerticalOptions="Center"
+
                                                          InputTransparent="True">
 
-                                        <!-- Biển số + năm -->
+                                        <!-- Biá»ƒn sá»‘ + nÄƒm -->
+
                                         <HorizontalStackLayout Spacing="8">
+
                                             <Label Text="{Binding LicensePlate}"
+
                                                    FontSize="15" FontAttributes="Bold"
+
                                                    TextColor="#F1F1F5" VerticalOptions="Center" />
+
                                             <Border BackgroundColor="#1E1E2E"
+
                                                     StrokeShape="RoundRectangle 4"
+
                                                     StrokeThickness="0"
+
                                                     Padding="6,2" VerticalOptions="Center"
+
                                                     InputTransparent="True">
+
                                                 <Label Text="{Binding Year}"
+
                                                        FontSize="11" FontAttributes="Bold"
+
                                                        TextColor="#818CF8" />
+
                                             </Border>
+
                                         </HorizontalStackLayout>
 
                                         <!-- Hãng + Model -->
+
                                         <HorizontalStackLayout Spacing="5">
+
                                             <Label Text="{Binding Brand, Converter={StaticResource EnumText}}"
+
                                                    Style="{StaticResource MutedLabel}" />
-                                            <Label Text="·" Style="{StaticResource MutedLabel}" />
+
+                                            <Label Text="Â·" Style="{StaticResource MutedLabel}" />
+
                                             <Label Text="{Binding Model}"
+
                                                    Style="{StaticResource MutedLabel}"
+
                                                    LineBreakMode="TailTruncation" MaxLines="1" />
+
                                         </HorizontalStackLayout>
 
-                                        <!-- Màu + Loại -->
+                                        <!-- MÃ u + Loại -->
+
                                         <HorizontalStackLayout Spacing="5">
-                                            <Label Text="🎨" FontSize="12" VerticalOptions="Center" />
+
+                                            <Label Text="ðŸŽ¨" FontSize="12" VerticalOptions="Center" />
+
                                             <Label Text="{Binding Color, Converter={StaticResource EnumText}}"
+
                                                    Style="{StaticResource MutedLabel}" />
-                                            <Label Text="·" Style="{StaticResource MutedLabel}" />
+
+                                            <Label Text="Â·" Style="{StaticResource MutedLabel}" />
+
                                             <Label Text="{Binding Type, Converter={StaticResource EnumText}}"
+
                                                    Style="{StaticResource MutedLabel}" />
+
                                         </HorizontalStackLayout>
 
-                                        <!-- Số km -->
+                                        <!-- Sá»‘ km -->
+
                                         <HorizontalStackLayout Spacing="5">
-                                            <Label Text="📍" FontSize="11" VerticalOptions="Center" />
+
+                                            <Label Text="ðŸ“" FontSize="11" VerticalOptions="Center" />
+
                                             <Label Style="{StaticResource MutedLabel}">
+
                                                 <Label.FormattedText>
+
                                                     <FormattedString>
+
                                                         <Span Text="{Binding Mileage, StringFormat='{0:N0}'}"
+
                                                               TextColor="#6B6B80" FontSize="13" />
+
                                                         <Span Text=" km" TextColor="#6B6B80" FontSize="12" />
+
                                                     </FormattedString>
+
                                                 </Label.FormattedText>
+
                                             </Label>
+
                                         </HorizontalStackLayout>
 
-                                        <!-- Ngăn bảo hiểm hết hạn -->
+                                        <!-- NgÄƒn bảo hiá»ƒm hết hạn -->
+
                                         <HorizontalStackLayout Spacing="5"
+
                                             IsVisible="{Binding InsuranceExpiryDate, Converter={StaticResource NotEmpty}}">
-                                            <Label Text="🛡" FontSize="11" VerticalOptions="Center" />
-                                            <Label Text="{Binding InsuranceExpiryDate, Converter={StaticResource ToShortDate}, StringFormat='Bảo hiểm đến {0}'}"
+
+                                            <Label Text="ðŸ›¡" FontSize="11" VerticalOptions="Center" />
+
+                                            <Label Text="{Binding InsuranceExpiryDate, Converter={StaticResource ToShortDate}, StringFormat='Bảo hiá»ƒm Ä‘ến {0}'}"
+
                                                    Style="{StaticResource MutedLabel}" />
+
                                         </HorizontalStackLayout>
 
                                     </VerticalStackLayout>
 
                                     <!-- Actions -->
+
                                     <VerticalStackLayout Grid.Column="2"
+
                                                          Spacing="6" VerticalOptions="Center">
-                                        <Button Text="🔧 Lệnh"
+
+                                        <Button Text="ðŸ”§ Lá»‡nh"
+
                                                 Style="{StaticResource RowEdit}"
+
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenRepairOrdersCommand}"
+
                                                 CommandParameter="{Binding .}" />
-                                        <Button Text="✏ Sửa"
+
+                                        <Button Text="âœ Sửa"
+
                                                 Style="{StaticResource RowEdit}"
+
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}"
+
                                                 CommandParameter="{Binding .}" />
-                                        <Button Text="🗑 Xóa"
+
+                                        <Button Text="ðŸ—‘ XÃ³a"
+
                                                 Style="{StaticResource RowDelete}"
+
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RequestDeleteCommand}"
+
                                                 CommandParameter="{Binding .}" />
+
                                     </VerticalStackLayout>
 
                                 </Grid>
+
                             </Border>
+
                         </DataTemplate>
+
                     </CollectionView.ItemTemplate>
+
                 </CollectionView>
 
             </Grid>
 
-            <!-- ─── ROW 3: PAGINATION ──────────────────────── -->
+            <!-- â”€â”€â”€ ROW 3: PAGINATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+
             <Grid Grid.Row="3"
+
                   ColumnDefinitions="Auto,*,Auto"
+
                   Padding="16,10,16,14" ColumnSpacing="10">
 
                 <Button Grid.Column="0"
-                        Text="← Trước"
+
+                        Text="â† TrÆ°á»›c"
+
                         Style="{StaticResource GhostBtn}"
+
                         IsEnabled="{Binding HasPreviousPage}"
+
                         Command="{Binding PreviousPageCommand}"
+
                         Padding="18,0" />
 
                 <Label Grid.Column="1"
+
                        HorizontalOptions="Center" VerticalOptions="Center">
+
                     <Label.FormattedText>
+
                         <FormattedString>
+
                             <Span Text="{Binding CurrentPage}"
+
                                   FontAttributes="Bold" TextColor="#F1F1F5" FontSize="14" />
+
                             <Span Text=" / " TextColor="#6B6B80" FontSize="14" />
+
                             <Span Text="{Binding TotalPages}"
+
                                   TextColor="#6B6B80" FontSize="14" />
+
                         </FormattedString>
+
                     </Label.FormattedText>
+
                 </Label>
 
                 <Button Grid.Column="2"
-                        Text="Tiếp →"
+
+                        Text="Tiếp â†’"
+
                         Style="{StaticResource AccentBtn}"
+
                         IsEnabled="{Binding HasNextPage}"
+
                         Command="{Binding NextPageCommand}"
+
                         Padding="18,0" />
+
             </Grid>
 
         </Grid>
+
         <!-- /main -->
 
-        <!-- ══════════════════════════════════════════════════
-             OVERLAY: FORM THÊM / SỬA XE
-             ══════════════════════════════════════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+             OVERLAY: FORM THÃŠM / SỬA XE
+
+             â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+
         <Grid IsVisible="{Binding IsFormVisible}" ZIndex="20">
+
             <BoxView BackgroundColor="#80000008" />
 
             <Border BackgroundColor="#111118"
+
                     StrokeShape="RoundRectangle 14"
+
                     Stroke="#2A2A38" StrokeThickness="1"
+
                     Margin="32,24" MaximumWidthRequest="520"
+
                     VerticalOptions="Center" HorizontalOptions="Center">
+
                 <ScrollView MaximumHeightRequest="600">
+
                     <VerticalStackLayout Padding="28,22" Spacing="0">
 
-                        <!-- Tiêu đề -->
+                        <!-- TiÃªu Ä‘ề -->
+
                         <Label Text="{Binding FormTitle}"
+
                                FontSize="18" FontAttributes="Bold"
+
                                TextColor="#F1F1F5"
+
                                HorizontalOptions="Center"
+
                                Margin="0,0,0,18" />
 
-                        <!-- Biển số -->
-                        <Label Text="BIỂN SỐ XE *" Style="{StaticResource FieldLabel}" />
+                        <!-- Biá»ƒn sá»‘ -->
+
+                        <Label Text="BIá»‚N SỐ XE *" Style="{StaticResource FieldLabel}" />
+
                         <Border Style="{StaticResource InputBorder}">
+
                             <Entry Text="{Binding FormLicensePlate}"
+
                                    Placeholder="VD: 51A-12345"
+
                                    Style="{StaticResource FormEntry}" />
+
                         </Border>
 
-                        <!-- Hãng + Dòng xe -->
+                        <!-- Hãng + DÃ²ng xe -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
                             <VerticalStackLayout Grid.Column="0">
-                                <Label Text="HÃNG XE" Style="{StaticResource FieldLabel}" />
+
+                                <Label Text="HÃƒNG XE" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource PickerBorder}">
+
                                     <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+
                                         <Label Text="{Binding SelectedFormBrandText}"
+
                                                TextColor="#F1F1F5"
+
                                                VerticalOptions="Center"
+
                                                LineBreakMode="TailTruncation"
+
                                                MaxLines="1" />
-                                        <Label Grid.Column="1" Text="▾"
+
+                                        <Label Grid.Column="1" Text="â–¾"
+
                                                TextColor="#6B6B80"
+
                                                VerticalOptions="Center" />
+
                                         <Grid.GestureRecognizers>
+
                                             <TapGestureRecognizer Tapped="OnFormBrandTapped" />
+
                                         </Grid.GestureRecognizers>
+
                                     </Grid>
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                             <VerticalStackLayout Grid.Column="1">
-                                <Label Text="DÒNG XE" Style="{StaticResource FieldLabel}" />
+
+                                <Label Text="DÃ’NG XE" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}">
+
                                     <Entry Text="{Binding FormModel}"
+
                                            Placeholder="VD: Vios, Civic..."
+
                                            Style="{StaticResource FormEntry}" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                         </Grid>
 
-                        <!-- Loại + Màu -->
+                        <!-- Loại + MÃ u -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
                             <VerticalStackLayout Grid.Column="0">
+
                                 <Label Text="LOẠI XE" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource PickerBorder}">
+
                                     <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+
                                         <Label Text="{Binding SelectedFormTypeText}"
+
                                                TextColor="#F1F1F5"
+
                                                VerticalOptions="Center"
+
                                                LineBreakMode="TailTruncation"
+
                                                MaxLines="1" />
-                                        <Label Grid.Column="1" Text="▾"
+
+                                        <Label Grid.Column="1" Text="â–¾"
+
                                                TextColor="#6B6B80"
+
                                                VerticalOptions="Center" />
+
                                         <Grid.GestureRecognizers>
+
                                             <TapGestureRecognizer Tapped="OnFormTypeTapped" />
+
                                         </Grid.GestureRecognizers>
+
                                     </Grid>
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                             <VerticalStackLayout Grid.Column="1">
-                                <Label Text="MÀU SẮC" Style="{StaticResource FieldLabel}" />
+
+                                <Label Text="MÃ€U SẮC" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource PickerBorder}">
+
                                     <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+
                                         <Label Text="{Binding SelectedFormColorText}"
+
                                                TextColor="#F1F1F5"
+
                                                VerticalOptions="Center"
+
                                                LineBreakMode="TailTruncation"
+
                                                MaxLines="1" />
-                                        <Label Grid.Column="1" Text="▾"
+
+                                        <Label Grid.Column="1" Text="â–¾"
+
                                                TextColor="#6B6B80"
+
                                                VerticalOptions="Center" />
+
                                         <Grid.GestureRecognizers>
+
                                             <TapGestureRecognizer Tapped="OnFormColorTapped" />
+
                                         </Grid.GestureRecognizers>
+
                                     </Grid>
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                         </Grid>
 
-                        <!-- Năm + Số km -->
+                        <!-- NÄƒm + Sá»‘ km -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
                             <VerticalStackLayout Grid.Column="0">
-                                <Label Text="NĂM SẢN XUẤT *" Style="{StaticResource FieldLabel}" />
+
+                                <Label Text="NÄ‚M SẢN XUẤT *" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}">
+
                                     <Entry Text="{Binding FormYear}"
+
                                            Keyboard="Numeric"
+
                                            Style="{StaticResource FormEntry}" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                             <VerticalStackLayout Grid.Column="1">
+
                                 <Label Text="SỐ KM" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}">
+
                                     <Entry Text="{Binding FormMileage}"
+
                                            Keyboard="Numeric"
+
                                            Placeholder="0"
+
                                            Style="{StaticResource FormEntry}" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                         </Grid>
 
-                        <!-- Số máy + Số khung -->
+                        <!-- Sá»‘ mÃ¡y + Sá»‘ khung -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
                             <VerticalStackLayout Grid.Column="0">
-                                <Label Text="SỐ MÁY" Style="{StaticResource FieldLabel}" />
+
+                                <Label Text="SỐ MÃY" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}">
+
                                     <Entry Text="{Binding FormEngineNumber}"
-                                           Placeholder="Số máy (tuỳ chọn)"
+
+                                           Placeholder="Sá»‘ mÃ¡y (tuỳ chọn)"
+
                                            Style="{StaticResource FormEntry}" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                             <VerticalStackLayout Grid.Column="1">
+
                                 <Label Text="SỐ KHUNG" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}">
+
                                     <Entry Text="{Binding FormFrameNumber}"
-                                           Placeholder="Số khung (tuỳ chọn)"
+
+                                           Placeholder="Sá»‘ khung (tuỳ chọn)"
+
                                            Style="{StaticResource FormEntry}" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                         </Grid>
 
-                        <!-- Ngày đăng ký + Hết hạn bảo hiểm -->
+                        <!-- NgÃ y Ä‘Äƒng kÃ½ + Hết hạn bảo hiá»ƒm -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
                             <VerticalStackLayout Grid.Column="0">
-                                <Label Text="NGÀY ĐĂNG KÝ" Style="{StaticResource FieldLabel}" />
+
+                                <Label Text="NGÃ€Y ĐÄ‚NG KÃ" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}">
+
                                     <DatePicker Date="{Binding FormRegistrationDate}"
+
                                                 Format="dd/MM/yyyy"
+
                                                 TextColor="#C4C4D4"
+
                                                 BackgroundColor="Transparent"
+
                                                 VerticalOptions="Center"
+
                                                 WidthRequest="224"/>
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                             <VerticalStackLayout Grid.Column="1">
-                                <Label Text="HẾT HẠN BẢO HIỂM" Style="{StaticResource FieldLabel}" />
+
+                                <Label Text="HẾT HẠN BẢO HIá»‚M" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}">
+
                                     <DatePicker Date="{Binding FormInsuranceExpiryDate, TargetNullValue={x:Static sys:DateTime.Today}}"
+
                                                 Format="dd/MM/yyyy"
+
                                                 TextColor="#C4C4D4"
+
                                                 BackgroundColor="Transparent"
+
                                                 VerticalOptions="Center"
+
                                                 WidthRequest="224" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                         </Grid>
 
                         <!-- Divider -->
+
                         <BoxView HeightRequest="1" BackgroundColor="#2A2A38" Margin="0,20,0,0" />
 
                         <!-- Error -->
+
                         <Border IsVisible="{Binding HasFormError}"
+
                                 BackgroundColor="#1E1014"
+
                                 StrokeShape="RoundRectangle 8"
+
                                 StrokeThickness="1" Stroke="#3A1A1A"
+
                                 Padding="12,8" Margin="0,0,0,12">
+
                             <Label Text="{Binding FormErrorMessage}"
+
                                    TextColor="#EF4444" FontSize="13" />
+
                         </Border>
 
                         <!-- Buttons -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,16,0,0">
+
                             <Button Grid.Column="0" Text="Hủy"
+
                                     Style="{StaticResource GhostBtn}"
+
                                     Command="{Binding CloseFormCommand}" />
+
                             <Button Grid.Column="1"
+
                                     Text="{Binding FormSaveText}"
+
                                     Style="{StaticResource AccentBtn}"
+
                                     Command="{Binding SaveFormCommand}" />
+
                         </Grid>
 
                     </VerticalStackLayout>
+
                 </ScrollView>
+
             </Border>
+
         </Grid>
+
         <!-- /form -->
 
-        <!-- ══════════════════════════════════════════════════
-             OVERLAY: XÁC NHẬN XÓA
-             ══════════════════════════════════════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+             OVERLAY: XÃC NHẬN XÃ“A
+
+             â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+
         <Grid IsVisible="{Binding IsDeleteConfirmVisible}" ZIndex="30">
+
             <BoxView BackgroundColor="#70000010" />
+
             <Border BackgroundColor="#111118"
+
                     StrokeShape="RoundRectangle 14"
+
                     Stroke="#3A1A1A" StrokeThickness="1"
+
                     Margin="48,0" MaximumWidthRequest="380"
+
                     VerticalOptions="Center" HorizontalOptions="Center"
+
                     Padding="28,24">
+
                 <VerticalStackLayout Spacing="14">
-                    <Label Text="Xác nhận xóa"
+
+                    <Label Text="XÃ¡c nhận xÃ³a"
+
                            FontSize="18" FontAttributes="Bold"
+
                            TextColor="#F1F1F5" HorizontalOptions="Center" />
+
                     <Label HorizontalOptions="Center" HorizontalTextAlignment="Center" FontSize="14">
+
                         <Label.FormattedText>
+
                             <FormattedString>
-                                <Span Text="Xóa xe " TextColor="#6B6B80" />
+
+                                <Span Text="XÃ³a xe " TextColor="#6B6B80" />
+
                                 <Span Text="{Binding DeleteConfirmPlate}"
+
                                       FontAttributes="Bold" TextColor="#F1F1F5" />
+
                                 <Span Text="?&#10;" TextColor="#6B6B80" />
-                                <Span Text="Hành động này không thể hoàn tác."
+
+                                <Span Text="HÃ nh Ä‘á»™ng nÃ y khÃ´ng thá»ƒ hoÃ n tÃ¡c."
+
                                       TextColor="#3A3A50" FontSize="12" />
+
                             </FormattedString>
+
                         </Label.FormattedText>
+
                     </Label>
+
                     <BoxView HeightRequest="1" BackgroundColor="#2A2A38" Margin="0,4,0,4" />
+
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+
                         <Button Grid.Column="0" Text="Hủy"
+
                                 Style="{StaticResource GhostBtn}"
+
                                 Command="{Binding CancelDeleteCommand}" />
-                        <Button Grid.Column="1" Text="Xóa"
+
+                        <Button Grid.Column="1" Text="XÃ³a"
+
                                 BackgroundColor="#EF4444" TextColor="White"
+
                                 FontAttributes="Bold" FontSize="14"
+
                                 CornerRadius="8" HeightRequest="42"
+
                                 Command="{Binding ConfirmDeleteCommand}" />
+
                     </Grid>
+
                 </VerticalStackLayout>
+
             </Border>
+
         </Grid>
 
-        <!-- ══════════════════════════════════════════════════
-             OVERLAY: POPUP LỖI
-             ══════════════════════════════════════════════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+             OVERLAY: POPUP Lá»–I
+
+             â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+
         <Grid IsVisible="{Binding IsPopupVisible}" ZIndex="40">
+
             <BoxView BackgroundColor="#70000010" />
+
             <Border BackgroundColor="#111118"
+
                     StrokeShape="RoundRectangle 14"
+
                     Stroke="#2A2A38" StrokeThickness="1"
+
                     Margin="48,0" MaximumWidthRequest="360"
+
                     VerticalOptions="Center" HorizontalOptions="Center"
+
                     Padding="28,24">
+
                 <VerticalStackLayout Spacing="12">
+
                     <Label Text="{Binding PopupTitle}"
+
                            FontSize="17" FontAttributes="Bold"
+
                            TextColor="#F1F1F5" HorizontalOptions="Center" />
+
                     <Label Text="{Binding PopupMessage}"
+
                            FontSize="13" TextColor="#6B6B80"
+
                            HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+
                     <Button Text="{Binding PopupButtonText}"
+
                             IsVisible="{Binding IsPopupRetry}"
+
                             Command="{Binding RetryLoadCommand}"
+
                             Style="{StaticResource AccentBtn}" />
-                    <Button Text="Đóng"
+
+                    <Button Text="ĐÃ³ng"
+
                             IsVisible="{Binding IsPopupNotRetry}"
+
                             Command="{Binding ClosePopupCommand}"
+
                             Style="{StaticResource GhostBtn}" />
+
                 </VerticalStackLayout>
+
             </Border>
+
         </Grid>
 
     </Grid>
+
     <!-- /root -->
 
 </ContentPage>
+

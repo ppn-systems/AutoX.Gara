@@ -1,150 +1,276 @@
 <?xml version="1.0" encoding="utf-8" ?>
+
 <ContentPage
+
     x:Name="PageRoot"
+
     x:Class="AutoX.Gara.Frontend.Views.RepairOrderItemsPage"
+
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+
     xmlns:ctrl="clr-namespace:AutoX.Gara.Frontend.Controllers.Billings"
+
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Billings;assembly=AutoX.Gara.Shared"
+
     x:DataType="ctrl:RepairOrderItemsViewModel"
+
     Title="{Binding PageTitle}"
+
     BackgroundColor="#0A0A0F">
 
     <ContentPage.Resources>
+
         <ResourceDictionary>
+
             <Style x:Key="CardStyle" TargetType="Border">
+
                 <Setter Property="BackgroundColor" Value="#111118" />
+
                 <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+
                 <Setter Property="Stroke" Value="#2A2A38" />
+
                 <Setter Property="StrokeThickness" Value="1" />
+
             </Style>
+
             <Style x:Key="AccentBtn" TargetType="Button">
+
                 <Setter Property="BackgroundColor" Value="#6366F1" />
+
                 <Setter Property="TextColor" Value="White" />
+
                 <Setter Property="FontAttributes" Value="Bold" />
+
                 <Setter Property="CornerRadius" Value="8" />
+
                 <Setter Property="HeightRequest" Value="40" />
+
             </Style>
+
             <Style x:Key="GhostBtn" TargetType="Button">
+
                 <Setter Property="BackgroundColor" Value="#1A1A24" />
+
                 <Setter Property="TextColor" Value="#F1F1F5" />
+
                 <Setter Property="CornerRadius" Value="8" />
+
                 <Setter Property="HeightRequest" Value="40" />
+
                 <Setter Property="BorderColor" Value="#2A2A38" />
+
                 <Setter Property="BorderWidth" Value="1" />
+
             </Style>
+
             <Style x:Key="DangerBtn" TargetType="Button">
+
                 <Setter Property="BackgroundColor" Value="#EF4444" />
+
                 <Setter Property="TextColor" Value="White" />
+
                 <Setter Property="FontAttributes" Value="Bold" />
+
                 <Setter Property="CornerRadius" Value="8" />
+
                 <Setter Property="HeightRequest" Value="40" />
+
             </Style>
+
             <Style x:Key="MutedLabel" TargetType="Label">
+
                 <Setter Property="TextColor" Value="#6B6B80" />
+
                 <Setter Property="FontSize" Value="12" />
+
             </Style>
+
         </ResourceDictionary>
+
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*" Padding="14">
+
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+
             <Button Text="←" Style="{StaticResource GhostBtn}" WidthRequest="44" Clicked="OnBackClicked" />
+
             <Label Grid.Column="1" Text="{Binding PageTitle}" TextColor="#F1F1F5" FontAttributes="Bold" VerticalOptions="Center" />
+
             <Button Grid.Column="2" Text="+" Style="{StaticResource AccentBtn}" WidthRequest="44" Command="{Binding OpenAddFormCommand}" />
+
         </Grid>
 
         <Grid Grid.Row="1" RowDefinitions="Auto,*" Margin="0,12,0,0">
+
             <Label Text="{Binding ErrorMessage}" TextColor="#EF4444" IsVisible="{Binding HasError}" />
 
             <CollectionView Grid.Row="1" ItemsSource="{Binding ItemRows}">
+
                 <CollectionView.ItemTemplate>
+
                     <DataTemplate x:DataType="ctrl:RepairOrderItemsViewModel+RepairOrderItemRow">
+
                         <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Padding="12">
+
                             <VerticalStackLayout Spacing="6">
+
                                 <Label Text="{Binding Item.RepairOrderItemId, StringFormat='Item #{0}'}" TextColor="#F1F1F5" FontAttributes="Bold" />
+
                                 <Label Text="{Binding PartName, StringFormat='Part: {0}'}" Style="{StaticResource MutedLabel}" />
+
                                 <Label Text="{Binding Item.Quantity, StringFormat='Số lượng: {0}'}" Style="{StaticResource MutedLabel}" />
 
                                 <HorizontalStackLayout Spacing="8" Margin="0,8,0,0">
+
                                     <Button Text="Sửa" Style="{StaticResource AccentBtn}"
+
                                             Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}"
+
                                             CommandParameter="{Binding Item}" />
+
                                     <Button Text="Xóa" Style="{StaticResource DangerBtn}"
+
                                             Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RequestDeleteCommand}"
+
                                             CommandParameter="{Binding Item}" />
+
                                 </HorizontalStackLayout>
+
                             </VerticalStackLayout>
+
                         </Border>
+
                     </DataTemplate>
+
                 </CollectionView.ItemTemplate>
+
             </CollectionView>
+
         </Grid>
 
         <!-- Form overlay -->
+
         <Grid IsVisible="{Binding IsFormVisible}" BackgroundColor="#70000010" RowSpan="2">
+
             <Border Style="{StaticResource CardStyle}" VerticalOptions="Center" HorizontalOptions="Center" Padding="16" WidthRequest="340">
+
                 <VerticalStackLayout Spacing="10">
+
                     <Label Text="Part trong lệnh" TextColor="#F1F1F5" FontAttributes="Bold" />
 
                     <Label Text="{Binding ErrorMessage}" TextColor="#EF4444" IsVisible="{Binding HasError}" />
 
                     <Label Text="Part" Style="{StaticResource MutedLabel}" />
+
                     <Button Text="{Binding SelectedPartOption.Display, FallbackValue='Chọn part'}"
+
                             Style="{StaticResource GhostBtn}"
+
                             Command="{Binding OpenPartSelectorCommand}" />
 
                     <Label Text="Quantity" Style="{StaticResource MutedLabel}" />
+
                     <Entry Text="{Binding FormQuantity}" Keyboard="Numeric" TextColor="#F1F1F5" />
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
+
                         <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CancelFormCommand}" />
+
                         <Button Grid.Column="1" Text="Lưu" Style="{StaticResource AccentBtn}" Command="{Binding SaveCommand}" />
+
                     </Grid>
+
                 </VerticalStackLayout>
+
             </Border>
+
         </Grid>
 
         <!-- Part selector overlay -->
+
         <Grid IsVisible="{Binding IsPartSelectorVisible}" BackgroundColor="#70000010" RowSpan="2">
+
             <Border Style="{StaticResource CardStyle}"
+
                     VerticalOptions="Center" HorizontalOptions="Center"
+
                     Padding="18" WidthRequest="380" HeightRequest="520">
+
                 <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="12">
+
                     <Label Text="Chọn part" TextColor="#F1F1F5" FontAttributes="Bold" FontSize="16" />
+
                     <Entry Grid.Row="1" Placeholder="Tìm theo tên hoặc id..." Text="{Binding PartSearchTerm}" TextColor="#F1F1F5" HeightRequest="44" />
+
                     <VerticalStackLayout Grid.Row="2" Spacing="6">
+
                         <Label Text="{Binding ErrorMessage}" TextColor="#EF4444" IsVisible="{Binding HasError}" />
+
                         <ActivityIndicator IsRunning="{Binding IsLookupLoading}" IsVisible="{Binding IsLookupLoading}" Color="#6366F1" />
+
                     </VerticalStackLayout>
+
                     <CollectionView Grid.Row="3" ItemsSource="{Binding FilteredPartOptions}">
+
                         <CollectionView.ItemTemplate>
+
                             <DataTemplate x:DataType="ctrl:RepairOrderItemsViewModel+LookupOption">
+
                                 <Button Text="{Binding Display}" Style="{StaticResource GhostBtn}"
+
                                         Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SelectPartCommand}"
+
                                         CommandParameter="{Binding .}" />
+
                             </DataTemplate>
+
                         </CollectionView.ItemTemplate>
+
                     </CollectionView>
+
                     <Grid Grid.Row="4" ColumnDefinitions="*,*" ColumnSpacing="10">
+
                         <Button Grid.Column="0" Text="Tải lại" Style="{StaticResource GhostBtn}" Command="{Binding LoadLookupsCommand}" />
+
                         <Button Grid.Column="1" Text="Đóng" Style="{StaticResource GhostBtn}" Command="{Binding ClosePartSelectorCommand}" />
+
                     </Grid>
+
                 </Grid>
+
             </Border>
+
         </Grid>
 
         <!-- Delete confirm overlay -->
+
         <Grid IsVisible="{Binding IsDeleteConfirmVisible}" BackgroundColor="#70000010" RowSpan="2">
+
             <Border Style="{StaticResource CardStyle}" VerticalOptions="Center" HorizontalOptions="Center" Padding="16" WidthRequest="320">
+
                 <VerticalStackLayout Spacing="12">
+
                     <Label Text="Xác nhận xóa" TextColor="#F1F1F5" FontAttributes="Bold" />
+
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+
                         <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CancelDeleteCommand}" />
+
                         <Button Grid.Column="1" Text="Xóa" Style="{StaticResource DangerBtn}" Command="{Binding ConfirmDeleteCommand}" />
+
                     </Grid>
+
                 </VerticalStackLayout>
+
             </Border>
+
         </Grid>
+
     </Grid>
+
 </ContentPage>
+

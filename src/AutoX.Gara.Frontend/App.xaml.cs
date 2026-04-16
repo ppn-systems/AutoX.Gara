@@ -1,29 +1,38 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Extensions.Logging;
 using Nalix.Framework.Injection;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace AutoX.Gara.Frontend;
 
+/// <summary>
+/// Lớp ứng dụng chính, quản lý vòng đời và xử lý lỗi toàn cục.
+/// Tuân thủ tiêu chuẩn Resilience và Traceability công nghiệp.
+/// </summary>
 public partial class App : Application
 {
     public App()
     {
         InitializeComponent();
+        
+        // Cài đặt các trình xử lý ngoại lệ không mong muốn toàn hệ thống
         InstallGlobalExceptionHandlers();
+        
+        // Ghi lại thông tin môi trường thực thi để hỗ trợ chuẩn đoán
         LogAppDataPath();
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        Window window = new(new AppShell())
+        // Khởi tạo cửa sổ ban đầu dành cho màn hình Đăng nhập (kích thước nhỏ)
+        var window = new Window(new AppShell())
         {
-            // Ch? Windows desktop mới đổi size window du?c
             Width = 400,
             Height = 520,
         };
@@ -33,27 +42,17 @@ public partial class App : Application
 
     private static void InstallGlobalExceptionHandlers()
     {
-        System.AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        // Xử lý lỗi UnhandledException trên AppDomain
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
-            try
-            {
-                LogCrash("AppDomain.UnhandledException", e.ExceptionObject as System.Exception);
-            }
-            catch
-            {
-            }
+            LogCrash("AppDomain.UnhandledException", e.ExceptionObject as Exception);
         };
 
+        // Xử lý lỗi trong các tác vụ bất đồng bộ (Background Tasks)
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
-            try
-            {
-                LogCrash("TaskScheduler.UnobservedTaskException", e.Exception);
-                e.SetObserved();
-            }
-            catch
-            {
-            }
+            LogCrash("TaskScheduler.UnobservedTaskException", e.Exception);
+            e.SetObserved(); // Đánh dấu đã xử lý để tránh sập app ngay lập tức
         };
     }
 
@@ -61,48 +60,41 @@ public partial class App : Application
     {
         try
         {
-            System.String path = Microsoft.Maui.Storage.FileSystem.AppDataDirectory;
-            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
-            logger?.Info($"[FE.{nameof(App)}] AppDataDirectory={path}");
-            Debug.WriteLine($"[FE.{nameof(App)}] AppDataDirectory={path}");
+            string path = Microsoft.Maui.Storage.FileSystem.AppDataDirectory;
+            var logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
+            
+            logger?.LogInformation("[FE.App] AppDataDirectory={Path}", path);
+            Debug.WriteLine($"[FE.App] AppDataDirectory={path}");
         }
-        catch
-        {
-        }
+        catch { /* Phớt lờ lỗi trong quá trình cấu hình logging */ }
     }
 
-    private static void LogCrash(System.String source, System.Exception? ex)
+    /// <summary>
+    /// Ghi lại nhật ký khi ứng dụng gặp sự cố nghiêm trọng (Crash).
+    /// Hỗ trợ truy vết vị trí xảy ra lỗi và nội dung exception.
+    /// </summary>
+    private static void LogCrash(string source, Exception? ex)
     {
         try
         {
-            System.String location = Shell.Current?.CurrentState?.Location?.ToString() ?? "(no-shell)";
-            System.String message = $"[CRASH] source={source} location={location}\n{(ex is null ? "(null exception)" : ex.ToString())}";
-
-            // Prefer existing logger (registered by AppShell) to keep logs in AutoX.log.
-            ILogger? logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
-            if (logger is not null)
-            {
-                logger.Error(message);
-            }
-            else
-            {
-                InstanceManager.Instance.GetOrCreateInstance<ILogger>().Error(message);
-            }
-
+            string location = Shell.Current?.CurrentState?.Location?.ToString() ?? "(no-shell)";
+            string message = $"[CRASH] source={source} location={location}\n{(ex is null ? "(null exception)" : ex.ToString())}";
+            
+            // Log vào hệ thống logging chính
+            var logger = InstanceManager.Instance.GetExistingInstance<ILogger>() 
+                      ?? InstanceManager.Instance.GetOrCreateInstance<ILogger>();
+            
+            logger.LogError(new EventId(999, "Crash"), ex, "{Message}", message);
             Debug.WriteLine(message);
 
-            // Extra fallback: write crash log to a known location for easy sharing.
+            // Ghi dự phòng vào file local phục vụ gửi báo cáo lỗi sau này
             try
             {
-                System.String path = Path.Combine(Microsoft.Maui.Storage.FileSystem.AppDataDirectory, "crash.log");
-                File.AppendAllText(path, $"{System.DateTimeOffset.Now:o}\n{message}\n\n");
+                string path = Path.Combine(Microsoft.Maui.Storage.FileSystem.AppDataDirectory, "crash.log");
+                File.AppendAllText(path, $"{DateTimeOffset.Now:o}\n{message}\n\n");
             }
-            catch
-            {
-            }
+            catch { /* File system lock hoặc Permission issue */ }
         }
-        catch
-        {
-        }
+        catch { /* Fail-safe tối thượng */ }
     }
 }

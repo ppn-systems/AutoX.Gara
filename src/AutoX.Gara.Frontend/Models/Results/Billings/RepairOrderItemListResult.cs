@@ -1,40 +1,63 @@
+﻿using System;
+using System.Collections.Generic;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Repairs;
+
 using Nalix.Common.Networking.Protocols;
 
 namespace AutoX.Gara.Frontend.Results.Billings;
 
 public sealed class RepairOrderItemListResult
+
 {
-    public System.Boolean IsSuccess { get; private init; }
-    public System.String? ErrorMessage { get; private init; }
+    public bool IsSuccess { get; private init; }
+
+    public string? ErrorMessage { get; private init; }
+
     public ProtocolAdvice Advice { get; private init; }
-    public System.Collections.Generic.List<RepairOrderItemDto> RepairOrderItems { get; private init; } = [];
-    public System.Int32 TotalCount { get; private init; } = -1;
-    public System.Boolean HasMore { get; private init; }
+
+    public List<RepairOrderItemDto> RepairOrderItems { get; private init; } = [];
+
+    public int TotalCount { get; private init; } = -1;
+
+    public bool HasMore { get; private init; }
 
     public static RepairOrderItemListResult Success(
-        System.Collections.Generic.List<RepairOrderItemDto> items,
-        System.Int32 totalCount = -1,
-        System.Boolean hasMore = false)
+
+        List<RepairOrderItemDto> items,
+
+        int totalCount = -1,
+
+        bool hasMore = false)
+
         => new()
+
         {
             IsSuccess = true,
+
             RepairOrderItems = items,
+
             TotalCount = totalCount,
+
             HasMore = hasMore
+
         };
 
-    public static RepairOrderItemListResult Failure(System.String message, ProtocolAdvice advice = ProtocolAdvice.FIX_AND_RETRY)
+    public static RepairOrderItemListResult Failure(string message, ProtocolAdvice advice = ProtocolAdvice.FIX_AND_RETRY)
+
         => new() { IsSuccess = false, ErrorMessage = message, Advice = advice };
 
     public static RepairOrderItemListResult Timeout()
+
         => new()
+
         {
             IsSuccess = false,
-            ErrorMessage = "Yêu cầu hết thời gian chờ. Vui lòng thử lại.",
+
+            ErrorMessage = "Y�u c?u h?t th?i gian ch?. Vui l�ng th? l?i.",
+
             Advice = ProtocolAdvice.BACKOFF_RETRY
+
         };
 }
-

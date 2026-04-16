@@ -1,171 +1,143 @@
+﻿using AutoX.Gara.Shared.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Models.Results.Accounts;
 using AutoX.Gara.Frontend.Results.Accounts;
-using AutoX.Gara.Shared.Enums;
+using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Protocol.Auth;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
-using Nalix.Framework.Random;
 using Nalix.SDK.Transport;
 using Nalix.SDK.Transport.Extensions;
 using Nalix.Framework.DataFrames.SignalFrames;
+using Nalix.SDK.Options;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AutoX.Gara.Frontend.Services.Accounts;
 
 /// <summary>
-/// Implementation th?c t?: k?t n?i ? handshake ? g?i LOGIN packet ? d?i ph?n h?i.
-/// To�n b? network I/O n?m ? d�y, ViewModel kh�ng bi?t g� v? TcpSession.
+/// Dịch vụ xử lý nghiệp vụ tài khoản và kết nối hệ thống.
+/// Tuân thủ tiêu chuẩn code công nghiệp: Clean Code, DI-ready, Logging, và Error Handling.
 /// </summary>
 public sealed class AccountService : IAccountService
 {
-    // --- C?u h�nh ------------------------------------------------------------
+    private const int LoginTimeoutMs = 5_000;
 
-    private const System.Int32 ServerPort = 57206;
-    private const System.String ServerHost = "127.0.0.1";
-
-    private const System.Int32 LoginTimeoutMs = 5_000;
-    private const System.Int32 HandshakeTimeoutMs = 5_000;
-
-    // --- Logger (lazy + GetOrCreate d? an to�n) ------------------------------
+    /// <summary>
+    /// Logger được lấy từ InstanceManager để ghi lại vết sự cố (Traceability).
+    /// </summary>
     private ILogger Logger => InstanceManager.Instance.GetOrCreateInstance<ILogger>();
 
-    // --- ConnectAsync ---------------------------------------------------------
-    public async System.Threading.Tasks.Task<ConnectionResult> ConnectAsync(System.Threading.CancellationToken ct = default)
+    /// <summary>
+    /// Thực hiện kết nối TCP và Handshake bảo mật (X25519).
+    /// </summary>
+    /// <param name="ct">Token hủy bỏ tác vụ.</param>
+    /// <returns>Kết quả trạng thái kết nối.</returns>
+    public async Task<ConnectionResult> ConnectAsync(CancellationToken ct = default)
     {
         try
         {
-            Logger.Debug($"[AccountService] ConnectAsync started ? {ServerHost}:{ServerPort}");
-
-            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
-
-            await client.ConnectAsync(ServerHost, ServerPort, ct);
-            Logger.Debug("[AccountService] TCP connection established successfully.");
-
-            Logger.Debug($"[AccountService] Starting HandshakeAsync (opCode = {(System.UInt16)OpCommand.HANDSHAKE}, timeout = {HandshakeTimeoutMs}ms)");
-
-            await client.HandshakeAsync(ct);
-            System.Boolean ok = true;
-
-            Logger.Debug($"[AccountService] HandshakeAsync completed ? Success = {ok}");
-
-            if (ok)
+            var client = InstanceManager.Instance.GetExistingInstance<TcpSession>();
+            if (client == null)
             {
-                Logger.Info("[AccountService] Handshake successful ? encryption channel ready.");
-                return ConnectionResult.Success();
+                return ConnectionResult.Failure("TcpSession chưa được đăng ký trong hệ thống.");
             }
-            else
+
+            var options = InstanceManager.Instance.GetExistingInstance<TransportOptions>();
+            if (options == null)
             {
-                Logger.Warn("[AccountService] Handshake failed (check SDK.HandshakeAsync log for SocketException 10054 or other details).");
-                return ConnectionResult.Failure("Handshake th?t b?i, kh�ng thi?t l?p du?c k�nh m� h�a.");
+                return ConnectionResult.Failure("Cấu hình mạng (TransportOptions) không tồn tại.");
             }
+
+            // 1. Thiết lập kết nối TCP mức thấp dựa trên cấu hình tập trung
+            await client.ConnectAsync(options.Address, (ushort)options.Port, ct).ConfigureAwait(false);
+
+            // 2. Thực hiện Handshake mã hóa X25519 để thiết lập Session Key bảo mật
+            await client.HandshakeAsync(ct).ConfigureAwait(false);
+
+            Logger.LogInformation("[AccountService] Đã thiết lập kết nối bảo mật tới {Host}:{Port}", options.Address, options.Port);
+            return ConnectionResult.Success();
         }
-        catch (System.Exception ex)
+        catch (OperationCanceledException)
         {
-            Logger.Error($"[AccountService] ConnectAsync failed with exception: {ex}");
-            if (ex.InnerException != null)
-            {
-                Logger.Error($"InnerException: {ex.InnerException}");
-            }
-
-            return ConnectionResult.Failure(ex.Message);
+            Logger.LogWarning("[AccountService] Kết nối bị hủy bởi người dùng.");
+            return ConnectionResult.Failure("Kết nối bị hủy.");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[AccountService] Lỗi kết nối server: {Message}", ex.Message);
+            return ConnectionResult.Failure($"Không thể kết nối tới máy chủ: {ex.Message}");
         }
     }
 
-    // --- AuthenticateAsync ----------------------------------------------------
-    public async System.Threading.Tasks.Task<LoginResult> AuthenticateAsync(
-        System.String username,
-        System.String password,
-        System.Threading.CancellationToken ct = default)
+    /// <summary>
+    /// Xác thực người dùng thông qua giao thức Nalix RPC.
+    /// </summary>
+    /// <param name="username">Tên đăng nhập.</param>
+    /// <param name="password">Mật khẩu (Clear-text phục vụ xác thực một lần).</param>
+    /// <param name="ct">Token hủy bỏ tác vụ.</param>
+    /// <returns>Kết quả đăng nhập.</returns>
+    public async Task<LoginResult> AuthenticateAsync(string username, string password, CancellationToken ct = default)
     {
         try
         {
-            Logger.Debug($"[AccountService] AuthenticateAsync started for user: {username} (password masked)");
-
-            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
-
-            // 1. Build packet
-            LoginPacket packet = new();
-            System.UInt32 sq = Csprng.NextUInt32();
-            LoginRequestModel model = new() { Username = username, Password = password };
-            packet.SequenceId = sq;
-            packet.Initialize((System.UInt16)OpCommand.LOGIN, model);
-
-            Logger.Debug($"[AccountService] LoginPacket built ? SequenceId = {sq}, OpCode = {(System.UInt16)OpCommand.LOGIN}");
-
-            // 2. TaskCompletionSource + OnOnce
-            System.Threading.Tasks.TaskCompletionSource<LoginResult> tcs = new(
-                System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
-
-            System.IDisposable? sub = null;
-            sub = client.OnOnce<Directive>(
-                predicate: p => p.SequenceId == sq,
-                handler: resp =>
-                {
-                    sub?.Dispose();
-
-                    Logger.Debug($"[AccountService] Received Directive response (seq {sq}) ? Type = {resp.Type}, Reason = {resp.Reason}");
-
-                    LoginResult result = resp.Type == ControlType.NONE
-                        ? LoginResult.Success()
-                        : MapErrorResponse(resp.Reason, resp.Action);
-
-                    tcs.TrySetResult(result);
-                });
-
-            // 3. G?i packet
-            Logger.Debug("[AccountService] Sending encrypted LoginPacket...");
-            await client.SendAsync(packet, ct);
-            Logger.Debug("[AccountService] LoginPacket sent ? waiting for response...");
-
-            // 4. �?i k?t qu? v?i timeout
-            using System.Threading.CancellationTokenSource cts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
-            System.Threading.Tasks.Task timeoutTask = System.Threading.Tasks.Task.Delay(LoginTimeoutMs, cts.Token);
-            System.Threading.Tasks.Task winner = await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask);
-
-            if (winner != tcs.Task)
+            var client = InstanceManager.Instance.GetExistingInstance<TcpSession>();
+            if (client == null || !client.IsConnected)
             {
-                sub?.Dispose();
-                Logger.Warn($"[AccountService] Login TIMEOUT after {LoginTimeoutMs}ms");
-                return LoginResult.Timeout();
+                return LoginResult.Failure("Chưa có kết nối tới máy chủ.", ProtocolAdvice.DO_NOT_RETRY);
             }
 
-            LoginResult finalResult = await tcs.Task;
-            Logger.Debug($"[AccountService] AuthenticateAsync completed ? {(finalResult.IsSuccess ? "SUCCESS" : "FAILURE")}");
-            return finalResult;
-        }
-        catch (System.OperationCanceledException)
-        {
-            Logger.Debug("[AccountService] AuthenticateAsync was canceled by user.");
-            return LoginResult.Failure("�ang nh?p b? h?y.", ProtocolAdvice.NONE);
-        }
-        catch (System.Exception ex)
-        {
-            Logger.Error($"[AccountService] AuthenticateAsync exception: {ex}");
-            if (ex.InnerException != null)
+            // Khởi tạo Packet Login với data model chuẩn hóa
+            var packet = new LoginPacket();
+            var model = new LoginRequestModel { Username = username, Password = password };
+            packet.Initialize((ushort)OpCommand.LOGIN, model);
+
+            // Gửi yêu cầu RPC với tùy chọn Timeout và Encrypt (Bắt buộc sau Handshake)
+            var response = await client.RequestAsync<Directive>(
+                packet,
+                options: RequestOptions.Default.WithTimeout(LoginTimeoutMs).WithEncrypt(),
+                ct: ct).ConfigureAwait(false);
+
+            // Xử lý phản hồi từ Server (Directive frame)
+            if (response.Type == ControlType.NONE)
             {
-                Logger.Error($"InnerException: {ex.InnerException}");
+                Logger.LogInformation("[AccountService] Người dùng '{User}' đăng nhập thành công.", username);
+                return LoginResult.Success();
             }
 
-            return LoginResult.Failure($"L?i kh�ng x�c d?nh: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
+            return MapErrorResponse(response.Reason, response.Action);
+        }
+        catch (OperationCanceledException)
+        {
+            return LoginResult.Failure("Đăng nhập bị hủy.", ProtocolAdvice.NONE);
+        }
+        catch (TimeoutException)
+        {
+            Logger.LogWarning("[AccountService] Hết hạn chờ phản hồi từ Server (Login).");
+            return LoginResult.Timeout();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[AccountService] Lỗi xác thực tài khoản: {Message}", ex.Message);
+            return LoginResult.Failure($"Lỗi hệ thống: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
         }
     }
 
-    // --- Error mapping --------------------------------------------------------
-
+    /// <summary>
+    /// Ánh xạ mã lỗi từ giao thức sang thông điệp người dùng thân thiện.
+    /// </summary>
     private static LoginResult MapErrorResponse(ProtocolReason reason, ProtocolAdvice advice)
     {
-        System.String message = reason switch
+        string message = reason switch
         {
-            ProtocolReason.NOT_FOUND => "T�i kho?n kh�ng t?n t?i.",
-            ProtocolReason.MALFORMED_PACKET => "G�i tin kh�ng h?p l?.",
-            ProtocolReason.INTERNAL_ERROR => "L?i h? th?ng, vui l�ng th? l?i sau.",
-            ProtocolReason.UNAUTHENTICATED => "Sai m?t kh?u, vui l�ng ki?m tra l?i.",
-            ProtocolReason.FORBIDDEN => "T�i kho?n b? c?m ho?c chua du?c k�ch ho?t, vui l�ng li�n h? qu?n tr? vi�n.",
-            ProtocolReason.ACCOUNT_LOCKED => "T�i kho?n t?m b? kh�a do nh?p sai nhi?u l?n, vui l�ng th? l?i sau 15 ph�t.",
-            _ => "�ang nh?p th?t b?i, vui l�ng th? l?i."
+            ProtocolReason.NOT_FOUND => "Tài khoản không tồn tại trong hệ thống.",
+            ProtocolReason.UNAUTHENTICATED => "Mật khẩu không chính xác.",
+            ProtocolReason.STATE_VIOLATION => "Phiên làm việc không hợp lệ (Handshake Error).",
+            _ => "Máy chủ từ chối đăng nhập (Lỗi giao thức)."
         };
 
         return LoginResult.Failure(message, advice);

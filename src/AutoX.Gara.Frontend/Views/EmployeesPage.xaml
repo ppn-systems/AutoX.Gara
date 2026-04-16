@@ -1,530 +1,984 @@
 <?xml version="1.0" encoding="utf-8" ?>
+
 <ContentPage
+
     x:Name="PageRoot"
+
     x:Class="AutoX.Gara.Frontend.Views.EmployeesPage"
+
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+
     xmlns:ctrl="clr-namespace:AutoX.Gara.Frontend.Controllers"
+
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+
     xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Employees;assembly=AutoX.Gara.Shared"
+
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
+
     Title="Quản lý nhân viên"
+
     BackgroundColor="#0A0A0F">
 
     <ContentPage.Resources>
+
         <ResourceDictionary>
+
             <conv:InverseBoolConverter x:Key="InverseBool" />
+
             <conv:DecimalToCurrencyConverter x:Key="ToCurrency" />
+
             <conv:EnumTextConverter x:Key="EnumText" />
+
             <conv:EmployeePositionToColorConverter x:Key="PositionColor" />
+
             <conv:EmploymentStatusToColorConverter x:Key="StatusColor" />
 
             <Style x:Key="CardStyle" TargetType="Border">
+
                 <Setter Property="BackgroundColor" Value="#111118" />
+
                 <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+
                 <Setter Property="Stroke" Value="#2A2A38" />
+
                 <Setter Property="StrokeThickness" Value="1" />
+
             </Style>
+
             <Style x:Key="InputBorder" TargetType="Border">
+
                 <Setter Property="BackgroundColor" Value="#1A1A24" />
+
                 <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+
                 <Setter Property="Stroke" Value="#2A2A38" />
+
                 <Setter Property="StrokeThickness" Value="1" />
+
                 <Setter Property="HeightRequest" Value="44" />
+
             </Style>
+
             <Style x:Key="PickerBorder" TargetType="Border">
+
                 <Setter Property="BackgroundColor" Value="#1A1A24" />
+
                 <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+
                 <Setter Property="Stroke" Value="#2A2A38" />
+
                 <Setter Property="StrokeThickness" Value="1" />
+
                 <Setter Property="HeightRequest" Value="44" />
+
             </Style>
+
             <Style x:Key="MutedLabel" TargetType="Label">
+
                 <Setter Property="FontSize" Value="12" />
+
                 <Setter Property="TextColor" Value="#6B6B80" />
+
                 <Setter Property="VerticalOptions" Value="Center" />
+
             </Style>
+
             <Style x:Key="FieldLabel" TargetType="Label">
+
                 <Setter Property="FontSize" Value="12" />
+
                 <Setter Property="FontAttributes" Value="Bold" />
+
                 <Setter Property="TextColor" Value="#6B6B80" />
+
                 <Setter Property="Margin" Value="0,12,0,5" />
+
                 <Setter Property="CharacterSpacing" Value="0.5" />
+
             </Style>
+
             <Style x:Key="FormEntry" TargetType="Entry">
+
                 <Setter Property="BackgroundColor" Value="Transparent" />
+
                 <Setter Property="TextColor" Value="#F1F1F5" />
+
                 <Setter Property="PlaceholderColor" Value="#3A3A50" />
+
                 <Setter Property="HeightRequest" Value="44" />
+
             </Style>
+
             <Style x:Key="AccentBtn" TargetType="Button">
+
                 <Setter Property="BackgroundColor" Value="#6366F1" />
+
                 <Setter Property="TextColor" Value="White" />
+
                 <Setter Property="FontAttributes" Value="Bold" />
+
                 <Setter Property="FontSize" Value="14" />
+
                 <Setter Property="CornerRadius" Value="8" />
+
                 <Setter Property="HeightRequest" Value="42" />
+
             </Style>
+
             <Style x:Key="GhostBtn" TargetType="Button">
+
                 <Setter Property="BackgroundColor" Value="#1A1A24" />
+
                 <Setter Property="TextColor" Value="#9999B0" />
+
                 <Setter Property="FontAttributes" Value="Bold" />
+
                 <Setter Property="FontSize" Value="14" />
+
                 <Setter Property="CornerRadius" Value="8" />
+
                 <Setter Property="HeightRequest" Value="42" />
+
                 <Setter Property="BorderColor" Value="#2A2A38" />
+
                 <Setter Property="BorderWidth" Value="1" />
+
             </Style>
+
             <Style x:Key="RowEdit" TargetType="Button">
+
                 <Setter Property="HeightRequest" Value="32" />
+
                 <Setter Property="WidthRequest" Value="80" />
+
                 <Setter Property="CornerRadius" Value="8" />
+
                 <Setter Property="FontSize" Value="12" />
+
                 <Setter Property="FontAttributes" Value="Bold" />
+
                 <Setter Property="Padding" Value="10,0" />
+
                 <Setter Property="BackgroundColor" Value="#1E1E2E" />
+
                 <Setter Property="TextColor" Value="#818CF8" />
+
                 <Setter Property="BorderColor" Value="#2A2A38" />
+
                 <Setter Property="BorderWidth" Value="1" />
+
             </Style>
+
         </ResourceDictionary>
+
     </ContentPage.Resources>
 
     <Grid>
+
         <!-- ══ MAIN GRID ══ -->
+
         <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="0">
 
             <!-- ROW 0: HEADER + SEARCH -->
+
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Padding="16,18,16,12" ColumnSpacing="12">
+
                 <Border Grid.Column="0" BackgroundColor="#111118" StrokeShape="RoundRectangle 8" StrokeThickness="1" Stroke="#2A2A38" Padding="0" HeightRequest="44">
+
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+
                         <Label Grid.Column="0" Text="⌕" FontSize="18" TextColor="#3A3A50" VerticalOptions="Center" Padding="12,0" InputTransparent="True" />
+
                         <Entry Grid.Column="1" Text="{Binding SearchTerm}" Placeholder="Tìm tên, email, điện thoại..." PlaceholderColor="#3A3A50" BackgroundColor="Transparent" TextColor="#F1F1F5" HeightRequest="44" VerticalOptions="Center" ReturnType="Search" ClearButtonVisibility="WhileEditing" Style="{StaticResource FormEntry}" />
+
                     </Grid>
+
                 </Border>
+
                 <Button Grid.Column="1" Text="＋ Thêm" Style="{StaticResource AccentBtn}" Command="{Binding OpenCreateFormCommand}" Padding="28,0" />
+
             </Grid>
 
             <!-- ROW 1: FILTER BAR -->
+
             <ScrollView Grid.Row="1" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Padding="16,0,16,14">
+
                 <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+
                     <Label Text="LỌC" FontSize="13" FontAttributes="Bold" CharacterSpacing="1.5" TextColor="#3A3A50" VerticalOptions="Center" Margin="0,0,4,0" />
 
                     <!-- Picker Position -->
+
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="150">
+
                         <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+
                             <Label Text="{Binding SelectedPositionText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+
                             <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+
                             <Grid.GestureRecognizers>
+
                                 <TapGestureRecognizer Tapped="OnPositionFilterTapped" />
+
                             </Grid.GestureRecognizers>
+
                         </Grid>
+
                     </Border>
 
                     <!-- Picker Status -->
+
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="160">
+
                         <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+
                             <Label Text="{Binding SelectedStatusText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+
                             <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+
                             <Grid.GestureRecognizers>
+
                                 <TapGestureRecognizer Tapped="OnStatusFilterTapped" />
+
                             </Grid.GestureRecognizers>
+
                         </Grid>
+
                     </Border>
 
                     <!-- Picker Gender -->
+
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="120">
+
                         <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+
                             <Label Text="{Binding SelectedGenderText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+
                             <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+
                             <Grid.GestureRecognizers>
+
                                 <TapGestureRecognizer Tapped="OnGenderFilterTapped" />
+
                             </Grid.GestureRecognizers>
+
                         </Grid>
+
                     </Border>
 
                     <!-- Picker Salary -->
+
                     <Border Style="{StaticResource PickerBorder}" WidthRequest="150">
+
                         <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+
                             <Label Text="{Binding SelectedSalaryText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+
                             <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+
                             <Grid.GestureRecognizers>
+
                                 <TapGestureRecognizer Tapped="OnSalaryFilterTapped" />
+
                             </Grid.GestureRecognizers>
+
                         </Grid>
+
                     </Border>
 
                     <!-- Clear Filter Button -->
+
                     <Button Text="✕" IsVisible="{Binding HasActiveFilters}" Command="{Binding ClearFiltersCommand}" BackgroundColor="#1E1014" TextColor="#EF4444" BorderColor="#3A1A1A" BorderWidth="1" FontSize="13" CornerRadius="8" HeightRequest="36" WidthRequest="36" Padding="0" />
 
                     <BoxView WidthRequest="1" HeightRequest="20" BackgroundColor="#2A2A38" VerticalOptions="Center" Margin="4,0" />
 
                     <!-- Total Count -->
+
                     <Label VerticalOptions="Center">
+
                         <Label.FormattedText>
+
                             <FormattedString>
+
                                 <Span Text="{Binding TotalCount}" FontAttributes="Bold" TextColor="#F1F1F5" FontSize="14" />
+
                                 <Span Text=" nhân viên" TextColor="#6B6B80" FontSize="13" />
+
                             </FormattedString>
+
                         </Label.FormattedText>
+
                     </Label>
+
                 </HorizontalStackLayout>
+
             </ScrollView>
 
             <!-- ROW 2: LIST -->
+
             <Grid Grid.Row="2">
+
                 <CollectionView ItemsSource="{Binding FilteredEmployees}" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}" Margin="16,0" VerticalOptions="Fill">
+
                     <CollectionView.ItemTemplate>
+
                         <DataTemplate x:DataType="ctrl:EmployeesViewModel+EmployeeRow">
+
                             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8" Padding="14,12">
+
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+
                                     <!-- Info -->
+
                                     <VerticalStackLayout Grid.Column="0" Spacing="4" VerticalOptions="Center" InputTransparent="True">
+
                                         <Label Text="{Binding Dto.Name}" FontSize="16" FontAttributes="Bold" TextColor="#F1F1F5" LineBreakMode="TailTruncation" MaxLines="1" />
+
                                         <HorizontalStackLayout Spacing="10">
+
                                             <Label Text="{Binding Dto.Email}" Style="{StaticResource MutedLabel}" />
+
                                             <Label Text="·" TextColor="#3A3A50" FontSize="12" VerticalOptions="Center" />
+
                                             <Label Text="{Binding Dto.PhoneNumber}" Style="{StaticResource MutedLabel}" />
+
                                         </HorizontalStackLayout>
+
                                           <HorizontalStackLayout Spacing="6">
+
                                               <Label Text="Chức vụ:" Style="{StaticResource MutedLabel}" />
+
                                               <Label Text="{Binding Dto.Position, Converter={StaticResource EnumText}}"
+
                                                      FontSize="12"
+
                                                      TextColor="{Binding Dto.Position, Converter={StaticResource PositionColor}}"
+
                                                      FontAttributes="Bold"
+
                                                      VerticalOptions="Center" />
+
                                           </HorizontalStackLayout>
+
                                           <HorizontalStackLayout Spacing="6">
+
                                               <Label Text="Trạng thái:" Style="{StaticResource MutedLabel}" />
+
                                               <Label Text="{Binding Dto.Status, Converter={StaticResource EnumText}}"
+
                                                      FontSize="12"
+
                                                      TextColor="{Binding Dto.Status, Converter={StaticResource StatusColor}}"
+
                                                      FontAttributes="Bold"
+
                                                      VerticalOptions="Center" />
+
                                           </HorizontalStackLayout>
+
                                           <HorizontalStackLayout Spacing="6">
+
                                               <Label Text="Lương:" Style="{StaticResource MutedLabel}" />
+
                                               <Label Text="{Binding SalaryText}"
+
                                                      FontSize="12"
+
                                                      TextColor="#34D399"
+
                                                      FontAttributes="Bold"
+
                                                      VerticalOptions="Center">
+
                                                   <Label.Triggers>
+
                                                       <DataTrigger TargetType="Label" Binding="{Binding HasSalary}" Value="False">
+
                                                           <Setter Property="TextColor" Value="#6B6B80" />
+
                                                       </DataTrigger>
+
                                                   </Label.Triggers>
+
                                               </Label>
+
                                           </HorizontalStackLayout>
+
                                     </VerticalStackLayout>
 
                                     <!-- Actions -->
+
                                     <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+
                                         <Button Text="✏ Sửa" 
+
                                                 Style="{StaticResource RowEdit}" 
+
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenEditFormCommand}" 
+
                                                 CommandParameter="{Binding .}" />
+
                                         <Button Text="💰 Sửa Lương" 
+
                                                 BackgroundColor="#122018" 
+
                                                 TextColor="#34D399" 
+
                                                 FontSize="12" CornerRadius="8" 
+
                                                 HeightRequest="32" 
+
                                                 WidthRequest="100" 
+
                                                 Padding="0" 
+
                                                 BorderColor="#1F3A2A" 
+
                                                 BorderWidth="1" 
+
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.OpenSalaryCommand}" 
+
                                                 CommandParameter="{Binding .}" />
+
                                         <Button Text="⚙ Trạng thái" 
+
                                                 BackgroundColor="#1E1E2E" 
+
                                                 TextColor="#818CF8" 
+
                                                 FontSize="12" 
+
                                                 CornerRadius="8"
+
                                                 HeightRequest="32" 
+
                                                 WidthRequest="110" 
+
                                                 Padding="0" 
+
                                                 Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RequestChangeStatusCommand}" 
+
                                                 CommandParameter="{Binding .}" />
+
                                     </HorizontalStackLayout>
+
                                 </Grid>
+
                             </Border>
+
                         </DataTemplate>
+
                     </CollectionView.ItemTemplate>
+
                 </CollectionView>
 
                 <!-- Loading -->
+
                 <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" InputTransparent="True" Color="#6366F1" HeightRequest="40" WidthRequest="40" VerticalOptions="Center" HorizontalOptions="Center" />
 
                 <!-- Empty -->
+
                 <VerticalStackLayout IsVisible="{Binding IsEmpty}" InputTransparent="True" VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+
                     <Label Text="—" FontSize="40" FontAttributes="Bold" TextColor="#2A2A38" HorizontalOptions="Center" />
+
                     <Label Text="Không có nhân viên" FontSize="16" FontAttributes="Bold" TextColor="#3A3A50" HorizontalOptions="Center" />
+
                     <Label Text="Nhấn ＋ Thêm để bắt đầu" FontSize="13" TextColor="#2A2A38" HorizontalOptions="Center" />
+
                 </VerticalStackLayout>
 
                 <!-- Error -->
+
                 <Border IsVisible="{Binding HasError}" InputTransparent="True" BackgroundColor="#1E1014" StrokeShape="RoundRectangle 8" StrokeThickness="1" Stroke="#3A1A1A" Margin="16,8" Padding="14,10" VerticalOptions="Start">
+
                     <Label Text="{Binding ErrorMessage}" TextColor="#EF4444" FontSize="13" />
+
                 </Border>
+
             </Grid>
 
             <!-- ROW 3: PAGINATION -->
+
             <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" Padding="16,10,16,16" ColumnSpacing="12">
+
                 <Button Grid.Column="0" Text="← Trước" Command="{Binding PreviousPageCommand}" IsEnabled="{Binding HasPreviousPage}" Style="{StaticResource GhostBtn}" Padding="16,0" />
+
                 <HorizontalStackLayout Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center" Spacing="4" InputTransparent="True">
+
                     <Label Text="{Binding CurrentPage}" FontSize="14" FontAttributes="Bold" TextColor="#6366F1" VerticalOptions="Center" />
+
                     <Label Text="/" FontSize="13" TextColor="#3A3A50" VerticalOptions="Center" />
+
                     <Label Text="{Binding TotalPages}" FontSize="13" TextColor="#6B6B80" VerticalOptions="Center" />
+
                 </HorizontalStackLayout>
+
                 <Button Grid.Column="2" Text="Tiếp →" Command="{Binding NextPageCommand}" IsEnabled="{Binding HasNextPage}" Style="{StaticResource GhostBtn}" Padding="16,0" />
+
             </Grid>
 
         </Grid>
 
         <!-- ══ OVERLAY: FORM ADD/EDIT ══ -->
+
         <Grid IsVisible="{Binding IsFormVisible}" ZIndex="20">
+
             <BoxView BackgroundColor="#70000010" InputTransparent="False">
+
                 <BoxView.GestureRecognizers>
+
                     <TapGestureRecognizer Command="{Binding CloseFormCommand}" />
+
                 </BoxView.GestureRecognizers>
+
             </BoxView>
+
             <Border BackgroundColor="#111118" StrokeShape="RoundRectangle 14" Stroke="#2A2A38" StrokeThickness="1" Margin="20,0" MaximumWidthRequest="650" VerticalOptions="Center" HorizontalOptions="Center" Padding="28,24">
+
                 <ScrollView Padding="0,0,20,0">
+
                     <VerticalStackLayout Spacing="0">
 
                         <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
+
                             <Label Grid.Column="0" Text="{Binding FormTitle}" FontSize="20" FontAttributes="Bold" TextColor="#F1F1F5" VerticalOptions="Center" />
+
                             <Button Grid.Column="1" Text="✕" Command="{Binding CloseFormCommand}" BackgroundColor="Transparent" TextColor="#3A3A50" FontSize="18" Padding="0" WidthRequest="32" HeightRequest="32" />
+
                         </Grid>
 
                         <!-- Name + Email -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
                             <VerticalStackLayout Grid.Column="0">
+
                                 <Label Text="TÊN NHÂN VIÊN *" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}" Padding="0">
+
                                     <Entry Text="{Binding FormName}" Placeholder="Nhập tên..." Style="{StaticResource FormEntry}" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                             <VerticalStackLayout Grid.Column="1">
+
                                 <Label Text="EMAIL *" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}" Padding="0">
+
                                     <Entry Text="{Binding FormEmail}" Placeholder="email@..." Keyboard="Email" Style="{StaticResource FormEntry}" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                         </Grid>
 
                         <!-- Address + Phone -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
                             <VerticalStackLayout Grid.Column="0">
+
                                 <Label Text="ĐỊA CHỈ" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}" Padding="0">
+
                                     <Entry Text="{Binding FormAddress}" Placeholder="Địa chỉ..." Style="{StaticResource FormEntry}" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                             <VerticalStackLayout Grid.Column="1">
+
                                 <Label Text="SỐ ĐIỆN THOẠI" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}" Padding="0">
+
                                     <Entry Text="{Binding FormPhoneNumber}" Placeholder="Số điện thoại..." Keyboard="Telephone" Style="{StaticResource FormEntry}" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                         </Grid>
 
                         <!-- Gender + Position -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
                             <VerticalStackLayout Grid.Column="0">
+
                                 <Label Text="GIỚI TÍNH" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource PickerBorder}" Padding="0,0">
+
                                     <Grid ColumnDefinitions="*,Auto" Padding="12,0,12,0">
+
                                         <Label Text="{Binding SelectedFormGenderText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+
                                         <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+
                                         <Grid.GestureRecognizers>
+
                                             <TapGestureRecognizer Tapped="OnEmployeeFormGenderTapped" />
+
                                         </Grid.GestureRecognizers>
+
                                     </Grid>
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                             <VerticalStackLayout Grid.Column="1">
+
                                 <Label Text="CHỨC VỤ *" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource PickerBorder}" Padding="0,0">
+
                                     <Grid ColumnDefinitions="*,Auto" Padding="12,0,12,0">
+
                                         <Label Text="{Binding SelectedFormPositionText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+
                                         <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+
                                         <Grid.GestureRecognizers>
+
                                             <TapGestureRecognizer Tapped="OnEmployeeFormPositionTapped" />
+
                                         </Grid.GestureRecognizers>
+
                                     </Grid>
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                         </Grid>
 
                         <!-- Status + Date of Birth -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
                             <VerticalStackLayout Grid.Column="0">
+
                                 <Label Text="TRẠNG THÁI" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource PickerBorder}" Padding="0,0">
+
                                     <Grid ColumnDefinitions="*,Auto" Padding="12,0,12,0">
+
                                         <Label Text="{Binding SelectedFormStatusText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+
                                         <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+
                                         <Grid.GestureRecognizers>
+
                                             <TapGestureRecognizer Tapped="OnEmployeeFormStatusTapped" />
+
                                         </Grid.GestureRecognizers>
+
                                     </Grid>
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                             <VerticalStackLayout Grid.Column="1">
+
                                 <Label Text="NGÀY SINH" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}">
+
                                     <DatePicker Date="{Binding FormDateOfBirth}" 
+
                                                 Format="dd/MM/yyyy" 
+
                                                 TextColor="#C4C4D4"
+
                                                 BackgroundColor="Transparent" 
+
                                                 VerticalOptions="Center"
+
                                                 WidthRequest="280" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                         </Grid>
 
                         <!-- Start Date + End Date -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+
                             <VerticalStackLayout Grid.Column="0">
+
                                 <Label Text="NGÀY BẮT ĐẦU" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}">
+
                                     <DatePicker Date="{Binding FormStartDate}" 
+
                                                 Format="dd/MM/yyyy" 
+
                                                 TextColor="#C4C4D4" 
+
                                                 BackgroundColor="Transparent" 
+
                                                 VerticalOptions="Center" 
+
                                                 WidthRequest="280" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                             <VerticalStackLayout Grid.Column="1">
+
                                 <Label Text="NGÀY KẾT THÚC" Style="{StaticResource FieldLabel}" />
+
                                 <Border Style="{StaticResource InputBorder}">
+
                                     <DatePicker Date="{Binding FormEndDate, TargetNullValue={x:Static sys:DateTime.Today}}" 
+
                                                 Format="dd/MM/yyyy" 
+
                                                 TextColor="#C4C4D4" 
+
                                                 BackgroundColor="Transparent" 
+
                                                 VerticalOptions="Center" 
+
                                                 WidthRequest="280" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                         </Grid>
 
                         <!-- Error -->
+
                         <Border IsVisible="{Binding HasFormError}" BackgroundColor="#1E1014" StrokeShape="RoundRectangle 8" StrokeThickness="1" Stroke="#3A1A1A" Padding="12,8" Margin="0,12,0,0">
+
                             <Label Text="{Binding FormErrorMessage}" TextColor="#EF4444" FontSize="13" />
+
                         </Border>
 
                         <!-- Buttons -->
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,16,0,0">
+
                             <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CloseFormCommand}" />
+
                             <Button Grid.Column="1" Text="{Binding FormSaveText}" Style="{StaticResource AccentBtn}" Command="{Binding SaveFormCommand}" />
+
                         </Grid>
 
                     </VerticalStackLayout>
+
                 </ScrollView>
+
             </Border>
+
         </Grid>
 
         <!-- ══ OVERLAY: CHANGE STATUS ══ -->
+
         <Grid IsVisible="{Binding IsStatusConfirmVisible}" ZIndex="30">
+
             <BoxView BackgroundColor="#70000010" />
+
             <Border BackgroundColor="#111118" StrokeShape="RoundRectangle 14" Stroke="#3A1A1A" StrokeThickness="1" Margin="48,0" WidthRequest="400" VerticalOptions="Center" HorizontalOptions="Center" Padding="28,24">
+
                 <VerticalStackLayout Spacing="14">
+
                     <Label Text="Thay đổi trạng thái" FontSize="18" FontAttributes="Bold" TextColor="#F1F1F5" HorizontalOptions="Center" />
+
                     <Label Text="{Binding StatusConfirmName}" FontSize="14" TextColor="#6B6B80" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+
                     <Border Style="{StaticResource PickerBorder}" Padding="0,0">
+
                         <Grid ColumnDefinitions="*,Auto" Padding="12,0,12,0">
+
                             <Label Text="{Binding SelectedNewStatusText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+
                             <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+
                             <Grid.GestureRecognizers>
+
                                 <TapGestureRecognizer Tapped="OnNewStatusTapped" />
+
                             </Grid.GestureRecognizers>
+
                         </Grid>
+
                     </Border>
+
                     <BoxView HeightRequest="1" BackgroundColor="#2A2A38" Margin="0,4,0,4" />
+
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+
                         <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CancelChangeStatusCommand}" />
+
                         <Button Grid.Column="1" Text="Xác nhận" Style="{StaticResource AccentBtn}" Command="{Binding ConfirmChangeStatusCommand}" />
+
                     </Grid>
+
                 </VerticalStackLayout>
+
             </Border>
+
         </Grid>
 
         <!-- ══ OVERLAY: POPUP ERROR ══ -->
+
         <Grid IsVisible="{Binding IsPopupVisible}" ZIndex="40">
+
             <BoxView BackgroundColor="#70000010" />
+
             <Border BackgroundColor="#111118" StrokeShape="RoundRectangle 14" Stroke="#2A2A38" StrokeThickness="1" Margin="48,0" MaximumWidthRequest="360" VerticalOptions="Center" HorizontalOptions="Center" Padding="28,24">
+
                 <VerticalStackLayout Spacing="12">
+
                     <Label Text="{Binding PopupTitle}" FontSize="17" FontAttributes="Bold" TextColor="#F1F1F5" HorizontalOptions="Center" />
+
                     <Label Text="{Binding PopupMessage}" FontSize="13" TextColor="#6B6B80" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+
                     <Button Text="{Binding PopupButtonText}" IsVisible="{Binding IsPopupRetry}" Command="{Binding RetryLoadCommand}" Style="{StaticResource AccentBtn}" />
+
                     <Button Text="Đóng" IsVisible="{Binding IsPopupNotRetry}" Command="{Binding ClosePopupCommand}" Style="{StaticResource GhostBtn}" />
+
                 </VerticalStackLayout>
+
             </Border>
+
         </Grid>
 
         <!-- ══ OVERLAY: SALARY FORM ══ -->
+
         <Grid IsVisible="{Binding IsSalaryFormVisible}" ZIndex="26">
+
             <BoxView BackgroundColor="#70000010" />
+
             <Border BackgroundColor="#111118" StrokeShape="RoundRectangle 14" Stroke="#2A2A38" StrokeThickness="1" Margin="48,0" WidthRequest="520" VerticalOptions="Center" HorizontalOptions="Center" Padding="24,18">
+
                 <ScrollView>
+
                     <VerticalStackLayout Spacing="10">
+
                         <Label Text="{Binding SalaryFormTitle}" FontSize="18" FontAttributes="Bold" TextColor="#F1F1F5" HorizontalOptions="Center" />
+
                         <Label Text="{Binding SalaryEmployeeName}" FontSize="13" TextColor="#6B6B80" HorizontalOptions="Center" />
 
                         <Label Text="Mức lương" Style="{StaticResource FieldLabel}" />
+
                         <Border Style="{StaticResource InputBorder}" Padding="0,0">
+
                             <Entry Text="{Binding SalaryFormSalary, StringFormat='{0:N0}'}" Keyboard="Numeric" Style="{StaticResource FormEntry}" Placeholder="0" />
+
                         </Border>
 
                         <Label Text="Số đơn vị (ngày/giờ)" Style="{StaticResource FieldLabel}" />
+
                         <Border Style="{StaticResource InputBorder}" Padding="0,0">
+
                             <Entry Text="{Binding SalaryFormUnit}" Keyboard="Numeric" Style="{StaticResource FormEntry}" Placeholder="1" />
+
                         </Border>
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+
                             <VerticalStackLayout Grid.Column="0" Spacing="6">
+
                                 <Label Text="Loại lương" Style="{StaticResource FieldLabel}" Margin="0,0,0,5" />
+
                                 <Border Style="{StaticResource PickerBorder}" Padding="0,0">
+
                                     <Grid ColumnDefinitions="*,Auto" Padding="12,0">
+
                                         <Label Text="{Binding SelectedSalaryFormTypeText}" TextColor="#F1F1F5" VerticalOptions="Center" LineBreakMode="TailTruncation" MaxLines="1" />
+
                                         <Label Grid.Column="1" Text="▾" TextColor="#6B6B80" VerticalOptions="Center" />
+
                                         <Grid.GestureRecognizers>
+
                                             <TapGestureRecognizer Tapped="OnSalaryTypeTapped" />
+
                                         </Grid.GestureRecognizers>
+
                                     </Grid>
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                             <VerticalStackLayout Grid.Column="1" Spacing="6">
+
                                 <Label Text="Hiệu lực từ" Style="{StaticResource FieldLabel}" Margin="0,0,0,5" />
+
                                 <Border Style="{StaticResource InputBorder}" Padding="0,0">
+
                                     <DatePicker Date="{Binding SalaryFormEffectiveFrom}"
+
                                                 Format="dd/MM/yyyy"
+
                                                 TextColor="#C4C4D4"
+
                                                 BackgroundColor="Transparent"
+
                                                 VerticalOptions="Center"
+
                                                 MinimumWidthRequest="230" />
+
                                 </Border>
+
                             </VerticalStackLayout>
+
                         </Grid>
 
                         <Label Text="Ghi chú" Style="{StaticResource FieldLabel}" />
+
                         <Border Style="{StaticResource InputBorder}" Padding="0,0" HeightRequest="88">
+
                             <Editor Text="{Binding SalaryFormNote}" TextColor="#F1F1F5" BackgroundColor="Transparent" AutoSize="TextChanges" />
+
                         </Border>
 
                         <Border IsVisible="{Binding HasSalaryFormError}" BackgroundColor="#1E1014" StrokeShape="RoundRectangle 8" StrokeThickness="1" Stroke="#3A1A1A" Padding="12,8" Margin="0,12,0,0">
+
                             <Label Text="{Binding SalaryFormErrorMessage}" TextColor="#EF4444" FontSize="13" />
+
                         </Border>
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,16,0,0">
+
                             <Button Grid.Column="0" Text="Hủy" Style="{StaticResource GhostBtn}" Command="{Binding CloseSalaryFormCommand}" />
+
                             <Button Grid.Column="1" Text="{Binding SalaryFormSaveText}" Style="{StaticResource AccentBtn}" Command="{Binding SaveSalaryFormCommand}" />
+
                         </Grid>
+
                     </VerticalStackLayout>
+
                 </ScrollView>
+
             </Border>
+
         </Grid>
+
     </Grid>
+
 </ContentPage>
+

@@ -1,86 +1,140 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using AutoX.Gara.Shared.Enums;
+using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Customers;
+
 using AutoX.Gara.Frontend.Abstractions;
-using AutoX.Gara.Shared.Enums;
+
+using Nalix.Common.Networking.Protocols;
+
 using AutoX.Gara.Shared.Protocol.Customers;
+
 using System.Collections.Concurrent;
+
 using System.Collections.Generic;
 
 namespace AutoX.Gara.Frontend.Services.Customers;
 
 /// <summary>
-/// Key duy nh?t cho m?t t?p tham s? truy vụn.
-/// C# record t? sinh <c>Equals</c> + <c>GetHashCode</c> dúng —
-/// dùng du?c tr?c ti?p làm key c?a <see cref="ConcurrentDictionary{TKey,TValue}"/>.
+
+/// Key duy nh?t cho m?t t?p tham s? truy v?n.
+
+/// C# record t? sinh <c>Equals</c> + <c>GetHashCode</c> d�ng �
+
+/// d�ng du?c tr?c ti?p l�m key c?a <see cref="ConcurrentDictionary{TKey,TValue}"/>.
+
 /// </summary>
+
 public sealed record CustomerCacheKey(
-    System.Int32 Page,
-    System.Int32 PageSize,
-    System.String SearchTerm,
+
+    int Page,
+
+    int PageSize,
+
+    string SearchTerm,
+
     CustomerSortField SortBy,
-    System.Boolean SortDescending,
+
+    bool SortDescending,
+
     CustomerType FilterType,
+
     MembershipLevel FilterMembership);
 
 /// <summary>
-/// M?t entry trong cache g?m d? li?u và th?i di?m h?t h?n.
+
+/// M?t entry trong cache g?m d? li?u v� th?i di?m h?t h?n.
+
 /// </summary>
+
 public sealed class CustomerCacheEntry
+
 {
     public required List<CustomerDto> Customers { get; init; }
-    public required System.Int32 TotalCount { get; init; }
-    public required System.DateTime ExpiresAt { get; init; }
+
+    public required int TotalCount { get; init; }
+
+    public required DateTime ExpiresAt { get; init; }
 
     /// <summary>
-    /// <c>true</c> khi entry dã quá TTL và không còn h?p l?.
+
+    /// <c>true</c> khi entry d� qu� TTL v� kh�ng c�n h?p l?.
+
     /// </summary>
-    public System.Boolean IsExpired => System.DateTime.UtcNow >= ExpiresAt;
+
+    public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
 }
 
 /// <summary>
-/// In-memory cache thread-safe vụi TTL 30 giây.
+
+/// In-memory cache thread-safe v?i TTL 30 gi�y.
+
 /// <para>
-/// Vòng đổi cache: mới (page, pageSize, search, filter, sort) là m?t entry d?c l?p.
-/// Khi user th?c hi?n write operation, toàn b? cache b? xóa d? tránh stale data.
+
+/// V�ng d?i cache: m?i (page, pageSize, search, filter, sort) l� m?t entry d?c l?p.
+
+/// Khi user th?c hi?n write operation, to�n b? cache b? x�a d? tr�nh stale data.
+
 /// </para>
+
 /// </summary>
+
 public sealed class CustomerQueryCache : ICustomerQueryCache
+
 {
-    /// <summary>TTL 30 giây — d? d? tránh duplicate request khi navigate, d? ng?n d? data không stale.</summary>
-    private static readonly System.TimeSpan Ttl = System.TimeSpan.FromSeconds(30);
+    /// <summary>TTL 30 gi�y � d? d? tr�nh duplicate request khi navigate, d? ng?n d? data kh�ng stale.</summary>
+
+    private static readonly TimeSpan Ttl = TimeSpan.FromSeconds(30);
 
     private readonly ConcurrentDictionary<CustomerCacheKey, CustomerCacheEntry> _store = new();
 
     /// <inheritdoc/>
-    public System.Boolean TryGet(CustomerCacheKey key, out CustomerCacheEntry? entry)
+
+    public bool TryGet(CustomerCacheKey key, out CustomerCacheEntry? entry)
+
     {
         if (_store.TryGetValue(key, out entry) && !entry.IsExpired)
+
         {
             return true;
+
         }
 
-        // Entry t?n Tải nhung dã h?t h?n ? xóa luôn d? tránh tích luy b? nh?
+        // Entry t?n T?i nhung d� h?t h?n ? x�a lu�n d? tr�nh t�ch luy b? nh?
+
         if (entry is not null)
+
         {
             _store.TryRemove(key, out _);
+
         }
 
         entry = null;
+
         return false;
+
     }
 
     /// <inheritdoc/>
-    public void Set(CustomerCacheKey key, List<CustomerDto> customers, System.Int32 totalCount)
+
+    public void Set(CustomerCacheKey key, List<CustomerDto> customers, int totalCount)
+
     {
         _store[key] = new CustomerCacheEntry
+
         {
             Customers = customers,
+
             TotalCount = totalCount,
-            ExpiresAt = System.DateTime.UtcNow.Add(Ttl)
+
+            ExpiresAt = DateTime.UtcNow.Add(Ttl)
+
         };
+
     }
 
     /// <inheritdoc/>
+
     public void Invalidate() => _store.Clear();
 }

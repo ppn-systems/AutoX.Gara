@@ -1,235 +1,138 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Payments;
+
 using AutoX.Gara.Domain.Enums.Transactions;
+
 using AutoX.Gara.Frontend.Results.Billings;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Invoices;
-using Microsoft.Extensions.Logging;
+
 using Nalix.Common.Networking.Protocols;
+
+using AutoX.Gara.Shared.Protocol.Invoices;
+
+using Microsoft.Extensions.Logging;
+
+using Nalix.Common.Networking.Protocols;
+
 using Nalix.Framework.Injection;
+
 using Nalix.Framework.Random;
+
 using Nalix.SDK.Transport;
+
 using Nalix.SDK.Transport.Extensions;
+
 using Nalix.Framework.DataFrames.SignalFrames;
 
 namespace AutoX.Gara.Frontend.Services.Invoices;
 
 public sealed class TransactionService
+
 {
-    private const System.Int32 RequestTimeoutMs = 10_000;
+    private const int RequestTimeoutMs = 10_000;
+
     private readonly TransactionQueryCache _cache;
 
     public TransactionService(TransactionQueryCache cache)
+
         => _cache = cache ?? throw new System.ArgumentNullException(nameof(cache));
 
     public async System.Threading.Tasks.Task<TransactionListResult> GetListAsync(
-        System.Int32 page,
-        System.Int32 pageSize,
-        System.Int32 filterInvoiceId,
-        System.String? searchTerm = null,
+
+        int page,
+
+        int pageSize,
+
+        int filterInvoiceId,
+
+        string? searchTerm = null,
+
         TransactionSortField sortBy = TransactionSortField.TransactionDate,
-        System.Boolean sortDescending = true,
+
+        bool sortDescending = true,
+
         TransactionType? filterType = null,
+
         TransactionStatus? filterStatus = null,
+
         PaymentMethod? filterPaymentMethod = null,
+
         System.Threading.CancellationToken ct = default)
+
     {
-        TransactionCacheKey key = new(
-            page, pageSize,
-            searchTerm ?? System.String.Empty,
-            sortBy, sortDescending,
-            filterInvoiceId,
-            filterType, filterStatus, filterPaymentMethod);
+        TransactionCacheKey key = new(page, pageSize, searchTerm ?? "", sortBy, sortDescending, filterInvoiceId, filterType, filterStatus, filterPaymentMethod);
 
         if (_cache.TryGet(key, out TransactionCacheEntry? cached))
+
         {
-            System.Boolean hasMore = page * pageSize < cached!.TotalCount;
-            return TransactionListResult.Success(cached.Transactions, cached.TotalCount, hasMore);
+            return TransactionListResult.Success(cached.Transactions, cached.TotalCount, page * pageSize < cached.TotalCount);
+
         }
 
         try
+
         {
-            System.UInt32 sq = Csprng.NextUInt32();
-            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
+            TcpSession client = InstanceManager.Instance.GetExistingInstance<TcpSession>()!;
 
-            TransactionQueryRequest packet = new()
+            TransactionQueryRequest packet = new() { Page = page, PageSize = pageSize, SearchTerm = searchTerm ?? "", SortBy = sortBy, SortDescending = sortDescending, FilterInvoiceId = filterInvoiceId, FilterType = filterType, FilterStatus = filterStatus, FilterPaymentMethod = filterPaymentMethod, OpCode = (System.UInt16)OpCommand.TRANSACTION_GET };
+
+            Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(packet, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(RequestTimeoutMs).WithEncrypt(), predicate: p => p is TransactionQueryResponse or Directive, ct: ct).ConfigureAwait(false);
+
+            if (r is TransactionQueryResponse resp)
+
             {
-                SequenceId = sq,
-                Page = page,
-                PageSize = pageSize,
-                SearchTerm = searchTerm ?? System.String.Empty,
-                SortBy = sortBy,
-                SortDescending = sortDescending,
-                FilterInvoiceId = filterInvoiceId,
-                FilterType = filterType,
-                FilterStatus = filterStatus,
-                FilterPaymentMethod = filterPaymentMethod,
-                OpCode = (System.UInt16)OpCommand.TRANSACTION_GET
-            };
+                _cache.Set(key, resp.Transactions, resp.TotalCount);
 
-            System.Threading.Tasks.TaskCompletionSource<TransactionListResult> tcs =
-                new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+                return TransactionListResult.Success(resp.Transactions, resp.TotalCount, page * pageSize < resp.TotalCount);
 
-            System.IDisposable? sub = null;
-            System.IDisposable? errSub = null;
-
-            sub = client.OnOnce<TransactionQueryResponse>(
-                predicate: p => p.SequenceId == sq,
-                handler: resp =>
-                {
-                    sub?.Dispose();
-                    errSub?.Dispose();
-                    _cache.Set(key, resp.Transactions, resp.TotalCount);
-                    System.Boolean hasMore = page * pageSize < resp.TotalCount;
-                    tcs.TrySetResult(TransactionListResult.Success(resp.Transactions, resp.TotalCount, hasMore));
-                });
-
-            errSub = client.OnOnce<Directive>(
-                predicate: p => p.SequenceId == sq,
-                handler: resp =>
-                {
-                    sub?.Dispose();
-                    errSub?.Dispose();
-                    tcs.TrySetResult(TransactionListResult.Failure(MapErrorReason(resp.Reason), resp.Action));
-                });
-
-            await client.SendAsync(packet, ct).ConfigureAwait(false);
-
-            using System.Threading.CancellationTokenSource cts =
-                System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
-            System.Threading.Tasks.Task timeoutTask = System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
-            System.Threading.Tasks.Task winner = await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
-            cts.Cancel();
-
-            if (!ReferenceEquals(winner, tcs.Task))
-            {
-                sub?.Dispose();
-                errSub?.Dispose();
-                return TransactionListResult.Timeout();
             }
 
-            return await tcs.Task.ConfigureAwait(false);
+            if (r is Directive err) return TransactionListResult.Failure(err.Reason.ToString(), err.Action);
+
+            return TransactionListResult.Failure("Unknown response", ProtocolAdvice.NONE);
+
         }
-        catch (System.OperationCanceledException)
-        {
-            return TransactionListResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
-        }
-        catch (System.Exception ex)
-        {
-            LogException(ex);
-            return TransactionListResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
-        }
+
+        catch (Exception ex) { return TransactionListResult.Failure(ex.Message, ProtocolAdvice.NONE); }
+
     }
 
-    public async System.Threading.Tasks.Task<TransactionWriteResult> CreateAsync(TransactionDto data, System.Threading.CancellationToken ct = default)
-        => await SendWritePacketAsync((System.UInt16)OpCommand.TRANSACTION_CREATE, data, expectEcho: true, ct).ConfigureAwait(false);
+    public async System.Threading.Tasks.Task<TransactionWriteResult> CreateAsync(TransactionDto data, System.Threading.CancellationToken ct = default) => await SendWriteAsync((System.UInt16)OpCommand.TRANSACTION_CREATE, data, true, ct);
 
-    public async System.Threading.Tasks.Task<TransactionWriteResult> UpdateAsync(TransactionDto data, System.Threading.CancellationToken ct = default)
-        => await SendWritePacketAsync((System.UInt16)OpCommand.TRANSACTION_UPDATE, data, expectEcho: true, ct).ConfigureAwait(false);
+    public async System.Threading.Tasks.Task<TransactionWriteResult> UpdateAsync(TransactionDto data, System.Threading.CancellationToken ct = default) => await SendWriteAsync((System.UInt16)OpCommand.TRANSACTION_UPDATE, data, true, ct);
 
-    public async System.Threading.Tasks.Task<TransactionWriteResult> DeleteAsync(TransactionDto data, System.Threading.CancellationToken ct = default)
-        => await SendWritePacketAsync((System.UInt16)OpCommand.TRANSACTION_DELETE, data, expectEcho: false, ct).ConfigureAwait(false);
+    public async System.Threading.Tasks.Task<TransactionWriteResult> DeleteAsync(TransactionDto data, System.Threading.CancellationToken ct = default) => await SendWriteAsync((System.UInt16)OpCommand.TRANSACTION_DELETE, data, false, ct);
 
-    private async System.Threading.Tasks.Task<TransactionWriteResult> SendWritePacketAsync(
-        System.UInt16 opcode,
-        TransactionDto data,
-        System.Boolean expectEcho,
-        System.Threading.CancellationToken ct)
+    private async System.Threading.Tasks.Task<TransactionWriteResult> SendWriteAsync(System.UInt16 op, TransactionDto data, bool echo, System.Threading.CancellationToken ct)
+
     {
         try
+
         {
-            System.UInt32 sq = Csprng.NextUInt32();
-            TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
+            data.OpCode = op;
 
-            data.OpCode = opcode;
-            data.SequenceId = sq;
+            TcpSession client = InstanceManager.Instance.GetExistingInstance<TcpSession>()!;
 
-            System.Threading.Tasks.TaskCompletionSource<TransactionWriteResult> tcs =
-                new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+            Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(data, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(RequestTimeoutMs).WithEncrypt(), predicate: p => (echo && p is TransactionDto) || p is Directive, ct: ct).ConfigureAwait(false);
 
-            System.IDisposable? echoSub = null;
-            System.IDisposable? errSub = null;
+            if (echo && r is TransactionDto confirmed) return TransactionWriteResult.Success(confirmed);
 
-            if (expectEcho)
+            if (r is Directive resp)
+
             {
-                echoSub = client.OnOnce<TransactionDto>(
-                    predicate: p => p.SequenceId == sq,
-                    handler: confirmed =>
-                    {
-                        echoSub?.Dispose();
-                        errSub?.Dispose();
-                        tcs.TrySetResult(TransactionWriteResult.Success(confirmed));
-                    });
+                if (resp.Type == ControlType.NONE) { _cache.Invalidate(); return TransactionWriteResult.Success(); }
+
+                return TransactionWriteResult.Failure(resp.Reason.ToString(), resp.Action);
+
             }
 
-            errSub = client.OnOnce<Directive>(
-                predicate: p => p.SequenceId == sq,
-                handler: resp =>
-                {
-                    echoSub?.Dispose();
-                    errSub?.Dispose();
-                    TransactionWriteResult result = resp.Type == ControlType.NONE
-                        ? TransactionWriteResult.Success()
-                        : TransactionWriteResult.Failure(MapErrorReason(resp.Reason), resp.Action);
-                    tcs.TrySetResult(result);
-                });
+            return TransactionWriteResult.Failure("Unknown", ProtocolAdvice.NONE);
 
-            await client.SendAsync(data, ct).ConfigureAwait(false);
-
-            using System.Threading.CancellationTokenSource cts =
-                System.Threading.CancellationTokenSource.CreateLinkedTokenSource(ct);
-            System.Threading.Tasks.Task timeoutTask = System.Threading.Tasks.Task.Delay(RequestTimeoutMs, cts.Token);
-            System.Threading.Tasks.Task winner = await System.Threading.Tasks.Task.WhenAny(tcs.Task, timeoutTask).ConfigureAwait(false);
-            cts.Cancel();
-
-            if (!ReferenceEquals(winner, tcs.Task))
-            {
-                echoSub?.Dispose();
-                errSub?.Dispose();
-                return TransactionWriteResult.Timeout();
-            }
-
-            TransactionWriteResult final = await tcs.Task.ConfigureAwait(false);
-            if (final.IsSuccess)
-            {
-                _cache.Invalidate();
-            }
-            return final;
         }
-        catch (System.OperationCanceledException)
-        {
-            return TransactionWriteResult.Failure("Yêu cầu bị hủy.", ProtocolAdvice.NONE);
-        }
-        catch (System.Exception ex)
-        {
-            LogException(ex);
-            return TransactionWriteResult.Failure($"Lỗi không xác định: {ex.Message}", ProtocolAdvice.DO_NOT_RETRY);
-        }
-    }
 
-    private static System.String MapErrorReason(ProtocolReason reason)
-        => reason switch
-        {
-            ProtocolReason.NOT_FOUND => "Không tìm thấy giao dịch.",
-            ProtocolReason.MALFORMED_PACKET => "Dữ liệu không hợp lệ.",
-            ProtocolReason.VALIDATION_FAILED => "Dữ liệu không hợp lệ.",
-            ProtocolReason.INTERNAL_ERROR => "Lỗi hệ thống. Vui lòng thử lại sau.",
-            ProtocolReason.FORBIDDEN => "Bạn không có quyền thực hiện thao tác này.",
-            ProtocolReason.UNAUTHENTICATED => "Bạn không có quyền thực hiện thao tác này.",
-            ProtocolReason.RATE_LIMITED => "Bạn đang thao tác quá nhanh. Vui lòng chờ một chút.",
-            ProtocolReason.TIMEOUT => "Máy chủ phản hồi hết hạn. Vui lòng thử lại.",
-            _ => "Thao tác thất bại. Vui lòng thử lại."
-        };
+        catch (Exception ex) { return TransactionWriteResult.Failure(ex.Message, ProtocolAdvice.NONE); }
 
-    private static void LogException(System.Exception ex)
-    {
-        ILogger logger = InstanceManager.Instance.GetOrCreateInstance<ILogger>();
-        logger.Error(ex.ToString());
-        if (ex.InnerException is not null)
-        {
-            logger.Error("Inner: " + ex.InnerException);
-        }
     }
 }
-

@@ -1,8 +1,7 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Models.Results.Accounts;
-using AutoX.Gara.Frontend.Results.Accounts;
 using AutoX.Gara.Shared.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,108 +10,79 @@ using Nalix.Framework.Injection;
 using Nalix.Framework.Tasks;
 using Nalix.SDK.Transport;
 using Nalix.Framework.DataFrames.SignalFrames;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AutoX.Gara.UI.ViewModels;
 
 /// <summary>
-/// <para>ViewModel cho m�n h�nh dang nh?p.</para>
-/// <para>
-/// Tr�ch nhi?m duy nh?t (SRP):
-///   - Qu?n l� tr?ng th�i UI (IsLoading, HasError, Popup...)
-///   - �i?u ph?i lu?ng: validate ? connect ? login ? navigate
-/// </para>
-/// <para>Kh�ng ch?a: network code, navigation code, validation rules.</para>
+/// ViewModel quản lý luồng nghiệp vụ cho màn hình Đăng nhập.
+/// Áp dụng Pattern MVVM chuẩn công nghiệp, SRP và Clean Code.
 /// </summary>
 public sealed partial class LoginViewModel : ObservableObject
 {
-    // --- Dependencies (DI) ---------------------------------------------------
-
     private readonly IAccountService _loginService;
     private readonly INavigationService _navigation;
+    private CancellationTokenSource? _loginCts;
 
-    // --- Cancellation --------------------------------------------------------
+    [ObservableProperty] private bool _hasError;
+    [ObservableProperty] private bool _isNetworkReady;
+    [ObservableProperty] private bool _isLoading = true;
+    [ObservableProperty] private bool _isPasswordHidden = true;
+    [ObservableProperty] private string? _errorMessage;
+    [ObservableProperty] private string _username = string.Empty;
+    [ObservableProperty] private string _password = string.Empty;
 
-    /// <summary>
-    /// Token d? H?y login dang cH?y khi user b?m n�t kh�c / tho�t m�n h�nh.
-    /// </summary>
-    private System.Threading.CancellationTokenSource? _loginCts;
+    // -- Popup State --
+    [ObservableProperty] private bool _isPopupRetry;
+    [ObservableProperty] private bool _isPopupVisible;
+    [ObservableProperty] private string _popupButtonText = "OK";
+    [ObservableProperty] private string _popupTitle = string.Empty;
+    [ObservableProperty] private string _popupMessage = string.Empty;
 
-    // --- Observable Properties -----------------------------------------------
-
-    [ObservableProperty] public partial System.Boolean HasError { get; set; }
-    [ObservableProperty] public partial System.Boolean IsNetworkReady { get; set; }
-    [ObservableProperty] public partial System.Boolean IsLoading { get; set; } = true;
-    [ObservableProperty] public partial System.Boolean IsPasswordHidden { get; set; } = true;
-
-    [ObservableProperty] public partial System.String? ErrorMessage { get; set; }
-    [ObservableProperty] public partial System.String Username { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial System.String Password { get; set; } = System.String.Empty;
-
-    // -- Popup -----------------------------------------------------------------
-
-    [ObservableProperty] public partial System.Boolean IsPopupRetry { get; set; }
-    [ObservableProperty] public partial System.Boolean IsPopupVisible { get; set; }
-    [ObservableProperty] public partial System.String PopupButtonText { get; set; } = "OK";
-    [ObservableProperty] public partial System.String PopupTitle { get; set; } = System.String.Empty;
-    [ObservableProperty] public partial System.String PopupMessage { get; set; } = System.String.Empty;
-
-
-    // -- Computed --------------------------------------------------------------
-
-    public System.Boolean IsPopupNotRetry => !IsPopupRetry;
-    public System.Boolean IsNetworkNotReady => !IsNetworkReady;
-    public System.String PasswordIcon => IsPasswordHidden ? "eye_off.png" : "eye.png";
-
-
-    // --- Constructor ---------------------------------------------------------
+    // -- Computed Properties --
+    public bool IsPopupNotRetry => !IsPopupRetry;
+    public bool IsNetworkNotReady => !IsNetworkReady;
+    public string PasswordIcon => IsPasswordHidden ? "eye_off.png" : "eye.png";
 
     /// <summary>
-    /// Constructor nh?n dependencies qua DI � d? unit test hon <c>InstanceManager</c>.
-    /// N?u chua d�ng DI container, b?n c� th? d�ng constructor m?c d?nh b�n du?i.
+    /// Khởi tạo ViewModel với các dependencies được inject từ MauiProgram.
     /// </summary>
     public LoginViewModel(IAccountService loginService, INavigationService navigation)
     {
-        _loginService = loginService;
-        _navigation = navigation;
+        _loginService = loginService ?? throw new ArgumentNullException(nameof(loginService));
+        _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
 
+        // Tự động khởi tạo kết nối khi ViewModel được tạo
         _ = InitConnectionAsync();
     }
 
-    // --- Property Change Hooks ------------------------------------------------
-
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
-
     partial void OnIsNetworkReadyChanged(bool value) => OnPropertyChanged(nameof(IsNetworkNotReady));
 
+    /// <summary>
+    /// Xử lý lệnh đăng nhập. Bao gồm validate, auth và chuyển trang.
+    /// </summary>
     [RelayCommand]
-    private async System.Threading.Tasks.Task LoginAsync()
+    private async Task LoginAsync()
     {
-        // H?y login tru?c d� n?u dang cH?y (v� d? user b?m nhanh 2 l?n)
+        // Tránh race-condition: Hủy tiến trình login cũ nếu đang chạy
         _loginCts?.Cancel();
-        _loginCts = new System.Threading.CancellationTokenSource();
+        _loginCts = new CancellationTokenSource();
         var ct = _loginCts.Token;
 
         ClearError();
 
-        // -- Validate input tru?c khi g?i network ------------------------------
-        if (!ValidateInputs())
-        {
-            return;
-        }
+        if (!ValidateInputs()) return;
 
         IsLoading = true;
         try
         {
-            LoginResult result = await _loginService.AuthenticateAsync(Username, Password, ct);
-
+            var result = await _loginService.AuthenticateAsync(Username, Password, ct);
             if (result.IsSuccess)
             {
-                TcpSession client = InstanceManager.Instance.GetOrCreateInstance<TcpSession>();
-                InstanceManager.Instance.GetOrCreateInstance<TaskManager>().ScheduleRecurring(
-                    "KeepAlive", System.TimeSpan.FromSeconds(30),
-                    async (ct) => await client.SendAsync(new Directive(), ct)
-                );
-
+                SetupKeepAlive();
                 await _navigation.GoToMainPageAsync();
                 return;
             }
@@ -121,9 +91,24 @@ public sealed partial class LoginViewModel : ObservableObject
         }
         finally
         {
-            // �?m b?o IsLoading lu�n du?c reset k? c? khi exception
             IsLoading = false;
         }
+    }
+
+    /// <summary>
+    /// Thiết lập định kỳ gửi Heartbeat để duy trì phiên làm việc Nalix.
+    /// </summary>
+    private void SetupKeepAlive()
+    {
+        var client = InstanceManager.Instance.GetExistingInstance<TcpSession>();
+        if (client == null) return;
+
+        var taskManager = InstanceManager.Instance.GetOrCreateInstance<TaskManager>();
+        taskManager.ScheduleRecurring(
+            "KeepAlive", 
+            TimeSpan.FromSeconds(30),
+            async (token) => await client.SendAsync(new Directive { Type = ControlType.HEARTBEAT }, token)
+        );
     }
 
     [RelayCommand]
@@ -143,109 +128,87 @@ public sealed partial class LoginViewModel : ObservableObject
         _ = InitConnectionAsync();
     }
 
-    // --- Private Helpers -----------------------------------------------------
-
     private void ClearError()
     {
         HasError = false;
         ErrorMessage = null;
     }
 
-    /// <summary>
-    /// Validate username + password client-side, hi?n l?i ngay kh�ng c?n g?i network.
-    /// </summary>
-    private System.Boolean ValidateInputs()
+    private bool ValidateInputs()
     {
-        if (System.String.IsNullOrWhiteSpace(Username))
+        if (string.IsNullOrWhiteSpace(Username))
         {
-            SetError("T�n dang nh?p kh�ng du?c d? tr?ng.");
+            SetError("Tên đăng nhập không được để trống.");
             return false;
         }
 
-        if (System.String.IsNullOrWhiteSpace(Password))
+        if (string.IsNullOrWhiteSpace(Password))
         {
-            SetError("M?t kh?u kh�ng du?c d? tr?ng.");
+            SetError("Mật khẩu không được để trống.");
             return false;
         }
 
         if (!AccountValidation.IsValidUsername(Username))
         {
-            SetError("T�n dang nh?p kh�ng h?p l?: ch? cho ph�p ch? c�i, s?, '_', '-' v� t?i da 50 k� t?.");
+            SetError("Tên đăng nhập không hợp lệ (5-50 ký tự).");
             return false;
         }
 
         if (!AccountValidation.IsValidPassword(Password))
         {
-            SetError("M?t kh?u ph?i c� �t nh?t 8 k� t?, g?m ch? hoa, thu?ng, s? v� k� t? d?c bi?t.");
+            SetError("Mật khẩu không đủ mạnh (tối thiểu 8 ký tự, bao gồm chữ hoa/thường/số/đặc biệt).");
             return false;
         }
 
         return true;
     }
 
-    private void SetError(System.String message)
+    private void SetError(string message)
     {
         ErrorMessage = message;
         HasError = true;
     }
 
-    /// <summary>
-    /// X? l� ph?n h?i t? server theo <see cref="ProtocolAdvice"/>:
-    /// - DO_NOT_RETRY  -> kh�a n�t dang nh?p
-    /// - BACKOFF_RETRY -> hi?n popup c� n�t retry
-    /// - FIX_AND_RETRY -> ch? hi?n l?i inline, cho ph�p nh?p l?i
-    /// </summary>
     private void HandleFailedLogin(LoginResult result)
     {
         switch (result.Advice)
         {
             case ProtocolAdvice.DO_NOT_RETRY:
-                // T�i kho?n b? c?m / chua active � show popup, kh�ng cho retry
-                ShowPopup("Kh�ng th? dang nh?p", result.ErrorMessage!, isRetry: false);
+                ShowPopup("Lỗi nghiêm trọng", result.ErrorMessage ?? "Máy chủ từ chối đăng nhập.", false);
                 break;
-
             case ProtocolAdvice.BACKOFF_RETRY:
-                // T�i kho?n b? kh�a t?m th?i � show popup c� n�t retry
-                ShowPopup("T�i kho?n c?a b?n d� b? kh�a t?m th?i. Vui l�ng th? l?i sau.", result.ErrorMessage!, isRetry: true);
+                ShowPopup("Tài khoản bị khóa", result.ErrorMessage ?? "Thử lại sau vài phút.", true);
                 break;
-
-            case ProtocolAdvice.FIX_AND_RETRY:
             default:
-                // Sai m?t kh?u / t�i kho?n kh�ng t?n t?i � inline error, cho nh?p l?i
-                SetError(result.ErrorMessage!);
+                SetError(result.ErrorMessage ?? "Thông tin đăng nhập không chính xác.");
                 break;
         }
     }
 
-    private void ShowPopup(System.String title, System.String message, System.Boolean isRetry)
+    private void ShowPopup(string title, string message, bool isRetry)
     {
         PopupTitle = title;
         PopupMessage = message;
         IsPopupRetry = isRetry;
-        PopupButtonText = isRetry ? "Th? l?i" : "OK";
+        PopupButtonText = isRetry ? "Thử lại" : "Đã hiểu";
         IsPopupVisible = true;
     }
 
-    /// <summary>
-    /// K?t n?i m?ng + handshake khi m�n h�nh load.
-    /// G?i l?i du?c khi user nh?n "Retry".
-    /// </summary>
-    private async System.Threading.Tasks.Task InitConnectionAsync()
+    private async Task InitConnectionAsync()
     {
         IsLoading = true;
         IsNetworkReady = false;
 
-        ConnectionResult result = await _loginService.ConnectAsync();
-
+        var result = await _loginService.ConnectAsync();
+        
         IsLoading = false;
-
         if (result.IsSuccess)
         {
             IsNetworkReady = true;
         }
         else
         {
-            ShowPopup("L?i k?t n?i", result.ErrorMessage!, isRetry: true);
+            ShowPopup("Lỗi máy chủ", result.ErrorMessage ?? "Không thể kết nối tới hạ tầng Nalix.", true);
         }
     }
 }
