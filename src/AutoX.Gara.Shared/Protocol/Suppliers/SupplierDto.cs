@@ -1,117 +1,122 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
-using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Domain.Enums.Payments;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets;
-using Nalix.Common.Serialization;
-using Nalix.Framework.DataFrames;
-
-namespace AutoX.Gara.Shared.Protocol.Suppliers;
-
-/// <summary>
-/// Packet mang d? li?u nh‡ cung c?p, d˘ng cho c·c thao t·c Create, Update v‡ Query.
-/// <para>
-/// Fixed-size fields (enum, int, DateTime) d?t TRU?C dynamic string fields
-/// d? <see cref="PacketBase{TSelf}.Length"/> tÌnh d˙ng wire-size.
-/// </para>
-/// </summary>
-[SerializePackable(SerializeLayout.Explicit)]
-public sealed class SupplierDto : PacketBase<SupplierDto>
-{
-    // --- Fixed-size fields ----------------------------------------------------
-
-    /// <summary>
-    /// ID nh‡ cung c?p. <c>null</c> khi t?o m?i.
-    /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
-    public System.Int32? SupplierId { get; set; }
-
-    /// <summary>Tr?ng th·i nh‡ cung c?p.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
-    public SupplierStatus? Status { get; set; }
-
-    /// <summary>–i?u kho?n thanh to·n.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
-    public PaymentTerms? PaymentTerms { get; set; }
-
-    /// <summary>Ng‡y b?t d?u h?p t·c.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
-    public System.DateTime? ContractStartDate { get; set; }
-
-    /// <summary>Ng‡y k?t th˙c h?p t·c (n?u cÛ).</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
-    public System.DateTime? ContractEndDate { get; set; }
-
-    // --- Dynamic-size fields --------------------------------------------------
-
-    /// <summary>TÍn nh‡ cung c?p.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
-    public System.String Name { get; set; }
-
-    /// <summary>Email nh‡ cung c?p.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
-    public System.String Email { get; set; }
-
-    /// <summary>–?a ch? nh‡ cung c?p.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
-    public System.String Address { get; set; }
-
-    /// <summary>M„ s? thu?.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 9)]
-    public System.String TaxCode { get; set; }
-
-    /// <summary>T‡i kho?n ng‚n h‡ng.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 10)]
-    public System.String BankAccount { get; set; }
-
-    /// <summary>
-    /// Danh s·ch S–T liÍn h?, ph‚n c·ch b?ng d?u ph?y.
-    /// VD: "0901234567,0912345678"
-    /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 11)]
-    public System.String PhoneNumbers { get; set; }
-
-    /// <summary>Ghi ch˙ n?i b?. T?i da 500 k˝ t?.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 12)]
-    public System.String Notes { get; set; }
-
-    // --- Constructor ----------------------------------------------------------
-
-    /// <summary>Kh?i t?o <see cref="SupplierDto"/> v?i gi· tr? m?c d?nh r?ng.</summary>
-    public SupplierDto()
-    {
-        Name = System.String.Empty;
-        Email = System.String.Empty;
-        Address = System.String.Empty;
-        TaxCode = System.String.Empty;
-        BankAccount = System.String.Empty;
-        PhoneNumbers = System.String.Empty;
-        Notes = System.String.Empty;
-        OpCode = OpCommand.NONE.AsUInt16();
-    }
-
-    // --- Pool Reset -----------------------------------------------------------
-
-    /// <inheritdoc/>
-    public override void ResetForPool()
-    {
-        base.ResetForPool();
-
-        SequenceId = 0;
-        SupplierId = null;
-        Status = null;
-        PaymentTerms = null;
-        ContractStartDate = null;
-        ContractEndDate = null;
-        Name = System.String.Empty;
-        Email = System.String.Empty;
-        Address = System.String.Empty;
-        TaxCode = System.String.Empty;
-        BankAccount = System.String.Empty;
-        PhoneNumbers = System.String.Empty;
-        Notes = System.String.Empty;
-        OpCode = OpCommand.NONE.AsUInt16();
-    }
+Ôªøusing AutoX.Gara.Shared.Enums;
+using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using AutoX.Gara.Domain.Enums;
+using AutoX.Gara.Domain.Enums.Payments;
+using Nalix.Common.Networking.Protocols;
+using AutoX.Gara.Shared.Extensions;
+using Nalix.Common.Networking.Packets;
+using Nalix.Common.Serialization;
+using Nalix.Framework.DataFrames;
+
+namespace AutoX.Gara.Shared.Protocol.Suppliers;
+
+/// <summary>
+/// Packet mang d·ªØ li·ªáu nh√† cung c?p, d√πng cho c√°c thao t√°c Create, Update v√† Query.
+/// <para>
+/// Fixed-size fields (enum, int, DateTime) d?t TRU?C dynamic string fields
+/// d? <see cref="PacketBase{TSelf}.Length"/> t√≠nh d√∫ng wire-size.
+/// </para>
+/// </summary>
+[SerializePackable(SerializeLayout.Explicit)]
+public sealed class SupplierDto : PacketBase<SupplierDto>
+{
+    // --- Fixed-size fields ----------------------------------------------------
+
+    /// <summary>
+    /// ID nh√† cung c?p. <c>null</c> khi t?o m?i.
+    /// </summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    public int? SupplierId { get; set; }
+
+    /// <summary>Tr?ng th√°i nh√† cung c?p.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    public SupplierStatus? Status { get; set; }
+
+    /// <summary>√êi?u kho?n thanh to√°n.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    public PaymentTerms? PaymentTerms { get; set; }
+
+    /// <summary>Ng√†y b?t d?u h?p t√°c.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    public DateTime? ContractStartDate { get; set; }
+
+    /// <summary>Ng√†y k?t th√∫c h?p t√°c (n?u c√≥).</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    public DateTime? ContractEndDate { get; set; }
+
+    // --- Dynamic-size fields --------------------------------------------------
+
+    /// <summary>T√™n nh√† cung c?p.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    public string Name { get; set; }
+
+    /// <summary>Email nh√† cung c?p.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    public string Email { get; set; }
+
+    /// <summary>√ê?a ch? nh√† cung c?p.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    public string Address { get; set; }
+
+    /// <summary>M√£ s? thu?.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 9)]
+    public string TaxCode { get; set; }
+
+    /// <summary>T√†i kho?n ng√¢n h√†ng.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 10)]
+    public string BankAccount { get; set; }
+
+    /// <summary>
+    /// Danh s√°ch S√êT li√™n h?, ph√¢n c√°ch b?ng d?u ph?y.
+    /// VD: "0901234567,0912345678"
+    /// </summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 11)]
+    public string PhoneNumbers { get; set; }
+
+    /// <summary>Ghi ch√∫ n?i b?. T?i da 500 k√Ω t?.</summary>
+    [SerializeOrder(PacketHeaderOffset.Region + 12)]
+    public string Notes { get; set; }
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string ContactPerson { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
+
+    // --- Constructor ----------------------------------------------------------
+
+    /// <summary>Kh?i t?o <see cref="SupplierDto"/> v?i gi√° tr? m?c d?nh r?ng.</summary>
+    public SupplierDto()
+    {
+        Name = string.Empty;
+        Email = string.Empty;
+        Address = string.Empty;
+        TaxCode = string.Empty;
+        BankAccount = string.Empty;
+        PhoneNumbers = string.Empty;
+        Notes = string.Empty;
+        OpCode = OpCommand.NONE.AsUInt16();
+    }
+
+    // --- Pool Reset -----------------------------------------------------------
+
+    /// <inheritdoc/>
+    public override void ResetForPool()
+    {
+        base.ResetForPool();
+
+        SequenceId = 0;
+        SupplierId = null;
+        Status = null;
+        PaymentTerms = null;
+        ContractStartDate = null;
+        ContractEndDate = null;
+        Name = string.Empty;
+        Email = string.Empty;
+        Address = string.Empty;
+        TaxCode = string.Empty;
+        BankAccount = string.Empty;
+        PhoneNumbers = string.Empty;
+        Notes = string.Empty;
+        OpCode = OpCommand.NONE.AsUInt16();
+    }
 }

@@ -1,22 +1,24 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using AutoX.Gara.Shared.Enums;
+using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 namespace AutoX.Gara.Shared.Enums;
 
 /// <summary>
-/// Các cột được phép sắp xếp trong truy vấn danh sách khách hàng.
-/// Dùng trong <see cref="CustomersQueryPacket.SortBy"/>.
+/// C�c c?t du?c ph�p s?p x?p trong truy v?n danh s�ch kh�ch h�ng.
+/// D�ng trong <see cref="CustomersQueryPacket.SortBy"/>.
 /// </summary>
-public enum CustomerSortField : System.Byte
+public enum CustomerSortField : byte
 {
-    /// <summary>Sắp xếp theo ngày tạo (mặc định).</summary>
+    /// <summary>S?p x?p theo ng�y t?o (m?c d?nh).</summary>
     CreatedAt = 0,
 
-    /// <summary>Sắp xếp theo tên khách hàng (A–Z hoặc Z–A).</summary>
+    /// <summary>S?p x?p theo t�n kh�ch h�ng (A�Z ho?c Z�A).</summary>
     Name = 1,
 
-    /// <summary>Sắp xếp theo địa chỉ email.</summary>
+    /// <summary>S?p x?p theo d?a ch? email.</summary>
     Email = 2,
 
-    /// <summary>Sắp xếp theo ngày cập nhật gần nhất.</summary>
+    /// <summary>S?p x?p theo ng�y c?p nh?t g?n nh?t.</summary>
     UpdatedAt = 3,
 }

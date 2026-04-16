@@ -8,7 +8,6 @@
 		<OutputType>Library</OutputType>
 		<IsTrimmable>false</IsTrimmable>
 		<Deterministic>true</Deterministic>
-		<TargetFramework>net10.0</TargetFramework>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
 		<!-- Versions -->

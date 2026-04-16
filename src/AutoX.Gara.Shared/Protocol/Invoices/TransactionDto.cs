@@ -1,8 +1,10 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
-using AutoX.Gara.Shared.Enums;
+using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
@@ -15,10 +17,10 @@ public sealed class TransactionDto : PacketBase<TransactionDto>
 {
 
     [SerializeOrder(PacketHeaderOffset.Region + 1)]
-    public System.Int32? TransactionId { get; set; }
+    public int? TransactionId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 2)]
-    public System.Int32 InvoiceId { get; set; }
+    public int InvoiceId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public TransactionType Type { get; set; }
@@ -30,30 +32,30 @@ public sealed class TransactionDto : PacketBase<TransactionDto>
     public TransactionStatus Status { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 6)]
-    public System.Decimal Amount { get; set; }
+    public decimal Amount { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 7)]
-    public System.DateTime TransactionDate { get; set; }
+    public DateTime TransactionDate { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 8)]
-    public System.Int32 CreatedBy { get; set; }
+    public int CreatedBy { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 9)]
-    public System.Int32? ModifiedBy { get; set; }
+    public int? ModifiedBy { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 10)]
-    public System.DateTime? UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 11)]
-    public System.Boolean IsReversed { get; set; }
+    public bool IsReversed { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 12)]
-    public System.String Description { get; set; }
+    public string Description { get; set; }
 
     public TransactionDto()
     {
-        Description = System.String.Empty;
-        TransactionDate = System.DateTime.UtcNow;
+        Description = string.Empty;
+        TransactionDate = DateTime.UtcNow;
         Type = TransactionType.Revenue;
         PaymentMethod = PaymentMethod.None;
         Status = TransactionStatus.Pending;
@@ -71,13 +73,12 @@ public sealed class TransactionDto : PacketBase<TransactionDto>
         PaymentMethod = PaymentMethod.None;
         Status = TransactionStatus.Pending;
         Amount = 0;
-        TransactionDate = System.DateTime.UtcNow;
+        TransactionDate = DateTime.UtcNow;
         CreatedBy = 0;
         ModifiedBy = null;
         UpdatedAt = null;
         IsReversed = false;
-        Description = System.String.Empty;
+        Description = string.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
-

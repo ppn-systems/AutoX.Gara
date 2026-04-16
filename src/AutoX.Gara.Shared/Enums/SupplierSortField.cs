@@ -1,31 +1,33 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using AutoX.Gara.Shared.Enums;
+using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Shared.Enums;
 
 /// <summary>
-/// Các cột cho phép sắp xếp khi truy vấn danh sách nhà cung cấp.
+/// C�c c?t cho ph�p s?p x?p khi truy v?n danh s�ch nh� cung c?p.
 /// </summary>
-public enum SupplierSortField : System.Byte
+public enum SupplierSortField : byte
 {
-    /// <summary>Sắp xếp theo tên nhà cung cấp.</summary>
-    [Display(Name = "Tên")]
+    /// <summary>S?p x?p theo t�n nh� cung c?p.</summary>
+    [Display(Name = "T�n")]
     Name = 0,
 
-    /// <summary>Sắp xếp theo email.</summary>
+    /// <summary>S?p x?p theo email.</summary>
     [Display(Name = "Email")]
     Email = 1,
 
-    /// <summary>Sắp xếp theo ngày bắt đầu hợp tác.</summary>
-    [Display(Name = "Ngày bắt đầu hợp tác")]
+    /// <summary>S?p x?p theo ng�y b?t d?u h?p t�c.</summary>
+    [Display(Name = "Ng�y b?t d?u h?p t�c")]
     ContractStartDate = 2,
 
-    /// <summary>Sắp xếp theo ngày kết thúc hợp tác.</summary>
-    [Display(Name = "Ngày kết thúc hợp tác")]
+    /// <summary>S?p x?p theo ng�y k?t th�c h?p t�c.</summary>
+    [Display(Name = "Ng�y k?t th�c h?p t�c")]
     ContractEndDate = 3,
 
-    /// <summary>Sắp xếp theo trạng thái.</summary>
-    [Display(Name = "Trạng thái")]
+    /// <summary>S?p x?p theo tr?ng th�i.</summary>
+    [Display(Name = "Tr?ng th�i")]
     Status = 4,
 }

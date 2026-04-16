@@ -1,7 +1,9 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Repairs;
-using AutoX.Gara.Shared.Enums;
+using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
@@ -14,37 +16,37 @@ public sealed class RepairTaskQueryRequest : PacketBase<RepairTaskQueryRequest>
 {
 
     [SerializeOrder(PacketHeaderOffset.Region + 1)]
-    public System.Int32 Page { get; set; } = 1;
+    public int Page { get; set; } = 1;
 
     [SerializeOrder(PacketHeaderOffset.Region + 2)]
-    public System.Int32 PageSize { get; set; } = 20;
+    public int PageSize { get; set; } = 20;
 
     [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public RepairTaskSortField SortBy { get; set; } = RepairTaskSortField.Id;
 
     [SerializeOrder(PacketHeaderOffset.Region + 4)]
-    public System.Boolean SortDescending { get; set; } = true;
+    public bool SortDescending { get; set; } = true;
 
     [SerializeOrder(PacketHeaderOffset.Region + 5)]
-    public System.Int32 FilterRepairOrderId { get; set; } = 0;
+    public int FilterRepairOrderId { get; set; } = 0;
 
     [SerializeOrder(PacketHeaderOffset.Region + 6)]
-    public System.Int32 FilterEmployeeId { get; set; } = 0;
+    public int FilterEmployeeId { get; set; } = 0;
 
     [SerializeOrder(PacketHeaderOffset.Region + 7)]
-    public System.Int32 FilterServiceItemId { get; set; } = 0;
+    public int FilterServiceItemId { get; set; } = 0;
 
     [SerializeOrder(PacketHeaderOffset.Region + 8)]
     public RepairOrderStatus? FilterStatus { get; set; } = null;
 
     [SerializeOrder(PacketHeaderOffset.Region + 9)]
-    public System.DateTime? FilterFromDate { get; set; } = null;
+    public DateTime? FilterFromDate { get; set; } = null;
 
     [SerializeOrder(PacketHeaderOffset.Region + 10)]
-    public System.DateTime? FilterToDate { get; set; } = null;
+    public DateTime? FilterToDate { get; set; } = null;
 
     [SerializeOrder(PacketHeaderOffset.Region + 11)]
-    public System.String SearchTerm { get; set; } = System.String.Empty;
+    public string SearchTerm { get; set; } = string.Empty;
 
     public RepairTaskQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
 
@@ -63,7 +65,7 @@ public sealed class RepairTaskQueryRequest : PacketBase<RepairTaskQueryRequest>
         FilterStatus = null;
         FilterFromDate = null;
         FilterToDate = null;
-        SearchTerm = System.String.Empty;
+        SearchTerm = string.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }

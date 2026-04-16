@@ -1,8 +1,10 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 namespace AutoX.Gara.Shared.Enums;
 
-public enum RepairTaskSortField : System.Byte
+public enum RepairTaskSortField : byte
 {
     Id = 0,
     RepairOrderId = 1,
@@ -10,4 +12,3 @@ public enum RepairTaskSortField : System.Byte
     StartDate = 3,
     CompletionDate = 4,
 }
-

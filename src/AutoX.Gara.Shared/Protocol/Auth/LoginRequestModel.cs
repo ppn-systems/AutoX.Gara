@@ -1,41 +1,28 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
-using Nalix.Common.Serialization;
-
-namespace AutoX.Gara.Shared.Protocol.Auth;
-
-/// <summary>
-/// ViewModel dành cho đăng nhập của người dùng hệ thống.
-/// Chỉ chứa thông tin tối thiểu (username và password) mà client gửi lên server.
-/// Không lưu bất kỳ thông tin bảo mật nhạy cảm nào ngoài tài khoản và mật khẩu dạng clear text (chỉ để xác thực một lần).
-/// </summary>
-[SerializePackable(SerializeLayout.Explicit)]
-public class LoginRequestModel
-{
-    /// <summary>
-    /// Tính tổng số byte thực tế (runtime) khi serialize Username và Password hiện tại (UTF-8).
-    /// Dùng khi cần kiểm soát size thực tiễn.
-    /// </summary>
-    [SerializeIgnore]
-    public System.UInt16 Length
-    {
-        get
-        {
-            System.Int32 usernameLen = System.String.IsNullOrEmpty(Username) ? 0 : System.Text.Encoding.UTF8.GetByteCount(Username);
-            System.Int32 passwordLen = System.String.IsNullOrEmpty(Password) ? 0 : System.Text.Encoding.UTF8.GetByteCount(Password);
-            return (System.UInt16)(usernameLen + passwordLen);
-        }
-    }
-
-    /// <summary>
-    /// Tên đăng nhập của người dùng.
-    /// </summary>
-    [SerializeOrder(1)]
-    public System.String Username { get; set; }
-
-    /// <summary>
-    /// Mật khẩu nhập vào từ người dùng (clear text, chỉ sử dụng để xác thực, không lưu trữ).
-    /// </summary>
-    [SerializeOrder(2)]
-    public System.String Password { get; set; }
+﻿using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+using Nalix.Common.Serialization;
+using Nalix.Framework.DataFrames;
+
+namespace AutoX.Gara.Shared.Protocol.Auth;
+
+/// <summary>
+/// ViewModel d�nh cho dang nh?p c?a ngu?i d�ng h? th?ng.
+/// Ch? ch?a th�ng tin t?i thi?u (username v� password) m� client g?i l�n server.
+/// Kh�ng luu b?t k? th�ng tin b?o m?t nh?y c?m n�o ngo�i t�i kho?n v� m?t kh?u d?ng clear text (ch? d? x�c th?c m?t l?n).
+/// </summary>
+[SerializePackable(SerializeLayout.Explicit)]
+public class LoginRequestModel : PacketBase<LoginRequestModel>
+{
+    /// <summary>
+    /// T�n dang nh?p c?a ngu?i d�ng.
+    /// </summary>
+    [SerializeOrder(1)]
+    public string Username { get; set; }
+
+    /// <summary>
+    /// M?t kh?u nh?p v�o t? ngu?i d�ng (clear text, ch? s? d?ng d? x�c th?c, kh�ng luu tr?).
+    /// </summary>
+    [SerializeOrder(2)]
+    public string Password { get; set; }
 }

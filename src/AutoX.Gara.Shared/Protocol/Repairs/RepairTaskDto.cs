@@ -1,7 +1,9 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Repairs;
-using AutoX.Gara.Shared.Enums;
+using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
@@ -14,31 +16,31 @@ public sealed class RepairTaskDto : PacketBase<RepairTaskDto>
 {
 
     [SerializeOrder(PacketHeaderOffset.Region + 1)]
-    public System.Int32? RepairTaskId { get; set; }
+    public int? RepairTaskId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 2)]
-    public System.Int32 RepairOrderId { get; set; }
+    public int RepairOrderId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 3)]
-    public System.Int32 EmployeeId { get; set; }
+    public int EmployeeId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 4)]
-    public System.Int32 ServiceItemId { get; set; }
+    public int ServiceItemId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 5)]
     public RepairOrderStatus Status { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 6)]
-    public System.DateTime? StartDate { get; set; }
+    public DateTime? StartDate { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 7)]
-    public System.Double EstimatedDuration { get; set; }
+    public double EstimatedDuration { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 8)]
-    public System.DateTime? CompletionDate { get; set; }
+    public DateTime? CompletionDate { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 9)]
-    public System.Boolean IsCompleted { get; set; }
+    public bool IsCompleted { get; set; }
 
     public RepairTaskDto()
     {

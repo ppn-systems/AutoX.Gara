@@ -1,19 +1,21 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using System;
+using System.Collections.Generic;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 namespace AutoX.Gara.Shared.Validation;
 
 /// <summary>
-/// Validation rules cho credentials — giống server để early-reject trước khi gửi packet.
-/// Nếu server thay đổi rules, chỉ cần sửa ở đây + AccountOps.
+/// Validation rules cho credentials � gi?ng server d? early-reject tru?c khi g?i packet.
+/// N?u server thay d?i rules, ch? c?n s?a ? d�y + AccountOps.
 /// </summary>
 public static class AccountValidation
 {
     /// <summary>
-    /// Validate username: không rỗng, ≤50 ký tự, chỉ a-z A-Z 0-9 _ -
+    /// Validate username: kh�ng r?ng, =50 k� t?, ch? a-z A-Z 0-9 _ -
     /// </summary>
-    public static System.Boolean IsValidUsername(System.String username)
+    public static bool IsValidUsername(string username)
     {
-        if (System.String.IsNullOrWhiteSpace(username))
+        if (string.IsNullOrWhiteSpace(username))
         {
             return false;
         }
@@ -35,10 +37,10 @@ public static class AccountValidation
     }
 
     /// <summary>
-    /// Validate password: ≥8 ký tự, có hoa, thường, số, ký tự đặc biệt.
+    /// Validate password: =8 k� t?, c� hoa, thu?ng, s?, k� t? d?c bi?t.
     /// </summary>
-    public static System.Boolean IsValidPassword(System.String password)
-        => !System.String.IsNullOrWhiteSpace(password)
+    public static bool IsValidPassword(string password)
+        => !string.IsNullOrWhiteSpace(password)
         && password.Length >= 8
         && System.Linq.Enumerable.Any(password, System.Char.IsLower)
         && System.Linq.Enumerable.Any(password, System.Char.IsUpper)
@@ -62,9 +64,9 @@ public static class AccountValidation
     /// </list>
     /// It does not guarantee that the domain exists.
     /// </remarks>
-    public static System.Boolean IsValidEmail(System.String email)
+    public static bool IsValidEmail(string email)
     {
-        if (System.String.IsNullOrWhiteSpace(email))
+        if (string.IsNullOrWhiteSpace(email))
         {
             return false;
         }
@@ -74,8 +76,8 @@ public static class AccountValidation
             return false;
         }
 
-        System.Int32 atIndex = email.IndexOf('@');
-        System.Int32 dotIndex = email.LastIndexOf('.');
+        int atIndex = email.IndexOf('@');
+        int dotIndex = email.LastIndexOf('.');
 
         if (atIndex <= 0)
         {
@@ -97,7 +99,7 @@ public static class AccountValidation
             return false;
         }
 
-        for (System.Int32 i = 1; i < email.Length; i++)
+        for (int i = 1; i < email.Length; i++)
         {
             if (email[i] == '.' && email[i - 1] == '.')
             {
@@ -105,13 +107,13 @@ public static class AccountValidation
             }
         }
 
-        System.String local = email[..atIndex];
-        System.String domain = email.Substring(atIndex + 1, dotIndex - atIndex - 1);
-        System.String tld = email[(dotIndex + 1)..];
+        string local = email[..atIndex];
+        string domain = email.Substring(atIndex + 1, dotIndex - atIndex - 1);
+        string tld = email[(dotIndex + 1)..];
 
-        return !System.String.IsNullOrWhiteSpace(local)
-            && !System.String.IsNullOrWhiteSpace(domain)
-            && !System.String.IsNullOrWhiteSpace(tld);
+        return !string.IsNullOrWhiteSpace(local)
+            && !string.IsNullOrWhiteSpace(domain)
+            && !string.IsNullOrWhiteSpace(tld);
     }
 
     /// <summary>
@@ -130,9 +132,9 @@ public static class AccountValidation
     /// <item>Valid prefixes: 03, 05, 07, 08, 09.</item>
     /// </list>
     /// </remarks>
-    public static System.Boolean IsValidVietnamPhoneNumber(System.String phone)
+    public static bool IsValidVietnamPhoneNumber(string phone)
     {
-        if (System.String.IsNullOrWhiteSpace(phone))
+        if (string.IsNullOrWhiteSpace(phone))
         {
             return false;
         }
@@ -160,10 +162,10 @@ public static class AccountValidation
             return false;
         }
 
-        System.Boolean prefixOk = false;
-        System.String[] validPrefixes = ["03", "05", "07", "08", "09"];
+        bool prefixOk = false;
+        string[] validPrefixes = ["03", "05", "07", "08", "09"];
 
-        foreach (System.String prefix in validPrefixes)
+        foreach (string prefix in validPrefixes)
         {
             if (phone.StartsWith(prefix))
             {
@@ -175,6 +177,6 @@ public static class AccountValidation
         return prefixOk;
     }
 
-    private static System.Boolean IsAllowedUsernameChar(System.Char c)
+    private static bool IsAllowedUsernameChar(System.Char c)
         => c is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '_' or '-';
 }

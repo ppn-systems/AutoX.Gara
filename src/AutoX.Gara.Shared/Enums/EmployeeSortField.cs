@@ -1,29 +1,31 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using AutoX.Gara.Shared.Enums;
+using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 
 namespace AutoX.Gara.Shared.Enums;
 
 /// <summary>
-/// Các cột cho phép sắp xếp khi truy vấn danh sách nhân viên.
+/// C�c c?t cho ph�p s?p x?p khi truy v?n danh s�ch nh�n vi�n.
 /// </summary>
-public enum EmployeeSortField : System.Byte
+public enum EmployeeSortField : byte
 {
-    [Display(Name = "Tên")]
+    [Display(Name = "T�n")]
     Name = 0,
 
     [Display(Name = "Email")]
     Email = 1,
 
-    [Display(Name = "Chức vụ")]
+    [Display(Name = "Ch?c v?")]
     Position = 2,
 
-    [Display(Name = "Trạng thái")]
+    [Display(Name = "Tr?ng th�i")]
     Status = 3,
 
-    [Display(Name = "Ngày bắt đầu")]
+    [Display(Name = "Ng�y b?t d?u")]
     StartDate = 4,
 
-    [Display(Name = "Giới tính")]
+    [Display(Name = "Gi?i t�nh")]
     Gender = 5,
 }

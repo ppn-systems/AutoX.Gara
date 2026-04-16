@@ -1,7 +1,9 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Payments;
-using AutoX.Gara.Shared.Enums;
+using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
@@ -18,22 +20,22 @@ namespace AutoX.Gara.Shared.Protocol.Billings;
 public sealed class InvoiceQueryRequest : PacketBase<InvoiceQueryRequest>
 {
     [SerializeOrder(PacketHeaderOffset.Region + 1)]
-    public System.Int32 Page { get; set; } = 1;
+    public int Page { get; set; } = 1;
 
     [SerializeOrder(PacketHeaderOffset.Region + 2)]
-    public System.Int32 PageSize { get; set; } = 20;
+    public int PageSize { get; set; } = 20;
 
     [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public InvoiceSortField SortBy { get; set; } = InvoiceSortField.InvoiceDate;
 
     [SerializeOrder(PacketHeaderOffset.Region + 4)]
-    public System.Boolean SortDescending { get; set; } = true;
+    public bool SortDescending { get; set; } = true;
 
     /// <summary>
     /// Loc theo customer id. 0 = khong loc.
     /// </summary>
     [SerializeOrder(PacketHeaderOffset.Region + 5)]
-    public System.Int32 FilterCustomerId { get; set; } = 0;
+    public int FilterCustomerId { get; set; } = 0;
 
     /// <summary>
     /// Loc theo trang thai thanh toan. null = khong loc.
@@ -45,16 +47,16 @@ public sealed class InvoiceQueryRequest : PacketBase<InvoiceQueryRequest>
     /// Loc theo khoang thoi gian (InvoiceDate). null = khong loc.
     /// </summary>
     [SerializeOrder(PacketHeaderOffset.Region + 7)]
-    public System.DateTime? FilterFromDate { get; set; } = null;
+    public DateTime? FilterFromDate { get; set; } = null;
 
     [SerializeOrder(PacketHeaderOffset.Region + 8)]
-    public System.DateTime? FilterToDate { get; set; } = null;
+    public DateTime? FilterToDate { get; set; } = null;
 
     /// <summary>
     /// Tim kiem theo so hoa don. Dynamic field - dat cuoi.
     /// </summary>
     [SerializeOrder(PacketHeaderOffset.Region + 9)]
-    public System.String SearchTerm { get; set; } = System.String.Empty;
+    public string SearchTerm { get; set; } = string.Empty;
 
     public InvoiceQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
 
@@ -71,8 +73,7 @@ public sealed class InvoiceQueryRequest : PacketBase<InvoiceQueryRequest>
         FilterPaymentStatus = null;
         FilterFromDate = null;
         FilterToDate = null;
-        SearchTerm = System.String.Empty;
+        SearchTerm = string.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
-

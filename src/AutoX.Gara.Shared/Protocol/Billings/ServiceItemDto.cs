@@ -1,7 +1,9 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Shared.Enums;
+using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
@@ -14,20 +16,20 @@ public sealed class ServiceItemDto : PacketBase<ServiceItemDto>
 {
 
     [SerializeOrder(PacketHeaderOffset.Region + 1)]
-    public System.Int32? ServiceItemId { get; set; }
+    public int? ServiceItemId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 2)]
     public ServiceType Type { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 3)]
-    public System.Decimal UnitPrice { get; set; }
+    public decimal UnitPrice { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 4)]
-    public System.String Description { get; set; }
+    public string Description { get; set; }
 
     public ServiceItemDto()
     {
-        Description = System.String.Empty;
+        Description = string.Empty;
         Type = ServiceType.None;
         UnitPrice = 0;
         OpCode = OpCommand.NONE.AsUInt16();
@@ -41,7 +43,7 @@ public sealed class ServiceItemDto : PacketBase<ServiceItemDto>
         ServiceItemId = null;
         Type = ServiceType.None;
         UnitPrice = 0;
-        Description = System.String.Empty;
+        Description = string.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }

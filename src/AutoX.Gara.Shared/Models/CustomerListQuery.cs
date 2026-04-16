@@ -1,19 +1,21 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using AutoX.Gara.Shared.Enums;
+using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Customers;
-using AutoX.Gara.Shared.Enums;
+using Nalix.Common.Networking.Protocols;
 
 namespace AutoX.Gara.Shared.Models;
 
 /// <summary>
-/// Value object chứa tất cả tham số truy vấn danh sách khách hàng.
-/// Dùng C# record để tự sinh Equals/GetHashCode — dùng được làm cache key.
+/// Value object ch?a t?t c? tham s? truy v?n danh s�ch kh�ch h�ng.
+/// D�ng C# record d? t? sinh Equals/GetHashCode � d�ng du?c l�m cache key.
 /// </summary>
 public sealed record CustomerListQuery(
-    System.Int32 Page,
-    System.Int32 PageSize,
-    System.String SearchTerm,
+    int Page,
+    int PageSize,
+    string SearchTerm,
     CustomerSortField SortBy,
-    System.Boolean SortDescending,
+    bool SortDescending,
     CustomerType FilterType,
     MembershipLevel FilterMembership);

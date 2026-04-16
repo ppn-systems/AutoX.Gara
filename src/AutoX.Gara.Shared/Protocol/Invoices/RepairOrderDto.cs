@@ -1,7 +1,9 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Repairs;
-using AutoX.Gara.Shared.Enums;
+using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
@@ -14,35 +16,47 @@ public sealed class RepairOrderDto : PacketBase<RepairOrderDto>
 {
 
     [SerializeOrder(PacketHeaderOffset.Region + 1)]
-    public System.Int32? RepairOrderId { get; set; }
+    public int? RepairOrderId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 2)]
-    public System.Int32 CustomerId { get; set; }
+    public int CustomerId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 3)]
-    public System.Int32? VehicleId { get; set; }
+    public int? VehicleId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 4)]
-    public System.Int32? InvoiceId { get; set; }
+    public int? InvoiceId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 5)]
-    public System.DateTime OrderDate { get; set; }
+    public DateTime OrderDate { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 6)]
-    public System.DateTime? CompletionDate { get; set; }
+    public DateTime? CompletionDate { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.Region + 10)]
+    public DateTime? ExpectedCompletionDate { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.Region + 11)]
+    public RepairOrderPriority Priority { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.Region + 12)]
+    public int? EmployeeId { get; set; }
+
+    [SerializeOrder(PacketHeaderOffset.Region + 13)]
+    public string Description { get; set; } = string.Empty;
 
     [SerializeOrder(PacketHeaderOffset.Region + 7)]
     public RepairOrderStatus Status { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 8)]
-    public System.Decimal TotalRepairCost { get; set; }
+    public decimal TotalRepairCost { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 9)]
-    public System.Boolean IsCompleted { get; set; }
+    public bool IsCompleted { get; set; }
 
     public RepairOrderDto()
     {
-        OrderDate = System.DateTime.UtcNow;
+        OrderDate = DateTime.UtcNow;
         Status = RepairOrderStatus.None;
         OpCode = OpCommand.NONE.AsUInt16();
     }
@@ -56,8 +70,12 @@ public sealed class RepairOrderDto : PacketBase<RepairOrderDto>
         CustomerId = 0;
         VehicleId = null;
         InvoiceId = null;
-        OrderDate = System.DateTime.UtcNow;
+        OrderDate = DateTime.UtcNow;
         CompletionDate = null;
+        ExpectedCompletionDate = null;
+        Priority = RepairOrderPriority.Normal;
+        EmployeeId = null;
+        Description = string.Empty;
         Status = RepairOrderStatus.None;
         TotalRepairCost = 0;
         IsCompleted = false;

@@ -1,8 +1,10 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using AutoX.Gara.Shared.Enums;
+using System;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
-using AutoX.Gara.Shared.Enums;
+using Nalix.Common.Networking.Protocols;
 
 namespace AutoX.Gara.Shared.Models;
 
@@ -21,10 +23,17 @@ namespace AutoX.Gara.Shared.Models;
 /// <param name="FilterStatus">Lọc theo trạng thái. <see cref="SupplierStatus.None"/> = tất cả.</param>
 /// <param name="FilterPaymentTerms">Lọc theo điều khoản thanh toán. <see cref="PaymentTerms.None"/> = tất cả.</param>
 public sealed record SupplierListQuery(
-    System.Int32 Page,
-    System.Int32 PageSize,
-    System.String SearchTerm,
+    int Page,
+    int PageSize,
+    string SearchTerm,
     SupplierSortField SortBy,
-    System.Boolean SortDescending,
+    bool SortDescending,
     SupplierStatus FilterStatus,
-    PaymentTerms FilterPaymentTerms);
+    PaymentTerms FilterPaymentTerms)
+{
+    public void Validate()
+    {
+        if (Page < 1) throw new ArgumentException("Page must be >= 1");
+        if (PageSize < 1) throw new ArgumentException("PageSize must be >= 1");
+    }
+}

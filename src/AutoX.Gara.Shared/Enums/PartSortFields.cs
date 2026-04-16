@@ -1,38 +1,40 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 namespace AutoX.Gara.Shared.Enums;
 
 /// <summary>
-/// Các cột có thể dùng để sắp xếp kết quả truy vấn <c>ReplacementPart</c>.
+/// C�c c?t c� th? d�ng d? s?p x?p k?t qu? truy v?n <c>ReplacementPart</c>.
 /// </summary>
-public enum PartSortField : System.Byte
+public enum PartSortField : byte
 {
-    /// <summary>Sắp xếp theo tên phụ tùng.</summary>
+    /// <summary>S?p x?p theo t�n ph? t�ng.</summary>
     PartName = 0,
 
-    /// <summary>Sắp xếp theo ngày nhập kho.</summary>
+    /// <summary>S?p x?p theo ng�y nh?p kho.</summary>
     DateAdded = 1,
 
-    /// <summary>Sắp xếp theo ngày hết hạn.</summary>
+    /// <summary>S?p x?p theo ng�y h?t h?n.</summary>
     ExpiryDate = 2,
 
-    /// <summary>Sắp xếp theo số lượng.</summary>
+    /// <summary>S?p x?p theo s? lu?ng.</summary>
     Quantity = 3,
 
-    /// <summary>Sắp xếp theo đơn giá.</summary>
-    UnitPrice = 4,
-
-    /// <summary>Sắp xếp theo giá nhập.</summary>
+    /// <summary>S?p x?p theo don gi�.</summary>
+    UnitPrice = 4,
+
+    /// <summary>S?p x?p theo gi� nh?p.</summary>
     PurchasePrice = 5,
 
-    /// <summary>Sắp xếp theo giá bán.</summary>
+    /// <summary>S?p x?p theo gi� b�n.</summary>
     SellingPrice = 6,
 
-    /// <summary>Sắp xếp theo số lượng tồn kho.</summary>
-    InventoryQuantity = 7,
-
-    /// <summary>
-    /// Giá trị tối đa (không phải cột thực tế, dùng để validate input).
-    /// </summary>
+    /// <summary>S?p x?p theo s? lu?ng t?n kho.</summary>
+    InventoryQuantity = 7,
+
+    /// <summary>
+    /// Gi� tr? t?i da (kh�ng ph?i c?t th?c t?, d�ng d? validate input).
+    /// </summary>
     TotalValue = 8,
 }

@@ -1,6 +1,8 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Enums;
+using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
@@ -13,16 +15,16 @@ public sealed class RepairOrderItemDto : PacketBase<RepairOrderItemDto>
 {
 
     [SerializeOrder(PacketHeaderOffset.Region + 1)]
-    public System.Int32? RepairOrderItemId { get; set; }
+    public int? RepairOrderItemId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 2)]
-    public System.Int32 RepairOrderId { get; set; }
+    public int RepairOrderId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 3)]
-    public System.Int32 PartId { get; set; }
+    public int PartId { get; set; }
 
     [SerializeOrder(PacketHeaderOffset.Region + 4)]
-    public System.Int32 Quantity { get; set; }
+    public int Quantity { get; set; }
 
     public RepairOrderItemDto() => OpCode = OpCommand.NONE.AsUInt16();
 

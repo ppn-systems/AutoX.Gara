@@ -1,7 +1,9 @@
+﻿using AutoX.Gara.Shared.Enums;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Shared.Enums;
+using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Extensions;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
@@ -14,28 +16,28 @@ public sealed class ServiceItemQueryRequest : PacketBase<ServiceItemQueryRequest
 {
 
     [SerializeOrder(PacketHeaderOffset.Region + 1)]
-    public System.Int32 Page { get; set; } = 1;
+    public int Page { get; set; } = 1;
 
     [SerializeOrder(PacketHeaderOffset.Region + 2)]
-    public System.Int32 PageSize { get; set; } = 20;
+    public int PageSize { get; set; } = 20;
 
     [SerializeOrder(PacketHeaderOffset.Region + 3)]
     public ServiceItemSortField SortBy { get; set; } = ServiceItemSortField.Description;
 
     [SerializeOrder(PacketHeaderOffset.Region + 4)]
-    public System.Boolean SortDescending { get; set; } = false;
+    public bool SortDescending { get; set; } = false;
 
     [SerializeOrder(PacketHeaderOffset.Region + 5)]
     public ServiceType? FilterType { get; set; } = null;
 
     [SerializeOrder(PacketHeaderOffset.Region + 6)]
-    public System.Decimal? FilterMinUnitPrice { get; set; } = null;
+    public decimal? FilterMinUnitPrice { get; set; } = null;
 
     [SerializeOrder(PacketHeaderOffset.Region + 7)]
-    public System.Decimal? FilterMaxUnitPrice { get; set; } = null;
+    public decimal? FilterMaxUnitPrice { get; set; } = null;
 
     [SerializeOrder(PacketHeaderOffset.Region + 8)]
-    public System.String SearchTerm { get; set; } = System.String.Empty;
+    public string SearchTerm { get; set; } = string.Empty;
 
     public ServiceItemQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
 
@@ -51,7 +53,7 @@ public sealed class ServiceItemQueryRequest : PacketBase<ServiceItemQueryRequest
         FilterType = null;
         FilterMinUnitPrice = null;
         FilterMaxUnitPrice = null;
-        SearchTerm = System.String.Empty;
+        SearchTerm = string.Empty;
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
