@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>disable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<OutputType>Library</OutputType>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<Product>AutoX.Gara</Product>
+		<Authors>PPN Corporation</Authors>
+		<Company>PPN Corporation</Company>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Nalix.Framework" Version="12.0.8" />
+		<PackageReference Include="Nalix.Network" Version="12.0.8" />
+		<PackageReference Include="Nalix.Runtime" Version="12.0.8" />
+		<ProjectReference Include="..\AutoX.Gara.Application\AutoX.Gara.Application.csproj" />
+		<ProjectReference Include="..\AutoX.Gara.Domain\AutoX.Gara.Domain.csproj" />
+		<ProjectReference Include="..\AutoX.Gara.Shared\AutoX.Gara.Shared.csproj" />
+	</ItemGroup>
+
+</Project>
