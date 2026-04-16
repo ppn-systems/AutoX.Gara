@@ -1,6 +1,24 @@
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿using System;
+using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using AutoX.Gara.Application.Abstractions.Persistence;
+using AutoX.Gara.Application.Abstractions.Services;
+using AutoX.Gara.Api.Handlers.Auth;
+using AutoX.Gara.Api.Handlers.Customers;
+using AutoX.Gara.Api.Handlers.Financial;
+using AutoX.Gara.Api.Handlers.Identity;
+using AutoX.Gara.Api.Handlers.Inventory;
+using AutoX.Gara.Api.Handlers.Repairs;
+using AutoX.Gara.Api.Handlers.Suppliers;
+using AutoX.Gara.Api.Handlers.Vehicles;
+using AutoX.Gara.Api.Handlers.Financial;
+using AutoX.Gara.Api.Handlers.Identity;
+using AutoX.Gara.Api.Handlers.Inventory;
+using AutoX.Gara.Api.Handlers.Repairs;
+using AutoX.Gara.Api.Handlers.Suppliers;
+using AutoX.Gara.Api.Handlers.Vehicles;
 using AutoX.Gara.Application.Billings;
 using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Application.Employees;
@@ -38,342 +56,194 @@ using Nalix.Network.Options;
 
 namespace AutoX.Gara.Backend;
 
-[System.Diagnostics.DebuggerStepThrough]
-[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+[DebuggerStepThrough]
+[ExcludeFromCodeCoverage]
 public static class Program
 {
-    private const System.Int32 IntervalInMinutes = 5;
+    private const int IntervalInMinutes = 5;
 
     private static readonly System.Threading.ManualResetEvent QuitEvent = new(false);
-    private static readonly TaskManager Task = InstanceManager.Instance.GetOrCreateInstance<TaskManager>();
+    private static readonly TaskManager _taskManager = InstanceManager.Instance.GetOrCreateInstance<TaskManager>();
     private static NetworkApplication App;
 
-    [System.STAThread]
-    [System.Diagnostics.DebuggerNonUserCode]
-    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.Synchronized)]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "<Pending>")]
-    public static void Main(System.String[] args)
+    [STAThread]
+    [DebuggerNonUserCode]
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public static void Main(string[] args)
     {
         try
         {
-            //InstanceManager.Instance.LogEvent += (sender, e) =>
-            //{
-            //    if (e.Level >= LogLevel.Error)
-            //    {
-            //        System.Console.Error.WriteLine($"[{e.Level}] {e.Message}");
-            //        if (e.Exception is not null)
-            //        {
-            //            System.Console.Error.WriteLine(e.Exception);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        System.Console.WriteLine($"[{e.Level}] {e.Message}");
-            //        if (e.Exception is not null)
-            //        {
-            //            System.Console.WriteLine(e.Exception);
-            //        }
-            //    }
-            //};
             InitializeComponent();
             App.ActivateAsync().GetAwaiter().GetResult();
 
-            System.Console.CursorVisible = false;
-            System.Console.CancelKeyPress += (sender, e) =>
+            Console.CursorVisible = false;
+            Console.CancelKeyPress += (sender, e) =>
             {
-                e.Cancel = true; // Ngăn dừng đột ngột
+                e.Cancel = true;
                 QuitEvent.Set();
             };
 
-
-            // We can use a worker to listen to keyboard input without blocking the main thread
-            InstanceManager.Instance.GetOrCreateInstance<TaskManager>().ScheduleWorker(
+            _taskManager.ScheduleWorker(
                 "console.keyboard", "console",
                 async (ctx, ct) => await LISTEN_TO_KEYBOARD(ctx, ct),
-                new WorkerOptions
-                {
-                    RetainFor = System.TimeSpan.FromMinutes(10)
-                }
+                new WorkerOptions { RetainFor = TimeSpan.FromMinutes(10) }
             );
 
-            // Schedule periodic report generation every 5 minutes
-            InstanceManager.Instance.GetOrCreateInstance<TaskManager>().ScheduleWorker(
+            _taskManager.ScheduleWorker(
                 "report.generator", "report",
                 async (ctx, ct) => await GENERATE_PERIODIC_REPORTS(ctx, ct),
-                new WorkerOptions
-                {
-                    RetainFor = System.TimeSpan.FromMinutes(IntervalInMinutes)
-                }
+                new WorkerOptions { RetainFor = TimeSpan.FromMinutes(IntervalInMinutes) }
             );
 
-            InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                    .Info("Press 'Ctrl+R' to print reports.");
-
-            InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                    .Info("Server is running. Press Ctrl+C to exit.");
+            InstanceManager.Instance.GetExistingInstance<ILogger>().Info("Press 'Ctrl+R' to print reports.");
+            InstanceManager.Instance.GetExistingInstance<ILogger>().Info("Server is running. Press Ctrl+C to exit.");
 
             QuitEvent.WaitOne();
-
             App.DeactivateAsync().GetAwaiter().GetResult();
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            if (InstanceManager.Instance.GetExistingInstance<ILogger>() is null)
-            {
-                System.Console.Error.WriteLine("Fatal error in Main: " + ex);
-            }
-            else
-            {
-                InstanceManager.Instance.GetExistingInstance<ILogger>()?
-                                        .Error("Unhandled exception in Main", ex);
-            }
-
-            System.Environment.Exit(-1);
+            InstanceManager.Instance.GetExistingInstance<ILogger>()?.Error("Unhandled exception in Main", ex);
+            Environment.Exit(-1);
         }
         finally
         {
-            System.Console.CursorVisible = false;
+            Console.CursorVisible = false;
         }
     }
 
     public static void GenerateReport()
     {
-
-        InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                .Info(InstanceManager.Instance
-                                .GenerateReport());
-
+        InstanceManager.Instance.GetExistingInstance<ILogger>().Info(InstanceManager.Instance.GenerateReport());
         ConnectionHub hub = (ConnectionHub)InstanceManager.Instance.GetExistingInstance<IConnectionHub>();
-        InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                .Info(hub.GenerateReport());
-
-        // Wait update from Nalix.Framework > v12.0.8 to support report for dispatchers
-        //InstanceManager.Instance.GetExistingInstance<ILogger>()
-        //                        .Info(InstanceManager.Instance
-        //                        .GetExistingInstance<IPacketDispatch>()
-        //                        .GenerateReport());
-
-        InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                .Info(InstanceManager.Instance
-                                .GetOrCreateInstance<BufferPoolManager>()
-                                .GenerateReport());
-
-        InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                .Info(InstanceManager.Instance
-                                .GetExistingInstance<ObjectPoolManager>()
-                                .GenerateReport());
-
-        InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                .Info(InstanceManager.Instance
-                                .GetExistingInstance<TaskManager>()
-                                .GenerateReport());
+        InstanceManager.Instance.GetExistingInstance<ILogger>().Info(hub.GenerateReport());
+        InstanceManager.Instance.GetExistingInstance<ILogger>().Info(InstanceManager.Instance.GetOrCreateInstance<BufferPoolManager>().GenerateReport());
+        InstanceManager.Instance.GetExistingInstance<ILogger>().Info(InstanceManager.Instance.GetExistingInstance<ObjectPoolManager>().GenerateReport());
+        InstanceManager.Instance.GetExistingInstance<ILogger>().Info(_taskManager.GenerateReport());
     }
 
     public static void InitializeComponent()
     {
-#if DEBUG
-        ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Trace;
-
+        ConfigurationManager.Instance.Get<NLogixOptions>().MinLevel = LogLevel.Trace;
         ILogger logger = new NLogix(cfg => cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = true)));
-#else
-        ConfigurationManager.Instance.Get<NLogixOptions>()
-                            .MinLevel = LogLevel.Trace;
-
-        ILogger logger = new NLogix(cfg =>
-        {
-            cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = false))
-               .RegisterTarget(new BatchFileLogTarget());
-        });
-#endif
         InstanceManager.Instance.Register<ILogger>(logger);
 
-        // Register application configuration
         AppConfig.Register();
 
         AutoXDbContextFactory factory = new();
         InstanceManager.Instance.Register<AutoXDbContextFactory>(factory);
         InstanceManager.Instance.Register<IDataSessionFactory>(new DataSessionFactory(factory));
 
-        // Seed initial data if necessary
         using (AutoXDbContext context = factory.CreateDbContext())
         {
-            try
+            if (context.Database.EnsureCreated())
             {
-                // EnsureCreated sẽ tự kiểm tra database chưa có mới tạo, nếu đã có thì không làm gì cả.
-                if (context.Database.EnsureCreated())
-                {
-                    // Sau khi TẠO MỚI database thành công, seed data.
-                    DataSeeder.SeedAsync(context).Wait();
-                }
-            }
-            catch (System.Exception ex)
-            {
-                InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                        .Error("Error during database initialization", ex);
-                throw; // Rethrow để Main có thể bắt và xử lý
+                DataSeeder.SeedAsync(context).Wait();
             }
         }
+
+        var sessionFactory = InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>();
+        InstanceManager.Instance.Register<IAccountAppService>(new AccountAppService(sessionFactory, logger.Create<AccountAppService>()));
+        InstanceManager.Instance.Register<IEmployeeAppService>(new EmployeeAppService(sessionFactory, logger.Create<EmployeeAppService>()));
+        InstanceManager.Instance.Register<IEmployeeSalaryAppService>(new EmployeeSalaryAppService(sessionFactory, logger.Create<EmployeeSalaryAppService>()));
+        InstanceManager.Instance.Register<ICustomerAppService>(new CustomerAppService(sessionFactory, logger.Create<CustomerAppService>()));
+        InstanceManager.Instance.Register<IVehicleAppService>(new VehicleAppService(sessionFactory, logger.Create<VehicleAppService>()));
+        InstanceManager.Instance.Register<IPartAppService>(new PartAppService(sessionFactory, logger.Create<PartAppService>()));
+        InstanceManager.Instance.Register<ISupplierAppService>(new SupplierAppService(sessionFactory, logger.Create<SupplierAppService>()));
+        InstanceManager.Instance.Register<IInvoiceAppService>(new InvoiceAppService(sessionFactory, logger.Create<InvoiceAppService>()));
+        InstanceManager.Instance.Register<IRepairOrderAppService>(new RepairOrderAppService(sessionFactory, logger.Create<RepairOrderAppService>()));
+        InstanceManager.Instance.Register<ITransactionAppService>(new TransactionAppService(sessionFactory, logger.Create<TransactionAppService>()));
+        InstanceManager.Instance.Register<IServiceItemAppService>(new ServiceItemAppService(sessionFactory, logger.Create<ServiceItemAppService>()));
+        InstanceManager.Instance.Register<IRepairTaskAppService>(new RepairTaskAppService(sessionFactory, logger.Create<RepairTaskAppService>()));
+        InstanceManager.Instance.Register<IRepairOrderItemAppService>(new RepairOrderItemAppService(sessionFactory, logger.Create<RepairOrderItemAppService>()));
 
         App = NetworkApplication.CreateBuilder()
             .ConfigureLogging(logger)
             .ConfigureConnectionHub(new ConnectionHub(null, logger))
             .ConfigureBufferPoolManager(new BufferPoolManager(logger))
             .Configure<NetworkSocketOptions>(options => { options.Port = 57206; })
-            .AddPacket<LoginPacket>()
             .ConfigureDispatch(dispatchOptions =>
             {
                 dispatchOptions.WithLogging(InstanceManager.Instance.GetExistingInstance<ILogger>());
-                dispatchOptions.WithErrorHandling((exception, command)
-                    => InstanceManager.Instance.GetExistingInstance<ILogger>()
-                                               .Error($"Error handling command: {command}", exception));
-
-                dispatchOptions.WithHandler(() =>
-                    new AccountOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new EmployeeOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new EmployeeSalaryOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new CustomerOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new VehicleOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new PartOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new SupplierOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new InvoiceOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new RepairOrderOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new TransactionOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new ServiceItemOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new RepairTaskOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
-                dispatchOptions.WithHandler(() =>
-                    new RepairOrderItemOps(
-                        InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()
-                    )
-                );
+                dispatchOptions.WithHandler(() => new AccountHandler(InstanceManager.Instance.GetExistingInstance<IAccountAppService>(), InstanceManager.Instance.GetExistingInstance<IDataSessionFactory>()));
+                dispatchOptions.WithHandler(() => new EmployeeHandler(InstanceManager.Instance.GetExistingInstance<IEmployeeAppService>()));
+                dispatchOptions.WithHandler(() => new EmployeeSalaryHandler(InstanceManager.Instance.GetExistingInstance<IEmployeeSalaryAppService>()));
+                dispatchOptions.WithHandler(() => new CustomerHandler(InstanceManager.Instance.GetExistingInstance<ICustomerAppService>()));
+                dispatchOptions.WithHandler(() => new VehicleHandler(InstanceManager.Instance.GetExistingInstance<IVehicleAppService>()));
+                dispatchOptions.WithHandler(() => new PartHandler(InstanceManager.Instance.GetExistingInstance<IPartAppService>()));
+                dispatchOptions.WithHandler(() => new SupplierHandler(InstanceManager.Instance.GetExistingInstance<ISupplierAppService>()));
+                dispatchOptions.WithHandler(() => new InvoiceHandler(InstanceManager.Instance.GetExistingInstance<IInvoiceAppService>()));
+                dispatchOptions.WithHandler(() => new RepairOrderHandler(InstanceManager.Instance.GetExistingInstance<IRepairOrderAppService>()));
+                dispatchOptions.WithHandler(() => new TransactionHandler(InstanceManager.Instance.GetExistingInstance<ITransactionAppService>()));
+                dispatchOptions.WithHandler(() => new ServiceItemHandler(InstanceManager.Instance.GetExistingInstance<IServiceItemAppService>()));
+                dispatchOptions.WithHandler(() => new RepairTaskHandler(InstanceManager.Instance.GetExistingInstance<IRepairTaskAppService>()));
+                dispatchOptions.WithHandler(() => new RepairOrderItemHandler(InstanceManager.Instance.GetExistingInstance<IRepairOrderItemAppService>()));
             })
             .AddTcp<AutoXProtocol>()
             .Build();
     }
 
-    private static System.Threading.Tasks.Task LISTEN_TO_KEYBOARD(IWorkerContext ctx, System.Threading.CancellationToken ct)
+    private static Task LISTEN_TO_KEYBOARD(IWorkerContext ctx, System.Threading.CancellationToken ct)
     {
-        return System.Threading.Tasks.Task.Run(async () =>
+        return Task.Run(async () =>
         {
-            const System.Double TileCooldownSeconds = 1.0;
-            const System.Double ReportCooldownSeconds = 5.0;
-
-            System.DateTime startTime = Clock.NowUtc();
-            System.DateTime lastTileTime = System.DateTime.MinValue;
-            System.DateTime lastReportTime = System.DateTime.MinValue;
+            const double TileCooldownSeconds = 1.0;
+            const double ReportCooldownSeconds = 5.0;
+            DateTime startTime = Clock.NowUtc();
+            DateTime lastTileTime = DateTime.MinValue;
+            DateTime lastReportTime = DateTime.MinValue;
 
             while (!ct.IsCancellationRequested)
             {
-                System.DateTime now = Clock.NowUtc();
-
-                // Kiểm tra cooldown để tránh spam
+                DateTime now = Clock.NowUtc();
                 if ((now - lastTileTime).TotalSeconds >= TileCooldownSeconds)
                 {
-                    System.TimeSpan runningTime = now - startTime;
-                    System.String runningTimeString = System.String.Format("{0:D2}:{1:D2}:{2:D2}", runningTime.Hours, runningTime.Minutes, runningTime.Seconds);
-                    System.Console.Title = $"AutoX | Level: {ConfigurationManager.Instance.Get<NLogixOptions>().MinLevel} | {Task.Title} | {runningTimeString}";
+                    TimeSpan runningTime = now - startTime;
+                    string runningTimeString = string.Format("{0:D2}:{1:D2}:{2:D2}", runningTime.Hours, runningTime.Minutes, runningTime.Seconds);
+                    Console.Title = "AutoX | " + _taskManager.Title + " | " + runningTimeString;
                 }
 
-                if (System.Console.KeyAvailable)
+                if (Console.KeyAvailable)
                 {
-                    System.ConsoleKeyInfo key = System.Console.ReadKey(intercept: true);
-                    if (key.Key == System.ConsoleKey.R && (key.Modifiers & System.ConsoleModifiers.Control) != 0)
+                    ConsoleKeyInfo key = Console.ReadKey(intercept: true);
+                    if (key.Key == ConsoleKey.R && (key.Modifiers & ConsoleModifiers.Control) != 0)
                     {
-                        // Kiểm tra cooldown để tránh spam
                         if ((now - lastReportTime).TotalSeconds >= ReportCooldownSeconds)
                         {
                             GenerateReport();
                             lastReportTime = now;
-
                             ctx.Advance(1);
                         }
                     }
-
-                    if (key.Key == System.ConsoleKey.R && (key.Modifiers & System.ConsoleModifiers.Control) != 0)
-                    {
-                        // Kiểm tra cooldown để tránh spam
-                        if ((now - lastReportTime).TotalSeconds >= ReportCooldownSeconds)
-                        {
-                            ConfigurationManager.Instance.Flush();
-                            lastReportTime = now;
-                            ctx.Advance(1);
-                        }
-                    }
-
-                    ctx.Beat();
-                    await System.Threading.Tasks.Task.Delay(100, ct);
                 }
+                ctx.Beat();
+                await Task.Delay(100, ct);
             }
-
         }, ct);
     }
 
-    private static async System.Threading.Tasks.Task GENERATE_PERIODIC_REPORTS(IWorkerContext ctx, System.Threading.CancellationToken ct)
+    private static async Task GENERATE_PERIODIC_REPORTS(IWorkerContext ctx, System.Threading.CancellationToken ct)
     {
         while (!ct.IsCancellationRequested)
         {
-            InstanceManager.Instance.GetOrCreateInstance<BufferPoolManager>()
-                                    .SaveReportToFile("buffer");
-
-            InstanceManager.Instance.GetExistingInstance<ObjectPoolManager>()
-                                    .SaveReportToFile("object");
-
-            InstanceManager.Instance.GetExistingInstance<TaskManager>()
-                                    .SaveReportToFile("task");
-
+            InstanceManager.Instance.GetOrCreateInstance<BufferPoolManager>().SaveReportToFile("buffer");
+            InstanceManager.Instance.GetExistingInstance<ObjectPoolManager>().SaveReportToFile("object");
+            _taskManager.SaveReportToFile("task");
             ctx.Beat();
             ctx.Advance(1);
-
-            await System.Threading.Tasks.Task.Delay(System.TimeSpan.FromMinutes(IntervalInMinutes), ct);
+            await Task.Delay(TimeSpan.FromMinutes(IntervalInMinutes), ct);
         }
     }
 }
 
-
+internal static class LoggerExtensions
+{
+    public static Microsoft.Extensions.Logging.ILogger<T> Create<T>(this Microsoft.Extensions.Logging.ILogger logger) => new LoggerWrapper<T>(logger);
+    private class LoggerWrapper<T>(Microsoft.Extensions.Logging.ILogger logger) : Microsoft.Extensions.Logging.ILogger<T>
+    {
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull => logger.BeginScope(state);
+        public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel) => logger.IsEnabled(logLevel);
+        public void Log<TState>(Microsoft.Extensions.Logging.LogLevel logLevel, Microsoft.Extensions.Logging.EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+            => logger.Log(logLevel, eventId, state, exception, formatter);
+    }
+}
