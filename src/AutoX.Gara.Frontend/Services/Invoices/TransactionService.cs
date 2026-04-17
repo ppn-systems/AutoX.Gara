@@ -14,7 +14,6 @@ using AutoX.Gara.Shared.Protocol.Invoices;
 
 using Microsoft.Extensions.Logging;
 
-using Nalix.Common.Networking.Protocols;
 
 using Nalix.Framework.Injection;
 
@@ -67,7 +66,7 @@ public sealed class TransactionService
         if (_cache.TryGet(key, out TransactionCacheEntry? cached))
 
         {
-            return TransactionListResult.Success(cached.Transactions, cached.TotalCount, page * pageSize < cached.TotalCount);
+            return TransactionListResult.Success(cached!.Transactions, cached!.TotalCount, page * pageSize < cached!.TotalCount);
 
         }
 

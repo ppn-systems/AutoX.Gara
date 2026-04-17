@@ -4,7 +4,6 @@ using Nalix.Common.Networking.Protocols;
 
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Customers;
-using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
@@ -15,7 +14,6 @@ using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Common.Security;
 using Nalix.Framework.Serialization;
 using System;
-using AutoX.Gara.Api.Handlers.Common;
 
 namespace AutoX.Gara.Api.Handlers.Vehicles;
 

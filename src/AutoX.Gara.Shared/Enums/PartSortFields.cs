@@ -22,8 +22,10 @@ public enum PartSortField : byte
     Quantity = 3,
 
     /// <summary>S?p x?p theo don gi�.</summary>
-    UnitPrice = 4,
-
+    UnitPrice = 4,
+
+
+
     /// <summary>S?p x?p theo gi� nh?p.</summary>
     PurchasePrice = 5,
 
@@ -31,10 +33,15 @@ public enum PartSortField : byte
     SellingPrice = 6,
 
     /// <summary>S?p x?p theo s? lu?ng t?n kho.</summary>
-    InventoryQuantity = 7,
-
-    /// <summary>
-    /// Gi� tr? t?i da (kh�ng ph?i c?t th?c t?, d�ng d? validate input).
-    /// </summary>
+    InventoryQuantity = 7,
+
+
+
+    /// <summary>
+
+    /// Gi� tr? t?i da (kh�ng ph?i c?t th?c t?, d�ng d? validate input).
+
+    /// </summary>
+
     TotalValue = 8,
 }

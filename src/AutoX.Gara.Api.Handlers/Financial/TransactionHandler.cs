@@ -4,7 +4,6 @@ using Nalix.Common.Networking.Protocols;
 
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Invoices;
-using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Protocol.Invoices;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;

@@ -26,20 +26,20 @@ public sealed partial class LoginViewModel : ObservableObject
     private readonly INavigationService _navigation;
     private CancellationTokenSource? _loginCts;
 
-    [ObservableProperty] private bool _hasError;
-    [ObservableProperty] private bool _isNetworkReady;
-    [ObservableProperty] private bool _isLoading = true;
-    [ObservableProperty] private bool _isPasswordHidden = true;
-    [ObservableProperty] private string? _errorMessage;
-    [ObservableProperty] private string _username = string.Empty;
-    [ObservableProperty] private string _password = string.Empty;
+    [ObservableProperty] public partial bool HasError { get; set; }
+    [ObservableProperty] public partial bool IsNetworkReady { get; set; }
+    [ObservableProperty] public partial bool IsLoading { get; set; } = true;
+    [ObservableProperty] public partial bool IsPasswordHidden { get; set; } = true;
+    [ObservableProperty] public partial string? ErrorMessage { get; set; }
+    [ObservableProperty] public partial string Username { get; set; } = string.Empty;
+    [ObservableProperty] public partial string Password { get; set; } = string.Empty;
 
     // -- Popup State --
-    [ObservableProperty] private bool _isPopupRetry;
-    [ObservableProperty] private bool _isPopupVisible;
-    [ObservableProperty] private string _popupButtonText = "OK";
-    [ObservableProperty] private string _popupTitle = string.Empty;
-    [ObservableProperty] private string _popupMessage = string.Empty;
+    [ObservableProperty] public partial bool IsPopupRetry { get; set; }
+    [ObservableProperty] public partial bool IsPopupVisible { get; set; }
+    [ObservableProperty] public partial string PopupButtonText { get; set; } = "OK";
+    [ObservableProperty] public partial string PopupTitle { get; set; } = string.Empty;
+    [ObservableProperty] public partial string PopupMessage { get; set; } = string.Empty;
 
     // -- Computed Properties --
     public bool IsPopupNotRetry => !IsPopupRetry;

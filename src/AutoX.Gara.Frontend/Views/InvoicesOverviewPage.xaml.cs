@@ -43,7 +43,7 @@ public partial class InvoicesOverviewPage : ContentPage
 
     }
 
-    private async void OnPaymentStatusFilterTapped(Object sender, TappedEventArgs e)
+    private async void OnPaymentStatusFilterTapped(object? sender, TappedEventArgs e)
 
     {
         if (BindingContext is not InvoicesOverviewViewModel vm)

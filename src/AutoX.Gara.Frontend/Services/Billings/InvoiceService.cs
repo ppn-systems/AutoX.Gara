@@ -12,7 +12,6 @@ using AutoX.Gara.Shared.Protocol.Billings;
 
 using Microsoft.Extensions.Logging;
 
-using Nalix.Common.Networking.Protocols;
 
 using Nalix.Framework.Injection;
 
@@ -69,7 +68,7 @@ public sealed class InvoiceService
         if (_cache.TryGet(key, out InvoiceCacheEntry? cached))
 
         {
-            return InvoiceListResult.Success(cached.Invoices, cached.TotalCount, page * pageSize < cached.TotalCount);
+            return InvoiceListResult.Success(cached!.Invoices, cached!.TotalCount, page * pageSize < cached!.TotalCount);
 
         }
 

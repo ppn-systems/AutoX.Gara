@@ -72,7 +72,7 @@ public partial class InvoicesPage : ContentPage
 
     public void Initialize(CustomerDto owner) => _vm.Initialize(owner);
 
-    private async void OnBackClicked(System.Object sender, System.EventArgs e)
+    private async void OnBackClicked(object? sender, System.EventArgs e)
 
     {
         if (Shell.Current?.Navigation is null)
@@ -94,7 +94,7 @@ public partial class InvoicesPage : ContentPage
 
     }
 
-    private async void OnDeletePressed(Object sender, EventArgs e)
+    private async void OnDeletePressed(object? sender, EventArgs e)
 
     {
         if (sender is not Button btn)
@@ -168,7 +168,7 @@ public partial class InvoicesPage : ContentPage
 
     }
 
-    private void OnDeleteReleased(Object sender, EventArgs e)
+    private void OnDeleteReleased(object? sender, EventArgs e)
 
     {
         try { _deleteHoldCts?.Cancel(); } catch { }

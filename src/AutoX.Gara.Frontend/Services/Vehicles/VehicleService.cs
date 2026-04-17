@@ -10,7 +10,6 @@ using AutoX.Gara.Shared.Protocol.Vehicles;
 
 using Microsoft.Extensions.Logging;
 
-using Nalix.Common.Networking.Protocols;
 
 using Nalix.Framework.Injection;
 
@@ -59,7 +58,7 @@ public sealed class VehicleService
         if (_cache.TryGet(key, out VehicleCacheEntry? cached))
 
         {
-            return VehicleListResult.Success(cached.Vehicles, cached.TotalCount, page * pageSize < cached.TotalCount);
+            return VehicleListResult.Success(cached!.Vehicles, cached!.TotalCount, page * pageSize < cached!.TotalCount);
 
         }
 

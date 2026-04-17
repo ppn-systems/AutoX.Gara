@@ -14,7 +14,6 @@ using AutoX.Gara.Shared.Protocol.Suppliers;
 
 using Microsoft.Extensions.Logging;
 
-using Nalix.Common.Networking.Protocols;
 
 using Nalix.Framework.Injection;
 
@@ -69,7 +68,7 @@ public sealed class SupplierService : ISupplierService
         if (_cache.TryGet(key, out SupplierCacheEntry? cached))
 
         {
-            return SupplierListResult.Success(cached.Suppliers, cached.TotalCount, page * pageSize < cached.TotalCount);
+            return SupplierListResult.Success(cached!.Suppliers, cached!.TotalCount, page * pageSize < cached!.TotalCount);
 
         }
 

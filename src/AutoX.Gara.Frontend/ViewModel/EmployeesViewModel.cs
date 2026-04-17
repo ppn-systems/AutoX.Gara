@@ -17,14 +17,13 @@ using AutoX.Gara.Frontend.Services.Employees;
 using Nalix.Common.Networking.Protocols;
 
 using AutoX.Gara.Shared.Protocol.Employees;
+using AutoX.Gara.Shared.Validation;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
 using CommunityToolkit.Mvvm.Input;
 
 using Microsoft.Extensions.Logging;
-
-using Nalix.Common.Networking.Protocols;
 
 using Nalix.Framework.Injection;
 
@@ -1672,40 +1671,28 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     }
 
-    private bool ValidateForm()
-
+        private bool ValidateForm()
     {
-        if (string.IsNullOrWhiteSpace(FormName))
+        ClearFormError();
+        if (!EmployeeValidation.IsValidName(FormName))
+        { SetFormError("Tên nhân viên không hợp lệ (2-100 ký tự)."); return false; }
 
-        { SetFormError("T�n nh�n vi�n kh�ng du?c d? tr?ng."); return false; }
-
-        if (FormName.Length > 50)
-
-        { SetFormError("T�n kh�ng du?c vu?t qu� 50 k� t?."); return false; }
-
-        if (!IsValidEmail(FormEmail))
-
-        { SetFormError("Email kh�ng h?p l?."); return false; }
+        if (!AccountValidation.IsValidEmail(FormEmail))
+        { SetFormError("Email không hợp lệ."); return false; }
 
         if (!string.IsNullOrWhiteSpace(FormPhoneNumber))
-
         {
-            if (!IsValidPhone(FormPhoneNumber))
-
-            { SetFormError("S? di?n tho?i kh�ng h?p l? (10-14 ch? s?)."); return false; }
-
+            if (!AccountValidation.IsValidVietnamPhoneNumber(FormPhoneNumber))
+            { SetFormError("Số điện thoại không hợp lệ."); return false; }
         }
 
-        if (FormDateOfBirth >= DateTime.Today)
+        if (!EmployeeValidation.IsValidDateOfBirth(FormDateOfBirth))
+        { SetFormError("Ngày sinh phải trong quá khứ."); return false; }
 
-        { SetFormError("Ng�y sinh ph?i trong qu� kh?."); return false; }
-
-        if (FormEndDate.HasValue && FormEndDate <= FormStartDate)
-
-        { SetFormError("Ng�y k?t th�c ph?i sau ng�y b?t d?u."); return false; }
+        if (!EmployeeValidation.IsValidDates(FormStartDate, FormEndDate))
+        { SetFormError("Ngày kết thúc phải sau ngày bắt đầu."); return false; }
 
         return true;
-
     }
 
     private EmployeeDto BuildPacketFromForm()
@@ -1813,26 +1800,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     }
 
-    private static bool IsValidEmail(string email)
+    
 
-    {
-        try
-
-        {
-            var addr = new System.Net.Mail.MailAddress(email);
-
-            return addr.Address == email;
-
-        }
-
-        catch
-
-        {
-            return false;
-
-        }
-
-    }
-
-    private static bool IsValidPhone(string phone) => System.Text.RegularExpressions.Regex.IsMatch(phone, @"^\d{10,14}$");
+    
 }

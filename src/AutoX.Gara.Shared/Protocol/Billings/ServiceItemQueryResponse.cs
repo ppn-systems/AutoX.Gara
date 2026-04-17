@@ -34,7 +34,8 @@ public sealed class ServiceItemQueryResponse : PacketBase<ServiceItemQueryRespon
 
             return total;
         }
-    }
+    }
+
 
     [SerializeOrder(PacketHeaderOffset.Region + 1)]
     public int TotalCount { get; set; }

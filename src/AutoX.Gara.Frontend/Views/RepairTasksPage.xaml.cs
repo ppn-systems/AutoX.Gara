@@ -49,7 +49,7 @@ public partial class RepairTasksPage : ContentPage
 
     public void Initialize(RepairOrderDto repairOrder) => _vm.Initialize(repairOrder);
 
-    private async void OnBackClicked(System.Object sender, System.EventArgs e)
+    private async void OnBackClicked(object? sender, System.EventArgs e)
 
     {
         if (Shell.Current?.Navigation is null)
@@ -65,7 +65,7 @@ public partial class RepairTasksPage : ContentPage
 
     }
 
-    private async void OnFormStatusTapped(object sender, TappedEventArgs e)
+    private async void OnFormStatusTapped(object? sender, TappedEventArgs e)
 
     {
         if (BindingContext is not RepairTasksViewModel vm)

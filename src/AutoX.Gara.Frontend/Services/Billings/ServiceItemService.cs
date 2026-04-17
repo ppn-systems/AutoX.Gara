@@ -12,7 +12,6 @@ using AutoX.Gara.Shared.Protocol.Billings;
 
 using Microsoft.Extensions.Logging;
 
-using Nalix.Common.Networking.Protocols;
 
 using Nalix.Framework.Injection;
 
@@ -63,7 +62,7 @@ public sealed class ServiceItemService
         if (_cache.TryGet(key, out ServiceItemCacheEntry? cached))
 
         {
-            return ServiceItemListResult.Success(cached.ServiceItems, cached.TotalCount, page * pageSize < cached.TotalCount);
+            return ServiceItemListResult.Success(cached!.ServiceItems, cached!.TotalCount, page * pageSize < cached!.TotalCount);
 
         }
 

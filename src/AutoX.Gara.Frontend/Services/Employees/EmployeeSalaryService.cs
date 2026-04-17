@@ -12,7 +12,6 @@ using AutoX.Gara.Shared.Protocol.Employees;
 
 using Microsoft.Extensions.Logging;
 
-using Nalix.Common.Networking.Protocols;
 
 using Nalix.Framework.Injection;
 
@@ -65,7 +64,7 @@ public sealed class EmployeeSalaryService
         if (_cache.TryGet(key, out EmployeeSalaryCacheEntry? cached))
 
         {
-            return EmployeeSalaryListResult.Success(cached.Salaries, cached.TotalCount, page * pageSize < cached.TotalCount);
+            return EmployeeSalaryListResult.Success(cached!.Salaries, cached!.TotalCount, page * pageSize < cached!.TotalCount);
 
         }
 

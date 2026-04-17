@@ -1,80 +1,80 @@
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="AutoX.Gara.Frontend.Views.MainPage"
-             BackgroundColor="{DynamicResource PageBackgroundColor}">
-    <ScrollView>
-        <VerticalStackLayout Padding="24,40,24,32" Spacing="20" HorizontalOptions="Center">
-            <!-- Logo -->
-            <Image Source="https://raw.githubusercontent.com/ppn-systems/Nalix/refs/heads/master/assets/Nalix.ico"
-                   HeightRequest="60"
-                   Aspect="AspectFit"
-                   HorizontalOptions="Center"/>
-            <!-- Title -->
-            <Label Text="Nalix"
-                   FontAttributes="Bold"
-                   FontSize="32"
-                   TextColor="{DynamicResource PrimaryTextColor}"
-                   HorizontalOptions="Center"/>
-            <Label Text="Real-Time .NET Server &amp; Secure Communication Library"
-                   FontSize="Medium"
-                   FontAttributes="Italic"
-                   TextColor="{DynamicResource SecondaryTextColor}"
-                   HorizontalOptions="Center"/>
-            <!-- Short Description -->
-            <Border Padding="12,8" Margin="0,12,0,0" BackgroundColor="{DynamicResource CardBackgroundColor}">
-                <Label Text="Nalix is a fast, secure, cross-platform server library for real-time communication, state sync, and protocol servers. Easily customizable and extensible for enterprise and modern apps."
-                       FontSize="Small"
-                       TextColor="{DynamicResource SecondaryTextColor}"/>
-            </Border>
-            <!-- Features -->
-            <Label Text="✨ Features" FontAttributes="Bold" FontSize="20" TextColor="{DynamicResource PrimaryTextColor}" Margin="0,10,0,0"/>
-            <VerticalStackLayout Spacing="4">
-                <Label Text="🖥️ Cross-platform (.NET 10+; Windows/Linux/macOS)" FontSize="14" TextColor="{DynamicResource FeatureTextColor}"/>
-                <Label Text="🔄 Real-time messaging &amp; state sync" FontSize="14" TextColor="{DynamicResource FeatureTextColor}"/>
-                <Label Text="🔐 Security: ChaCha20/Salsa20-Poly1305 encryption" FontSize="14" TextColor="{DynamicResource FeatureTextColor}"/>
-                <Label Text="🛤️ Pluggable protocols, custom middleware, high performance" FontSize="14" TextColor="{DynamicResource FeatureTextColor}"/>
-                <Label Text="🧩 SOLID &amp; DDD architecture, modern C# 14 code" FontSize="14" TextColor="{DynamicResource FeatureTextColor}"/>
-            </VerticalStackLayout>
-            <!-- Installation -->
-            <Label Text="📦 Install via NuGet" FontAttributes="Bold" FontSize="18" Margin="0,15,0,0"/>
-            <Border Padding="6" BackgroundColor="#161923">
-                <VerticalStackLayout Spacing="3">
-                    <Label Text="dotnet add package Nalix.SDK"
-                           FontFamily="Consolas"
-                           FontSize="14"
-                           TextColor="#7eecff"/>
-                    <Label Text="dotnet add package Nalix.Common"
-                           FontFamily="Consolas"
-                           FontSize="14"
-                           TextColor="#7eecff"/>
-                    <Label Text="dotnet add package Nalix.Shared"
-                           FontFamily="Consolas"
-                           FontSize="14"
-                           TextColor="#7eecff"/>
-                    <Label Text="dotnet add package Nalix.Logging"
-                           FontFamily="Consolas"
-                           FontSize="14"
-                           TextColor="#7eecff"/>
-                    <Label Text="dotnet add package Nalix.Network"
-                           FontFamily="Consolas"
-                           FontSize="14"
-                           TextColor="#7eecff"/>
-                    <Label Text="dotnet add package Nalix.Framework"
-                           FontFamily="Consolas"
-                           FontSize="14"
-                           TextColor="#7eecff"/>
-                </VerticalStackLayout>
-            </Border>
-            <!-- Links -->
-            <Button Text="View on GitHub" 
-                    Clicked="OnGitHubClick" 
-                    StyleClass="PrimaryButton"
-                    Margin="0,14,0,0"/>
-            <Label Text="Copyright © 2026 PhcNguyen"
-                   FontSize="10"
-                   TextColor="{DynamicResource DisabledColor}"
-                   HorizontalOptions="Center"
-                   Margin="0,12,0,0"/>
-        </VerticalStackLayout>
-    </ScrollView>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AutoX.Gara.Frontend.Views.MainPage"
+             BackgroundColor="{DynamicResource PageBackgroundColor}">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,40,24,32" Spacing="20" HorizontalOptions="Center">
+            <!-- Logo -->
+            <Image Source="https://raw.githubusercontent.com/ppn-systems/Nalix/refs/heads/master/assets/Nalix.ico"
+                   HeightRequest="60"
+                   Aspect="AspectFit"
+                   HorizontalOptions="Center"/>
+            <!-- Title -->
+            <Label Text="Nalix"
+                   FontAttributes="Bold"
+                   FontSize="32"
+                   TextColor="{DynamicResource PrimaryTextColor}"
+                   HorizontalOptions="Center"/>
+            <Label Text="Real-Time .NET Server &amp; Secure Communication Library"
+                    FontSize="18"
+                    FontAttributes="Italic"
+                    TextColor="{DynamicResource SecondaryTextColor}"
+                    HorizontalOptions="Center"/>
+            <!-- Short Description -->
+            <Border Padding="12,8" Margin="0,12,0,0" BackgroundColor="{DynamicResource CardBackgroundColor}">
+                <Label Text="Nalix is a fast, secure, cross-platform server library for real-time communication, state sync, and protocol servers. Easily customizable and extensible for enterprise and modern apps."
+                       FontSize="12"
+                       TextColor="{DynamicResource SecondaryTextColor}"/>
+            </Border>
+            <!-- Features -->
+            <Label Text="✨ Features" FontAttributes="Bold" FontSize="20" TextColor="{DynamicResource PrimaryTextColor}" Margin="0,10,0,0"/>
+            <VerticalStackLayout Spacing="4">
+                <Label Text="🖥️ Cross-platform (.NET 10+; Windows/Linux/macOS)" FontSize="14" TextColor="{DynamicResource FeatureTextColor}"/>
+                <Label Text="🔄 Real-time messaging &amp; state sync" FontSize="14" TextColor="{DynamicResource FeatureTextColor}"/>
+                <Label Text="🔐 Security: ChaCha20/Salsa20-Poly1305 encryption" FontSize="14" TextColor="{DynamicResource FeatureTextColor}"/>
+                <Label Text="🛤️ Pluggable protocols, custom middleware, high performance" FontSize="14" TextColor="{DynamicResource FeatureTextColor}"/>
+                <Label Text="🧩 SOLID &amp; DDD architecture, modern C# 14 code" FontSize="14" TextColor="{DynamicResource FeatureTextColor}"/>
+            </VerticalStackLayout>
+            <!-- Installation -->
+            <Label Text="📦 Install via NuGet" FontAttributes="Bold" FontSize="18" Margin="0,15,0,0"/>
+            <Border Padding="6" BackgroundColor="#161923">
+                <VerticalStackLayout Spacing="3">
+                    <Label Text="dotnet add package Nalix.SDK"
+                           FontFamily="Consolas"
+                           FontSize="14"
+                           TextColor="#7eecff"/>
+                    <Label Text="dotnet add package Nalix.Common"
+                           FontFamily="Consolas"
+                           FontSize="14"
+                           TextColor="#7eecff"/>
+                    <Label Text="dotnet add package Nalix.Shared"
+                           FontFamily="Consolas"
+                           FontSize="14"
+                           TextColor="#7eecff"/>
+                    <Label Text="dotnet add package Nalix.Logging"
+                           FontFamily="Consolas"
+                           FontSize="14"
+                           TextColor="#7eecff"/>
+                    <Label Text="dotnet add package Nalix.Network"
+                           FontFamily="Consolas"
+                           FontSize="14"
+                           TextColor="#7eecff"/>
+                    <Label Text="dotnet add package Nalix.Framework"
+                           FontFamily="Consolas"
+                           FontSize="14"
+                           TextColor="#7eecff"/>
+                </VerticalStackLayout>
+            </Border>
+            <!-- Links -->
+            <Button Text="View on GitHub" 
+                    Clicked="OnGitHubClick" 
+                    StyleClass="PrimaryButton"
+                    Margin="0,14,0,0"/>
+            <Label Text="Copyright © 2026 PhcNguyen"
+                   FontSize="10"
+                   TextColor="{DynamicResource DisabledColor}"
+                   HorizontalOptions="Center"
+                   Margin="0,12,0,0"/>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

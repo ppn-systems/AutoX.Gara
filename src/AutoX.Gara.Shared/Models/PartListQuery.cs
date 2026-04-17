@@ -11,37 +11,58 @@ namespace AutoX.Gara.Shared.Models;
 /// <summary>
 /// Value object representing query parameters for retrieving a paginated list of parts.
 /// </summary>
-public sealed record PartListQuery(
+public sealed record PartListQuery(
+
     /// <summary>Page number (starts from 1).</summary>
-    int Page,
-
+    int Page,
+
+
+
     /// <summary>Number of records per page.</summary>
-    int PageSize,
-
+    int PageSize,
+
+
+
     /// <summary>Search term for filtering parts by name, code, or manufacturer.</summary>
-    string SearchTerm,
-
+    string SearchTerm,
+
+
+
     /// <summary>Field to sort by.</summary>
-    PartSortField SortBy,
-
+    PartSortField SortBy,
+
+
+
     /// <summary>Sort order: true for descending, false for ascending.</summary>
-    bool SortDescending,
-
+    bool SortDescending,
+
+
+
     /// <summary>Filter by supplier identifier. Null means no filter.</summary>
-    int? FilterSupplierId,
-
+    int? FilterSupplierId,
+
+
+
     /// <summary>Filter by part category. Null means no filter.</summary>
-    PartCategory? FilterCategory,
-
+    PartCategory? FilterCategory,
+
+
+
     /// <summary>Filter by in-stock status. Null means no filter.</summary>
-    bool? FilterInStock,
-
+    bool? FilterInStock,
+
+
+
     /// <summary>Filter by defective status. Null means no filter.</summary>
-    bool? FilterDefective,
-
+    bool? FilterDefective,
+
+
+
     /// <summary>Filter by expired status. Null means no filter.</summary>
-    bool? FilterExpired,
-
+    bool? FilterExpired,
+
+
+
     /// <summary>Filter by discontinued status. Null means no filter.</summary>
     bool? FilterDiscontinued
 )

@@ -114,8 +114,7 @@ public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, IL
             if (existing is null || existing.DeletedAt != null) 
                 return ServiceResult<bool>.Failure("Không tìm thấy xe.", ProtocolReason.NOT_FOUND);
 
-            existing.DeletedAt = DateTime.UtcNow;
-            session.Vehicles.Update(existing);
+                        session.Vehicles.Delete(existing);
             await session.Vehicles.SaveChangesAsync().ConfigureAwait(false);
 
             return ServiceResult<bool>.Success(true);

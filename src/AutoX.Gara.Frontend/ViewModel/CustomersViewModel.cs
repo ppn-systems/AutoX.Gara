@@ -25,8 +25,6 @@ using CommunityToolkit.Mvvm.Input;
 
 using Microsoft.Maui.Controls;
 
-using Nalix.Common.Networking.Protocols;
-
 using System.Diagnostics;
 
 using System.Linq;
@@ -987,48 +985,28 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
     }
 
-    private bool ValidateForm()
-
+        private bool ValidateForm()
     {
-        if (string.IsNullOrWhiteSpace(FormName))
-
-        { SetFormError("T�n kh�ch h�ng kh�ng du?c d? tr?ng."); return false; }
-
-        if (FormName.Length > 100)
-
-        { SetFormError("T�n kh�ng du?c vu?t qu� 100 k� t?."); return false; }
+        ClearFormError();
+        if (!CustomerValidation.IsValidName(FormName))
+        { SetFormError("Tên khách hàng không hợp lệ (2-100 ký tự)."); return false; }
 
         if (!AccountValidation.IsValidEmail(FormEmail))
-
-        { SetFormError("Email kh�ng h?p l?."); return false; }
+        { SetFormError("Email không hợp lệ."); return false; }
 
         if (!AccountValidation.IsValidVietnamPhoneNumber(FormPhone))
+        { SetFormError("Số điện thoại không hợp lệ (VD: 0901234567)."); return false; }
 
-        { SetFormError("S? di?n tho?i kh�ng h?p l? (VD: 0901234567)."); return false; }
+        if (!CustomerValidation.IsValidDateOfBirth(FormDateOfBirth))
+        { SetFormError("Ngày sinh không hợp lệ."); return false; }
 
-        if (FormDateOfBirth.HasValue)
+        if (!CustomerValidation.IsValidTaxCode(FormTaxCode, FormType))
+        { SetFormError("Mã số thuế bắt buộc đối với khách hàng doanh nghiệp."); return false; }
 
-        {
-            if (FormDateOfBirth.Value > DateTime.Today)
-
-            { SetFormError("Ng�y sinh kh�ng du?c l� ng�y trong tuong lai."); return false; }
-
-            if (FormDateOfBirth.Value < DateTime.Today.AddYears(-120))
-
-            { SetFormError("Ng�y sinh kh�ng h?p l?."); return false; }
-
-        }
-
-        if (FormType == CustomerType.Business && string.IsNullOrWhiteSpace(FormTaxCode))
-
-        { SetFormError("M� s? thu? b?t bu?c d?i v?i kh�ch h�ng doanh nghi?p."); return false; }
-
-        if (FormNotes.Length > 500)
-
-        { SetFormError("Ghi ch� kh�ng du?c vu?t qu� 500 k� t?."); return false; }
+        if (!CustomerValidation.IsValidNotes(FormNotes))
+        { SetFormError("Ghi chú không được vượt quá 500 ký tự."); return false; }
 
         return true;
-
     }
 
     private CustomerDto BuildPacketFromForm() => new()

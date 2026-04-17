@@ -40,7 +40,7 @@ public partial class TransactionsPage : ContentPage
 
         => _vm.Initialize(invoice, autoOpenAddForm, prefillAmount);
 
-    private async void OnBackClicked(System.Object sender, System.EventArgs e)
+    private async void OnBackClicked(object? sender, System.EventArgs e)
 
     {
         if (Shell.Current?.Navigation is null)
@@ -56,7 +56,7 @@ public partial class TransactionsPage : ContentPage
 
     }
 
-    private async void OnPaymentMethodTapped(object sender, TappedEventArgs e)
+    private async void OnPaymentMethodTapped(object? sender, TappedEventArgs e)
 
     {
         if (BindingContext is not TransactionsViewModel vm)
@@ -70,7 +70,7 @@ public partial class TransactionsPage : ContentPage
 
     }
 
-    private async void OnTypeTapped(object sender, TappedEventArgs e)
+    private async void OnTypeTapped(object? sender, TappedEventArgs e)
 
     {
         if (BindingContext is not TransactionsViewModel vm)
@@ -84,7 +84,7 @@ public partial class TransactionsPage : ContentPage
 
     }
 
-    private async void OnStatusTapped(object sender, TappedEventArgs e)
+    private async void OnStatusTapped(object? sender, TappedEventArgs e)
 
     {
         if (BindingContext is not TransactionsViewModel vm)

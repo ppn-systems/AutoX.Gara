@@ -5,7 +5,6 @@ using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Identity;
-using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Protocol.Auth;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
@@ -18,7 +17,6 @@ using Nalix.Framework.Injection;
 using Nalix.Framework.Serialization;
 using System;
 using System.Collections.Concurrent;
-using AutoX.Gara.Api.Handlers.Common;
 
 namespace AutoX.Gara.Api.Handlers.Auth;
 
@@ -104,4 +102,4 @@ public sealed class AccountHandler(IAccountAppService accountService, IDataSessi
             InstanceManager.Instance.GetExistingInstance<ILogger>()?.Error($"[AccountHandler] Logout failed for {username}: {ex.Message}");
         }
     }
-}
+}

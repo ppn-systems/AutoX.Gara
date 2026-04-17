@@ -22,3 +22,4 @@ public sealed class AccountRepository(AutoXDbContext context) : IAccountReposito
     public System.Threading.Tasks.Task SaveChangesAsync(System.Threading.CancellationToken ct = default)
         => _context.SaveChangesAsync(ct);
 }
+

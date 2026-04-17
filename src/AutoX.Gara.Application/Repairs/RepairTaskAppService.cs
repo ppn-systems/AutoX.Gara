@@ -82,7 +82,7 @@ public sealed class RepairTaskAppService(IDataSessionFactory dataSessionFactory,
             if (existing == null) return ServiceResult<bool>.Failure("Không tìm thấy hạng mục.", ProtocolReason.NOT_FOUND);
 
             existing.IsActive = false;
-            session.RepairTasks.Update(existing);
+            session.RepairTasks.Delete(existing);
             await session.RepairTasks.SaveChangesAsync().ConfigureAwait(false);
             return ServiceResult<bool>.Success(true);
         }

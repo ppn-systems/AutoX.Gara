@@ -15,7 +15,6 @@ using AutoX.Gara.Shared.Protocol.Customers;
 
 using Microsoft.Extensions.Logging;
 
-using Nalix.Common.Networking.Protocols;
 
 using Nalix.Framework.Injection;
 
@@ -84,7 +83,7 @@ public sealed class CustomerService : ICustomerService
         if (_cache.TryGet(key, out CustomerCacheEntry? cached))
 
         {
-            return CustomerListResult.Success(cached.Customers, cached.TotalCount, page * pageSize < cached.TotalCount);
+            return CustomerListResult.Success(cached!.Customers, cached!.TotalCount, page * pageSize < cached!.TotalCount);
 
         }
 

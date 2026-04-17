@@ -12,7 +12,6 @@ using AutoX.Gara.Shared.Protocol.Invoices;
 
 using Microsoft.Extensions.Logging;
 
-using Nalix.Common.Networking.Protocols;
 
 using Nalix.Framework.Injection;
 
@@ -69,7 +68,7 @@ public sealed class RepairOrderService
         if (_cache.TryGet(key, out RepairOrderCacheEntry? cached))
 
         {
-            return RepairOrderListResult.Success(cached.RepairOrders, cached.TotalCount, page * pageSize < cached.TotalCount);
+            return RepairOrderListResult.Success(cached!.RepairOrders, cached!.TotalCount, page * pageSize < cached!.TotalCount);
 
         }
 

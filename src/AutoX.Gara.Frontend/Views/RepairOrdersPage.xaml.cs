@@ -45,7 +45,7 @@ public partial class RepairOrdersPage : ContentPage
 
     public void Initialize(CustomerDto owner, InvoiceDto invoice) => _vm.Initialize(owner, invoice);
 
-    private async void OnBackClicked(System.Object sender, System.EventArgs e)
+    private async void OnBackClicked(object? sender, System.EventArgs e)
 
     {
         if (Shell.Current?.Navigation is null)

@@ -41,7 +41,7 @@ public partial class RepairOrderItemsPage : ContentPage
 
     public void Initialize(RepairOrderDto repairOrder) => _vm.Initialize(repairOrder);
 
-    private async void OnBackClicked(System.Object sender, System.EventArgs e)
+    private async void OnBackClicked(object? sender, System.EventArgs e)
 
     {
         if (Shell.Current?.Navigation is null)

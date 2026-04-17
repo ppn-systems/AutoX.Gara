@@ -12,7 +12,6 @@ using AutoX.Gara.Shared.Protocol.Repairs;
 
 using Microsoft.Extensions.Logging;
 
-using Nalix.Common.Networking.Protocols;
 
 using Nalix.Framework.Injection;
 
@@ -65,7 +64,7 @@ public sealed class RepairTaskService
         if (_cache.TryGet(key, out RepairTaskCacheEntry? cached))
 
         {
-            return RepairTaskListResult.Success(cached.RepairTasks, cached.TotalCount, page * pageSize < cached.TotalCount);
+            return RepairTaskListResult.Success(cached!.RepairTasks, cached!.TotalCount, page * pageSize < cached!.TotalCount);
 
         }
 

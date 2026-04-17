@@ -9,7 +9,8 @@ using Nalix.Common.Serialization;
 using Nalix.Framework.Injection;
 using Nalix.Framework.DataFrames;
 using Nalix.Framework.Memory.Objects;
-using System.Collections.Generic;
+using System.Collections.Generic;
+
 
 namespace AutoX.Gara.Shared.Protocol.Repairs;
 

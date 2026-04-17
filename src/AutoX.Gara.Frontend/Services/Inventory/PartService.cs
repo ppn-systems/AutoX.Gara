@@ -13,7 +13,6 @@ using AutoX.Gara.Shared.Protocol.Inventory;
 
 using Microsoft.Extensions.Logging;
 
-using Nalix.Common.Networking.Protocols;
 
 using Nalix.Framework.Injection;
 
@@ -78,7 +77,7 @@ public sealed class PartService : IPartService
         if (_cache.TryGet(key, out PartCacheEntry? cached))
 
         {
-            return PartListResult.Success(cached.Parts, cached.TotalCount, page * pageSize < cached.TotalCount);
+            return PartListResult.Success(cached!.Parts, cached!.TotalCount, page * pageSize < cached!.TotalCount);
 
         }
 
