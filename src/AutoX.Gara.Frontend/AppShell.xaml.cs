@@ -1,16 +1,15 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared;
-using Microsoft.Maui.Controls;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls;
+using Nalix.Common.Networking.Packets;
+using Nalix.Framework.Configuration;
 using Nalix.Framework.Injection;
 using Nalix.Logging;
 using Nalix.Logging.Sinks;
 using Nalix.SDK.Options;
 using Nalix.SDK.Transport;
-using Nalix.Common.Networking.Packets;
-using Nalix.Framework.Configuration;
 
 namespace AutoX.Gara.Frontend;
 
@@ -20,7 +19,7 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
 
-        // 1) �ang k� logger
+        // 1) Đăng ký logger
         InstanceManager.Instance.Register<ILogger>(
             new NLogix(cfg =>
                 cfg.RegisterTarget(
@@ -29,17 +28,21 @@ public partial class AppShell : Shell
             )
         );
 
-        // 2) �ang k� Packet Registry (Shared)
+        // 2) Đăng ký Packet Registry (Shared)
         AppConfig.Register();
 
-        // 3) �ang k� TcpSession (Frontend)
+        // 3) Đăng ký TcpSession (Frontend)
         var catalog = InstanceManager.Instance.GetExistingInstance<IPacketRegistry>();
-        
-        // S? d?ng ConfigurationManager d? l?y instance chu?n c?a framework
+
+        // Sử dụng ConfigurationManager để lấy instance chuẩn của framework
         var options = ConfigurationManager.Instance.Get<TransportOptions>();
-        options.Address = "127.0.0.1";
-        options.Port = 57206;
-        options.EncryptionEnabled = false; // Ph?i t?t ban d?u d? Handshake kh�ng b? crash (Nalix.SDK bug fix)
+
+        // Fix: Ensure encryption is disabled if no secret is present to avoid initialization errors before handshake
+        if (options.Secret == null || options.Secret.Length == 0)
+        {
+            options.EncryptionEnabled = false;
+            options.Secret = System.Array.Empty<byte>();
+        }
 
         var session = new TcpSession(options, catalog!);
         InstanceManager.Instance.Register<TcpSession>(session);
