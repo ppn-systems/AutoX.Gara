@@ -1,3 +1,4 @@
+using AutoX.Gara.Application.Repairs;
 using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
@@ -9,6 +10,9 @@ using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.DataFrames.Pooling;
+using System;
+using System.Threading.Tasks;
+
 
 namespace AutoX.Gara.Backend.Transport.Repairs;
 

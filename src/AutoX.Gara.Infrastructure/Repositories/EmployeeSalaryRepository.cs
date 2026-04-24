@@ -43,7 +43,7 @@ public sealed class EmployeeSalaryRepository(AutoXDbContext context) : IEmployee
 
 
 
-        IQueryable<EmployeeSalary> q = _context.EmployeeSalaries.AsNoTracking();
+        IQueryable<EmployeeSalary> q = _context.EmployeeSalaries.AsNoTracking().Where(es => es.DeletedAt == null);
 
 
 
@@ -145,7 +145,7 @@ public sealed class EmployeeSalaryRepository(AutoXDbContext context) : IEmployee
 
     public System.Threading.Tasks.Task<EmployeeSalary> GetByIdAsync(int id, System.Threading.CancellationToken ct = default)
 
-        => _context.EmployeeSalaries.FirstOrDefaultAsync(es => es.Id == id, ct);
+        => _context.EmployeeSalaries.FirstOrDefaultAsync(es => es.Id == id && es.DeletedAt == null, ct);
 
 
 
@@ -159,7 +159,15 @@ public sealed class EmployeeSalaryRepository(AutoXDbContext context) : IEmployee
 
 
 
-    public void Delete(EmployeeSalary data) => _context.EmployeeSalaries.Remove(data);
+    public void Delete(EmployeeSalary data)
+
+    {
+
+        data.DeletedAt = System.DateTime.UtcNow;
+
+        _context.EmployeeSalaries.Update(data);
+
+    }
 
 
 

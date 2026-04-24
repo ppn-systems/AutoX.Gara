@@ -1,6 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
+using AutoX.Gara.Application.Employees;
 using AutoX.Gara.Backend.Transport.Common;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Auth;
@@ -9,6 +10,9 @@ using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
+using System;
+using System.Threading.Tasks;
+
 
 namespace AutoX.Gara.Backend.Transport.Auth;
 
