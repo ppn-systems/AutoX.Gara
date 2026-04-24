@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 
@@ -108,11 +108,7 @@ public sealed class AutoXProtocol : Protocol
         // TODO: Parse message and implement business logic here
 
 
-
         s_Dispatch.HandlePacket(args.Lease, args.Connection);
-
-        args.Dispose();
-
     }
 
 
