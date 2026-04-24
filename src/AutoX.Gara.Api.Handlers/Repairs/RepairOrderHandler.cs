@@ -157,7 +157,7 @@ public sealed class RepairOrderHandler(IRepairOrderAppService repairOrderService
 
     }
 
-    private static RepairOrderDto MapToPacket(RepairOrder o, uint sequenceId) => new()
+    private static RepairOrderDto MapToPacket(RepairOrder o, ushort sequenceId) => new()
     {
         SequenceId = sequenceId,
         RepairOrderId = o.Id,

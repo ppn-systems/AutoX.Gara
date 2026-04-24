@@ -26,11 +26,11 @@
 
 	<!-- Nalix Framework -->
 	<ItemGroup>
-		<PackageReference Include="Nalix.Logging" Version="12.0.8" />
-		<PackageReference Include="Nalix.Runtime" Version="12.0.8" />
-		<PackageReference Include="Nalix.Network" Version="12.0.8" />
-		<PackageReference Include="Nalix.Network.Hosting" Version="12.0.8" />
-		<PackageReference Include="Nalix.Network.Pipeline" Version="12.0.8" />
+		<PackageReference Include="Nalix.Logging" Version="12.1.0" />
+		<PackageReference Include="Nalix.Runtime" Version="12.1.0" />
+		<PackageReference Include="Nalix.Network" Version="12.1.0" />
+		<PackageReference Include="Nalix.Network.Hosting" Version="12.1.0" />
+		<PackageReference Include="Nalix.Network.Pipeline" Version="12.1.0" />
 	</ItemGroup>
 
 	<!-- EF SQL -->

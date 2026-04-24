@@ -188,7 +188,7 @@ public sealed class SupplierHandler(ISupplierAppService supplierService)
 
     }
 
-    private static SupplierDto MapToPacket(Supplier s, uint sequenceId)
+    private static SupplierDto MapToPacket(Supplier s, ushort sequenceId)
     {
         var dto = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<SupplierDto>();
         dto.SequenceId = sequenceId;

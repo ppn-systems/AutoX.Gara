@@ -1,4 +1,4 @@
-﻿using AutoX.Gara.Shared.Enums;
+using AutoX.Gara.Shared.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
@@ -772,7 +772,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
                     : SupplierStatus.None,
 
-                SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
+                SequenceId = (ushort)Nalix.Framework.Random.Csprng.NextUInt32()
 
             };
 
@@ -1036,7 +1036,7 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
             ContractEndDate = FormContractEndDate,
 
-            SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
+            SequenceId = (ushort)Nalix.Framework.Random.Csprng.NextUInt32()
 
         };
 
@@ -1136,3 +1136,4 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
     private static bool IsValidPhoneNumber(string phone) => System.Text.RegularExpressions.Regex.IsMatch(phone, @"^(\+?\d{1,3}[-.\s]?)?\d{10,15}$");
 }
+

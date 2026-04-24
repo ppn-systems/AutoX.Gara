@@ -182,7 +182,7 @@ public sealed class InvoiceHandler(IInvoiceAppService invoiceService)
 
     }
 
-    private static InvoiceDto MapToPacket(Invoice invoice, uint sequenceId)
+    private static InvoiceDto MapToPacket(Invoice invoice, ushort sequenceId)
     {
         var dto = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<InvoiceDto>();
         dto.SequenceId = sequenceId;

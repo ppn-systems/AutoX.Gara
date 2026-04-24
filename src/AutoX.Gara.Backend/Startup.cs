@@ -1,11 +1,4 @@
-﻿using AutoX.Gara.Api.Handlers.Auth;
-using AutoX.Gara.Api.Handlers.Customers;
-using AutoX.Gara.Api.Handlers.Financial;
-using AutoX.Gara.Api.Handlers.Identity;
-using AutoX.Gara.Api.Handlers.Inventory;
-using AutoX.Gara.Api.Handlers.Repairs;
-using AutoX.Gara.Api.Handlers.Suppliers;
-using AutoX.Gara.Api.Handlers.Vehicles;
+using AutoX.Gara.Api.Handlers.Auth;
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Application.Billings;
@@ -20,22 +13,20 @@ using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Networking;
 using AutoX.Gara.Infrastructure.Persistence;
 using Microsoft.Extensions.Logging;
-using Nalix.Network.Connections;
-using Nalix.Network.Hosting;
-using Nalix.Network.Options;
+using Nalix.Common.Networking.Packets;
+using Nalix.Framework.Extensions;
 using Nalix.Framework.Injection;
-using Nalix.Framework.Memory.Buffers;
+using Nalix.Logging;
 using Nalix.Logging.Options;
 using Nalix.Logging.Sinks;
-using Nalix.Logging;
-using Nalix.Framework.Extensions;
+using Nalix.Network.Hosting;
 using System;
 
 namespace AutoX.Gara.Backend;
 
 /// <summary>
-/// Quản lý cấu hình khởi động cho hệ thống Backend.
-/// Tách biệt logic khởi tạo giúp Program.cs chỉ tập trung vào luồng thực thi chính.
+/// Quan ly cau hinh khoi dong cho he thong Backend.
+/// Tach biet logic khoi tao giup Program.cs chi tap trung vao luong thuc thi chinh.
 /// </summary>
 public static class Startup
 {
@@ -44,7 +35,7 @@ public static class Startup
         // 1. Database & Persistence Layer
         var dbFactory = new AutoXDbContextFactory();
         var sessionFactory = new DataSessionFactory(dbFactory);
-        
+
         InstanceManager.Instance.Register<AutoXDbContextFactory>(dbFactory);
         InstanceManager.Instance.Register<IDataSessionFactory>(sessionFactory);
 
@@ -54,32 +45,16 @@ public static class Startup
         // 2. Application Services Registration
         RegisterServices(sessionFactory, loggerFactory);
 
-        // 3. Build Network Application with Middleware Pipeline
+        // 3. Build Network Application with Hosting API (v12.1.0)
+        var packetRegistry = InstanceManager.Instance.GetExistingInstance<IPacketRegistry>()
+            ?? throw new InvalidOperationException("IPacketRegistry is not registered. Ensure AppConfig.Register() is called before Startup.Configure().");
+
         return NetworkApplication.CreateBuilder()
             .ConfigureLogging(logger)
-            .ConfigureConnectionHub(new ConnectionHub(null, logger))
-            .ConfigureBufferPoolManager(new BufferPoolManager(logger))
-            .Configure<NetworkSocketOptions>(options => { options.Port = 57206; })
-            .ConfigureDispatch(options =>
-            {
-                options.WithLogging(logger);
-                
-                var inst = InstanceManager.Instance;
-                options.WithHandler(() => new AccountHandler(inst.GetExistingInstance<IAccountAppService>(), inst.GetExistingInstance<IDataSessionFactory>()));
-                options.WithHandler(() => new EmployeeHandler(inst.GetExistingInstance<IEmployeeAppService>()));
-                options.WithHandler(() => new EmployeeSalaryHandler(inst.GetExistingInstance<IEmployeeSalaryAppService>()));
-                options.WithHandler(() => new CustomerHandler(inst.GetExistingInstance<ICustomerAppService>()));
-                options.WithHandler(() => new VehicleHandler(inst.GetExistingInstance<IVehicleAppService>()));
-                options.WithHandler(() => new PartHandler(inst.GetExistingInstance<IPartAppService>()));
-                options.WithHandler(() => new SupplierHandler(inst.GetExistingInstance<ISupplierAppService>()));
-                options.WithHandler(() => new InvoiceHandler(inst.GetExistingInstance<IInvoiceAppService>()));
-                options.WithHandler(() => new RepairOrderHandler(inst.GetExistingInstance<IRepairOrderAppService>()));
-                options.WithHandler(() => new TransactionHandler(inst.GetExistingInstance<ITransactionAppService>()));
-                options.WithHandler(() => new ServiceItemHandler(inst.GetExistingInstance<IServiceItemAppService>()));
-                options.WithHandler(() => new RepairTaskHandler(inst.GetExistingInstance<IRepairTaskAppService>()));
-                options.WithHandler(() => new RepairOrderItemHandler(inst.GetExistingInstance<IRepairOrderItemAppService>()));
-            })
-            .AddTcp<AutoXProtocol>()
+            .ConfigurePacketRegistry(packetRegistry)
+            .ConfigureDispatch(options => options.WithLogging(logger))
+            .AddHandlers<AccountHandler>()
+            .AddTcp<AutoXProtocol>(57206)
             .Build();
     }
 

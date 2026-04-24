@@ -17,13 +17,6 @@
 		<SingleProject>true</SingleProject>
 		<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
 		<RootNamespace>AutoX.Gara.Frontend</RootNamespace>
-
-		<!-- Enable XAML source generation for faster build times and improved performance.
-		     This generates C# code from XAML at compile time instead of runtime inflation.
-		     To disable, remove this line.
-		     For individual files, you can override by setting Inflator metadata:
-		       <MauiXaml Update="MyPage.xaml" Inflator="Default" /> (reverts to defaults: Runtime for Debug, XamlC for Release)
-		       <MauiXaml Update="MyPage.xaml" Inflator="Runtime" /> (force runtime inflation) -->
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 
 		<!-- Display name -->
@@ -67,10 +60,10 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.51" />
 
-		<PackageReference Include="Nalix.SDK" Version="12.0.8" />
-		<PackageReference Include="Nalix.Logging" Version="12.0.8" />
-		<PackageReference Include="Nalix.Common" Version="12.0.8" />
-		<PackageReference Include="Nalix.Framework" Version="12.0.8" />
+		<PackageReference Include="Nalix.SDK" Version="12.1.0" />
+		<PackageReference Include="Nalix.Logging" Version="12.1.0" />
+		<PackageReference Include="Nalix.Common" Version="12.1.0" />
+		<PackageReference Include="Nalix.Framework" Version="12.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>

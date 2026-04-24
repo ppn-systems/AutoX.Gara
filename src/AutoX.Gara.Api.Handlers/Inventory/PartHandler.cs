@@ -186,7 +186,7 @@ public sealed class PartHandler(IPartAppService partService)
 
     }
 
-    private static PartDto MapToPacket(Part pt, uint sequenceId)
+    private static PartDto MapToPacket(Part pt, ushort sequenceId)
     {
         var dto = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<PartDto>();
         dto.SequenceId = sequenceId;

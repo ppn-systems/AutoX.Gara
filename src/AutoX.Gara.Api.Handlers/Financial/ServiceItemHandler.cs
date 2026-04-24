@@ -147,7 +147,7 @@ public sealed class ServiceItemHandler(IServiceItemAppService serviceItemService
 
     }
 
-    private static ServiceItemDto MapToPacket(ServiceItem i, uint sequenceId) => new()
+    private static ServiceItemDto MapToPacket(ServiceItem i, ushort sequenceId) => new()
     {
         SequenceId = sequenceId,
         ServiceItemId = i.Id,

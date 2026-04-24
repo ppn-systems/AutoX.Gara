@@ -146,7 +146,7 @@ public sealed class RepairOrderItemHandler(IRepairOrderItemAppService itemServic
 
     }
 
-    private static RepairOrderItemDto MapToPacket(RepairOrderItem i, uint sequenceId) => new()
+    private static RepairOrderItemDto MapToPacket(RepairOrderItem i, ushort sequenceId) => new()
     {
         SequenceId = sequenceId,
         RepairOrderItemId = i.Id,

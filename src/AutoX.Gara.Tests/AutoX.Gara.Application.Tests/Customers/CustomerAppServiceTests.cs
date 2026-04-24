@@ -1,4 +1,5 @@
-﻿using AutoX.Gara.Application.Abstractions.Persistence;
+using AutoX.Gara.Application.Abstractions.Persistence;
+using AutoX.Gara.Application.Abstractions.Repositories;
 using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Domain.Entities.Customers;
 using FluentAssertions;

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared;
+using Nalix.Common.Primitives;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
 using Nalix.Common.Networking.Packets;
@@ -38,10 +39,10 @@ public partial class AppShell : Shell
         var options = ConfigurationManager.Instance.Get<TransportOptions>();
 
         // Fix: Ensure encryption is disabled if no secret is present to avoid initialization errors before handshake
-        if (options.Secret == null || options.Secret.Length == 0)
+        if (options.Secret.IsZero)
         {
             options.EncryptionEnabled = false;
-            options.Secret = System.Array.Empty<byte>();
+            options.Secret = Bytes32.Zero;
         }
 
         var session = new TcpSession(options, catalog!);

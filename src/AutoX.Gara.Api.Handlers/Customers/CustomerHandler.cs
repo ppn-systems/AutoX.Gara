@@ -183,7 +183,7 @@ public sealed class CustomerHandler(ICustomerAppService customerService)
     private static CustomerListQuery BuildListQuery(CustomerQueryRequest request)
         => new(request.Page, request.PageSize, request.SearchTerm, request.SortBy, request.SortDescending, request.FilterType, request.FilterMembership);
 
-    private static CustomerDto MapToPacket(Customer c, uint sequenceId)
+    private static CustomerDto MapToPacket(Customer c, ushort sequenceId)
     {
         var data = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<CustomerDto>();
         data.SequenceId = sequenceId;

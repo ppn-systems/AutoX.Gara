@@ -1,22 +1,16 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
+using AutoX.Gara.Infrastructure.Database;
+using AutoX.Gara.Shared;
+using Microsoft.Extensions.Logging;
+using Nalix.Common.Concurrency;
+using Nalix.Framework.Injection;
+using Nalix.Framework.Options;
+using Nalix.Framework.Tasks;
+using Nalix.Network.Hosting;
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using AutoX.Gara.Infrastructure.Database;
-using Microsoft.Extensions.Logging;
-using Nalix.Framework.Configuration;
-using Nalix.Framework.Injection;
-using Nalix.Framework.Memory.Buffers;
-using Nalix.Framework.Memory.Objects;
-using Nalix.Framework.Tasks;
-using Nalix.Logging;
-using Nalix.Network.Connections;
-using Nalix.Network.Hosting;
-using Nalix.Common.Networking;
-using Nalix.Common.Concurrency;
-using Nalix.Framework.Options;
-using AutoX.Gara.Shared;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AutoX.Gara.Backend;
 
@@ -25,73 +19,82 @@ namespace AutoX.Gara.Backend;
 public static class Program
 {
     private const int IntervalInMinutes = 5;
-    private static readonly System.Threading.ManualResetEvent QuitEvent = new(false);
-    private static readonly TaskManager _taskManager = InstanceManager.Instance.GetOrCreateInstance<TaskManager>();
-    private static NetworkApplication App;
+    private static readonly TaskManager TaskManager = InstanceManager.Instance.GetOrCreateInstance<TaskManager>();
+    private static readonly CancellationTokenSource ShutdownCts = new();
 
     [STAThread]
     public static void Main(string[] args)
     {
+        ILogger logger = Startup.CreateBootstrapLogger();
+
         try
         {
-            // 1. Root Initialization
-            ILogger logger = Startup.CreateBootstrapLogger();
+            // 1. Root initialization
             InstanceManager.Instance.Register<ILogger>(logger);
-
             AppConfig.Register();
 
-            // 2. Database Ensure Created (Side-effect during startup)
-            var dbFactory = new AutoXDbContextFactory();
-            using (var context = dbFactory.CreateDbContext())
-            {
-                if (context.Database.EnsureCreated())
-                {
-                    DataSeeder.SeedAsync(context).Wait();
-                }
-            }
+            // 2. Database ensure created (side effect during startup)
+            EnsureDatabaseCreated();
 
-            // 3. Configure App Pipeline
-            App = Startup.Configure(logger);
-            App.ActivateAsync().GetAwaiter().GetResult();
-
+            // 3. Configure app pipeline + host lifecycle
+            using NetworkApplication app = Startup.Configure(logger);
             SetupConsole(logger);
-
-            QuitEvent.WaitOne();
-            
-            logger.Info("Deactivating application...");
-            App.DeactivateAsync().GetAwaiter().GetResult();
+            app.RunAsync(ShutdownCts.Token).GetAwaiter().GetResult();
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected during graceful shutdown.
         }
         catch (Exception ex)
         {
-            var logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
-            logger?.Error("Critical failure during startup", ex);
-            Environment.Exit(-1);
+            (InstanceManager.Instance.GetExistingInstance<ILogger>() ?? logger).Error("Critical failure during startup", ex);
+            Environment.ExitCode = -1;
+        }
+        finally
+        {
+            ShutdownCts.Dispose();
+        }
+    }
+
+    private static void EnsureDatabaseCreated()
+    {
+        var dbFactory = new AutoXDbContextFactory();
+        using var context = dbFactory.CreateDbContext();
+        if (context.Database.EnsureCreated())
+        {
+            DataSeeder.SeedAsync(context).Wait();
         }
     }
 
     private static void SetupConsole(ILogger logger)
     {
         Console.CursorVisible = false;
-        Console.CancelKeyPress += (sender, e) =>
+        Console.CancelKeyPress += (_, e) =>
         {
             e.Cancel = true;
-            QuitEvent.Set();
+            if (!ShutdownCts.IsCancellationRequested)
+            {
+                logger.Info("Shutdown signal received. Stopping host...");
+                ShutdownCts.Cancel();
+            }
         };
 
-        _taskManager.ScheduleWorker(
-            "console.keyboard", "console",
-            async (ctx, ct) => await LISTEN_TO_KEYBOARD(ctx, ct),
+        TaskManager.ScheduleWorker(
+            "console.keyboard",
+            "console",
+            async (ctx, ct) => await LISTEN_TO_KEYBOARD(ctx, ct).ConfigureAwait(false),
             new WorkerOptions { RetainFor = TimeSpan.FromMinutes(10) }
         );
 
-        _taskManager.ScheduleWorker(
-            "report.generator", "report",
-            async (ctx, ct) => await GENERATE_PERIODIC_REPORTS(ctx, ct),
+        TaskManager.ScheduleWorker(
+            "report.generator",
+            "report",
+            async (ctx, ct) => await GENERATE_PERIODIC_REPORTS(ctx, ct).ConfigureAwait(false),
             new WorkerOptions { RetainFor = TimeSpan.FromMinutes(IntervalInMinutes) }
         );
 
         logger.Info("AutoX Backend System is ONLINE.");
-        logger.Info("Press 'Ctrl+R' to print immediate diagnostic reports.");
+        logger.Info("Press Ctrl+R to print immediate diagnostic reports.");
         logger.Info("Press Ctrl+C to shutdown safely.");
     }
 
@@ -99,20 +102,16 @@ public static class Program
     {
         var inst = InstanceManager.Instance;
         var logger = inst.GetExistingInstance<ILogger>();
-        
-        logger.Info(inst.GenerateReport());
-        // Simple report for now to avoid assembly issues
-        // logger.Info(inst.GetOrCreateInstance<BufferPoolManager>().GenerateReport());
-        // logger.Info(inst.GetExistingInstance<ObjectPoolManager>().GenerateReport());
-        // logger.Info(_taskManager.GenerateReport());
+        logger?.Info(inst.GenerateReport());
     }
 
-    private static Task LISTEN_TO_KEYBOARD(IWorkerContext ctx, System.Threading.CancellationToken ct)
+    private static Task LISTEN_TO_KEYBOARD(IWorkerContext ctx, CancellationToken ct)
     {
         return Task.Run(async () =>
         {
             DateTime lastReportTime = DateTime.MinValue;
-            while (!ct.IsCancellationRequested)
+
+            while (!IsStopping(ct))
             {
                 if (Console.KeyAvailable)
                 {
@@ -127,22 +126,37 @@ public static class Program
                         }
                     }
                 }
+
                 ctx.Beat();
-                await Task.Delay(100, ct);
+                await DelayWithStopAsync(TimeSpan.FromMilliseconds(100), ct).ConfigureAwait(false);
             }
         }, ct);
     }
 
-    private static async Task GENERATE_PERIODIC_REPORTS(IWorkerContext ctx, System.Threading.CancellationToken ct)
+    private static async Task GENERATE_PERIODIC_REPORTS(IWorkerContext ctx, CancellationToken ct)
     {
-        while (!ct.IsCancellationRequested)
+        while (!IsStopping(ct))
         {
-            // InstanceManager.Instance.GetOrCreateInstance<BufferPoolManager>().SaveReportToFile("buffer");
-            // InstanceManager.Instance.GetExistingInstance<ObjectPoolManager>().SaveReportToFile("object");
-            // _taskManager.SaveReportToFile("task");
             ctx.Beat();
             ctx.Advance(1);
-            await Task.Delay(TimeSpan.FromMinutes(IntervalInMinutes), ct);
+            await DelayWithStopAsync(TimeSpan.FromMinutes(IntervalInMinutes), ct).ConfigureAwait(false);
+        }
+    }
+
+    private static bool IsStopping(CancellationToken token)
+        => token.IsCancellationRequested || ShutdownCts.IsCancellationRequested;
+
+    private static async Task DelayWithStopAsync(TimeSpan delay, CancellationToken token)
+    {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, ShutdownCts.Token);
+        try
+        {
+            await Task.Delay(delay, linked.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // Graceful cancellation.
         }
     }
 }
+

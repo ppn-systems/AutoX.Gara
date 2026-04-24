@@ -182,7 +182,7 @@ public sealed class EmployeeSalaryHandler(IEmployeeSalaryAppService salaryServic
 
     }
 
-    private static EmployeeSalaryDto MapToPacket(EmployeeSalary e, uint sequenceId)
+    private static EmployeeSalaryDto MapToPacket(EmployeeSalary e, ushort sequenceId)
     {
         var dto = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<EmployeeSalaryDto>();
         dto.SequenceId = sequenceId;

@@ -186,7 +186,7 @@ public sealed class EmployeeHandler(IEmployeeAppService employeeService)
     private static EmployeeListQuery BuildListQuery(EmployeeQueryRequest request)
         => new(request.Page, request.PageSize, request.SearchTerm, request.SortBy, request.SortDescending, request.FilterPosition, request.FilterStatus, request.FilterGender);
 
-    private static EmployeeDto MapToPacket(Employee e, uint sequenceId)
+    private static EmployeeDto MapToPacket(Employee e, ushort sequenceId)
     {
         var data = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<EmployeeDto>();
         data.SequenceId = sequenceId;

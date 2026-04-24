@@ -1,9 +1,11 @@
-﻿using AutoX.Gara.Shared.Enums;
+using AutoX.Gara.Shared.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Models.Results.Accounts;
 using AutoX.Gara.Frontend.Results.Accounts;
+using Nalix.Common.Primitives;
+
 using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Protocol.Auth;
 using Microsoft.Extensions.Logging;
@@ -54,10 +56,10 @@ public sealed class AccountService : IAccountService
             }
 
             // 1. Thiết lập kết nối TCP mức thấp dựa trên cấu hình tập trung
-            if (options.Secret == null || options.Secret.Length == 0)
+            if (options.Secret.IsZero)
             {
                 client.Options.EncryptionEnabled = false;
-                client.Options.Secret = System.Array.Empty<byte>();
+                client.Options.Secret = Bytes32.Zero;
             }
 
             await client.ConnectAsync(options.Address, (ushort)options.Port, ct).ConfigureAwait(false);
@@ -149,3 +151,4 @@ public sealed class AccountService : IAccountService
         return LoginResult.Failure(message, advice);
     }
 }
+

@@ -1,4 +1,4 @@
-﻿using AutoX.Gara.Shared.Enums;
+using AutoX.Gara.Shared.Enums;
 using System.Collections.Generic;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
@@ -1129,7 +1129,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
                 Status = StatusValues[System.Math.Clamp(NewStatusIndex, 0, StatusValues.Length - 1)],
 
-                SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
+                SequenceId = (ushort)Nalix.Framework.Random.Csprng.NextUInt32()
 
             };
 
@@ -1382,7 +1382,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
             Note = SalaryFormNote ?? string.Empty,
 
-            SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
+            SequenceId = (ushort)Nalix.Framework.Random.Csprng.NextUInt32()
 
         };
 
@@ -1723,7 +1723,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
             EndDate = FormEndDate,
 
-            SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
+            SequenceId = (ushort)Nalix.Framework.Random.Csprng.NextUInt32()
 
         };
 
@@ -1804,3 +1804,4 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     
 }
+

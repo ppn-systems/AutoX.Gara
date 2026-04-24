@@ -175,7 +175,7 @@ public sealed class VehicleHandler(IVehicleAppService vehicleService)
         await context.OkAsync().ConfigureAwait(false);
     }
 
-    private static VehicleDto MapToPacket(Vehicle v, uint sequenceId) => new()
+    private static VehicleDto MapToPacket(Vehicle v, ushort sequenceId) => new()
     {
         SequenceId = sequenceId,
         VehicleId = v.Id,

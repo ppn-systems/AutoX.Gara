@@ -17,7 +17,7 @@ public static class HandlerExtensions
             ControlType.ERROR, 
             reason, 
             ProtocolAdvice.DO_NOT_RETRY, 
-            (uint)context.Packet.SequenceId);
+            context.Packet.SequenceId);
             
         await context.Connection.TCP.SendAsync(directive).ConfigureAwait(false);
     }
@@ -31,7 +31,7 @@ public static class HandlerExtensions
             ControlType.NONE, 
             ProtocolReason.NONE, 
             ProtocolAdvice.NONE, 
-            (uint)context.Packet.SequenceId);
+            context.Packet.SequenceId);
             
         await context.Connection.TCP.SendAsync(directive).ConfigureAwait(false);
     }

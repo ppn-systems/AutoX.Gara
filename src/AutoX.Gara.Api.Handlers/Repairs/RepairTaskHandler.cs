@@ -158,7 +158,7 @@ public sealed class RepairTaskHandler(IRepairTaskAppService repairTaskService)
 
     }
 
-    private static RepairTaskDto MapToPacket(RepairTask t, uint sequenceId) => new()
+    private static RepairTaskDto MapToPacket(RepairTask t, ushort sequenceId) => new()
     {
         SequenceId = sequenceId,
         RepairTaskId = t.Id,

@@ -1,4 +1,4 @@
-﻿using AutoX.Gara.Shared.Enums;
+using AutoX.Gara.Shared.Enums;
 using System.Collections.Generic;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
@@ -855,7 +855,7 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
 
             Type = type,
 
-            SequenceId = Nalix.Framework.Random.Csprng.NextUInt32()
+            SequenceId = (ushort)Nalix.Framework.Random.Csprng.NextUInt32()
 
         };
 
@@ -932,3 +932,4 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
 
     }
 }
+

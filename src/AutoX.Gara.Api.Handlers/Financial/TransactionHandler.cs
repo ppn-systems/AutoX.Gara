@@ -131,7 +131,7 @@ public sealed class TransactionHandler(ITransactionAppService transactionService
 
     }
 
-    private static TransactionDto MapToPacket(Transaction t, uint sequenceId) => new()
+    private static TransactionDto MapToPacket(Transaction t, ushort sequenceId) => new()
     {
         SequenceId = sequenceId,
         TransactionId = t.Id,
