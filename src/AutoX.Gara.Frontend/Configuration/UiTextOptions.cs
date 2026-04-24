@@ -1,17 +1,9 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 using Nalix.Framework.Configuration;
 using Nalix.Framework.Configuration.Binding;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-
 namespace AutoX.Gara.Frontend.Configuration;
-
 public sealed class UiTextOptions : ConfigurationLoader
 {
-    public Dictionary<string, string> Entries { get; init; } = new(StringComparer.OrdinalIgnoreCase);
-
     public string LoginAppTitle { get; init; } = "AutoX Gara";
     public string LoginAppSubtitle { get; init; } = "Đăng nhập vào hệ thống";
     public string LoginUsernameLabel { get; init; } = "Tên đăng nhập";
@@ -36,35 +28,214 @@ public sealed class UiTextOptions : ConfigurationLoader
     public string RetryLaterMessageText { get; init; } = "Vui lòng thử lại sau.";
     public string ServerErrorTitleText { get; init; } = "Lỗi máy chủ";
     public string ConnectFailedMessageText { get; init; } = "Không thể kết nối tới hạ tầng Nalix.";
-
-    public string Get(string key, string fallback)
-    {
-        if (!string.IsNullOrWhiteSpace(key)
-            && Entries.TryGetValue(key, out string? value)
-            && !string.IsNullOrWhiteSpace(value))
-        {
-            return value;
-        }
-
-        return fallback;
-    }
-
-    public string Format(string key, string fallbackFormat, params object[] args)
-    {
-        string format = Get(key, fallbackFormat);
-        return string.Format(CultureInfo.CurrentCulture, format, args);
-    }
+    public string ShellLoginItemTitleText { get; init; } = "Đăng nhập";
+    public string ShellLoginItemFallbackTitleText { get; init; } = "Login";
+    public string AccountServiceTcpSessionMissingText { get; init; } = "TcpSession chưa được đăng ký trong hệ thống.";
+    public string AccountServiceTransportOptionsMissingText { get; init; } = "Cấu hình mạng (TransportOptions) không tồn tại.";
+    public string AccountServiceConnectionCanceledText { get; init; } = "Kết nối bị hủy.";
+    public string AccountServiceConnectFailedText { get; init; } = "Không thể kết nối tới máy chủ: {0}";
+    public string AccountServiceNotConnectedText { get; init; } = "Chưa có kết nối tới máy chủ.";
+    public string AccountServiceOperationCanceledText { get; init; } = "Thao tác bị hủy.";
+    public string AccountServiceSystemErrorText { get; init; } = "Lỗi hệ thống: {0}";
+    public string AccountServiceLoginNotFoundText { get; init; } = "Tài khoản không tồn tại trong hệ thống.";
+    public string AccountServiceLoginPasswordInvalidText { get; init; } = "Mật khẩu không chính xác.";
+    public string AccountServiceStateViolationText { get; init; } = "Phiên làm việc không hợp lệ (Handshake Error).";
+    public string AccountServiceRegisterFailedText { get; init; } = "Đăng ký thất bại. Vui lòng thử lại.";
+    public string AccountServiceLoginRejectedText { get; init; } = "Máy chủ từ chối đăng nhập.";
+    public string AccountServiceTimeoutText { get; init; } = "Không nhận được phản hồi từ server. Vui lòng thử lại.";
+    public string CommonFilterAllText { get; init; } = "Tất cả";
+    public string CommonSelectPlaceholderText { get; init; } = "— chọn —";
+    public string CommonFormSaveText { get; init; } = "Lưu";
+    public string CommonFormCreateText { get; init; } = "Tạo";
+    public string CommonFormSaveChangesText { get; init; } = "Lưu thay đổi";
+    public string CommonErrorActionFailedText { get; init; } = "Thao tác thất bại.";
+    public string CommonErrorTryAgainText { get; init; } = "Vui lòng thử lại.";
+    public string CommonActionCancelText { get; init; } = "Hủy";
+    public string CustomersFilterTypeAllText { get; init; } = "Tất cả loại";
+    public string CustomersFilterMembershipAllText { get; init; } = "Tất cả hạng";
+    public string CustomersFormTitleEditText { get; init; } = "Sửa khách hàng";
+    public string CustomersFormTitleCreateText { get; init; } = "Thêm khách hàng";
+    public string CustomersFormSaveCreateText { get; init; } = "Thêm khách hàng";
+    public string CustomersErrorLoadFailedText { get; init; } = "Tải danh sách thất bại";
+    public string CustomersErrorDeleteFailedText { get; init; } = "Xóa thất bại";
+    public string CustomersPickerFilterTypeText { get; init; } = "Chọn loại khách hàng";
+    public string CustomersPickerFilterMembershipText { get; init; } = "Chọn hạng";
+    public string CustomersPickerFormTypeText { get; init; } = "Loại khách hàng";
+    public string CustomersPickerFormMembershipText { get; init; } = "Hạng thành viên";
+    public string CustomersPickerFormGenderText { get; init; } = "Giới tính";
+    public string CustomersValidationNameInvalidText { get; init; } = "Tên khách hàng không hợp lệ (2-100 ký tự).";
+    public string CustomersValidationEmailInvalidText { get; init; } = "Email không hợp lệ.";
+    public string CustomersValidationPhoneInvalidText { get; init; } = "Số điện thoại không hợp lệ (VD: 0901234567).";
+    public string CustomersValidationDobInvalidText { get; init; } = "Ngày sinh không hợp lệ.";
+    public string CustomersValidationTaxRequiredBusinessText { get; init; } = "Mã số thuế bắt buộc đối với khách hàng doanh nghiệp.";
+    public string CustomersValidationNotesTooLongText { get; init; } = "Ghi chú không được vượt quá 500 ký tự.";
+    public string EmployeesFilterPositionAllText { get; init; } = "Tất cả chức vụ";
+    public string EmployeesFilterStatusAllText { get; init; } = "Tất cả trạng thái";
+    public string EmployeesSalaryFilterAllText { get; init; } = "Tất cả lương";
+    public string EmployeesSalaryFilterHasSalaryText { get; init; } = "Có lương";
+    public string EmployeesSalaryFilterNoSalaryText { get; init; } = "Chưa có lương";
+    public string EmployeesSalaryFilterMonthlyText { get; init; } = "Theo tháng";
+    public string EmployeesSalaryFilterDailyText { get; init; } = "Theo ngày";
+    public string EmployeesSalaryFilterHourlyText { get; init; } = "Theo giờ";
+    public string EmployeesFormTitleEditText { get; init; } = "Sửa nhân viên";
+    public string EmployeesFormTitleCreateText { get; init; } = "Thêm nhân viên";
+    public string EmployeesFormSaveCreateText { get; init; } = "Thêm nhân viên";
+    public string EmployeesSalaryNoneText { get; init; } = "Chưa có";
+    public string EmployeesSalaryFormTitleEditText { get; init; } = "Chỉnh sửa lương";
+    public string EmployeesSalaryFormTitleCreateText { get; init; } = "Thiết lập lương";
+    public string EmployeesErrorLoadFailedText { get; init; } = "Tải danh sách thất bại";
+    public string EmployeesPickerFilterPositionText { get; init; } = "Chọn chức vụ";
+    public string EmployeesPickerFilterStatusText { get; init; } = "Chọn trạng thái";
+    public string EmployeesPickerFilterGenderText { get; init; } = "Chọn giới tính";
+    public string EmployeesPickerFilterSalaryText { get; init; } = "Lọc theo lương";
+    public string EmployeesPickerChangeStatusText { get; init; } = "Thay đổi trạng thái";
+    public string EmployeesPickerSalaryTypeText { get; init; } = "Loại lương";
+    public string EmployeesPickerFormGenderText { get; init; } = "Giới tính";
+    public string EmployeesPickerFormPositionText { get; init; } = "Chức vụ";
+    public string EmployeesPickerFormStatusText { get; init; } = "Trạng thái";
+    public string EmployeesErrorChangeStatusFailedText { get; init; } = "Đổi trạng thái thất bại";
+    public string EmployeesSalaryValidationEmployeeRequiredText { get; init; } = "Chưa chọn nhân viên.";
+    public string EmployeesSalaryValidationAmountNonNegativeText { get; init; } = "Mức lương phải >= 0.";
+    public string EmployeesSalaryValidationUnitNonNegativeText { get; init; } = "Số đơn vị phải >= 0.";
+    public string EmployeesSalaryErrorSaveFailedText { get; init; } = "Lưu thất bại.";
+    public string EmployeesValidationNameInvalidText { get; init; } = "Tên nhân viên không hợp lệ (2-100 ký tự).";
+    public string EmployeesValidationEmailInvalidText { get; init; } = "Email không hợp lệ.";
+    public string EmployeesValidationPhoneInvalidText { get; init; } = "Số điện thoại không hợp lệ.";
+    public string EmployeesValidationDobInPastText { get; init; } = "Ngày sinh phải trong quá khứ.";
+    public string EmployeesValidationEndAfterStartText { get; init; } = "Ngày kết thúc phải sau ngày bắt đầu.";
+    public string PartsFilterInStockText { get; init; } = "Còn hàng";
+    public string PartsFilterOutOfStockText { get; init; } = "Hết hàng";
+    public string PartsFilterNormalText { get; init; } = "Bình thường";
+    public string PartsFilterDefectiveText { get; init; } = "Bị lỗi";
+    public string PartsFilterNotExpiredText { get; init; } = "Còn hạn";
+    public string PartsFilterExpiredText { get; init; } = "Hết hạn";
+    public string PartsFilterActiveText { get; init; } = "Đang bán";
+    public string PartsFilterDiscontinuedText { get; init; } = "Ngừng bán";
+    public string PartsFormTitleEditText { get; init; } = "Sửa phụ tùng";
+    public string PartsFormTitleCreateText { get; init; } = "Thêm phụ tùng";
+    public string PartsFormSaveCreateText { get; init; } = "Thêm phụ tùng";
+    public string PartsFilterCategoryAllText { get; init; } = "Tất cả loại";
+    public string PartsPickerFilterCategoryText { get; init; } = "Chọn loại phụ tùng";
+    public string PartsPickerFormCategoryText { get; init; } = "Loại phụ tùng";
+    public string PartsPickerFilterStockText { get; init; } = "Tồn kho";
+    public string PartsPickerFilterConditionText { get; init; } = "Tình trạng";
+    public string PartsPickerFilterExpiryText { get; init; } = "Hạn sử dụng";
+    public string PartsPickerFilterSaleStatusText { get; init; } = "Trạng thái bán";
+    public string PartsErrorLoadFailedText { get; init; } = "Tải danh sách thất bại";
+    public string PartsErrorDeleteFailedText { get; init; } = "Xóa thất bại";
+    public string PartsValidationSkuRequiredText { get; init; } = "Mã SKU không được để trống.";
+    public string PartsValidationSkuFormatText { get; init; } = "Mã SKU tối đa 12 ký tự, chỉ gồm chữ và số.";
+    public string PartsValidationNameRequiredText { get; init; } = "Tên phụ tùng không được để trống.";
+    public string PartsValidationNameMaxLengthText { get; init; } = "Tên không được vượt quá 100 ký tự.";
+    public string PartsValidationCostInvalidText { get; init; } = "Giá nhập không hợp lệ.";
+    public string PartsValidationPriceInvalidText { get; init; } = "Giá bán không hợp lệ.";
+    public string PartsValidationPriceNotLessThanCostText { get; init; } = "Giá bán không được thấp hơn giá nhập.";
+    public string PartsValidationQuantityNonNegativeText { get; init; } = "Số lượng phải là số nguyên không âm.";
+    public string PartsValidationSupplierRequiredText { get; init; } = "Vui lòng chọn nhà cung cấp.";
+    public string PartsValidationExpiryAfterReceivedText { get; init; } = "Ngày hết hạn phải sau ngày nhập kho.";
+    public string InvoicesActionPayNowText { get; init; } = "Thanh toán";
+    public string InvoicesActionPaidText { get; init; } = "Đã thanh toán";
+    public string InvoicesPageTitleText { get; init; } = "Hóa đơn";
+    public string InvoicesPageTitleWithOwnerText { get; init; } = "Hóa đơn {0}";
+    public string InvoicesErrorLoadFailedText { get; init; } = "Không tải được hóa đơn";
+    public string InvoicesValidationInvoiceNumberRequiredText { get; init; } = "Số hóa đơn không được để trống.";
+    public string InvoicesErrorSaveFailedText { get; init; } = "Lưu thất bại";
+    public string InvoicesErrorOpenTransactionsFailedText { get; init; } = "Không thể mở giao dịch";
+    public string InvoicesErrorPayNowFailedText { get; init; } = "Không thể thanh toán";
+    public string InvoicesErrorDeleteFailedText { get; init; } = "Xóa thất bại";
+    public string InvoicesButtonLoadingText { get; init; } = "Đang gửi...";
+    public string InvoicesButtonHoldToDeleteText { get; init; } = "Giữ để xóa";
+    public string InvoicesPickerTaxRateText { get; init; } = "Thuế";
+    public string InvoicesPickerDiscountTypeText { get; init; } = "Loại giảm giá";
+    public string InvoicesPickerPaymentStatusText { get; init; } = "Trạng thái thanh toán";
+    public string InvoicesMoneyPopupErrorLoadServiceLinesFailedText { get; init; } = "Không tải được danh sách dịch vụ.";
+    public string InvoicesMoneyPopupErrorLoadPartLinesFailedText { get; init; } = "Không tải được danh sách phụ tùng.";
+    public string InvoicesMoneyPopupServiceFallbackText { get; init; } = "Dịch vụ #{0}";
+    public string InvoicesMoneyPopupPartFallbackText { get; init; } = "Phụ tùng #{0}";
+    public string InvoicesMoneyPopupErrorLinkedOrderMissingText { get; init; } = "Không xác định được lệnh liên kết của hóa đơn. Bạn có thể bấm 'Xem lệnh' để kiểm tra.";
+    public string InvoicesMoneyPopupErrorLoadLineDetailsFailedText { get; init; } = "Không tải được chi tiết dịch vụ/phụ tùng.";
+    public string InvoicesOverviewPageTitleText { get; init; } = "Hóa đơn (tổng)";
+    public string InvoicesOverviewErrorLoadFailedText { get; init; } = "Không tải được hóa đơn";
+    public string RepairOrdersPageTitleVehicleText { get; init; } = "Sửa chữa {0}";
+    public string RepairOrdersPageTitleInvoiceText { get; init; } = "Lệnh sửa chữa ({0})";
+    public string RepairOrdersPageTitleText { get; init; } = "Lệnh sửa chữa";
+    public string RepairOrdersFormTitleEditText { get; init; } = "Sửa lệnh";
+    public string RepairOrdersFormTitleCreateText { get; init; } = "Tạo lệnh";
+    public string RepairOrdersDeleteConfirmTitleText { get; init; } = "Xác nhận xóa";
+    public string RepairOrdersDeleteConfirmMessageWithIdText { get; init; } = "Xóa lệnh #{0}";
+    public string RepairOrdersErrorLoadFailedText { get; init; } = "Không tải được lệnh sửa chữa";
+    public string RepairOrdersErrorSaveFailedText { get; init; } = "Lưu thất bại";
+    public string RepairOrdersErrorDeleteFailedText { get; init; } = "Xóa thất bại";
+    public string RepairOrdersPickerStatusText { get; init; } = "Trạng thái";
+    public string RepairOrderItemsPageTitleText { get; init; } = "Part trong lệnh";
+    public string RepairOrderItemsPageTitleWithIdText { get; init; } = "Part lệnh #{0}";
+    public string RepairOrderItemsErrorLoadPartsText { get; init; } = "Không tải được danh sách part: {0}";
+    public string RepairOrderItemsValidationPartAndQuantityText { get; init; } = "Vui lòng chọn Part và nhập Quantity > 0.";
+    public string RepairTasksPageTitleText { get; init; } = "Task sửa chữa";
+    public string RepairTasksPageTitleWithIdText { get; init; } = "Task lệnh #{0}";
+    public string RepairTasksFormTitleEditText { get; init; } = "Sửa task";
+    public string RepairTasksFormTitleCreateText { get; init; } = "Thêm task";
+    public string RepairTasksErrorLoadFailedText { get; init; } = "Không tải được task";
+    public string RepairTasksValidationEmployeeAndServiceRequiredText { get; init; } = "Vui lòng chọn Nhân viên và Dịch vụ.";
+    public string RepairTasksErrorSaveFailedText { get; init; } = "Lưu thất bại";
+    public string RepairTasksErrorDeleteFailedText { get; init; } = "Xóa thất bại";
+    public string RepairTasksPickerStatusText { get; init; } = "Trạng thái";
+    public string ServiceItemsFormTitleEditText { get; init; } = "Sửa dịch vụ";
+    public string ServiceItemsFormTitleCreateText { get; init; } = "Thêm dịch vụ";
+    public string ServiceItemsFormSaveCreateText { get; init; } = "Thêm dịch vụ";
+    public string ServiceItemsFilterTypeAllText { get; init; } = "Tất cả loại";
+    public string ServiceItemsFormTypePlaceholderText { get; init; } = "— Chọn loại —";
+    public string ServiceItemsPickerFilterTypeText { get; init; } = "Chọn loại dịch vụ";
+    public string ServiceItemsPickerFormTypeText { get; init; } = "Loại dịch vụ";
+    public string ServiceItemsErrorLoadFailedText { get; init; } = "Tải danh sách thất bại";
+    public string ServiceItemsErrorDeleteFailedText { get; init; } = "Xóa thất bại";
+    public string ServiceItemsValidationDescriptionRequiredText { get; init; } = "Mô tả dịch vụ không được để trống.";
+    public string ServiceItemsValidationDescriptionMaxLengthText { get; init; } = "Mô tả không được vượt quá 255 ký tự.";
+    public string ServiceItemsValidationUnitPricePositiveText { get; init; } = "Đơn giá không hợp lệ (phải là số dương).";
+    public string ServiceItemsValidationTypeRequiredText { get; init; } = "Vui lòng chọn loại dịch vụ.";
+    public string SuppliersFilterStatusAllText { get; init; } = "Tất cả trạng thái";
+    public string SuppliersFilterPaymentTermsAllText { get; init; } = "Tất cả thanh toán";
+    public string SuppliersFormTitleEditText { get; init; } = "Sửa nhà cung cấp";
+    public string SuppliersFormTitleCreateText { get; init; } = "Thêm nhà cung cấp";
+    public string SuppliersFormSaveCreateText { get; init; } = "Thêm nhà cung cấp";
+    public string SuppliersPickerFilterStatusText { get; init; } = "Trạng thái";
+    public string SuppliersPickerFilterPaymentTermsText { get; init; } = "Điều khoản thanh toán";
+    public string SuppliersPickerFormStatusText { get; init; } = "Trạng thái";
+    public string SuppliersPickerFormPaymentTermsText { get; init; } = "Điều khoản thanh toán";
+    public string SuppliersPickerChangeStatusText { get; init; } = "Thay đổi trạng thái";
+    public string SuppliersErrorLoadFailedText { get; init; } = "Tải danh sách thất bại";
+    public string SuppliersErrorChangeStatusFailedText { get; init; } = "Đổi trạng thái thất bại";
+    public string SuppliersValidationNameRequiredText { get; init; } = "Tên nhà cung cấp không được để trống.";
+    public string SuppliersValidationNameMaxLengthText { get; init; } = "Tên không được vượt quá 150 ký tự.";
+    public string SuppliersValidationEmailInvalidText { get; init; } = "Email không hợp lệ.";
+    public string SuppliersValidationTaxCodeRequiredText { get; init; } = "Mã số thuế không được để trống.";
+    public string SuppliersValidationPhoneInvalidText { get; init; } = "Số điện thoại không hợp lệ.";
+    public string SuppliersValidationEndDateAfterStartDateText { get; init; } = "Ngày kết thúc phải sau ngày bắt đầu.";
+    public string TransactionsPageTitleText { get; init; } = "Thanh toán";
+    public string TransactionsPageTitleWithInvoiceText { get; init; } = "Thanh toán {0}";
+    public string TransactionsPickerPaymentMethodText { get; init; } = "Phương thức";
+    public string TransactionsPickerTypeText { get; init; } = "Loại";
+    public string TransactionsPickerStatusText { get; init; } = "Trạng thái";
+    public string TransactionsErrorLoadFailedText { get; init; } = "Không tải được giao dịch";
+    public string TransactionsValidationAmountPositiveText { get; init; } = "Số tiền phải > 0.";
+    public string TransactionsErrorCreateFailedText { get; init; } = "Tạo giao dịch thất bại";
+    public string TransactionsErrorDeleteFailedText { get; init; } = "Xóa thất bại";
+    public string VehiclesPageTitleText { get; init; } = "Danh sách xe";
+    public string VehiclesPageTitleWithOwnerText { get; init; } = "Xe của {0}";
+    public string VehiclesFormTitleEditText { get; init; } = "Sửa xe";
+    public string VehiclesFormTitleCreateText { get; init; } = "Thêm xe mới";
+    public string VehiclesFormSaveCreateText { get; init; } = "Thêm xe";
+    public string VehiclesPickerFormBrandText { get; init; } = "Hãng xe";
+    public string VehiclesPickerFormTypeText { get; init; } = "Loại xe";
+    public string VehiclesPickerFormColorText { get; init; } = "Màu sắc";
+    public string VehiclesErrorLoadFailedText { get; init; } = "Tải danh sách thất bại";
+    public string VehiclesErrorDeleteFailedText { get; init; } = "Xóa thất bại";
+    public string VehiclesValidationPlateRequiredText { get; init; } = "Biển số xe không được để trống.";
+    public string VehiclesValidationPlateMaxLengthText { get; init; } = "Biển số xe không được vượt quá 20 ký tự.";
+    public string VehiclesValidationYearInvalidText { get; init; } = "Năm sản xuất không hợp lệ (1900 - {0}).";
+    public string VehiclesValidationOdometerNonNegativeText { get; init; } = "Số km không được âm.";
 }
-
 public static class UiTextConfiguration
 {
     public static UiTextOptions Current => ConfigurationManager.Instance.Get<UiTextOptions>();
-}
-
-public static class UiText
-{
-    public static string Get(string key, string fallback) => UiTextConfiguration.Current.Get(key, fallback);
-
-    public static string Format(string key, string fallbackFormat, params object[] args) =>
-        UiTextConfiguration.Current.Format(key, fallbackFormat, args);
 }

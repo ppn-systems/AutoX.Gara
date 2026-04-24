@@ -1,13 +1,11 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 using AutoX.Gara.Frontend.Abstractions;
+using AutoX.Gara.Frontend.Configuration;
 using Microsoft.Maui.Controls;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-
 namespace AutoX.Gara.Frontend.Services;
-
 /// <summary>
 /// Implementation điều hướng dựa trên MAUI Shell.
 /// Đây là nơi duy nhất quản lý việc chuyển trang và cấu hình cửa sổ ứng dụng.
@@ -19,15 +17,15 @@ public sealed class ShellNavigationService : INavigationService
     /// </summary>
     public async Task GoToMainPageAsync()
     {
+        UiTextOptions text = UiTextConfiguration.Current;
         // 1. Loại bỏ trang đăng nhập khỏi lịch sử Shell để ngăn người dùng quay lại bằng nút Back.
         var loginItem = Shell.Current.Items
-            .FirstOrDefault(i => i.Title is "Login" or "Đăng nhập");
-
+            .FirstOrDefault(i => String.Equals(i.Title, text.ShellLoginItemFallbackTitleText, StringComparison.OrdinalIgnoreCase)
+                                 || String.Equals(i.Title, text.ShellLoginItemTitleText, StringComparison.OrdinalIgnoreCase));
         if (loginItem is not null)
         {
             Shell.Current.Items.Remove(loginItem);
         }
-
         // 2. Định cấu hình kích thước Window chuẩn cho giao diện desktop chính.
         if (Application.Current?.Windows.Count > 0)
         {
@@ -35,7 +33,6 @@ public sealed class ShellNavigationService : INavigationService
             window.Width = 1280;
             window.Height = 720;
         }
-
         // 3. Thực hiện chuyển hướng Shell tới Route chính.
         await Shell.Current.GoToAsync("///MainPage");
     }
