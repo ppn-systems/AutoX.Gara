@@ -1,6 +1,6 @@
-﻿using System;
-using AutoX.Gara.Domain.Abstractions;
+﻿using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Enums;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 

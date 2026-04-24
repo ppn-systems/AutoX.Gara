@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using AutoX.Gara.Domain.Entities.Identity;
-using AutoX.Gara.Shared.Models;
+﻿using AutoX.Gara.Domain.Entities.Identity;using AutoX.Gara.Shared.Models;using System.Collections.Generic;
 
 namespace AutoX.Gara.Application.Abstractions.Repositories;
 

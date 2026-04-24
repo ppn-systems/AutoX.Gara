@@ -1,12 +1,11 @@
-﻿using Nalix.Common.Networking.Protocols;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Shared.Models;
 using Microsoft.Extensions.Logging;
-
+using Nalix.Common.Networking.Protocols;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -24,10 +23,9 @@ public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, IL
         {
             await using var session = _dataSessionFactory.Create();
             var vehicle = await session.Vehicles.GetByIdAsync(vehicleId).ConfigureAwait(false);
-            if (vehicle == null || vehicle.DeletedAt != null) 
-                return ServiceResult<Vehicle>.Failure("Không tìm thấy xe.", ProtocolReason.NOT_FOUND);
-            
-            return ServiceResult<Vehicle>.Success(vehicle);
+            return vehicle == null || vehicle.DeletedAt != null
+                ? ServiceResult<Vehicle>.Failure("Không tìm thấy xe.", ProtocolReason.NOT_FOUND)
+                : ServiceResult<Vehicle>.Success(vehicle);
         }
         catch (Exception ex)
         {
@@ -57,7 +55,9 @@ public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, IL
         {
             await using var session = _dataSessionFactory.Create();
             if (await session.Vehicles.ExistsAsync(vehicle.LicensePlate, vehicle.EngineNumber, vehicle.FrameNumber).ConfigureAwait(false))
+            {
                 return ServiceResult<Vehicle>.Failure("Xe đã tồn tại (trùng BKS hoặc số máy/số khung).", ProtocolReason.ALREADY_EXISTS);
+            }
 
             await session.Vehicles.AddAsync(vehicle).ConfigureAwait(false);
             await session.Vehicles.SaveChangesAsync().ConfigureAwait(false);
@@ -77,8 +77,10 @@ public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, IL
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.Vehicles.GetByIdAsync(vehicle.Id).ConfigureAwait(false);
-            if (existing is null || existing.DeletedAt != null) 
+            if (existing is null || existing.DeletedAt != null)
+            {
                 return ServiceResult<Vehicle>.Failure("Không tìm thấy xe.", ProtocolReason.NOT_FOUND);
+            }
 
             existing.CustomerId = vehicle.CustomerId;
             existing.Type = vehicle.Type;
@@ -111,10 +113,12 @@ public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, IL
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.Vehicles.GetByIdAsync(vehicleId).ConfigureAwait(false);
-            if (existing is null || existing.DeletedAt != null) 
+            if (existing is null || existing.DeletedAt != null)
+            {
                 return ServiceResult<bool>.Failure("Không tìm thấy xe.", ProtocolReason.NOT_FOUND);
+            }
 
-                        session.Vehicles.Delete(existing);
+            session.Vehicles.Delete(existing);
             await session.Vehicles.SaveChangesAsync().ConfigureAwait(false);
 
             return ServiceResult<bool>.Success(true);

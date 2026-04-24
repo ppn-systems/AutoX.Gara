@@ -1,25 +1,18 @@
-﻿using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Networking.Protocols;
+﻿using AutoX.Gara.Api.Handlers.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Identity;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Employees;
-using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
-using AutoX.Gara.Api.Handlers.Common;
-using Nalix.Framework.DataFrames.SignalFrames;
-using Nalix.Framework.DataFrames.Pooling;
+using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
+using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
-using Nalix.Framework.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace AutoX.Gara.Api.Handlers.Identity;
 
@@ -206,10 +199,17 @@ public sealed class EmployeeHandler(IEmployeeAppService employeeService)
 
     private static void ReturnDtos(IEnumerable<EmployeeDto> dtos)
     {
-        if (dtos == null) return;
+        if (dtos == null)
+        {
+            return;
+        }
+
         var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
-        foreach (var dto in dtos) pool.Return(dto);
+        foreach (var dto in dtos)
+        {
+            pool.Return(dto);
+        }
     }
 
-    
+
 }

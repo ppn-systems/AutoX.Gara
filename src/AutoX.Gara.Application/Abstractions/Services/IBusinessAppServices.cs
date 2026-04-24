@@ -1,7 +1,5 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Shared.Models;

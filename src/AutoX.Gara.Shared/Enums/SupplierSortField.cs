@@ -1,6 +1,4 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
 

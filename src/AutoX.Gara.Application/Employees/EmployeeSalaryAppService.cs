@@ -1,5 +1,4 @@
-﻿using Nalix.Common.Networking.Protocols;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Abstractions.Services;
@@ -7,7 +6,7 @@ using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-
+using Nalix.Common.Networking.Protocols;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -39,10 +38,12 @@ public sealed class EmployeeSalaryAppService(IDataSessionFactory dataSessionFact
         try
         {
             await using var session = _dataSessionFactory.Create();
-            
+
             // Validate Employee existence
             if (!await session.Context.Set<Employee>().AsNoTracking().AnyAsync(e => e.Id == salary.EmployeeId).ConfigureAwait(false))
+            {
                 return ServiceResult<EmployeeSalary>.Failure("Không tìm thấy nhân viên tương ứng.", ProtocolReason.NOT_FOUND);
+            }
 
             await session.EmployeeSalaries.AddAsync(salary).ConfigureAwait(false);
             await session.EmployeeSalaries.SaveChangesAsync().ConfigureAwait(false);
@@ -64,13 +65,18 @@ public sealed class EmployeeSalaryAppService(IDataSessionFactory dataSessionFact
             var repo = session.EmployeeSalaries;
 
             var existing = await repo.GetByIdAsync(salary.Id).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<EmployeeSalary>.Failure("Không tìm thấy bản ghi lương.", ProtocolReason.NOT_FOUND);
+            if (existing is null)
+            {
+                return ServiceResult<EmployeeSalary>.Failure("Không tìm thấy bản ghi lương.", ProtocolReason.NOT_FOUND);
+            }
 
             // Validate Employee if changed
             if (existing.EmployeeId != salary.EmployeeId)
             {
                 if (!await session.Context.Set<Employee>().AsNoTracking().AnyAsync(e => e.Id == salary.EmployeeId).ConfigureAwait(false))
+                {
                     return ServiceResult<EmployeeSalary>.Failure("Không tìm thấy nhân viên mới.", ProtocolReason.NOT_FOUND);
+                }
             }
 
             existing.EmployeeId = salary.EmployeeId;
@@ -99,7 +105,10 @@ public sealed class EmployeeSalaryAppService(IDataSessionFactory dataSessionFact
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.EmployeeSalaries.GetByIdAsync(salaryId).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<bool>.Failure("Không tìm thấy bản ghi lương.", ProtocolReason.NOT_FOUND);
+            if (existing is null)
+            {
+                return ServiceResult<bool>.Failure("Không tìm thấy bản ghi lương.", ProtocolReason.NOT_FOUND);
+            }
 
             session.EmployeeSalaries.Delete(existing);
             await session.EmployeeSalaries.SaveChangesAsync().ConfigureAwait(false);

@@ -1,9 +1,6 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Shared.Protocol.Vehicles;
-
-using System.Collections.Generic;
+using AutoX.Gara.Shared.Protocol.Vehicles;using System;using System.Collections.Generic;
 
 namespace AutoX.Gara.Frontend.Services.Vehicles;
 

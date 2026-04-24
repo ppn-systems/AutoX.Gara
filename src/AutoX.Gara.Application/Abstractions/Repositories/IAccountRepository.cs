@@ -1,5 +1,4 @@
-﻿using System;
-using AutoX.Gara.Domain.Entities.Identity;
+﻿using AutoX.Gara.Domain.Entities.Identity;
 
 namespace AutoX.Gara.Application.Abstractions.Repositories;
 

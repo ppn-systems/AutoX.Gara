@@ -1,17 +1,6 @@
-﻿using Nalix.Common.Networking.Protocols;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Services;
-using AutoX.Gara.Domain.Entities.Billings;
-using AutoX.Gara.Domain.Entities.Invoices;
-using AutoX.Gara.Shared.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using AutoX.Gara.Application.Abstractions.Persistence;using AutoX.Gara.Application.Abstractions.Services;using AutoX.Gara.Domain.Entities.Billings;using AutoX.Gara.Domain.Entities.Invoices;using AutoX.Gara.Shared.Models;using Microsoft.EntityFrameworkCore;using Microsoft.Extensions.Logging;using Nalix.Common.Networking.Protocols;using System;using System.Collections.Generic;using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Billings;
 
@@ -39,13 +28,18 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
     {
         try
         {
-            await using var session = _dataSessionFactory.Create();
-            
-            if (await session.Invoices.ExistsByInvoiceNumberAsync(invoice.InvoiceNumber).ConfigureAwait(false))
-                return ServiceResult<Invoice>.Failure("Số hóa đơn đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
-
+            await using var session = _dataSessionFactory.Create();
+
+
+
+            if (await session.Invoices.ExistsByInvoiceNumberAsync(invoice.InvoiceNumber).ConfigureAwait(false))
+            {
+                return ServiceResult<Invoice>.Failure("Số hóa đơn đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
+            }
+
             await using var tx = await session.BeginTransactionAsync().ConfigureAwait(false);
-            try 
+            try
+
             {
                 await session.Invoices.AddAsync(invoice).ConfigureAwait(false);
                 await session.SaveChangesAsync().ConfigureAwait(false);
@@ -60,9 +54,12 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
                     }
                 }
 
-                await session.SaveChangesAsync().ConfigureAwait(false);
-                
-                // Recalculate contextually
+                await session.SaveChangesAsync().ConfigureAwait(false);
+
+
+
+                // Recalculate contextually
+
                 var withDetails = await session.Invoices.GetInvoiceWithFullGraphTrackedAsync(invoice.Id).ConfigureAwait(false);
                 if (withDetails != null)
                 {
@@ -94,12 +91,17 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
             var repo = session.Invoices;
 
             var existing = await repo.GetInvoiceWithFullGraphTrackedAsync(invoice.Id).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<Invoice>.Failure("Không tìm thấy hóa đơn.", ProtocolReason.NOT_FOUND);
-
+            if (existing is null)
+            {
+                return ServiceResult<Invoice>.Failure("Không tìm thấy hóa đơn.", ProtocolReason.NOT_FOUND);
+            }
+
             if (!string.Equals(existing.InvoiceNumber, invoice.InvoiceNumber, StringComparison.Ordinal))
             {
-                if (await repo.ExistsByInvoiceNumberAsync(invoice.InvoiceNumber, existing.Id).ConfigureAwait(false))
-                    return ServiceResult<Invoice>.Failure("Số hóa đơn mới đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
+                if (await repo.ExistsByInvoiceNumberAsync(invoice.InvoiceNumber, existing.Id).ConfigureAwait(false))
+                {
+                    return ServiceResult<Invoice>.Failure("Số hóa đơn mới đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
+                }
             }
 
             existing.CustomerId = invoice.CustomerId;
@@ -114,7 +116,10 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
             if (repairOrderId.HasValue && repairOrderId.Value > 0)
             {
                 var linkResult = await LinkRepairOrderInternal(session, existing.Id, repairOrderId.Value, existing.CustomerId).ConfigureAwait(false);
-                if (!linkResult.IsSuccess) return ServiceResult<Invoice>.Failure(linkResult.ErrorMessage, linkResult.Reason);
+                if (!linkResult.IsSuccess)
+                {
+                    return ServiceResult<Invoice>.Failure(linkResult.ErrorMessage, linkResult.Reason);
+                }
             }
 
             existing.Recalculate();
@@ -135,10 +140,21 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
         var ro = await session.Context.Set<RepairOrder>()
             .FirstOrDefaultAsync(r => r.Id == repairOrderId).ConfigureAwait(false);
 
-        if (ro == null) return ServiceResult<bool>.Failure("Không tìm thấy lệnh sửa chữa.", ProtocolReason.NOT_FOUND);
-        if (ro.CustomerId != customerId) return ServiceResult<bool>.Failure("Lệnh sửa chữa không thuộc về khách hàng này.", ProtocolReason.VALIDATION_FAILED);
-        if (ro.InvoiceId.HasValue && ro.InvoiceId.Value != invoiceId) return ServiceResult<bool>.Failure("Lệnh sửa chữa đã được gắn vào hóa đơn khác.", ProtocolReason.ALREADY_EXISTS);
-
+        if (ro == null)
+        {
+            return ServiceResult<bool>.Failure("Không tìm thấy lệnh sửa chữa.", ProtocolReason.NOT_FOUND);
+        }
+
+        if (ro.CustomerId != customerId)
+        {
+            return ServiceResult<bool>.Failure("Lệnh sửa chữa không thuộc về khách hàng này.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (ro.InvoiceId.HasValue && ro.InvoiceId.Value != invoiceId)
+        {
+            return ServiceResult<bool>.Failure("Lệnh sửa chữa đã được gắn vào hóa đơn khác.", ProtocolReason.ALREADY_EXISTS);
+        }
+
         ro.InvoiceId = invoiceId;
         return ServiceResult<bool>.Success(true);
     }
@@ -149,9 +165,15 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.Invoices.GetByIdAsync(invoiceId).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<bool>.Failure("Không tìm thấy hóa đơn.", ProtocolReason.NOT_FOUND);
-
-            // Invoices might not support hard delete, but for this refactor we follow the CRUD pattern
+            if (existing is null)
+            {
+                return ServiceResult<bool>.Failure("Không tìm thấy hóa đơn.", ProtocolReason.NOT_FOUND);
+            }
+
+
+
+            // Invoices might not support hard delete, but for this refactor we follow the CRUD pattern
+
             session.Invoices.Delete(existing);
             await session.Invoices.SaveChangesAsync().ConfigureAwait(false);
 

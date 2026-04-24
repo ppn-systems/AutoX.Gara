@@ -1,5 +1,4 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Auth;
 using AutoX.Gara.Shared.Protocol.Billings;
@@ -11,8 +10,8 @@ using AutoX.Gara.Shared.Protocol.Repairs;
 using AutoX.Gara.Shared.Protocol.Suppliers;
 using AutoX.Gara.Shared.Protocol.Vehicles;
 using Nalix.Common.Networking.Packets;
-using Nalix.Framework.Injection;
 using Nalix.Framework.DataFrames;
+using Nalix.Framework.Injection;
 
 namespace AutoX.Gara.Shared;
 

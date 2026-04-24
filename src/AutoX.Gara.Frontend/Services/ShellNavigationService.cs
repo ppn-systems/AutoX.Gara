@@ -1,8 +1,8 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
 using Microsoft.Maui.Controls;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 

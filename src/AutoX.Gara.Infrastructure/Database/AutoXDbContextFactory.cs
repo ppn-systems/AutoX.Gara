@@ -68,18 +68,15 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
         }
     }
 
-    public AutoXDbContext CreateDbContext(string[] args = null)
-    {
-        return new AutoXDbContext(OptionsBuilder.Options);
-    }
+    public AutoXDbContext CreateDbContext(string[] args = null) => new(OptionsBuilder.Options);
 
     private static bool CAN_CONNECT_TO_DATABASE(string connectionString)
     {
         try
         {
-            Npgsql.NpgsqlConnectionStringBuilder builder = new(connectionString);
+            Npgsql.NpgsqlConnectionStringBuilder builder = [with(connectionString)];
             string host = builder.Host;
-            
+
             using Ping ping = new();
             PingReply reply = ping.Send(host, 3000);
 

@@ -1,25 +1,13 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Frontend.Results.Vehicles;
-
-using Nalix.Common.Networking.Protocols;
-
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Vehicles;
-
-using Microsoft.Extensions.Logging;
-
-
-using Nalix.Framework.Injection;
-
-using Nalix.Framework.Random;
-
-using Nalix.SDK.Transport;
-
-using Nalix.SDK.Transport.Extensions;
-
+using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
+using Nalix.Framework.Injection;
+using Nalix.SDK.Transport;
+using Nalix.SDK.Transport.Extensions;
+using System;
 
 namespace AutoX.Gara.Frontend.Services.Vehicles;
 
@@ -80,10 +68,9 @@ public sealed class VehicleService
 
             }
 
-            if (r is Directive err) return VehicleListResult.Failure(err.Reason.ToString(), err.Action);
-
-            return VehicleListResult.Failure("Unknown response", ProtocolAdvice.NONE);
-
+            return r is Directive err
+                ? VehicleListResult.Failure(err.Reason.ToString(), err.Action)
+                : VehicleListResult.Failure("Unknown response", ProtocolAdvice.NONE);
         }
 
         catch (System.TimeoutException) { return VehicleListResult.Timeout(); }
@@ -110,7 +97,10 @@ public sealed class VehicleService
 
             Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(data, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(RequestTimeoutMs).WithEncrypt(), predicate: p => (echo && p is VehicleDto) || p is Directive, ct: ct).ConfigureAwait(false);
 
-            if (echo && r is VehicleDto confirmed) return VehicleWriteResult.Success(confirmed);
+            if (echo && r is VehicleDto confirmed)
+            {
+                return VehicleWriteResult.Success(confirmed);
+            }
 
             if (r is Directive resp)
 

@@ -1,7 +1,7 @@
-﻿using System;
-using AutoX.Gara.Domain.Abstractions;
+﻿using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums.Cars;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;

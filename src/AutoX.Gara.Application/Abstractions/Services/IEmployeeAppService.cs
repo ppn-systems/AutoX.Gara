@@ -1,12 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Protocol.Employees;
-using Microsoft.Extensions.Logging;
-
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

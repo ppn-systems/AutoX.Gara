@@ -1,16 +1,6 @@
-﻿using Nalix.Common.Networking.Protocols;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Services;
-using AutoX.Gara.Domain.Entities.Inventory;
-using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Validation;
-using Microsoft.Extensions.Logging;
-
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using AutoX.Gara.Application.Abstractions.Persistence;using AutoX.Gara.Application.Abstractions.Services;using AutoX.Gara.Domain.Entities.Inventory;using AutoX.Gara.Shared.Models;using AutoX.Gara.Shared.Validation;using Microsoft.Extensions.Logging;using Nalix.Common.Networking.Protocols;using System;using System.Collections.Generic;using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Inventory;
 
@@ -36,18 +26,24 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
 
     public async Task<ServiceResult<Part>> CreateAsync(Part part)
     {
-        if (!PartValidation.IsValidName(part.PartName))
-            return ServiceResult<Part>.Failure("Tên phụ tùng không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
-
-        if (!PartValidation.IsValidPrice(part.PurchasePrice, part.SellingPrice))
-            return ServiceResult<Part>.Failure("Giá bán không được nhỏ hơn giá nhập.", ProtocolReason.VALIDATION_FAILED);
-
+        if (!PartValidation.IsValidName(part.PartName))
+        {
+            return ServiceResult<Part>.Failure("Tên phụ tùng không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (!PartValidation.IsValidPrice(part.PurchasePrice, part.SellingPrice))
+        {
+            return ServiceResult<Part>.Failure("Giá bán không được nhỏ hơn giá nhập.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
-            if (await session.Parts.ExistsByPartCodeAsync(part.PartCode).ConfigureAwait(false))
-                return ServiceResult<Part>.Failure("Mã phụ tùng đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
-
+            if (await session.Parts.ExistsByPartCodeAsync(part.PartCode).ConfigureAwait(false))
+            {
+                return ServiceResult<Part>.Failure("Mã phụ tùng đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
+            }
+
             await session.Parts.AddAsync(part).ConfigureAwait(false);
             await session.Parts.SaveChangesAsync().ConfigureAwait(false);
 
@@ -66,8 +62,11 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.Parts.GetByIdAsync(part.Id).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<Part>.Failure("Không tìm thấy phụ tùng.", ProtocolReason.NOT_FOUND);
-
+            if (existing is null)
+            {
+                return ServiceResult<Part>.Failure("Không tìm thấy phụ tùng.", ProtocolReason.NOT_FOUND);
+            }
+
             existing.PartName = part.PartName;
             existing.Manufacturer = part.Manufacturer;
             existing.PartCategory = part.PartCategory;
@@ -78,9 +77,15 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
             existing.ExpiryDate = part.ExpiryDate;
             existing.IsDiscontinued = part.IsDiscontinued;
 
-            if (part.IsDefective && !existing.IsDefective) existing.MarkAsDefective();
-            else if (!part.IsDefective && existing.IsDefective) existing.UnmarkAsDefective();
-
+            if (part.IsDefective && !existing.IsDefective)
+            {
+                existing.MarkAsDefective();
+            }
+            else if (!part.IsDefective && existing.IsDefective)
+            {
+                existing.UnmarkAsDefective();
+            }
+
             session.Parts.Update(existing);
             await session.Parts.SaveChangesAsync().ConfigureAwait(false);
 
@@ -99,8 +104,11 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.Parts.GetByIdAsync(partId).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<bool>.Failure("Không tìm thấy phụ tùng.", ProtocolReason.NOT_FOUND);
-
+            if (existing is null)
+            {
+                return ServiceResult<bool>.Failure("Không tìm thấy phụ tùng.", ProtocolReason.NOT_FOUND);
+            }
+
             existing.IsDiscontinued = true;
             session.Parts.Delete(existing);
             await session.Parts.SaveChangesAsync().ConfigureAwait(false);

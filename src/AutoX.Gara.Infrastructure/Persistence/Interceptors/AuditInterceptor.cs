@@ -3,7 +3,6 @@ using AutoX.Gara.Domain.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,8 +24,11 @@ public class AuditInterceptor : SaveChangesInterceptor
 
     private void UpdateEntities(DbContext? context)
     {
-        if (context == null) return;
-
+        if (context == null)
+        {
+            return;
+        }
+
         var entries = context.ChangeTracker.Entries<IAuditEntity>();
         var now = DateTime.UtcNow;
 

@@ -1,23 +1,7 @@
-using AutoX.Gara.Shared.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Frontend.Abstractions;
-using AutoX.Gara.Frontend.Models.Results.Accounts;
-using AutoX.Gara.Frontend.Results.Accounts;
-using Nalix.Common.Primitives;
-
-using Nalix.Common.Networking.Protocols;
-using AutoX.Gara.Shared.Protocol.Auth;
-using Microsoft.Extensions.Logging;
-using Nalix.Framework.Configuration;
-using Nalix.Framework.Injection;
-using Nalix.SDK.Transport;
-using Nalix.SDK.Transport.Extensions;
-using Nalix.Framework.DataFrames.SignalFrames;
-using Nalix.SDK.Options;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using AutoX.Gara.Frontend.Abstractions;using AutoX.Gara.Frontend.Models.Results.Accounts;using AutoX.Gara.Shared.Enums;using AutoX.Gara.Shared.Protocol.Auth;using Microsoft.Extensions.Logging;using Nalix.Common.Networking.Protocols;using Nalix.Common.Primitives;
+using Nalix.Framework.Configuration;using Nalix.Framework.DataFrames.SignalFrames;using Nalix.Framework.Injection;using Nalix.SDK.Options;using Nalix.SDK.Transport;using Nalix.SDK.Transport.Extensions;using System;using System.Threading;using System.Threading.Tasks;
 
 namespace AutoX.Gara.Frontend.Services.Accounts;
 
@@ -62,7 +46,7 @@ public sealed class AccountService : IAccountService
                 client.Options.Secret = Bytes32.Zero;
             }
 
-            await client.ConnectAsync(options.Address, (ushort)options.Port, ct).ConfigureAwait(false);
+            await client.ConnectAsync(options.Address, options.Port, ct).ConfigureAwait(false);
 
             // 2. Thực hiện Handshake mã hóa X25519 để thiết lập Session Key bảo mật
             await client.HandshakeAsync(ct).ConfigureAwait(false);

@@ -1,21 +1,15 @@
-﻿using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Networking.Protocols;
+﻿using AutoX.Gara.Api.Handlers.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Repairs;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Repairs;
-using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
-using AutoX.Gara.Api.Handlers.Common;
-using Nalix.Framework.DataFrames.SignalFrames;
-using Nalix.Framework.DataFrames.Pooling;
+using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
-using Nalix.Framework.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Nalix.Framework.DataFrames.Pooling;
 
 namespace AutoX.Gara.Api.Handlers.Repairs;
 
@@ -50,7 +44,7 @@ public sealed class RepairOrderItemHandler(IRepairOrderItemAppService itemServic
 
         using var lease = PacketPool<RepairOrderItemQueryResponse>.Rent();
         var response = lease.Value;
-        response.SequenceId = (ushort)packet.SequenceId;
+        response.SequenceId = packet.SequenceId;
         response.TotalCount = result.Data!.totalCount;
         response.RepairOrderItems = result.Data!.items.ConvertAll(i => MapToPacket(i, 0));
 
@@ -155,5 +149,5 @@ public sealed class RepairOrderItemHandler(IRepairOrderItemAppService itemServic
         Quantity = i.Quantity
     };
 
-    
+
 }

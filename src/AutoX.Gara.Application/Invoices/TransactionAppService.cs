@@ -1,19 +1,6 @@
-﻿using Nalix.Common.Networking.Protocols;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Services;
-using AutoX.Gara.Domain.Entities.Invoices;
-using AutoX.Gara.Shared.Models;
-using Microsoft.Extensions.Logging;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using AutoX.Gara.Domain.Enums.Payments;
-using AutoX.Gara.Domain.Enums.Transactions;
+using AutoX.Gara.Application.Abstractions.Persistence;using AutoX.Gara.Application.Abstractions.Services;using AutoX.Gara.Domain.Entities.Invoices;using AutoX.Gara.Domain.Enums.Payments;using AutoX.Gara.Domain.Enums.Transactions;using AutoX.Gara.Shared.Models;using Microsoft.EntityFrameworkCore;using Microsoft.Extensions.Logging;using Nalix.Common.Networking.Protocols;using System;using System.Collections.Generic;using System.Linq;using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Invoices;
 
@@ -39,13 +26,17 @@ public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory
 
     public async Task<ServiceResult<Transaction>> CreateAsync(Transaction transaction)
     {
-        if (transaction.Amount <= 0)
-            return ServiceResult<Transaction>.Failure("Số tiền giao dịch phải lớn hơn 0.", ProtocolReason.MALFORMED_PACKET);
-
+        if (transaction.Amount <= 0)
+        {
+            return ServiceResult<Transaction>.Failure("Số tiền giao dịch phải lớn hơn 0.", ProtocolReason.MALFORMED_PACKET);
+        }
+
         try
         {
-            await using var session = _dataSessionFactory.Create();
-            
+            await using var session = _dataSessionFactory.Create();
+
+
+
             await using var tx = await session.BeginTransactionAsync().ConfigureAwait(false);
             try
             {
@@ -63,13 +54,19 @@ public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory
                         .Where(t => t.InvoiceId == invoice.Id && t.Status == TransactionStatus.Completed && !t.IsReversed)
                         .ToListAsync().ConfigureAwait(false);
 
-                    var totalPaid = allTransactions.Sum(t => t.Amount);
-                    
-                    if (totalPaid >= invoice.TotalAmount)
-                        invoice.PaymentStatus = PaymentStatus.Paid;
-                    else if (totalPaid > 0)
-                        invoice.PaymentStatus = PaymentStatus.PartiallyPaid;
-
+                    var totalPaid = allTransactions.Sum(t => t.Amount);
+
+
+
+                    if (totalPaid >= invoice.TotalAmount)
+                    {
+                        invoice.PaymentStatus = PaymentStatus.Paid;
+                    }
+                    else if (totalPaid > 0)
+                    {
+                        invoice.PaymentStatus = PaymentStatus.PartiallyPaid;
+                    }
+
                     await session.SaveChangesAsync().ConfigureAwait(false);
                 }
 
@@ -99,8 +96,11 @@ public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory
             try
             {
                 var existing = await session.Transactions.GetByIdAsync(transactionId).ConfigureAwait(false);
-                if (existing is null) return ServiceResult<bool>.Failure("Không tìm thấy giao dịch.", ProtocolReason.NOT_FOUND);
-
+                if (existing is null)
+                {
+                    return ServiceResult<bool>.Failure("Không tìm thấy giao dịch.", ProtocolReason.NOT_FOUND);
+                }
+
                 int invoiceId = existing.InvoiceId;
                 session.Transactions.Delete(existing);
                 await session.SaveChangesAsync().ConfigureAwait(false);
@@ -113,15 +113,12 @@ public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory
                         .Where(t => t.InvoiceId == invoiceId && t.Status == TransactionStatus.Completed && !t.IsReversed)
                         .ToListAsync().ConfigureAwait(false);
 
-                    var totalPaid = allTransactions.Sum(t => t.Amount);
-                    
-                    if (totalPaid >= invoice.TotalAmount)
-                        invoice.PaymentStatus = PaymentStatus.Paid;
-                    else if (totalPaid > 0)
-                        invoice.PaymentStatus = PaymentStatus.PartiallyPaid;
-                    else
-                        invoice.PaymentStatus = PaymentStatus.Unpaid;
-
+                    var totalPaid = allTransactions.Sum(t => t.Amount);
+
+
+
+                    invoice.PaymentStatus = totalPaid >= invoice.TotalAmount ? PaymentStatus.Paid : totalPaid > 0 ? PaymentStatus.PartiallyPaid : PaymentStatus.Unpaid;
+
                     await session.SaveChangesAsync().ConfigureAwait(false);
                 }
 

@@ -1,19 +1,15 @@
-﻿using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Networking.Protocols;
+﻿using AutoX.Gara.Api.Handlers.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Customers;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Vehicles;
-using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
-using AutoX.Gara.Api.Handlers.Common;
-using Nalix.Framework.DataFrames.SignalFrames;
-using Nalix.Framework.DataFrames.Pooling;
+using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
-using Nalix.Framework.Serialization;
-using System;
+using Nalix.Framework.DataFrames.Pooling;
 
 namespace AutoX.Gara.Api.Handlers.Vehicles;
 
@@ -193,5 +189,5 @@ public sealed class VehicleHandler(IVehicleAppService vehicleService)
         Mileage = v.Mileage
     };
 
-    
+
 }

@@ -1,9 +1,6 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using Microsoft.Maui.ApplicationModel;
-
-using Microsoft.Maui.Controls;
+using Microsoft.Maui.ApplicationModel;using Microsoft.Maui.Controls;using System;
 
 namespace AutoX.Gara.Frontend.Views;
 

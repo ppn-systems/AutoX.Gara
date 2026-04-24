@@ -1,5 +1,4 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.UI.ViewModels;
 using Microsoft.Maui.Controls;
@@ -15,7 +14,7 @@ public partial class LoginPage : ContentPage
     public LoginPage(LoginViewModel viewModel)
     {
         InitializeComponent();
-        
+
         // Gán BindingContext từ đối tượng được inject qua Constructor
         BindingContext = viewModel;
     }

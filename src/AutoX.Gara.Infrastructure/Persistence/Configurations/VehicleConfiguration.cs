@@ -1,5 +1,4 @@
-﻿using System;
-using AutoX.Gara.Domain.Entities.Customers;
+﻿using AutoX.Gara.Domain.Entities.Customers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

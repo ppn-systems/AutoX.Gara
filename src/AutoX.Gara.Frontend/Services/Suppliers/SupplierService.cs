@@ -1,29 +1,15 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
-
 using AutoX.Gara.Domain.Enums.Payments;
-
-using AutoX.Gara.Frontend.Results.Suppliers;
-
-using Nalix.Common.Networking.Protocols;
-
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Suppliers;
-
-using Microsoft.Extensions.Logging;
-
-
-using Nalix.Framework.Injection;
-
-using Nalix.Framework.Random;
-
-using Nalix.SDK.Transport;
-
-using Nalix.SDK.Transport.Extensions;
-
+using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
+using Nalix.Framework.Injection;
+using Nalix.SDK.Transport;
+using Nalix.SDK.Transport.Extensions;
+using System;
 
 namespace AutoX.Gara.Frontend.Services.Suppliers;
 
@@ -90,10 +76,9 @@ public sealed class SupplierService : ISupplierService
 
             }
 
-            if (r is Directive err) return SupplierListResult.Failure(err.Reason.ToString(), err.Action);
-
-            return SupplierListResult.Failure("Unknown response", ProtocolAdvice.NONE);
-
+            return r is Directive err
+                ? SupplierListResult.Failure(err.Reason.ToString(), err.Action)
+                : SupplierListResult.Failure("Unknown response", ProtocolAdvice.NONE);
         }
 
         catch (System.TimeoutException) { return SupplierListResult.Timeout(); }
@@ -120,7 +105,10 @@ public sealed class SupplierService : ISupplierService
 
             Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(data, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(RequestTimeoutMs).WithEncrypt(), predicate: p => (echo && p is SupplierDto) || p is Directive, ct: ct).ConfigureAwait(false);
 
-            if (echo && r is SupplierDto confirmed) return SupplierWriteResult.Success(confirmed);
+            if (echo && r is SupplierDto confirmed)
+            {
+                return SupplierWriteResult.Success(confirmed);
+            }
 
             if (r is Directive resp)
 

@@ -97,10 +97,10 @@ public class Invoice : AuditEntity<int>
 
     #region Calculated Properties
 
-    public DateTime InvoiceDate 
-    { 
-        get => CreatedAt; 
-        set => CreatedAt = value; 
+    public DateTime InvoiceDate
+    {
+        get => CreatedAt;
+        set => CreatedAt = value;
     }
 
     /// <summary>

@@ -1,5 +1,4 @@
-﻿using System;
-using AutoX.Gara.Domain.Entities.Inventory;
+﻿using AutoX.Gara.Domain.Entities.Inventory;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,7 +15,7 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.HasIndex(p => p.PartName);
         builder.HasIndex(p => p.Manufacturer);
         builder.HasIndex(p => p.SupplierId);
-        
+
         builder.HasIndex(p => new { p.IsDiscontinued, p.IsDefective, p.InventoryQuantity });
 
         builder.HasOne(p => p.Supplier)

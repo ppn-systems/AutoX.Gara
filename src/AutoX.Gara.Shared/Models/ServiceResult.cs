@@ -1,5 +1,5 @@
 ﻿#nullable enable
-using System;
+
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using Nalix.Common.Networking.Protocols;
@@ -16,9 +16,12 @@ public record ServiceResult<T>
     public string? ErrorMessage { get; init; }
     public ProtocolReason Reason { get; init; } = ProtocolReason.NONE;
 
-    public static ServiceResult<T> Success(T data) => new() { IsSuccess = true, Data = data };
-    
-    public static ServiceResult<T> Failure(string message, ProtocolReason reason = ProtocolReason.INTERNAL_ERROR) 
+    public static ServiceResult<T> Success(T data) => new() { IsSuccess = true, Data = data };
+
+
+
+    public static ServiceResult<T> Failure(string message, ProtocolReason reason = ProtocolReason.INTERNAL_ERROR)
+
         => new() { IsSuccess = false, ErrorMessage = message, Reason = reason };
 }
 

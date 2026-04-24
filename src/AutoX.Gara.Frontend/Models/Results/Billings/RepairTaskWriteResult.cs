@@ -1,11 +1,10 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Repairs;
 
 using Nalix.Common.Networking.Protocols;
 
-namespace AutoX.Gara.Frontend.Results.Billings;
+namespace AutoX.Gara.Frontend.Models.Results.Billings;
 
 public sealed class RepairTaskWriteResult
 

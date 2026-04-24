@@ -1,5 +1,4 @@
 ﻿using System;
-using AutoX.Gara.Domain.Enums.Repairs;
 
 namespace AutoX.Gara.Shared.Validation;
 
@@ -8,15 +7,7 @@ namespace AutoX.Gara.Shared.Validation;
 /// </summary>
 public static class RepairOrderValidation
 {
-    public static bool IsValidDates(DateTime orderDate, DateTime? expectedCompletion)
-    {
-        if (!expectedCompletion.HasValue) return true;
-        return expectedCompletion.Value >= orderDate;
-    }
+    public static bool IsValidDates(DateTime orderDate, DateTime? expectedCompletion) => !expectedCompletion.HasValue || expectedCompletion.Value >= orderDate;
 
-    public static bool IsValidDescription(string? desc)
-    {
-        if (string.IsNullOrEmpty(desc)) return true;
-        return desc.Length <= 1000;
-    }
+    public static bool IsValidDescription(string? desc) => string.IsNullOrEmpty(desc) || desc.Length <= 1000;
 }

@@ -1,12 +1,11 @@
-﻿using Nalix.Common.Networking.Protocols;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Shared.Models;
 using Microsoft.Extensions.Logging;
-
+using Nalix.Common.Networking.Protocols;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -55,7 +54,10 @@ public sealed class RepairOrderItemAppService(IDataSessionFactory dataSessionFac
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.RepairOrderItems.GetByIdAsync(item.Id).ConfigureAwait(false);
-            if (existing == null) return ServiceResult<RepairOrderItem>.Failure("Không tìm thấy hạng mục.", ProtocolReason.NOT_FOUND);
+            if (existing == null)
+            {
+                return ServiceResult<RepairOrderItem>.Failure("Không tìm thấy hạng mục.", ProtocolReason.NOT_FOUND);
+            }
 
             existing.Quantity = item.Quantity;
 
@@ -76,7 +78,10 @@ public sealed class RepairOrderItemAppService(IDataSessionFactory dataSessionFac
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.RepairOrderItems.GetByIdAsync(itemId).ConfigureAwait(false);
-            if (existing == null) return ServiceResult<bool>.Failure("Không tìm thấy hạng mục.", ProtocolReason.NOT_FOUND);
+            if (existing == null)
+            {
+                return ServiceResult<bool>.Failure("Không tìm thấy hạng mục.", ProtocolReason.NOT_FOUND);
+            }
 
             session.RepairOrderItems.Delete(existing);
             await session.RepairOrderItems.SaveChangesAsync().ConfigureAwait(false);

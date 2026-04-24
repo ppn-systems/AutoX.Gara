@@ -1,5 +1,4 @@
-﻿using System;
-using AutoX.Gara.Application.Abstractions.Repositories;
+﻿using AutoX.Gara.Application.Abstractions.Repositories;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;

@@ -1,18 +1,6 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-using System.Collections.Generic;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using AutoX.Gara.Application.Abstractions.Repositories;// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Entities.Suppliers;
-using AutoX.Gara.Domain.Enums;
-using AutoX.Gara.Domain.Enums.Payments;
-using AutoX.Gara.Infrastructure.Database;
-using Nalix.Common.Networking.Protocols;
-using AutoX.Gara.Shared.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
-
-using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Domain.Entities.Suppliers;using AutoX.Gara.Domain.Enums;using AutoX.Gara.Domain.Enums.Payments;using AutoX.Gara.Infrastructure.Database;using AutoX.Gara.Shared.Enums;using AutoX.Gara.Shared.Models;using Microsoft.EntityFrameworkCore;using System.Collections.Generic;using System.Linq;
 
 namespace AutoX.Gara.Infrastructure.Repositories;
 

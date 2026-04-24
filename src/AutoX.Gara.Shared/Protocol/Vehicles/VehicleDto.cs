@@ -1,15 +1,8 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 
 
-using AutoX.Gara.Domain.Enums.Cars;
-
-using Nalix.Common.Networking.Packets;
-
-using Nalix.Common.Serialization;
-
-using Nalix.Framework.DataFrames;
+using AutoX.Gara.Domain.Enums.Cars;using Nalix.Common.Networking.Packets;using Nalix.Common.Serialization;using Nalix.Framework.DataFrames;using System;
 
 
 

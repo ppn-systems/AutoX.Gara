@@ -1,8 +1,6 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Models.Results.Accounts;
-using AutoX.Gara.Frontend.Results.Accounts;
 using System.Threading;
 
 namespace AutoX.Gara.Frontend.Abstractions;

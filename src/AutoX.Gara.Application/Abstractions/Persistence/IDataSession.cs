@@ -1,5 +1,4 @@
-﻿using System;
-using AutoX.Gara.Application.Abstractions.Repositories;
+﻿using AutoX.Gara.Application.Abstractions.Repositories;
 
 namespace AutoX.Gara.Application.Abstractions.Persistence;
 

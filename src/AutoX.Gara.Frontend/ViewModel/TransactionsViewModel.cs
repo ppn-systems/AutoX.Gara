@@ -1,33 +1,6 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Enums.Payments;
-
-using AutoX.Gara.Domain.Enums.Transactions;
-
-using AutoX.Gara.Frontend.Helpers;
-
-using AutoX.Gara.Frontend.Messages;
-
-using AutoX.Gara.Frontend.Results.Billings;
-
-using AutoX.Gara.Frontend.Services.Invoices;
-
-using AutoX.Gara.Shared.Protocol.Billings;
-
-using AutoX.Gara.Shared.Protocol.Invoices;
-
-using CommunityToolkit.Mvvm.ComponentModel;
-
-using CommunityToolkit.Mvvm.Input;
-
-using CommunityToolkit.Mvvm.Messaging;
-
-using Nalix.Common.Networking.Protocols;
-
-using System.Collections.ObjectModel;
-
-using System.Linq;
+using AutoX.Gara.Domain.Enums.Payments;using AutoX.Gara.Domain.Enums.Transactions;using AutoX.Gara.Frontend.Helpers;using AutoX.Gara.Frontend.Messages;using AutoX.Gara.Frontend.Services.Invoices;using AutoX.Gara.Shared.Protocol.Billings;using AutoX.Gara.Shared.Protocol.Invoices;using CommunityToolkit.Mvvm.ComponentModel;using CommunityToolkit.Mvvm.Input;using CommunityToolkit.Mvvm.Messaging;using Nalix.Common.Networking.Protocols;using System;using System.Collections.ObjectModel;using System.Linq;
 
 namespace AutoX.Gara.Frontend.Controllers.Billings;
 
@@ -76,15 +49,18 @@ public sealed partial class TransactionsViewModel : ObservableObject, System.IDi
 
     private static readonly TransactionType[] TypeValues = System.Enum.GetValues<TransactionType>();
 
-    [ObservableProperty] public partial int PickerPaymentMethodIndex { get; set; } =
+    [ObservableProperty]
+    public partial int PickerPaymentMethodIndex { get; set; } =
 
         System.Array.IndexOf(PaymentMethodValues, PaymentMethod.Cash);
 
-    [ObservableProperty] public partial int PickerStatusIndex { get; set; } =
+    [ObservableProperty]
+    public partial int PickerStatusIndex { get; set; } =
 
         System.Array.IndexOf(StatusValues, TransactionStatus.Completed);
 
-    [ObservableProperty] public partial int PickerTypeIndex { get; set; } =
+    [ObservableProperty]
+    public partial int PickerTypeIndex { get; set; } =
 
         System.Array.IndexOf(TypeValues, TransactionType.Revenue);
 

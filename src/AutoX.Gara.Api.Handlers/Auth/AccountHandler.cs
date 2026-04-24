@@ -1,22 +1,16 @@
-﻿using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Networking.Protocols;
+﻿
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Api.Handlers.Common;
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Abstractions.Services;
-using AutoX.Gara.Domain.Entities.Identity;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Auth;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
-using AutoX.Gara.Api.Handlers.Common;
-using Nalix.Framework.DataFrames.SignalFrames;
-using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
-using Nalix.Framework.Serialization;
-using System;
-using System.Collections.Concurrent;
 
 namespace AutoX.Gara.Api.Handlers.Auth;
 
@@ -28,7 +22,7 @@ public sealed class AccountHandler(IAccountAppService accountService, IDataSessi
 {
     private readonly IAccountAppService _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
     private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory ?? throw new ArgumentNullException(nameof(dataSessionFactory));
-    
+
     private const string AttributeUsername = "Username";
 
 

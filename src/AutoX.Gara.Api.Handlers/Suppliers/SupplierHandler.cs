@@ -1,24 +1,18 @@
-﻿using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Networking.Protocols;
+﻿using AutoX.Gara.Api.Handlers.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Suppliers;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Suppliers;
-using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
-using AutoX.Gara.Api.Handlers.Common;
-using Nalix.Framework.DataFrames.SignalFrames;
-using Nalix.Framework.DataFrames.Pooling;
+using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
+using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
-using Nalix.Framework.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace AutoX.Gara.Api.Handlers.Suppliers;
 
@@ -39,12 +33,12 @@ public sealed class SupplierHandler(ISupplierAppService supplierService)
         IConnection connection = context.Connection;
 
         var query = new SupplierListQuery(
-            packet.Page, 
-            packet.PageSize, 
-            packet.SearchTerm ?? string.Empty, 
-            packet.SortBy, 
-            packet.SortDescending, 
-            packet.FilterStatus, 
+            packet.Page,
+            packet.PageSize,
+            packet.SearchTerm ?? string.Empty,
+            packet.SortBy,
+            packet.SortDescending,
+            packet.FilterStatus,
             packet.FilterPaymentTerms
         );
 
@@ -206,15 +200,25 @@ public sealed class SupplierHandler(ISupplierAppService supplierService)
 
     private static void ReturnDtos(IEnumerable<SupplierDto> dtos)
     {
-        if (dtos == null) return;
+        if (dtos == null)
+        {
+            return;
+        }
+
         var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
-        foreach (var dto in dtos) pool.Return(dto);
+        foreach (var dto in dtos)
+        {
+            pool.Return(dto);
+        }
     }
 
     private static void ReturnToPool(SupplierDto dto)
     {
-        if (dto != null) InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(dto);
+        if (dto != null)
+        {
+            InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(dto);
+        }
     }
 
-    
+
 }

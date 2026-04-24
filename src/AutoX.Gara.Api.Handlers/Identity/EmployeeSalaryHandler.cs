@@ -1,24 +1,18 @@
-﻿using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Networking.Protocols;
+﻿using AutoX.Gara.Api.Handlers.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Identity;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Employees;
-using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
-using AutoX.Gara.Api.Handlers.Common;
-using Nalix.Framework.DataFrames.SignalFrames;
-using Nalix.Framework.DataFrames.Pooling;
+using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
+using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
-using Nalix.Framework.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace AutoX.Gara.Api.Handlers.Identity;
 
@@ -38,7 +32,7 @@ public sealed class EmployeeSalaryHandler(IEmployeeSalaryAppService salaryServic
         EmployeeSalaryQueryRequest packet = context.Packet;
         IConnection connection = context.Connection;
 
-        var query = new EmployeeSalaryListQuery(packet.Page, packet.PageSize, packet.SearchTerm, packet.SortBy, packet.SortDescending, 
+        var query = new EmployeeSalaryListQuery(packet.Page, packet.PageSize, packet.SearchTerm, packet.SortBy, packet.SortDescending,
             packet.FilterEmployeeId > 0 ? packet.FilterEmployeeId : null, packet.FilterSalaryType, packet.FilterFromDate, packet.FilterToDate);
 
         var result = await _salaryService.GetPageAsync(query).ConfigureAwait(false);
@@ -62,7 +56,10 @@ public sealed class EmployeeSalaryHandler(IEmployeeSalaryAppService salaryServic
         finally
         {
             var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
-            foreach (var dto in response.Salaries) pool.Return(dto);
+            foreach (var dto in response.Salaries)
+            {
+                pool.Return(dto);
+            }
         }
     }
 
@@ -197,5 +194,5 @@ public sealed class EmployeeSalaryHandler(IEmployeeSalaryAppService salaryServic
         return dto;
     }
 
-    
+
 }

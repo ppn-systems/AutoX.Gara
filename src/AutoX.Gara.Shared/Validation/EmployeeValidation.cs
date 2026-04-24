@@ -9,15 +9,15 @@ public static class EmployeeValidation
 {
     public static bool IsValidName(string? name) => !string.IsNullOrWhiteSpace(name) && name.Length >= 2 && name.Length <= 100;
 
-    public static bool IsValidDates(DateTime startDate, DateTime? endDate)
-    {
-        if (!endDate.HasValue) return true;
-        return endDate.Value > startDate;
-    }
+    public static bool IsValidDates(DateTime startDate, DateTime? endDate) => !endDate.HasValue || endDate.Value > startDate;
 
     public static bool IsValidDateOfBirth(DateTime? dob)
     {
-        if (!dob.HasValue || dob.Value == default) return true;
+        if (!dob.HasValue || dob.Value == default)
+        {
+            return true;
+        }
+
         var today = DateTime.Today;
         return dob.Value < today && dob.Value > today.AddYears(-100);
     }

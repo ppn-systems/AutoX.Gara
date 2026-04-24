@@ -1,22 +1,6 @@
-﻿using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Networking.Protocols;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿using AutoX.Gara.Api.Handlers.Common;// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Services;
-using AutoX.Gara.Domain.Entities.Invoices;
-using AutoX.Gara.Shared.Protocol.Invoices;
-using AutoX.Gara.Shared.Models;
-using Microsoft.Extensions.Logging;
-using Nalix.Common.Networking;
-using Nalix.Common.Networking.Packets;
-using AutoX.Gara.Api.Handlers.Common;
-using Nalix.Framework.DataFrames.SignalFrames;
-using Nalix.Framework.DataFrames.Pooling;
-using Nalix.Common.Security;
-using Nalix.Framework.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using AutoX.Gara.Application.Abstractions.Services;using AutoX.Gara.Domain.Entities.Invoices;using AutoX.Gara.Shared.Enums;using AutoX.Gara.Shared.Models;using AutoX.Gara.Shared.Protocol.Invoices;using Nalix.Common.Networking;using Nalix.Common.Networking.Packets;using Nalix.Common.Networking.Protocols;using Nalix.Common.Security;using Nalix.Framework.DataFrames.Pooling;
 
 namespace AutoX.Gara.Api.Handlers.Repairs;
 
@@ -36,8 +20,10 @@ public sealed class RepairOrderHandler(IRepairOrderAppService repairOrderService
         RepairOrderQueryRequest packet = context.Packet;
         IConnection connection = context.Connection;
 
-        var query = new RepairOrderListQuery(packet.Page, packet.PageSize, packet.SearchTerm, packet.SortBy, packet.SortDescending, 
-            packet.FilterCustomerId <= 0 ? null : packet.FilterCustomerId, packet.FilterVehicleId <= 0 ? null : packet.FilterVehicleId, 
+        var query = new RepairOrderListQuery(packet.Page, packet.PageSize, packet.SearchTerm, packet.SortBy, packet.SortDescending,
+
+            packet.FilterCustomerId <= 0 ? null : packet.FilterCustomerId, packet.FilterVehicleId <= 0 ? null : packet.FilterVehicleId,
+
             packet.FilterInvoiceId <= 0 ? null : packet.FilterInvoiceId, packet.FilterStatus, packet.FilterFromDate, packet.FilterToDate);
 
         var result = await _repairOrderService.GetPageAsync(query).ConfigureAwait(false);
@@ -171,7 +157,10 @@ public sealed class RepairOrderHandler(IRepairOrderAppService repairOrderService
         TotalRepairCost = o.TotalRepairCost,
         ExpectedCompletionDate = o.ExpectedCompletionDate,
         CompletionDate = o.CompletionDate
-    };
-
-    
+    };
+
+
+
+
+
 }

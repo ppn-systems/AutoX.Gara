@@ -1,5 +1,4 @@
-﻿using System;
-using AutoX.Gara.Domain.Entities.Invoices;
+﻿using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Entities.Repairs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

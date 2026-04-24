@@ -1,5 +1,4 @@
-﻿using System;
-using AutoX.Gara.Domain.Abstractions;
+﻿using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Identity;
@@ -45,9 +44,12 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.AddInterceptors(new AuditInterceptor());
-        
-        // Performance Monitoring
+        optionsBuilder.AddInterceptors(new AuditInterceptor());
+
+
+
+        // Performance Monitoring
+
         var loggerFactory = optionsBuilder.Options.FindExtension<CoreOptionsExtension>()?.LoggerFactory;
         if (loggerFactory != null)
         {
@@ -59,8 +61,10 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-        
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+
+
         ApplySoftDeleteFilters(modelBuilder);
 
         base.OnModelCreating(modelBuilder);

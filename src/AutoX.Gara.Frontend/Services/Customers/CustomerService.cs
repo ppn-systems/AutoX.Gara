@@ -1,30 +1,16 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-using System.Collections.Generic;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Customers;
-
 using AutoX.Gara.Frontend.Abstractions;
-
 using AutoX.Gara.Frontend.Models.Results.Customer;
-
-using Nalix.Common.Networking.Protocols;
-
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Customers;
-
-using Microsoft.Extensions.Logging;
-
-
-using Nalix.Framework.Injection;
-
-using Nalix.Framework.Random;
-
-using Nalix.SDK.Transport;
-
-using Nalix.SDK.Transport.Extensions;
-
+using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
+using Nalix.Framework.Injection;
+using Nalix.SDK.Transport;
+using Nalix.SDK.Transport.Extensions;
+using System;
 
 namespace AutoX.Gara.Frontend.Services.Customers;
 
@@ -105,10 +91,9 @@ public sealed class CustomerService : ICustomerService
 
             }
 
-            if (r is Directive err) return CustomerListResult.Failure(err.Reason.ToString(), err.Action);
-
-            return CustomerListResult.Failure("Unknown response", ProtocolAdvice.NONE);
-
+            return r is Directive err
+                ? CustomerListResult.Failure(err.Reason.ToString(), err.Action)
+                : CustomerListResult.Failure("Unknown response", ProtocolAdvice.NONE);
         }
 
         catch (System.TimeoutException) { return CustomerListResult.Timeout(); }
@@ -135,7 +120,10 @@ public sealed class CustomerService : ICustomerService
 
             Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(data, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(RequestTimeoutMs).WithEncrypt(), predicate: p => (echo && p is CustomerDto) || p is Directive, ct: ct).ConfigureAwait(false);
 
-            if (echo && r is CustomerDto confirmed) return CustomerWriteResult.Success(confirmed);
+            if (echo && r is CustomerDto confirmed)
+            {
+                return CustomerWriteResult.Success(confirmed);
+            }
 
             if (r is Directive resp)
 

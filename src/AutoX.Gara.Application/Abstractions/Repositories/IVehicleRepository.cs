@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using AutoX.Gara.Domain.Entities.Customers;
+﻿using AutoX.Gara.Domain.Entities.Customers;using System.Collections.Generic;
 
 namespace AutoX.Gara.Application.Abstractions.Repositories;
 

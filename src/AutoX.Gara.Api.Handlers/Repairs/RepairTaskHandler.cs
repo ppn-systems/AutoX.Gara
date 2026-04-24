@@ -1,22 +1,16 @@
-﻿using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Networking.Protocols;
+﻿using AutoX.Gara.Api.Handlers.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Repairs;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Repairs;
-using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
-using AutoX.Gara.Api.Handlers.Common;
-using Nalix.Framework.DataFrames.SignalFrames;
-using Nalix.Framework.DataFrames.Pooling;
+using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
-using Nalix.Framework.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Nalix.Framework.DataFrames.Pooling;
 
 namespace AutoX.Gara.Api.Handlers.Repairs;
 
@@ -37,11 +31,11 @@ public sealed class RepairTaskHandler(IRepairTaskAppService repairTaskService)
         IConnection connection = context.Connection;
 
         var query = new RepairTaskListQuery(
-            packet.Page, 
-            packet.PageSize, 
-            packet.SearchTerm ?? string.Empty, 
-            packet.SortBy, 
-            packet.SortDescending, 
+            packet.Page,
+            packet.PageSize,
+            packet.SearchTerm ?? string.Empty,
+            packet.SortBy,
+            packet.SortDescending,
             packet.FilterRepairOrderId > 0 ? packet.FilterRepairOrderId : null,
             packet.FilterEmployeeId > 0 ? packet.FilterEmployeeId : null,
             packet.FilterServiceItemId > 0 ? packet.FilterServiceItemId : null,
@@ -172,5 +166,5 @@ public sealed class RepairTaskHandler(IRepairTaskAppService repairTaskService)
         IsCompleted = t.IsCompleted
     };
 
-    
+
 }

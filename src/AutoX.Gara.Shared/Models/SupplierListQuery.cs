@@ -1,10 +1,9 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
-using Nalix.Common.Networking.Protocols;
+using AutoX.Gara.Shared.Enums;
+using System;
 
 namespace AutoX.Gara.Shared.Models;
 
@@ -33,7 +32,14 @@ public sealed record SupplierListQuery(
 {
     public void Validate()
     {
-        if (Page < 1) throw new ArgumentException("Page must be >= 1");
-        if (PageSize < 1) throw new ArgumentException("PageSize must be >= 1");
+        if (Page < 1)
+        {
+            throw new ArgumentException("Page must be >= 1");
+        }
+
+        if (PageSize < 1)
+        {
+            throw new ArgumentException("PageSize must be >= 1");
+        }
     }
 }

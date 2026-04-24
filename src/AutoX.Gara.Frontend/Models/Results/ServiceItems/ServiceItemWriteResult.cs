@@ -1,11 +1,10 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Billings;
 
 using Nalix.Common.Networking.Protocols;
 
-namespace AutoX.Gara.Frontend.Results.ServiceItems;
+namespace AutoX.Gara.Frontend.Models.Results.ServiceItems;
 
 /// <summary>
 

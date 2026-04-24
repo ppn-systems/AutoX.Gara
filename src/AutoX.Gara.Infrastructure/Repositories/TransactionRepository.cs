@@ -1,25 +1,15 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 
 
 using AutoX.Gara.Application.Abstractions.Repositories;
-
 using AutoX.Gara.Domain.Entities.Invoices;
-
 using AutoX.Gara.Infrastructure.Database;
-
-using Nalix.Common.Networking.Protocols;
-
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
-
 using Microsoft.EntityFrameworkCore;
-
 using System.Collections.Generic;
-
 using System.Linq;
-
 using System.Threading.Tasks;
 
 

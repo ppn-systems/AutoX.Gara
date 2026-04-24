@@ -1,11 +1,12 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+
+
+
 using AutoX.Gara.Shared.Protocol.Vehicles;
 
 using Nalix.Common.Networking.Protocols;
 
-namespace AutoX.Gara.Frontend.Results.Vehicles;
+namespace AutoX.Gara.Frontend.Models.Results.Vehicles;
 
 /// <summary>
 

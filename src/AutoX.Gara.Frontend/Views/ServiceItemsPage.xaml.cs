@@ -1,16 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using AutoX.Gara.Frontend.Controllers.Billings;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Services.Billings;
-
-using AutoX.Gara.Frontend.Controllers.Billings;
-
 using Microsoft.Maui.Controls;
-
 using Nalix.Framework.Injection;
-
 using System;
-
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AutoX.Gara.Frontend.Views;

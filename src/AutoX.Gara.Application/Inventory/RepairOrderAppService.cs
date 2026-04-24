@@ -1,12 +1,11 @@
-﻿using Nalix.Common.Networking.Protocols;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Shared.Models;
 using Microsoft.Extensions.Logging;
-
+using Nalix.Common.Networking.Protocols;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -38,10 +37,12 @@ public sealed class RepairOrderAppService(IDataSessionFactory dataSessionFactory
         try
         {
             await using var session = _dataSessionFactory.Create();
-            
+
             order.OrderDate = DateTime.UtcNow;
             if (order.ExpectedCompletionDate.HasValue && order.ExpectedCompletionDate.Value < order.OrderDate)
+            {
                 return ServiceResult<RepairOrder>.Failure("Ngày hoàn thành dự kiến không thể trước ngày đặt lệnh.", ProtocolReason.MALFORMED_PACKET);
+            }
 
             await session.RepairOrders.AddAsync(order).ConfigureAwait(false);
             await session.RepairOrders.SaveChangesAsync().ConfigureAwait(false);
@@ -63,7 +64,10 @@ public sealed class RepairOrderAppService(IDataSessionFactory dataSessionFactory
             var repo = session.RepairOrders;
 
             var existing = await repo.GetByIdAsync(order.Id).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<RepairOrder>.Failure("Không tìm thấy lệnh sửa chữa.", ProtocolReason.NOT_FOUND);
+            if (existing is null)
+            {
+                return ServiceResult<RepairOrder>.Failure("Không tìm thấy lệnh sửa chữa.", ProtocolReason.NOT_FOUND);
+            }
 
             existing.VehicleId = order.VehicleId;
             existing.EmployeeId = order.EmployeeId;
@@ -91,7 +95,10 @@ public sealed class RepairOrderAppService(IDataSessionFactory dataSessionFactory
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.RepairOrders.GetByIdAsync(orderId).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<bool>.Failure("Không tìm thấy lệnh sửa chữa.", ProtocolReason.NOT_FOUND);
+            if (existing is null)
+            {
+                return ServiceResult<bool>.Failure("Không tìm thấy lệnh sửa chữa.", ProtocolReason.NOT_FOUND);
+            }
 
             session.RepairOrders.Delete(existing);
             await session.RepairOrders.SaveChangesAsync().ConfigureAwait(false);

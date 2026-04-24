@@ -2,7 +2,6 @@
 using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using Nalix.Common.Networking.Protocols;
 
 namespace AutoX.Gara.Shared.Models;
 

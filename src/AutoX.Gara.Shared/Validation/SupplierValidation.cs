@@ -11,13 +11,13 @@ public static class SupplierValidation
 
     public static bool IsValidTaxCode(string? taxCode)
     {
-        if (string.IsNullOrEmpty(taxCode)) return true; // Optional for some suppliers
-        return taxCode.Length >= 10 && taxCode.Length <= 14;
+        if (string.IsNullOrEmpty(taxCode))
+        {
+            return true; // Optional for some suppliers
+        }
+
+        return taxCode.Length is >= 10 and <= 14;
     }
 
-    public static bool IsValidDates(DateTime contractStart, DateTime? contractEnd)
-    {
-        if (!contractEnd.HasValue) return true;
-        return contractEnd.Value >= contractStart;
-    }
+    public static bool IsValidDates(DateTime contractStart, DateTime? contractEnd) => !contractEnd.HasValue || contractEnd.Value >= contractStart;
 }

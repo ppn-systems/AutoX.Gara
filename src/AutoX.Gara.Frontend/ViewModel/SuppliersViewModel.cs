@@ -1,29 +1,6 @@
-using AutoX.Gara.Shared.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Enums;
-
-using AutoX.Gara.Domain.Enums.Payments;
-
-using AutoX.Gara.Frontend.Helpers;
-
-using AutoX.Gara.Frontend.Results.Suppliers;
-
-using AutoX.Gara.Frontend.Services.Suppliers;
-
-using Nalix.Common.Networking.Protocols;
-
-using AutoX.Gara.Shared.Protocol.Suppliers;
-
-using CommunityToolkit.Mvvm.ComponentModel;
-
-using CommunityToolkit.Mvvm.Input;
-
-using System;
-
-using System.Diagnostics;
-
-using System.Linq;
+using AutoX.Gara.Domain.Enums;using AutoX.Gara.Domain.Enums.Payments;using AutoX.Gara.Frontend.Helpers;using AutoX.Gara.Frontend.Services.Suppliers;using AutoX.Gara.Shared.Enums;using AutoX.Gara.Shared.Protocol.Suppliers;using CommunityToolkit.Mvvm.ComponentModel;using CommunityToolkit.Mvvm.Input;using Nalix.Common.Networking.Protocols;using System;using System.Diagnostics;using System.Linq;
 
 namespace AutoX.Gara.Frontend.Controllers;
 
@@ -582,12 +559,18 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
         FormStatusIndex = System.Array.IndexOf(StatusValues, supplier.Status ?? SupplierStatus.None);
 
-        if (FormStatusIndex < 0) FormStatusIndex = 0;
-
+        if (FormStatusIndex < 0)
+        {
+            FormStatusIndex = 0;
+        }
+
         FormPaymentTermsIndex = System.Array.IndexOf(PaymentTermsValues, supplier.PaymentTerms ?? PaymentTerms.None);
 
-        if (FormPaymentTermsIndex < 0) FormPaymentTermsIndex = 0;
-
+        if (FormPaymentTermsIndex < 0)
+        {
+            FormPaymentTermsIndex = 0;
+        }
+
         FormContractStartDate = supplier.ContractStartDate ?? DateTime.Today;
 
         FormContractEndDate = supplier.ContractEndDate;
@@ -724,8 +707,11 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
 
         NewStatusIndex = System.Array.IndexOf(StatusValues, supplier.Status ?? SupplierStatus.None);
 
-        if (NewStatusIndex < 0) NewStatusIndex = 0;
-
+        if (NewStatusIndex < 0)
+        {
+            NewStatusIndex = 0;
+        }
+
         IsStatusConfirmVisible = true;
 
     }

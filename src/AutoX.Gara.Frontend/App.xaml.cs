@@ -1,8 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Maui;
 using Microsoft.Maui.Controls;
-using Microsoft.Extensions.Logging;
 using Nalix.Framework.Injection;
 using System;
 using System.Diagnostics;
@@ -20,10 +20,10 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
-        
+
         // Cài đặt các trình xử lý ngoại lệ không mong muốn toàn hệ thống
         InstallGlobalExceptionHandlers();
-        
+
         // Ghi lại thông tin môi trường thực thi để hỗ trợ chuẩn đoán
         LogAppDataPath();
     }
@@ -62,7 +62,7 @@ public partial class App : Application
         {
             string path = Microsoft.Maui.Storage.FileSystem.AppDataDirectory;
             var logger = InstanceManager.Instance.GetExistingInstance<ILogger>();
-            
+
             logger?.LogInformation("[FE.App] AppDataDirectory={Path}", path);
             Debug.WriteLine($"[FE.App] AppDataDirectory={path}");
         }
@@ -79,11 +79,11 @@ public partial class App : Application
         {
             string location = Shell.Current?.CurrentState?.Location?.ToString() ?? "(no-shell)";
             string message = $"[CRASH] source={source} location={location}\n{(ex is null ? "(null exception)" : ex.ToString())}";
-            
+
             // Log vào hệ thống logging chính
-            var logger = InstanceManager.Instance.GetExistingInstance<ILogger>() 
+            var logger = InstanceManager.Instance.GetExistingInstance<ILogger>()
                       ?? InstanceManager.Instance.GetOrCreateInstance<ILogger>();
-            
+
             logger.LogError(new EventId(999, "Crash"), ex, "{Message}", message);
             Debug.WriteLine(message);
 

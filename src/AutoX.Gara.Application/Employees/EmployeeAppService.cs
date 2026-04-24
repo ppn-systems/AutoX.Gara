@@ -1,17 +1,6 @@
-﻿using Nalix.Common.Networking.Protocols;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Services;
-using AutoX.Gara.Domain.Entities.Identity;
-using AutoX.Gara.Domain.Enums.Employees;
-using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Validation;
-using Microsoft.Extensions.Logging;
-
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using AutoX.Gara.Application.Abstractions.Persistence;using AutoX.Gara.Application.Abstractions.Services;using AutoX.Gara.Domain.Entities.Identity;using AutoX.Gara.Domain.Enums.Employees;using AutoX.Gara.Shared.Models;using AutoX.Gara.Shared.Validation;using Microsoft.Extensions.Logging;using Nalix.Common.Networking.Protocols;using System;using System.Collections.Generic;using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Employees;
 
@@ -37,23 +26,31 @@ public sealed class EmployeeAppService(IDataSessionFactory dataSessionFactory, I
 
     public async Task<ServiceResult<Employee>> CreateAsync(Employee employee)
     {
-        if (!EmployeeValidation.IsValidName(employee.Name))
-            return ServiceResult<Employee>.Failure("Tên nhân viên không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
-
-        if (!EmployeeValidation.IsValidDateOfBirth(employee.DateOfBirth))
-            return ServiceResult<Employee>.Failure("Ngày sinh không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
-
+        if (!EmployeeValidation.IsValidName(employee.Name))
+        {
+            return ServiceResult<Employee>.Failure("Tên nhân viên không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (!EmployeeValidation.IsValidDateOfBirth(employee.DateOfBirth))
+        {
+            return ServiceResult<Employee>.Failure("Ngày sinh không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
             var employees = session.Employees;
 
-            if (await employees.ExistsByEmailAsync(employee.Email).ConfigureAwait(false))
-                return ServiceResult<Employee>.Failure("Email đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
-
-            if (!string.IsNullOrWhiteSpace(employee.PhoneNumber) && await employees.ExistsByPhoneAsync(employee.PhoneNumber).ConfigureAwait(false))
-                return ServiceResult<Employee>.Failure("Số điện thoại đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
-
+            if (await employees.ExistsByEmailAsync(employee.Email).ConfigureAwait(false))
+            {
+                return ServiceResult<Employee>.Failure("Email đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
+            }
+
+            if (!string.IsNullOrWhiteSpace(employee.PhoneNumber) && await employees.ExistsByPhoneAsync(employee.PhoneNumber).ConfigureAwait(false))
+            {
+                return ServiceResult<Employee>.Failure("Số điện thoại đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
+            }
+
             employee.UpdateStatus();
             await employees.AddAsync(employee).ConfigureAwait(false);
             await employees.SaveChangesAsync().ConfigureAwait(false);
@@ -69,21 +66,31 @@ public sealed class EmployeeAppService(IDataSessionFactory dataSessionFactory, I
 
     public async Task<ServiceResult<Employee>> UpdateAsync(Employee employee)
     {
-        if (!EmployeeValidation.IsValidName(employee.Name))
-            return ServiceResult<Employee>.Failure("Tên nhân viên không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
-
-        if (!EmployeeValidation.IsValidDateOfBirth(employee.DateOfBirth))
-            return ServiceResult<Employee>.Failure("Ngày sinh không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
-
+        if (!EmployeeValidation.IsValidName(employee.Name))
+        {
+            return ServiceResult<Employee>.Failure("Tên nhân viên không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (!EmployeeValidation.IsValidDateOfBirth(employee.DateOfBirth))
+        {
+            return ServiceResult<Employee>.Failure("Ngày sinh không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
             var employees = session.Employees;
 
             var existing = await employees.GetByIdAsync(employee.Id).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<Employee>.Failure("Không tìm thấy nhân viên.", ProtocolReason.NOT_FOUND);
-
-            // Update fields... (mapping logic moved here from Controller)
+            if (existing is null)
+            {
+                return ServiceResult<Employee>.Failure("Không tìm thấy nhân viên.", ProtocolReason.NOT_FOUND);
+            }
+
+
+
+            // Update fields... (mapping logic moved here from Controller)
+
             existing.Name = employee.Name;
             existing.Email = employee.Email;
             existing.Address = employee.Address;
@@ -114,8 +121,11 @@ public sealed class EmployeeAppService(IDataSessionFactory dataSessionFactory, I
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.Employees.GetByIdAsync(employeeId).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<bool>.Failure("Không tìm thấy nhân viên.", ProtocolReason.NOT_FOUND);
-
+            if (existing is null)
+            {
+                return ServiceResult<bool>.Failure("Không tìm thấy nhân viên.", ProtocolReason.NOT_FOUND);
+            }
+
             existing.Status = status;
             session.Employees.Update(existing);
             await session.Employees.SaveChangesAsync().ConfigureAwait(false);

@@ -1,34 +1,20 @@
-using AutoX.Gara.Shared.Enums;
-using System.Collections.Generic;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
-
 using AutoX.Gara.Domain.Enums.Employees;
-
 using AutoX.Gara.Frontend.Helpers;
-
 using AutoX.Gara.Frontend.Models.Results.Employees;
-
-using AutoX.Gara.Frontend.Results.Employees;
-
 using AutoX.Gara.Frontend.Services.Employees;
-
-using Nalix.Common.Networking.Protocols;
-
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Employees;
 using AutoX.Gara.Shared.Validation;
-
 using CommunityToolkit.Mvvm.ComponentModel;
-
 using CommunityToolkit.Mvvm.Input;
-
 using Microsoft.Extensions.Logging;
-
+using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.Injection;
-
 using System;
-
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AutoX.Gara.Frontend.Controllers;
@@ -1671,7 +1657,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     }
 
-        private bool ValidateForm()
+    private bool ValidateForm()
     {
         ClearFormError();
         if (!EmployeeValidation.IsValidName(FormName))
@@ -1800,8 +1786,8 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     }
 
-    
 
-    
+
+
 }
 

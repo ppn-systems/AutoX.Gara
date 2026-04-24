@@ -1,28 +1,6 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System.Collections.Generic;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Enums.Parts;
-
-using AutoX.Gara.Frontend.Helpers;
-
-using AutoX.Gara.Frontend.Results.Parts;
-
-using AutoX.Gara.Frontend.Services.Inventory;
-
-using Nalix.Common.Networking.Protocols;
-
-using AutoX.Gara.Shared.Protocol.Inventory;
-
-using CommunityToolkit.Mvvm.ComponentModel;
-
-using CommunityToolkit.Mvvm.Input;
-
-using System;
-
-using System.Diagnostics;
-
-using System.Linq;
+using AutoX.Gara.Domain.Enums.Parts;using AutoX.Gara.Frontend.Helpers;using AutoX.Gara.Frontend.Services.Inventory;using AutoX.Gara.Shared.Enums;using AutoX.Gara.Shared.Protocol.Inventory;using CommunityToolkit.Mvvm.ComponentModel;using CommunityToolkit.Mvvm.Input;using Nalix.Common.Networking.Protocols;using System;using System.Collections.Generic;using System.Diagnostics;using System.Linq;
 
 namespace AutoX.Gara.Frontend.Controllers;
 

@@ -1,5 +1,4 @@
-﻿using System;
-using AutoX.Gara.Domain.Abstractions;
+﻿using AutoX.Gara.Domain.Abstractions;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 

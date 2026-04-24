@@ -1,7 +1,6 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-namespace AutoX.Gara.Frontend.Results.Accounts;
+namespace AutoX.Gara.Frontend.Models.Results.Accounts;
 
 /// <summary>
 

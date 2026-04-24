@@ -1,21 +1,13 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
-using AutoX.Gara.Frontend.Services.Billings;
-
-using AutoX.Gara.Frontend.Services.Employees;
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Controllers.Billings;
-
-using Microsoft.Maui.Controls;
-
-using Nalix.Framework.Injection;
-
-using AutoX.Gara.Shared.Protocol.Invoices;
-
-using AutoX.Gara.Frontend.Services.Invoices;
-
 using AutoX.Gara.Frontend.Helpers;
+using AutoX.Gara.Frontend.Services.Billings;
+using AutoX.Gara.Frontend.Services.Employees;
+using AutoX.Gara.Frontend.Services.Invoices;
+using AutoX.Gara.Shared.Protocol.Invoices;
+using Microsoft.Maui.Controls;
+using Nalix.Framework.Injection;
 
 namespace AutoX.Gara.Frontend.Views;
 

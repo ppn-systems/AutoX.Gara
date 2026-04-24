@@ -1,22 +1,16 @@
-﻿using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Networking.Protocols;
+﻿using AutoX.Gara.Api.Handlers.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Billings;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Billings;
-using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
-using AutoX.Gara.Api.Handlers.Common;
-using Nalix.Framework.DataFrames.SignalFrames;
-using Nalix.Framework.DataFrames.Pooling;
+using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
-using Nalix.Framework.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Nalix.Framework.DataFrames.Pooling;
 
 namespace AutoX.Gara.Api.Handlers.Financial;
 
@@ -37,11 +31,11 @@ public sealed class ServiceItemHandler(IServiceItemAppService serviceItemService
         IConnection connection = context.Connection;
 
         var query = new ServiceItemListQuery(
-            packet.Page, 
-            packet.PageSize, 
-            packet.SearchTerm, 
-            packet.SortBy, 
-            packet.SortDescending, 
+            packet.Page,
+            packet.PageSize,
+            packet.SearchTerm,
+            packet.SortBy,
+            packet.SortDescending,
             packet.FilterType > 0 ? packet.FilterType : null,
             null,
             null
@@ -156,5 +150,5 @@ public sealed class ServiceItemHandler(IServiceItemAppService serviceItemService
         Description = i.Description
     };
 
-    
+
 }

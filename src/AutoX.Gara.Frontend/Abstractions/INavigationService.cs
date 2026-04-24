@@ -1,6 +1,4 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 namespace AutoX.Gara.Frontend.Abstractions;
 
 /// <summary>

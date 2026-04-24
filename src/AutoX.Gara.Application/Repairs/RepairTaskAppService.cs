@@ -1,12 +1,11 @@
-﻿using Nalix.Common.Networking.Protocols;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Shared.Models;
 using Microsoft.Extensions.Logging;
-
+using Nalix.Common.Networking.Protocols;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -55,7 +54,10 @@ public sealed class RepairTaskAppService(IDataSessionFactory dataSessionFactory,
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.RepairTasks.GetByIdAsync(task.Id).ConfigureAwait(false);
-            if (existing == null) return ServiceResult<RepairTask>.Failure("Không tìm thấy hạng mục.", ProtocolReason.NOT_FOUND);
+            if (existing == null)
+            {
+                return ServiceResult<RepairTask>.Failure("Không tìm thấy hạng mục.", ProtocolReason.NOT_FOUND);
+            }
 
             existing.Name = task.Name;
             existing.BasePrice = task.BasePrice;
@@ -79,7 +81,10 @@ public sealed class RepairTaskAppService(IDataSessionFactory dataSessionFactory,
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.RepairTasks.GetByIdAsync(taskId).ConfigureAwait(false);
-            if (existing == null) return ServiceResult<bool>.Failure("Không tìm thấy hạng mục.", ProtocolReason.NOT_FOUND);
+            if (existing == null)
+            {
+                return ServiceResult<bool>.Failure("Không tìm thấy hạng mục.", ProtocolReason.NOT_FOUND);
+            }
 
             existing.IsActive = false;
             session.RepairTasks.Delete(existing);

@@ -1,16 +1,6 @@
-﻿using Nalix.Common.Networking.Protocols;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Services;
-using AutoX.Gara.Domain.Entities.Suppliers;
-using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Validation;
-using Microsoft.Extensions.Logging;
-
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using AutoX.Gara.Application.Abstractions.Persistence;using AutoX.Gara.Application.Abstractions.Services;using AutoX.Gara.Domain.Entities.Suppliers;using AutoX.Gara.Shared.Models;using AutoX.Gara.Shared.Validation;using Microsoft.Extensions.Logging;using Nalix.Common.Networking.Protocols;using System;using System.Collections.Generic;using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Suppliers;
 
@@ -36,15 +26,19 @@ public sealed class SupplierAppService(IDataSessionFactory dataSessionFactory, I
 
     public async Task<ServiceResult<Supplier>> CreateAsync(Supplier supplier)
     {
-        if (!SupplierValidation.IsValidName(supplier.Name))
-            return ServiceResult<Supplier>.Failure("Tên nhà cung cấp không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
-
+        if (!SupplierValidation.IsValidName(supplier.Name))
+        {
+            return ServiceResult<Supplier>.Failure("Tên nhà cung cấp không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
-            if (await session.Suppliers.ExistsByDetailsAsync(supplier.Name, supplier.Email, supplier.PhoneNumber).ConfigureAwait(false))
-                return ServiceResult<Supplier>.Failure("Nhà cung cấp đã tồn tại (trùng tên, email hoặc số điện thoại).", ProtocolReason.ALREADY_EXISTS);
-
+            if (await session.Suppliers.ExistsByDetailsAsync(supplier.Name, supplier.Email, supplier.PhoneNumber).ConfigureAwait(false))
+            {
+                return ServiceResult<Supplier>.Failure("Nhà cung cấp đã tồn tại (trùng tên, email hoặc số điện thoại).", ProtocolReason.ALREADY_EXISTS);
+            }
+
             await session.Suppliers.AddAsync(supplier).ConfigureAwait(false);
             await session.Suppliers.SaveChangesAsync().ConfigureAwait(false);
 
@@ -65,8 +59,11 @@ public sealed class SupplierAppService(IDataSessionFactory dataSessionFactory, I
             var repo = session.Suppliers;
 
             var existing = await repo.GetByIdAsync(supplier.Id).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<Supplier>.Failure("Không tìm thấy nhà cung cấp.", ProtocolReason.NOT_FOUND);
-
+            if (existing is null)
+            {
+                return ServiceResult<Supplier>.Failure("Không tìm thấy nhà cung cấp.", ProtocolReason.NOT_FOUND);
+            }
+
             existing.Name = supplier.Name;
             existing.Email = supplier.Email;
             existing.PhoneNumber = supplier.PhoneNumber;
@@ -94,8 +91,11 @@ public sealed class SupplierAppService(IDataSessionFactory dataSessionFactory, I
         {
             await using var session = _dataSessionFactory.Create();
             var existing = await session.Suppliers.GetByIdAsync(supplierId).ConfigureAwait(false);
-            if (existing is null) return ServiceResult<bool>.Failure("Không tìm thấy nhà cung cấp.", ProtocolReason.NOT_FOUND);
-
+            if (existing is null)
+            {
+                return ServiceResult<bool>.Failure("Không tìm thấy nhà cung cấp.", ProtocolReason.NOT_FOUND);
+            }
+
             existing.IsActive = false;
             session.Suppliers.Delete(existing);
             await session.Suppliers.SaveChangesAsync().ConfigureAwait(false);

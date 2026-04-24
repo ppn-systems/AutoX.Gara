@@ -1,24 +1,18 @@
-﻿using AutoX.Gara.Shared.Enums;
-using Nalix.Common.Networking.Protocols;
+﻿using AutoX.Gara.Api.Handlers.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Inventory;
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Protocol.Inventory;
-using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
-using AutoX.Gara.Api.Handlers.Common;
-using Nalix.Framework.DataFrames.SignalFrames;
-using Nalix.Framework.DataFrames.Pooling;
+using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
+using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
-using Nalix.Framework.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace AutoX.Gara.Api.Handlers.Inventory;
 
@@ -38,8 +32,8 @@ public sealed class PartHandler(IPartAppService partService)
         PartQueryRequest packet = context.Packet;
         IConnection connection = context.Connection;
 
-        var query = new PartListQuery(packet.Page, packet.PageSize, packet.SearchTerm, packet.SortBy, packet.SortDescending, 
-            packet.FilterSupplierId == 0 ? null : packet.FilterSupplierId, packet.FilterCategory, packet.FilterInStock, 
+        var query = new PartListQuery(packet.Page, packet.PageSize, packet.SearchTerm, packet.SortBy, packet.SortDescending,
+            packet.FilterSupplierId == 0 ? null : packet.FilterSupplierId, packet.FilterCategory, packet.FilterInStock,
             packet.FilterDefective, packet.FilterExpired, packet.FilterDiscontinued);
 
         var result = await _partService.GetPageAsync(query).ConfigureAwait(false);
@@ -208,15 +202,25 @@ public sealed class PartHandler(IPartAppService partService)
 
     private static void ReturnDtos(IEnumerable<PartDto> dtos)
     {
-        if (dtos == null) return;
+        if (dtos == null)
+        {
+            return;
+        }
+
         var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
-        foreach (var dto in dtos) pool.Return(dto);
+        foreach (var dto in dtos)
+        {
+            pool.Return(dto);
+        }
     }
 
     private static void ReturnToPool(PartDto dto)
     {
-        if (dto != null) InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(dto);
+        if (dto != null)
+        {
+            InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(dto);
+        }
     }
 
-    
+
 }

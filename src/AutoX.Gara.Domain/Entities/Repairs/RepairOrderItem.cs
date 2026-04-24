@@ -1,8 +1,6 @@
-﻿using System;
-using AutoX.Gara.Domain.Abstractions;
+﻿using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Domain.Entities.Invoices;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutoX.Gara.Domain.Entities.Repairs;

@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Shared.Protocol.Suppliers;
-
 using Nalix.Common.Networking.Protocols;
+using System.Collections.Generic;
 
-namespace AutoX.Gara.Frontend.Results.Suppliers;
+namespace AutoX.Gara.Frontend.Models.Results.Suppliers;
 
 /// <summary>
 

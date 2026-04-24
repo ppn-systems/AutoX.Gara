@@ -1,7 +1,5 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using Nalix.Common.Networking.Protocols;
 using AutoX.Gara.Shared.Enums;
 
 namespace AutoX.Gara.Shared.Extensions;

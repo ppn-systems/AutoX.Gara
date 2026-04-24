@@ -1,23 +1,12 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
-
 using AutoX.Gara.Domain.Enums.Payments;
-
-using AutoX.Gara.Frontend.Results.Suppliers;
-
 using AutoX.Gara.Frontend.Services.Suppliers;
-
-using Nalix.Common.Networking.Protocols;
-
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Suppliers;
-
 using System.Collections.Generic;
-
 using System.Threading;
-
 using System.Threading.Tasks;
 
 namespace AutoX.Gara.Frontend.Abstractions;

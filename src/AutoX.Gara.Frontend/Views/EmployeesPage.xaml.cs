@@ -1,17 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using AutoX.Gara.Frontend.Controllers;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Services.Employees;
-
-using AutoX.Gara.Frontend.Controllers;
-
 using CommunityToolkit.Mvvm.Input;
-
 using Microsoft.Maui.Controls;
-
 using Nalix.Framework.Injection;
-
 using System;
+using System.Collections.Generic;
 
 namespace AutoX.Gara.Frontend.Views;
 
@@ -87,145 +82,195 @@ public partial class EmployeesPage : ContentPage
 
     {
         if (BindingContext is not EmployeesViewModel vm)
-
+        {
             return;
+        }
 
 #if WINDOWS
 
         if (TryShowFlyout(sender as VisualElement, "Thay d?i tr?ng th�i", vm.ChangeStatusOptions, idx => vm.NewStatusIndex = idx))
-
+        {
             return;
+        }
 
 #endif
 
         var page = Application.Current?.Windows[0].Page;
 
-        if (page is null) return;
+        if (page is null)
+        {
+            return;
+        }
 
         string pick = await page.DisplayActionSheetAsync("Thay d?i tr?ng th�i", "H?y", null, vm.ChangeStatusOptions);
 
-        if (pick == "H?y" || string.IsNullOrWhiteSpace(pick)) return;
+        if (pick == "H?y" || string.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
 
         int idx2 = Array.IndexOf(vm.ChangeStatusOptions, pick);
 
-        if (idx2 >= 0) vm.NewStatusIndex = idx2;
-
+        if (idx2 >= 0)
+        {
+            vm.NewStatusIndex = idx2;
+        }
     }
 
     private async void OnSalaryTypeTapped(object? sender, TappedEventArgs e)
 
     {
         if (BindingContext is not EmployeesViewModel vm)
-
+        {
             return;
+        }
 
 #if WINDOWS
 
         if (TryShowFlyout(sender as VisualElement, "Lo?i luong", vm.SalaryFormTypeOptions, idx => vm.SalaryFormTypeIndex = idx))
-
+        {
             return;
+        }
 
 #endif
 
         var page = Application.Current?.Windows[0].Page;
 
-        if (page is null) return;
+        if (page is null)
+        {
+            return;
+        }
 
         string pick = await page.DisplayActionSheetAsync("Lo?i luong", "H?y", null, vm.SalaryFormTypeOptions);
 
-        if (pick == "H?y" || string.IsNullOrWhiteSpace(pick)) return;
+        if (pick == "H?y" || string.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
 
         int idx2 = Array.IndexOf(vm.SalaryFormTypeOptions, pick);
 
-        if (idx2 >= 0) vm.SalaryFormTypeIndex = idx2;
-
+        if (idx2 >= 0)
+        {
+            vm.SalaryFormTypeIndex = idx2;
+        }
     }
 
     private async void OnEmployeeFormGenderTapped(object? sender, TappedEventArgs e)
 
     {
         if (BindingContext is not EmployeesViewModel vm)
-
+        {
             return;
+        }
 
 #if WINDOWS
 
         if (TryShowFlyout(sender as VisualElement, "Gi?i t�nh", vm.FormGenderOptions, idx => vm.FormGenderIndex = idx))
-
+        {
             return;
+        }
 
 #endif
 
         var page = Application.Current?.Windows[0].Page;
 
-        if (page is null) return;
+        if (page is null)
+        {
+            return;
+        }
 
         string pick = await page.DisplayActionSheetAsync("Gi?i t�nh", "H?y", null, vm.FormGenderOptions);
 
-        if (pick == "H?y" || string.IsNullOrWhiteSpace(pick)) return;
+        if (pick == "H?y" || string.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
 
         int idx2 = Array.IndexOf(vm.FormGenderOptions, pick);
 
-        if (idx2 >= 0) vm.FormGenderIndex = idx2;
-
+        if (idx2 >= 0)
+        {
+            vm.FormGenderIndex = idx2;
+        }
     }
 
     private async void OnEmployeeFormPositionTapped(object? sender, TappedEventArgs e)
 
     {
         if (BindingContext is not EmployeesViewModel vm)
-
+        {
             return;
+        }
 
 #if WINDOWS
 
         if (TryShowFlyout(sender as VisualElement, "Ch?c v?", vm.FormPositionOptions, idx => vm.FormPositionIndex = idx))
-
+        {
             return;
+        }
 
 #endif
 
         var page = Application.Current?.Windows[0].Page;
 
-        if (page is null) return;
+        if (page is null)
+        {
+            return;
+        }
 
         string pick = await page.DisplayActionSheetAsync("Ch?c v?", "H?y", null, vm.FormPositionOptions);
 
-        if (pick == "H?y" || string.IsNullOrWhiteSpace(pick)) return;
+        if (pick == "H?y" || string.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
 
         int idx2 = Array.IndexOf(vm.FormPositionOptions, pick);
 
-        if (idx2 >= 0) vm.FormPositionIndex = idx2;
-
+        if (idx2 >= 0)
+        {
+            vm.FormPositionIndex = idx2;
+        }
     }
 
     private async void OnEmployeeFormStatusTapped(object? sender, TappedEventArgs e)
 
     {
         if (BindingContext is not EmployeesViewModel vm)
-
+        {
             return;
+        }
 
 #if WINDOWS
 
         if (TryShowFlyout(sender as VisualElement, "Tr?ng th�i", vm.FormStatusOptions, idx => vm.FormStatusIndex = idx))
-
+        {
             return;
+        }
 
 #endif
 
         var page = Application.Current?.Windows[0].Page;
 
-        if (page is null) return;
+        if (page is null)
+        {
+            return;
+        }
 
         string pick = await page.DisplayActionSheetAsync("Tr?ng th�i", "H?y", null, vm.FormStatusOptions);
 
-        if (pick == "H?y" || string.IsNullOrWhiteSpace(pick)) return;
+        if (pick == "H?y" || string.IsNullOrWhiteSpace(pick))
+        {
+            return;
+        }
 
         int idx2 = Array.IndexOf(vm.FormStatusOptions, pick);
 
-        if (idx2 >= 0) vm.FormStatusIndex = idx2;
-
+        if (idx2 >= 0)
+        {
+            vm.FormStatusIndex = idx2;
+        }
     }
 
     private void ShowFilterFlyout(
@@ -242,8 +287,9 @@ public partial class EmployeesPage : ContentPage
 
     {
         if (BindingContext is not EmployeesViewModel vm)
-
+        {
             return;
+        }
 
 #if WINDOWS
 
@@ -251,8 +297,9 @@ public partial class EmployeesPage : ContentPage
 
         {
             if (sender is not VisualElement anchor)
-
+            {
                 throw new InvalidOperationException("Missing anchor element for flyout.");
+            }
 
             var options = getOptions(vm);
 
@@ -333,8 +380,9 @@ public partial class EmployeesPage : ContentPage
 
         {
             if (anchor?.Handler?.PlatformView is not Microsoft.UI.Xaml.FrameworkElement fe)
-
+            {
                 return false;
+            }
 
             var flyout = new Microsoft.UI.Xaml.Controls.MenuFlyout
 

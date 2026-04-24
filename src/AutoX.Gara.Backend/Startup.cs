@@ -14,10 +14,8 @@ using AutoX.Gara.Infrastructure.Networking;
 using AutoX.Gara.Infrastructure.Persistence;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Packets;
-using Nalix.Framework.Extensions;
 using Nalix.Framework.Injection;
 using Nalix.Logging;
-using Nalix.Logging.Options;
 using Nalix.Logging.Sinks;
 using Nalix.Network.Hosting;
 using System;
@@ -76,8 +74,5 @@ public static class Startup
         inst.Register<IRepairOrderItemAppService>(new RepairOrderItemAppService(factory, loggerFactory.CreateLogger<RepairOrderItemAppService>()));
     }
 
-    public static ILogger CreateBootstrapLogger()
-    {
-        return new NLogix(cfg => cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = true)));
-    }
+    public static ILogger CreateBootstrapLogger() => new NLogix(cfg => cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = true)));
 }

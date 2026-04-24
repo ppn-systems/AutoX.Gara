@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Entities.Suppliers;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Domain.Entities.Suppliers;using AutoX.Gara.Shared.Models;using System.Collections.Generic;
 
 namespace AutoX.Gara.Infrastructure.Abstractions.Repositories;
 

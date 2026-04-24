@@ -6,10 +6,10 @@ using AutoX.Gara.Shared.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
+using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Tasks;
 using Nalix.SDK.Transport;
-using Nalix.Framework.DataFrames.SignalFrames;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -74,7 +74,10 @@ public sealed partial class LoginViewModel : ObservableObject
 
         ClearError();
 
-        if (!ValidateInputs()) return;
+        if (!ValidateInputs())
+        {
+            return;
+        }
 
         IsLoading = true;
         try
@@ -101,11 +104,14 @@ public sealed partial class LoginViewModel : ObservableObject
     private void SetupKeepAlive()
     {
         var client = InstanceManager.Instance.GetExistingInstance<TcpSession>();
-        if (client == null) return;
+        if (client == null)
+        {
+            return;
+        }
 
         var taskManager = InstanceManager.Instance.GetOrCreateInstance<TaskManager>();
         taskManager.ScheduleRecurring(
-            "KeepAlive", 
+            "KeepAlive",
             TimeSpan.FromSeconds(30),
             async (token) => await client.SendAsync(new Directive { Type = ControlType.HEARTBEAT }, token)
         );
@@ -200,7 +206,7 @@ public sealed partial class LoginViewModel : ObservableObject
         IsNetworkReady = false;
 
         var result = await _loginService.ConnectAsync();
-        
+
         IsLoading = false;
         if (result.IsSuccess)
         {

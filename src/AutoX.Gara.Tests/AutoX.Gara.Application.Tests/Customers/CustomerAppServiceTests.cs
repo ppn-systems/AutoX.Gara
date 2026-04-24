@@ -5,8 +5,6 @@ using AutoX.Gara.Domain.Entities.Customers;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace AutoX.Gara.Application.Tests.Customers;
 
@@ -30,7 +28,7 @@ public class CustomerAppServiceTests
         var customer = new Customer { Email = "test@example.com", PhoneNumber = "123" };
         var sessionMock = new Mock<IDataSession>();
         var customerRepoMock = new Mock<ICustomerRepository>();
-        
+
         _sessionFactoryMock.Setup(f => f.Create()).Returns(sessionMock.Object);
         sessionMock.Setup(s => s.Customers).Returns(customerRepoMock.Object);
         customerRepoMock.Setup(r => r.ExistsByContactAsync(customer.Email, customer.PhoneNumber))

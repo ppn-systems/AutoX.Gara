@@ -1,12 +1,10 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Services;
 using AutoX.Gara.Frontend.Services.Accounts;
 using AutoX.Gara.Frontend.Views;
 using AutoX.Gara.UI.ViewModels;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Maui.Hosting;

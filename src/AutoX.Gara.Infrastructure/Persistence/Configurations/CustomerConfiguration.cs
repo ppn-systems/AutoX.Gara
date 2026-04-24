@@ -1,5 +1,4 @@
-﻿using System;
-using AutoX.Gara.Domain.Entities.Customers;
+﻿using AutoX.Gara.Domain.Entities.Customers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,7 +12,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.HasIndex(c => c.PhoneNumber).IsUnique();
         builder.HasIndex(c => c.TaxCode);
         builder.HasIndex(c => c.Name);
-        
+
         builder.Property(c => c.Debt).HasPrecision(18, 2);
     }
 }

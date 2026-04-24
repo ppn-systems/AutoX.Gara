@@ -1,16 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using AutoX.Gara.Frontend.Controllers;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Services.Suppliers;
-
-using AutoX.Gara.Frontend.Controllers;
-
 using Microsoft.Maui.Controls;
-
 using Nalix.Framework.Injection;
-
 using System;
-
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AutoX.Gara.Frontend.Views;

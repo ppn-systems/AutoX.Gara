@@ -1,29 +1,15 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Payments;
-
 using AutoX.Gara.Domain.Enums.Transactions;
-
-using AutoX.Gara.Frontend.Results.Billings;
-
-using Nalix.Common.Networking.Protocols;
-
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Invoices;
-
-using Microsoft.Extensions.Logging;
-
-
-using Nalix.Framework.Injection;
-
-using Nalix.Framework.Random;
-
-using Nalix.SDK.Transport;
-
-using Nalix.SDK.Transport.Extensions;
-
+using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
+using Nalix.Framework.Injection;
+using Nalix.SDK.Transport;
+using Nalix.SDK.Transport.Extensions;
+using System;
 
 namespace AutoX.Gara.Frontend.Services.Invoices;
 
@@ -88,10 +74,9 @@ public sealed class TransactionService
 
             }
 
-            if (r is Directive err) return TransactionListResult.Failure(err.Reason.ToString(), err.Action);
-
-            return TransactionListResult.Failure("Unknown response", ProtocolAdvice.NONE);
-
+            return r is Directive err
+                ? TransactionListResult.Failure(err.Reason.ToString(), err.Action)
+                : TransactionListResult.Failure("Unknown response", ProtocolAdvice.NONE);
         }
 
         catch (Exception ex) { return TransactionListResult.Failure(ex.Message, ProtocolAdvice.NONE); }
@@ -116,7 +101,10 @@ public sealed class TransactionService
 
             Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(data, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(RequestTimeoutMs).WithEncrypt(), predicate: p => (echo && p is TransactionDto) || p is Directive, ct: ct).ConfigureAwait(false);
 
-            if (echo && r is TransactionDto confirmed) return TransactionWriteResult.Success(confirmed);
+            if (echo && r is TransactionDto confirmed)
+            {
+                return TransactionWriteResult.Success(confirmed);
+            }
 
             if (r is Directive resp)
 

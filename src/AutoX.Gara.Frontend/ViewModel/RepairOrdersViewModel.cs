@@ -1,32 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Enums.Repairs;
-
-using AutoX.Gara.Frontend.Helpers;
-
-using AutoX.Gara.Frontend.Results.Billings;
-
-using AutoX.Gara.Frontend.Services.Repairs;
-
-using AutoX.Gara.Shared.Protocol.Billings;
-
-using AutoX.Gara.Shared.Protocol.Customers;
-
-using AutoX.Gara.Shared.Protocol.Invoices;
-
-using AutoX.Gara.Shared.Protocol.Vehicles;
-
-using CommunityToolkit.Mvvm.ComponentModel;
-
-using CommunityToolkit.Mvvm.Input;
-
-using Microsoft.Maui.Controls;
-
-using Nalix.Common.Networking.Protocols;
-
-using System.Collections.ObjectModel;
+using AutoX.Gara.Domain.Enums.Repairs;using AutoX.Gara.Frontend.Helpers;using AutoX.Gara.Frontend.Services.Repairs;using AutoX.Gara.Shared.Protocol.Billings;using AutoX.Gara.Shared.Protocol.Customers;using AutoX.Gara.Shared.Protocol.Invoices;using AutoX.Gara.Shared.Protocol.Vehicles;using CommunityToolkit.Mvvm.ComponentModel;using CommunityToolkit.Mvvm.Input;using Microsoft.Maui.Controls;using Nalix.Common.Networking.Protocols;using System;using System.Collections.ObjectModel;
 
 namespace AutoX.Gara.Frontend.Controllers.Billings;
 

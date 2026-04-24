@@ -1,10 +1,8 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
-using Nalix.Common.Networking.Protocols;
+using AutoX.Gara.Shared.Enums;
 
 namespace AutoX.Gara.Shared.Models;
 

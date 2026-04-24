@@ -10,8 +10,6 @@ using Microsoft.Maui.Controls;
 
 using Nalix.Framework.Injection;
 
-using System;
-
 namespace AutoX.Gara.Frontend.Views;
 
 public partial class InvoicesOverviewPage : ContentPage

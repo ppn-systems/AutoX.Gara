@@ -1,18 +1,11 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using Microsoft.Maui;
-
 using Microsoft.Maui.Hosting;
-
-using Microsoft.UI.Xaml;
-
-using Microsoft.Extensions.Logging;
-
 using Nalix.Framework.Injection;
-
+using System;
 using System.Diagnostics;
-
 using System.IO;
 
 // To learn more about WinUI, the WinUI project structure,

@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using System.Data.Common;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,9 +16,9 @@ public sealed class DbPerformanceInterceptor(ILogger<DbPerformanceInterceptor> l
     private const long SlowQueryThresholdMs = 100;
 
     public override async ValueTask<DbDataReader> ReaderExecutedAsync(
-        DbCommand command, 
-        CommandExecutedEventData eventData, 
-        DbDataReader result, 
+        DbCommand command,
+        CommandExecutedEventData eventData,
+        DbDataReader result,
         CancellationToken cancellationToken = default)
     {
         if (eventData.Duration.TotalMilliseconds > SlowQueryThresholdMs)

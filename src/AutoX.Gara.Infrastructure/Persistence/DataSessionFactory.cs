@@ -1,5 +1,4 @@
-﻿using System;
-using AutoX.Gara.Application.Abstractions.Persistence;
+﻿using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Infrastructure.Database;
 
 namespace AutoX.Gara.Infrastructure.Persistence;

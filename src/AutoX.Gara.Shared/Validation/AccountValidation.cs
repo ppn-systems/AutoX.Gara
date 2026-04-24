@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 namespace AutoX.Gara.Shared.Validation;
 

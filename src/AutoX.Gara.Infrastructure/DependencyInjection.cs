@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using AutoX.Gara.Application.Abstractions.Persistence;
+﻿using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Persistence;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AutoX.Gara.Infrastructure;
 

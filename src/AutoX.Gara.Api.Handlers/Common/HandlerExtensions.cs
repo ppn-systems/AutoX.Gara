@@ -1,8 +1,7 @@
 ﻿using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
-using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.DataFrames.Pooling;
-using System.Threading.Tasks;
+using Nalix.Framework.DataFrames.SignalFrames;
 
 namespace AutoX.Gara.Api.Handlers.Common;
 
@@ -14,11 +13,11 @@ public static class HandlerExtensions
         using var lease = PacketPool<Directive>.Rent();
         var directive = lease.Value;
         directive.Initialize(
-            ControlType.ERROR, 
-            reason, 
-            ProtocolAdvice.DO_NOT_RETRY, 
+            ControlType.ERROR,
+            reason,
+            ProtocolAdvice.DO_NOT_RETRY,
             context.Packet.SequenceId);
-            
+
         await context.Connection.TCP.SendAsync(directive).ConfigureAwait(false);
     }
 
@@ -28,11 +27,11 @@ public static class HandlerExtensions
         using var lease = PacketPool<Directive>.Rent();
         var directive = lease.Value;
         directive.Initialize(
-            ControlType.NONE, 
-            ProtocolReason.NONE, 
-            ProtocolAdvice.NONE, 
+            ControlType.NONE,
+            ProtocolReason.NONE,
+            ProtocolAdvice.NONE,
             context.Packet.SequenceId);
-            
+
         await context.Connection.TCP.SendAsync(directive).ConfigureAwait(false);
     }
 }

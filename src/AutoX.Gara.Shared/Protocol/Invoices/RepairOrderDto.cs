@@ -1,13 +1,6 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Enums.Repairs;
-using Nalix.Common.Networking.Protocols;
-using AutoX.Gara.Shared.Extensions;
-using Nalix.Common.Networking.Packets;
-using Nalix.Common.Serialization;
-using Nalix.Framework.DataFrames;
+using AutoX.Gara.Domain.Enums.Repairs;using AutoX.Gara.Shared.Enums;using AutoX.Gara.Shared.Extensions;using Nalix.Common.Networking.Packets;using Nalix.Common.Serialization;using Nalix.Framework.DataFrames;using System;
 
 namespace AutoX.Gara.Shared.Protocol.Invoices;
 

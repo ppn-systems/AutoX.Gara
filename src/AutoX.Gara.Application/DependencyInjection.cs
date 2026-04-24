@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using AutoX.Gara.Application.Abstractions.Services;
+﻿using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Application.Billings;
 using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Application.Employees;
@@ -8,6 +7,7 @@ using AutoX.Gara.Application.Invoices;
 using AutoX.Gara.Application.Repairs;
 using AutoX.Gara.Application.Suppliers;
 using AutoX.Gara.Application.Vehicles;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AutoX.Gara.Application;
 

@@ -1,29 +1,14 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Repairs;
-
-using AutoX.Gara.Frontend.Results.Billings;
-
-using Nalix.Common.Networking.Protocols;
-
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Invoices;
-
-using Microsoft.Extensions.Logging;
-
-
-using Nalix.Framework.Injection;
-
-using Nalix.Framework.Random;
-
-using Nalix.SDK.Transport;
-
-using Nalix.SDK.Transport.Extensions;
-
+using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
-
-using System.Diagnostics;
+using Nalix.Framework.Injection;
+using Nalix.SDK.Transport;
+using Nalix.SDK.Transport.Extensions;
+using System;
 
 namespace AutoX.Gara.Frontend.Services.Repairs;
 
@@ -90,10 +75,9 @@ public sealed class RepairOrderService
 
             }
 
-            if (r is Directive err) return RepairOrderListResult.Failure(err.Reason.ToString(), err.Action);
-
-            return RepairOrderListResult.Failure("Unknown response", ProtocolAdvice.NONE);
-
+            return r is Directive err
+                ? RepairOrderListResult.Failure(err.Reason.ToString(), err.Action)
+                : RepairOrderListResult.Failure("Unknown response", ProtocolAdvice.NONE);
         }
 
         catch (Exception ex) { return RepairOrderListResult.Failure(ex.Message, ProtocolAdvice.NONE); }
@@ -118,7 +102,10 @@ public sealed class RepairOrderService
 
             Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(data, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(WriteTimeoutMs).WithEncrypt(), predicate: p => (echo && p is RepairOrderDto) || p is Directive, ct: ct).ConfigureAwait(false);
 
-            if (echo && r is RepairOrderDto confirmed) return RepairOrderWriteResult.Success(confirmed);
+            if (echo && r is RepairOrderDto confirmed)
+            {
+                return RepairOrderWriteResult.Success(confirmed);
+            }
 
             if (r is Directive resp)
 

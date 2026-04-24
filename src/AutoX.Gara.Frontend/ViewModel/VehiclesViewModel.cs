@@ -1,29 +1,6 @@
-﻿using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Enums.Cars;
-
-using AutoX.Gara.Frontend.Helpers;
-
-using AutoX.Gara.Frontend.Results.Vehicles;
-
-using AutoX.Gara.Frontend.Services.Vehicles;
-
-using AutoX.Gara.Shared.Protocol.Customers;
-
-using AutoX.Gara.Shared.Protocol.Vehicles;
-
-using CommunityToolkit.Mvvm.ComponentModel;
-
-using CommunityToolkit.Mvvm.Input;
-
-using Microsoft.Maui.Controls;
-
-using Nalix.Common.Networking.Protocols;
-
-using System.Diagnostics;
-
-using System.Linq;
+using AutoX.Gara.Domain.Enums.Cars;using AutoX.Gara.Frontend.Helpers;using AutoX.Gara.Frontend.Services.Vehicles;using AutoX.Gara.Shared.Protocol.Customers;using AutoX.Gara.Shared.Protocol.Vehicles;using CommunityToolkit.Mvvm.ComponentModel;using CommunityToolkit.Mvvm.Input;using Microsoft.Maui.Controls;using Nalix.Common.Networking.Protocols;using System;using System.Diagnostics;using System.Linq;
 
 namespace AutoX.Gara.Frontend.Controllers;
 

@@ -1,31 +1,16 @@
-﻿using AutoX.Gara.Shared.Enums;
-using System;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums;
-
 using AutoX.Gara.Domain.Enums.Employees;
-
 using AutoX.Gara.Frontend.Models.Results.Employees;
-
-using AutoX.Gara.Frontend.Results.Employees;
-
-using Nalix.Common.Networking.Protocols;
-
+using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Employees;
-
-using Microsoft.Extensions.Logging;
-
-
-using Nalix.Framework.Injection;
-
-using Nalix.Framework.Random;
-
-using Nalix.SDK.Transport;
-
-using Nalix.SDK.Transport.Extensions;
-
+using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
+using Nalix.Framework.Injection;
+using Nalix.SDK.Transport;
+using Nalix.SDK.Transport.Extensions;
+using System;
 
 namespace AutoX.Gara.Frontend.Services.Employees;
 
@@ -94,10 +79,9 @@ public sealed class EmployeeService : IEmployeeService
 
             }
 
-            if (r is Directive err) return EmployeeListResult.Failure(err.Reason.ToString(), err.Action);
-
-            return EmployeeListResult.Failure("Unknown response", ProtocolAdvice.NONE);
-
+            return r is Directive err
+                ? EmployeeListResult.Failure(err.Reason.ToString(), err.Action)
+                : EmployeeListResult.Failure("Unknown response", ProtocolAdvice.NONE);
         }
 
         catch (System.TimeoutException) { return EmployeeListResult.Timeout(); }
@@ -124,7 +108,10 @@ public sealed class EmployeeService : IEmployeeService
 
             Nalix.Common.Networking.Packets.IPacket r = await client.RequestAsync<Nalix.Common.Networking.Packets.IPacket>(data, options: Nalix.SDK.Options.RequestOptions.Default.WithTimeout(RequestTimeoutMs).WithEncrypt(), predicate: p => (echo && p is EmployeeDto) || p is Directive, ct: ct).ConfigureAwait(false);
 
-            if (echo && r is EmployeeDto confirmed) return EmployeeWriteResult.Success(confirmed);
+            if (echo && r is EmployeeDto confirmed)
+            {
+                return EmployeeWriteResult.Success(confirmed);
+            }
 
             if (r is Directive resp)
 

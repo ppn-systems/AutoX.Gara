@@ -1,38 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-// Copyright (c) 2026 PPN Corporation. All rights reserved.
+﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Domain.Enums;
-
-using AutoX.Gara.Domain.Enums.Repairs;
-
-using AutoX.Gara.Frontend.Helpers;
-
-using AutoX.Gara.Frontend.Results.Billings;
-
-using AutoX.Gara.Frontend.Services.Billings;
-
-using AutoX.Gara.Frontend.Services.Employees;
-
-using AutoX.Gara.Frontend.Services.Invoices;
-
-using AutoX.Gara.Shared.Protocol.Billings;
-
-using AutoX.Gara.Shared.Protocol.Employees;
-
-using AutoX.Gara.Shared.Protocol.Invoices;
-
-using AutoX.Gara.Shared.Protocol.Repairs;
-
-using CommunityToolkit.Mvvm.ComponentModel;
-
-using CommunityToolkit.Mvvm.Input;
-
-using Nalix.Common.Networking.Protocols;
-
-using System.Collections.ObjectModel;
-
-using System.Linq;
+using AutoX.Gara.Domain.Enums;using AutoX.Gara.Domain.Enums.Repairs;using AutoX.Gara.Frontend.Helpers;using AutoX.Gara.Frontend.Services.Billings;using AutoX.Gara.Frontend.Services.Employees;using AutoX.Gara.Frontend.Services.Invoices;using AutoX.Gara.Shared.Protocol.Billings;using AutoX.Gara.Shared.Protocol.Employees;using AutoX.Gara.Shared.Protocol.Invoices;using AutoX.Gara.Shared.Protocol.Repairs;using CommunityToolkit.Mvvm.ComponentModel;using CommunityToolkit.Mvvm.Input;using Nalix.Common.Networking.Protocols;using System;using System.Collections.Generic;using System.Collections.ObjectModel;using System.Linq;
 
 namespace AutoX.Gara.Frontend.Controllers.Billings;
 
