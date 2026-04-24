@@ -42,7 +42,7 @@ public sealed class ServiceItemRepository
 
 
 
-        IQueryable<ServiceItem> q = _dbContext.ServiceItems.AsNoTracking();
+        IQueryable<ServiceItem> q = _dbContext.ServiceItems.AsNoTracking().Where(s => s.DeletedAt == null);
 
 
 
@@ -134,7 +134,7 @@ public sealed class ServiceItemRepository
 
     public Task<ServiceItem> GetByIdAsync(int id)
 
-        => _dbContext.ServiceItems.FirstOrDefaultAsync(s => s.Id == id);
+        => _dbContext.ServiceItems.FirstOrDefaultAsync(s => s.Id == id && s.DeletedAt == null);
 
 
 
@@ -168,7 +168,9 @@ public sealed class ServiceItemRepository
 
         System.ArgumentNullException.ThrowIfNull(serviceItem);
 
-        _dbContext.ServiceItems.Remove(serviceItem);
+        serviceItem.DeletedAt = System.DateTime.UtcNow;
+
+        _dbContext.ServiceItems.Update(serviceItem);
 
     }
 

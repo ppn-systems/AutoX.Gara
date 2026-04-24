@@ -48,6 +48,8 @@ public sealed class RepairOrderRepository
 
             .AsNoTracking()
 
+            .Where(ro => ro.DeletedAt == null)
+
             .Include(ro => ro.Tasks)
 
                 .ThenInclude(t => t.ServiceItem)
@@ -186,6 +188,8 @@ public sealed class RepairOrderRepository
 
         return _dbContext.RepairOrders
 
+            .Where(ro => ro.DeletedAt == null)
+
             .Include(ro => ro.Tasks)
 
                 .ThenInclude(t => t.ServiceItem)
@@ -230,7 +234,9 @@ public sealed class RepairOrderRepository
 
         System.ArgumentNullException.ThrowIfNull(repairOrder);
 
-        _dbContext.RepairOrders.Remove(repairOrder);
+        repairOrder.DeletedAt = System.DateTime.UtcNow;
+
+        _dbContext.RepairOrders.Update(repairOrder);
 
     }
 

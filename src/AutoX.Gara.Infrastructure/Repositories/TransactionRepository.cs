@@ -44,7 +44,7 @@ public sealed class TransactionRepository
 
 
 
-        IQueryable<Transaction> q = _dbContext.Transactions.AsNoTracking();
+        IQueryable<Transaction> q = _dbContext.Transactions.AsNoTracking().Where(t => t.DeletedAt == null);
 
 
 
@@ -194,7 +194,7 @@ public sealed class TransactionRepository
 
     public Task<Transaction> GetByIdAsync(int id)
 
-        => _dbContext.Transactions.FirstOrDefaultAsync(t => t.Id == id);
+        => _dbContext.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt == null);
 
 
 
@@ -228,7 +228,9 @@ public sealed class TransactionRepository
 
         System.ArgumentNullException.ThrowIfNull(transaction);
 
-        _dbContext.Transactions.Remove(transaction);
+        transaction.DeletedAt = System.DateTime.UtcNow;
+
+        _dbContext.Transactions.Update(transaction);
 
     }
 

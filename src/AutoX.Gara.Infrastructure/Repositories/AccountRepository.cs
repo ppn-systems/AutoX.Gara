@@ -10,10 +10,10 @@ public sealed class AccountRepository(AutoXDbContext context) : IAccountReposito
     private readonly AutoXDbContext _context = context;
 
     public System.Threading.Tasks.Task<Account> GetByUsernameAsync(string username, System.Threading.CancellationToken ct = default)
-        => _context.Set<Account>().FirstOrDefaultAsync(a => a.Username == username, ct);
+        => _context.Set<Account>().FirstOrDefaultAsync(a => a.DeletedAt == null && a.Username == username, ct);
 
     public System.Threading.Tasks.Task<bool> ExistsByUsernameAsync(string username, System.Threading.CancellationToken ct = default)
-        => _context.Set<Account>().AnyAsync(a => a.Username == username, ct);
+        => _context.Set<Account>().AnyAsync(a => a.DeletedAt == null && a.Username == username, ct);
 
     public System.Threading.Tasks.Task AddAsync(Account account, System.Threading.CancellationToken ct = default)
         => _context.Set<Account>().AddAsync(account, ct).AsTask();

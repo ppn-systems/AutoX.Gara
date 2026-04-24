@@ -42,7 +42,7 @@ public sealed class RepairTaskRepository
 
 
 
-        IQueryable<RepairTask> q = _dbContext.RepairTasks.AsNoTracking();
+        IQueryable<RepairTask> q = _dbContext.RepairTasks.AsNoTracking().Where(t => t.DeletedAt == null);
 
 
 
@@ -176,7 +176,7 @@ public sealed class RepairTaskRepository
 
     public Task<RepairTask> GetByIdAsync(int id)
 
-        => _dbContext.RepairTasks.FirstOrDefaultAsync(t => t.Id == id);
+        => _dbContext.RepairTasks.FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt == null);
 
 
 
@@ -210,7 +210,9 @@ public sealed class RepairTaskRepository
 
         System.ArgumentNullException.ThrowIfNull(task);
 
-        _dbContext.RepairTasks.Remove(task);
+        task.DeletedAt = System.DateTime.UtcNow;
+
+        _dbContext.RepairTasks.Update(task);
 
     }
 

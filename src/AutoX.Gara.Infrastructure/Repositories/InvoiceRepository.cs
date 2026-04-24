@@ -66,6 +66,8 @@ public sealed class InvoiceRepository
 
             .AsTracking()
 
+            .Where(i => i.DeletedAt == null)
+
             .AsSplitQuery()
 
             .Include(i => i.Transactions)
@@ -100,7 +102,7 @@ public sealed class InvoiceRepository
 
 
 
-        IQueryable<Invoice> q = _dbContext.Invoices.AsNoTracking();
+        IQueryable<Invoice> q = _dbContext.Invoices.AsNoTracking().Where(i => i.DeletedAt == null);
 
 
 
@@ -210,7 +212,7 @@ public sealed class InvoiceRepository
 
     public Task<Invoice> GetByIdAsync(int id)
 
-        => _dbContext.Invoices.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
+        => _dbContext.Invoices.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id && i.DeletedAt == null);
 
 
 
@@ -224,7 +226,7 @@ public sealed class InvoiceRepository
 
 
 
-        IQueryable<Invoice> q = _dbContext.Invoices;
+        IQueryable<Invoice> q = _dbContext.Invoices.Where(i => i.DeletedAt == null);
 
         if (excludeId.HasValue)
 
@@ -255,6 +257,8 @@ public sealed class InvoiceRepository
     {
 
         return _dbContext.Invoices
+
+            .Where(i => i.DeletedAt == null)
 
             .Include(i => i.Transactions)
 
@@ -306,7 +310,9 @@ public sealed class InvoiceRepository
 
         System.ArgumentNullException.ThrowIfNull(invoice);
 
-        _dbContext.Invoices.Remove(invoice);
+        invoice.DeletedAt = System.DateTime.UtcNow;
+
+        _dbContext.Invoices.Update(invoice);
 
     }
 

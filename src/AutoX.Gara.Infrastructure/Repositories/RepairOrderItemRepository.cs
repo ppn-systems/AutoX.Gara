@@ -42,7 +42,7 @@ public sealed class RepairOrderItemRepository
 
 
 
-        IQueryable<RepairOrderItem> q = _dbContext.RepairOrderItems.AsNoTracking();
+        IQueryable<RepairOrderItem> q = _dbContext.RepairOrderItems.AsNoTracking().Where(i => i.DeletedAt == null);
 
 
 
@@ -132,7 +132,7 @@ public sealed class RepairOrderItemRepository
 
     public Task<RepairOrderItem> GetByIdAsync(int id)
 
-        => _dbContext.RepairOrderItems.FirstOrDefaultAsync(i => i.Id == id);
+        => _dbContext.RepairOrderItems.FirstOrDefaultAsync(i => i.Id == id && i.DeletedAt == null);
 
 
 
@@ -166,7 +166,9 @@ public sealed class RepairOrderItemRepository
 
         System.ArgumentNullException.ThrowIfNull(item);
 
-        _dbContext.RepairOrderItems.Remove(item);
+        item.DeletedAt = System.DateTime.UtcNow;
+
+        _dbContext.RepairOrderItems.Update(item);
 
     }
 
@@ -176,7 +178,7 @@ public sealed class RepairOrderItemRepository
     {
         var items = await _dbContext.RepairOrderItems
             .Include(i => i.SparePart)
-            .Where(i => i.RepairOrderId == orderId)
+            .Where(i => i.RepairOrderId == orderId && i.DeletedAt == null)
             .ToListAsync()
             .ConfigureAwait(false);
         return (items, items.Count);

@@ -1,5 +1,6 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
+using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -196,16 +197,31 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
         T entity = await _dbSet.FindAsync([id], cancellationToken);
         if (entity is not null)
         {
-            _dbSet.Remove(entity);
+            Delete(entity);
         }
     }
 
     /// <summary>X�a m?t entity d� được tracked.</summary>
-    public void Delete(T entity) => _dbSet.Remove(entity);
+    public void Delete(T entity)
+    {
+        if (entity is ISoftDelete softDeleteEntity)
+        {
+            softDeleteEntity.DeletedAt = DateTime.UtcNow;
+            _dbSet.Update(entity);
+            return;
+        }
+
+        _dbSet.Remove(entity);
+    }
 
     /// <summary>X�a nhi?u entity.</summary>
     public void DeleteRange(IEnumerable<T> entities)
-        => _dbSet.RemoveRange(entities);
+    {
+        foreach (T entity in entities)
+        {
+            Delete(entity);
+        }
+    }
 
     /// <summary>Luu t?t c? thay d?i v�o database.</summary>
     public System.Threading.Tasks.Task<int> SaveChangesAsync(

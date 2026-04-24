@@ -59,7 +59,7 @@ public sealed class PartRepository
 
 
 
-        IQueryable<Part> q = _dbContext.Parts.AsQueryable();
+        IQueryable<Part> q = _dbContext.Parts.AsNoTracking().Where(p => p.DeletedAt == null);
 
 
 
@@ -257,7 +257,7 @@ public sealed class PartRepository
 
         return await _dbContext.Parts
 
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt == null);
 
     }
 
@@ -275,7 +275,7 @@ public sealed class PartRepository
 
         return await _dbContext.Parts
 
-            .AnyAsync(p => p.PartCode == partCode);
+            .AnyAsync(p => p.DeletedAt == null && p.PartCode == partCode);
 
     }
 
@@ -329,7 +329,9 @@ public sealed class PartRepository
 
         System.ArgumentNullException.ThrowIfNull(part);
 
-        _dbContext.Parts.Remove(part);
+        part.DeletedAt = DateTime.UtcNow;
+
+        _dbContext.Parts.Update(part);
 
     }
 
