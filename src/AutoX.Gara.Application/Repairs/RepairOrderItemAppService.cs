@@ -1,7 +1,6 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Shared.Models;
 using Microsoft.Extensions.Logging;
@@ -12,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Repairs;
 
-public sealed class RepairOrderItemAppService(IDataSessionFactory dataSessionFactory, ILogger<RepairOrderItemAppService> logger) : IRepairOrderItemAppService
+public sealed class RepairOrderItemAppService(IDataSessionFactory dataSessionFactory, ILogger<RepairOrderItemAppService> logger)
 {
     private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory ?? throw new ArgumentNullException(nameof(dataSessionFactory));
     private readonly ILogger<RepairOrderItemAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -94,3 +93,4 @@ public sealed class RepairOrderItemAppService(IDataSessionFactory dataSessionFac
         }
     }
 }
+

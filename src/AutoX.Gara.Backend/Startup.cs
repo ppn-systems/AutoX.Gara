@@ -1,6 +1,5 @@
-using AutoX.Gara.Api.Handlers.Auth;
+using AutoX.Gara.Backend.Transport.Auth;
 using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Application.Billings;
 using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Application.Employees;
@@ -59,20 +58,22 @@ public static class Startup
     private static void RegisterServices(IDataSessionFactory factory, ILoggerFactory loggerFactory)
     {
         var inst = InstanceManager.Instance;
-        inst.Register<IAccountAppService>(new AccountAppService(factory, loggerFactory.CreateLogger<AccountAppService>()));
-        inst.Register<IEmployeeAppService>(new EmployeeAppService(factory, loggerFactory.CreateLogger<EmployeeAppService>()));
-        inst.Register<IEmployeeSalaryAppService>(new EmployeeSalaryAppService(factory, loggerFactory.CreateLogger<EmployeeSalaryAppService>()));
-        inst.Register<ICustomerAppService>(new CustomerAppService(factory, loggerFactory.CreateLogger<CustomerAppService>()));
-        inst.Register<IVehicleAppService>(new VehicleAppService(factory, loggerFactory.CreateLogger<VehicleAppService>()));
-        inst.Register<IPartAppService>(new PartAppService(factory, loggerFactory.CreateLogger<PartAppService>()));
-        inst.Register<ISupplierAppService>(new SupplierAppService(factory, loggerFactory.CreateLogger<SupplierAppService>()));
-        inst.Register<IInvoiceAppService>(new InvoiceAppService(factory, loggerFactory.CreateLogger<InvoiceAppService>()));
-        inst.Register<IRepairOrderAppService>(new RepairOrderAppService(factory, loggerFactory.CreateLogger<RepairOrderAppService>()));
-        inst.Register<ITransactionAppService>(new TransactionAppService(factory, loggerFactory.CreateLogger<TransactionAppService>()));
-        inst.Register<IServiceItemAppService>(new ServiceItemAppService(factory, loggerFactory.CreateLogger<ServiceItemAppService>()));
-        inst.Register<IRepairTaskAppService>(new RepairTaskAppService(factory, loggerFactory.CreateLogger<RepairTaskAppService>()));
-        inst.Register<IRepairOrderItemAppService>(new RepairOrderItemAppService(factory, loggerFactory.CreateLogger<RepairOrderItemAppService>()));
+        inst.Register<AccountAppService>(new AccountAppService(factory, loggerFactory.CreateLogger<AccountAppService>()));
+        inst.Register<EmployeeAppService>(new EmployeeAppService(factory, loggerFactory.CreateLogger<EmployeeAppService>()));
+        inst.Register<EmployeeSalaryAppService>(new EmployeeSalaryAppService(factory, loggerFactory.CreateLogger<EmployeeSalaryAppService>()));
+        inst.Register<CustomerAppService>(new CustomerAppService(factory, loggerFactory.CreateLogger<CustomerAppService>()));
+        inst.Register<VehicleAppService>(new VehicleAppService(factory, loggerFactory.CreateLogger<VehicleAppService>()));
+        inst.Register<PartAppService>(new PartAppService(factory, loggerFactory.CreateLogger<PartAppService>()));
+        inst.Register<SupplierAppService>(new SupplierAppService(factory, loggerFactory.CreateLogger<SupplierAppService>()));
+        inst.Register<InvoiceAppService>(new InvoiceAppService(factory, loggerFactory.CreateLogger<InvoiceAppService>()));
+        inst.Register<RepairOrderAppService>(new RepairOrderAppService(factory, loggerFactory.CreateLogger<RepairOrderAppService>()));
+        inst.Register<TransactionAppService>(new TransactionAppService(factory, loggerFactory.CreateLogger<TransactionAppService>()));
+        inst.Register<ServiceItemAppService>(new ServiceItemAppService(factory, loggerFactory.CreateLogger<ServiceItemAppService>()));
+        inst.Register<RepairTaskAppService>(new RepairTaskAppService(factory, loggerFactory.CreateLogger<RepairTaskAppService>()));
+        inst.Register<RepairOrderItemAppService>(new RepairOrderItemAppService(factory, loggerFactory.CreateLogger<RepairOrderItemAppService>()));
     }
 
     public static ILogger CreateBootstrapLogger() => new NLogix(cfg => cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = true)));
 }
+
+

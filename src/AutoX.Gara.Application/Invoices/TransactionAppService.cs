@@ -1,10 +1,10 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Persistence;using AutoX.Gara.Application.Abstractions.Services;using AutoX.Gara.Domain.Entities.Invoices;using AutoX.Gara.Domain.Enums.Payments;using AutoX.Gara.Domain.Enums.Transactions;using AutoX.Gara.Shared.Models;using Microsoft.EntityFrameworkCore;using Microsoft.Extensions.Logging;using Nalix.Common.Networking.Protocols;using System;using System.Collections.Generic;using System.Linq;using System.Threading.Tasks;
+using AutoX.Gara.Application.Abstractions.Persistence;using AutoX.Gara.Domain.Entities.Invoices;using AutoX.Gara.Domain.Enums.Payments;using AutoX.Gara.Domain.Enums.Transactions;using AutoX.Gara.Shared.Models;using Microsoft.EntityFrameworkCore;using Microsoft.Extensions.Logging;using Nalix.Common.Networking.Protocols;using System;using System.Collections.Generic;using System.Linq;using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Invoices;
 
-public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory, ILogger<TransactionAppService> logger) : ITransactionAppService
+public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory, ILogger<TransactionAppService> logger)
 {
     private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory ?? throw new ArgumentNullException(nameof(dataSessionFactory));
     private readonly ILogger<TransactionAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -139,3 +139,5 @@ public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory
         }
     }
 }
+
+

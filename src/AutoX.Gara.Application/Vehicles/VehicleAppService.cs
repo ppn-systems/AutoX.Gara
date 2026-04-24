@@ -1,7 +1,6 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Shared.Models;
 using Microsoft.Extensions.Logging;
@@ -12,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Vehicles;
 
-public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, ILogger<VehicleAppService> logger) : IVehicleAppService
+public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, ILogger<VehicleAppService> logger)
 {
     private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory ?? throw new ArgumentNullException(nameof(dataSessionFactory));
     private readonly ILogger<VehicleAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -130,3 +129,4 @@ public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, IL
         }
     }
 }
+

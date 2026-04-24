@@ -1,7 +1,6 @@
-﻿using AutoX.Gara.Api.Handlers.Common;
+using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
@@ -12,15 +11,15 @@ using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.DataFrames.Pooling;
 
-namespace AutoX.Gara.Api.Handlers.Repairs;
+namespace AutoX.Gara.Backend.Transport.Repairs;
 
 /// <summary>
 /// Packet Handler for repair task related operations.
 /// </summary>
 [PacketController]
-public sealed class RepairTaskHandler(IRepairTaskAppService repairTaskService)
+public sealed class RepairTaskHandler(RepairTaskAppService repairTaskService)
 {
-    private readonly IRepairTaskAppService _repairTaskService = repairTaskService ?? throw new ArgumentNullException(nameof(repairTaskService));
+    private readonly RepairTaskAppService _repairTaskService = repairTaskService ?? throw new ArgumentNullException(nameof(repairTaskService));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -168,3 +167,5 @@ public sealed class RepairTaskHandler(IRepairTaskAppService repairTaskService)
 
 
 }
+
+

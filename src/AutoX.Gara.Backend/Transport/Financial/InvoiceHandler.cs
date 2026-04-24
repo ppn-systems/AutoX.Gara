@@ -1,7 +1,6 @@
-﻿using AutoX.Gara.Api.Handlers.Common;
+using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
@@ -14,15 +13,15 @@ using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
 
-namespace AutoX.Gara.Api.Handlers.Financial;
+namespace AutoX.Gara.Backend.Transport.Financial;
 
 /// <summary>
 /// Packet Handler for invoice related operations.
 /// </summary>
 [PacketController]
-public sealed class InvoiceHandler(IInvoiceAppService invoiceService)
+public sealed class InvoiceHandler(InvoiceAppService invoiceService)
 {
-    private readonly IInvoiceAppService _invoiceService = invoiceService ?? throw new ArgumentNullException(nameof(invoiceService));
+    private readonly InvoiceAppService _invoiceService = invoiceService ?? throw new ArgumentNullException(nameof(invoiceService));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -230,3 +229,5 @@ public sealed class InvoiceHandler(IInvoiceAppService invoiceService)
 
 
 }
+
+

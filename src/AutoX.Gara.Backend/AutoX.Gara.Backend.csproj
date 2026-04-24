@@ -49,11 +49,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Nalix.Framework" Version="12.1.0" />
+		<PackageReference Include="Nalix.Network" Version="12.1.0" />
 		<PackageReference Include="Nalix.Network.Hosting" Version="12.1.0" />
+		<PackageReference Include="Nalix.Runtime" Version="12.1.0" />
 		<ProjectReference Include="..\AutoX.Gara.Shared\AutoX.Gara.Shared.csproj" />
 		<ProjectReference Include="..\AutoX.Gara.Application\AutoX.Gara.Application.csproj" />
 		<ProjectReference Include="..\AutoX.Gara.Infrastructure\AutoX.Gara.Infrastructure.csproj" />
-		<ProjectReference Include="..\AutoX.Gara.Api.Handlers\AutoX.Gara.Api.Handlers.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -15,8 +15,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Shared", "AutoX.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Frontend", "AutoX.Gara.Frontend\AutoX.Gara.Frontend.csproj", "{E3BE00AF-D34D-661E-4AEE-56A202914B79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Api.Handlers", "AutoX.Gara.Api.Handlers\AutoX.Gara.Api.Handlers.csproj", "{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AutoX.Gara.Tests", "AutoX.Gara.Tests", "{E20673C4-9184-9F29-FDD9-075283A9F5C9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Application.Tests", "AutoX.Gara.Tests\AutoX.Gara.Application.Tests\AutoX.Gara.Application.Tests.csproj", "{AF62649A-5D24-4625-88CA-C291FEB70E5E}"
@@ -105,18 +103,6 @@ Global
 		{E3BE00AF-D34D-661E-4AEE-56A202914B79}.Release|x64.Build.0 = Release|Any CPU
 		{E3BE00AF-D34D-661E-4AEE-56A202914B79}.Release|x86.ActiveCfg = Release|Any CPU
 		{E3BE00AF-D34D-661E-4AEE-56A202914B79}.Release|x86.Build.0 = Release|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Debug|x64.Build.0 = Debug|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Debug|x86.Build.0 = Debug|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Release|Any CPU.Build.0 = Release|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Release|x64.ActiveCfg = Release|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Release|x64.Build.0 = Release|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Release|x86.ActiveCfg = Release|Any CPU
-		{60B0F23F-C7C6-4A8F-97CE-D5DC89E0E835}.Release|x86.Build.0 = Release|Any CPU
 		{AF62649A-5D24-4625-88CA-C291FEB70E5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AF62649A-5D24-4625-88CA-C291FEB70E5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF62649A-5D24-4625-88CA-C291FEB70E5E}.Debug|x64.ActiveCfg = Debug|Any CPU

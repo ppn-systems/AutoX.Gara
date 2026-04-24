@@ -1,7 +1,6 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Shared.Models;
 using Microsoft.Extensions.Logging;
@@ -12,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Billings;
 
-public sealed class ServiceItemAppService(IDataSessionFactory dataSessionFactory, ILogger<ServiceItemAppService> logger) : IServiceItemAppService
+public sealed class ServiceItemAppService(IDataSessionFactory dataSessionFactory, ILogger<ServiceItemAppService> logger)
 {
     private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory ?? throw new ArgumentNullException(nameof(dataSessionFactory));
     private readonly ILogger<ServiceItemAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -96,3 +95,4 @@ public sealed class ServiceItemAppService(IDataSessionFactory dataSessionFactory
         }
     }
 }
+

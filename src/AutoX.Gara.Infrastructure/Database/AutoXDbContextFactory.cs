@@ -74,7 +74,7 @@ public sealed class AutoXDbContextFactory : IDesignTimeDbContextFactory<AutoXDbC
     {
         try
         {
-            Npgsql.NpgsqlConnectionStringBuilder builder = [with(connectionString)];
+            Npgsql.NpgsqlConnectionStringBuilder builder = new(connectionString);
             string host = builder.Host;
 
             using Ping ping = new();

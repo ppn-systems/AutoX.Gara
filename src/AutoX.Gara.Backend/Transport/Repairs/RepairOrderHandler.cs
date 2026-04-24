@@ -1,16 +1,16 @@
-﻿using AutoX.Gara.Api.Handlers.Common;// Copyright (c) 2026 PPN Corporation. All rights reserved.
+using AutoX.Gara.Backend.Transport.Common;// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Services;using AutoX.Gara.Domain.Entities.Invoices;using AutoX.Gara.Shared.Enums;using AutoX.Gara.Shared.Models;using AutoX.Gara.Shared.Protocol.Invoices;using Nalix.Common.Networking;using Nalix.Common.Networking.Packets;using Nalix.Common.Networking.Protocols;using Nalix.Common.Security;using Nalix.Framework.DataFrames.Pooling;
+using AutoX.Gara.Domain.Entities.Invoices;using AutoX.Gara.Shared.Enums;using AutoX.Gara.Shared.Models;using AutoX.Gara.Shared.Protocol.Invoices;using Nalix.Common.Networking;using Nalix.Common.Networking.Packets;using Nalix.Common.Networking.Protocols;using Nalix.Common.Security;using Nalix.Framework.DataFrames.Pooling;
 
-namespace AutoX.Gara.Api.Handlers.Repairs;
+namespace AutoX.Gara.Backend.Transport.Repairs;
 
 /// <summary>
 /// Packet Handler for repair order related operations.
 /// </summary>
 [PacketController]
-public sealed class RepairOrderHandler(IRepairOrderAppService repairOrderService)
+public sealed class RepairOrderHandler(RepairOrderAppService repairOrderService)
 {
-    private readonly IRepairOrderAppService _repairOrderService = repairOrderService ?? throw new ArgumentNullException(nameof(repairOrderService));
+    private readonly RepairOrderAppService _repairOrderService = repairOrderService ?? throw new ArgumentNullException(nameof(repairOrderService));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -164,3 +164,6 @@ public sealed class RepairOrderHandler(IRepairOrderAppService repairOrderService
 
 
 }
+
+
+

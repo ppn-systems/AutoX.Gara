@@ -1,7 +1,6 @@
-﻿using AutoX.Gara.Api.Handlers.Common;
+using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Repairs;
@@ -11,15 +10,15 @@ using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.DataFrames.Pooling;
 
-namespace AutoX.Gara.Api.Handlers.Repairs;
+namespace AutoX.Gara.Backend.Transport.Repairs;
 
 /// <summary>
 /// Packet Handler for repair order item related operations.
 /// </summary>
 [PacketController]
-public sealed class RepairOrderItemHandler(IRepairOrderItemAppService itemService)
+public sealed class RepairOrderItemHandler(RepairOrderItemAppService itemService)
 {
-    private readonly IRepairOrderItemAppService _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
+    private readonly RepairOrderItemAppService _itemService = itemService ?? throw new ArgumentNullException(nameof(itemService));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -151,3 +150,5 @@ public sealed class RepairOrderItemHandler(IRepairOrderItemAppService itemServic
 
 
 }
+
+

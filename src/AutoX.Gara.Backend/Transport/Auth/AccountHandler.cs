@@ -1,9 +1,7 @@
-﻿
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Api.Handlers.Common;
 using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Services;
+using AutoX.Gara.Backend.Transport.Common;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Auth;
 using Microsoft.Extensions.Logging;
@@ -12,19 +10,18 @@ using Nalix.Common.Networking.Packets;
 using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 
-namespace AutoX.Gara.Api.Handlers.Auth;
+namespace AutoX.Gara.Backend.Transport.Auth;
 
 /// <summary>
 /// Packet Handler for account related operations (Login, Register).
 /// </summary>
 [PacketController]
-public sealed class AccountHandler(IAccountAppService accountService, IDataSessionFactory dataSessionFactory)
+public sealed class AccountHandler(AccountAppService accountService, IDataSessionFactory dataSessionFactory)
 {
-    private readonly IAccountAppService _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
+    private readonly AccountAppService _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
     private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory ?? throw new ArgumentNullException(nameof(dataSessionFactory));
 
     private const string AttributeUsername = "Username";
-
 
     [PacketPermission(PermissionLevel.NONE)]
     [PacketOpcode((ushort)OpCommand.LOGIN)]
@@ -97,3 +94,5 @@ public sealed class AccountHandler(IAccountAppService accountService, IDataSessi
         }
     }
 }
+
+

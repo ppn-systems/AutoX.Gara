@@ -1,7 +1,6 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Shared.Models;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Employees;
 
-public sealed class EmployeeSalaryAppService(IDataSessionFactory dataSessionFactory, ILogger<EmployeeSalaryAppService> logger) : IEmployeeSalaryAppService
+public sealed class EmployeeSalaryAppService(IDataSessionFactory dataSessionFactory, ILogger<EmployeeSalaryAppService> logger)
 {
     private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory ?? throw new ArgumentNullException(nameof(dataSessionFactory));
     private readonly ILogger<EmployeeSalaryAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -122,3 +121,4 @@ public sealed class EmployeeSalaryAppService(IDataSessionFactory dataSessionFact
         }
     }
 }
+

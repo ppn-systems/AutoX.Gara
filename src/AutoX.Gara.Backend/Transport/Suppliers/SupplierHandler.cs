@@ -1,11 +1,10 @@
-﻿using AutoX.Gara.Api.Handlers.Common;
+using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Services;
-using AutoX.Gara.Domain.Entities.Customers;
+using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Protocol.Customers;
+using AutoX.Gara.Shared.Protocol.Suppliers;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
@@ -14,53 +13,64 @@ using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
 
-namespace AutoX.Gara.Api.Handlers.Customers;
+namespace AutoX.Gara.Backend.Transport.Suppliers;
 
 /// <summary>
-/// Packet Handler for customer related operations.
+/// Packet Handler for supplier related operations.
 /// </summary>
 [PacketController]
-public sealed class CustomerHandler(ICustomerAppService customerService)
+public sealed class SupplierHandler(SupplierAppService supplierService)
 {
-    private readonly ICustomerAppService _customerService = customerService ?? throw new ArgumentNullException(nameof(customerService));
+    private readonly SupplierAppService _supplierService = supplierService ?? throw new ArgumentNullException(nameof(supplierService));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((ushort)OpCommand.CUSTOMER_GET)]
-    public async ValueTask GetAsync(IPacketContext<CustomerQueryRequest> context)
+    [PacketOpcode((ushort)OpCommand.SUPPLIER_GET)]
+    public async ValueTask GetAsync(IPacketContext<SupplierQueryRequest> context)
     {
-        CustomerQueryRequest packet = context.Packet;
+        SupplierQueryRequest packet = context.Packet;
         IConnection connection = context.Connection;
 
-        var result = await _customerService.GetPageAsync(BuildListQuery(packet)).ConfigureAwait(false);
+        var query = new SupplierListQuery(
+            packet.Page,
+            packet.PageSize,
+            packet.SearchTerm ?? string.Empty,
+            packet.SortBy,
+            packet.SortDescending,
+            packet.FilterStatus,
+            packet.FilterPaymentTerms
+        );
+
+        var result = await _supplierService.GetPageAsync(query).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
 
-        using var lease = PacketPool<CustomerQueryResponse>.Rent();
+        using var lease = PacketPool<SupplierQueryResponse>.Rent();
         var response = lease.Value;
         response.TotalCount = result.Data!.totalCount;
         response.SequenceId = packet.SequenceId;
-        response.Customers = result.Data.items.ConvertAll(c => MapToPacket(c, 0));
+        response.Suppliers = result.Data.items.ConvertAll(s => MapToPacket(s, 0));
 
         try
         {
             await connection.TCP.SendAsync(response).ConfigureAwait(false);
+
         }
         finally
         {
-            ReturnDtos(response.Customers);
+            ReturnDtos(response.Suppliers);
         }
     }
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((ushort)OpCommand.CUSTOMER_CREATE)]
-    public async ValueTask CreateAsync(IPacketContext<CustomerDto> context)
+    [PacketOpcode((ushort)OpCommand.SUPPLIER_CREATE)]
+    public async ValueTask CreateAsync(IPacketContext<SupplierDto> context)
     {
-        CustomerDto packet = context.Packet;
+        SupplierDto packet = context.Packet;
         IConnection connection = context.Connection;
 
         if (string.IsNullOrWhiteSpace(packet.Name))
@@ -69,21 +79,19 @@ public sealed class CustomerHandler(ICustomerAppService customerService)
             return;
         }
 
-        var customer = new Customer
+        var supplier = new Supplier
         {
             Name = packet.Name,
             Email = packet.Email,
             PhoneNumber = packet.PhoneNumber,
             Address = packet.Address,
-            DateOfBirth = packet.DateOfBirth,
             TaxCode = packet.TaxCode,
-            Type = packet.Type,
-            Membership = packet.Membership,
-            Gender = packet.Gender ?? AutoX.Gara.Domain.Enums.Gender.None,
-            Notes = packet.Notes ?? string.Empty
+            ContactPerson = packet.ContactPerson,
+            Notes = packet.Notes,
+            IsActive = true
         };
 
-        var result = await _customerService.CreateAsync(customer).ConfigureAwait(false);
+        var result = await _supplierService.CreateAsync(supplier).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
@@ -104,34 +112,32 @@ public sealed class CustomerHandler(ICustomerAppService customerService)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
-    [PacketOpcode((ushort)OpCommand.CUSTOMER_UPDATE)]
-    public async ValueTask UpdateAsync(IPacketContext<CustomerDto> context)
+    [PacketOpcode((ushort)OpCommand.SUPPLIER_UPDATE)]
+    public async ValueTask UpdateAsync(IPacketContext<SupplierDto> context)
     {
-        CustomerDto packet = context.Packet;
+        SupplierDto packet = context.Packet;
         IConnection connection = context.Connection;
 
-        if (packet.CustomerId == null)
+        if (packet.SupplierId == null)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
 
-        var customer = new Customer
+        var supplier = new Supplier
         {
-            Id = packet.CustomerId.Value,
+            Id = packet.SupplierId.Value,
             Name = packet.Name,
             Email = packet.Email,
             PhoneNumber = packet.PhoneNumber,
             Address = packet.Address,
-            DateOfBirth = packet.DateOfBirth,
             TaxCode = packet.TaxCode,
-            Type = packet.Type,
-            Membership = packet.Membership,
-            Gender = packet.Gender ?? AutoX.Gara.Domain.Enums.Gender.None,
-            Notes = packet.Notes ?? string.Empty
+            ContactPerson = packet.ContactPerson,
+            Notes = packet.Notes,
+            IsActive = packet.IsActive
         };
 
-        var result = await _customerService.UpdateAsync(customer).ConfigureAwait(false);
+        var result = await _supplierService.UpdateAsync(supplier).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
@@ -152,19 +158,19 @@ public sealed class CustomerHandler(ICustomerAppService customerService)
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
-    [PacketOpcode((ushort)OpCommand.CUSTOMER_DELETE)]
-    public async ValueTask DeleteAsync(IPacketContext<CustomerDto> context)
+    [PacketOpcode((ushort)OpCommand.SUPPLIER_DELETE)]
+    public async ValueTask DeleteAsync(IPacketContext<SupplierDto> context)
     {
-        CustomerDto packet = context.Packet;
+        SupplierDto packet = context.Packet;
         IConnection connection = context.Connection;
 
-        if (packet.CustomerId == null)
+        if (packet.SupplierId == null)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
 
-        var result = await _customerService.DeleteAsync(packet.CustomerId.Value).ConfigureAwait(false);
+        var result = await _supplierService.DeleteAsync(packet.SupplierId.Value).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
@@ -172,32 +178,26 @@ public sealed class CustomerHandler(ICustomerAppService customerService)
         }
 
         await context.OkAsync().ConfigureAwait(false);
+
     }
 
-    private static CustomerListQuery BuildListQuery(CustomerQueryRequest request)
-        => new(request.Page, request.PageSize, request.SearchTerm, request.SortBy, request.SortDescending, request.FilterType, request.FilterMembership);
-
-    private static CustomerDto MapToPacket(Customer c, ushort sequenceId)
+    private static SupplierDto MapToPacket(Supplier s, ushort sequenceId)
     {
-        var data = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<CustomerDto>();
-        data.SequenceId = sequenceId;
-        data.CustomerId = c.Id;
-        data.Type = c.Type;
-        data.Name = c.Name;
-        data.Email = c.Email;
-        data.PhoneNumber = c.PhoneNumber;
-        data.Address = c.Address;
-        data.DateOfBirth = c.DateOfBirth;
-        data.TaxCode = c.TaxCode;
-        data.Membership = c.Membership;
-        data.Gender = c.Gender;
-        data.Notes = c.Notes ?? string.Empty;
-        data.CreatedAt = c.CreatedAt;
-        data.UpdatedAt = c.UpdatedAt;
-        return data;
+        var dto = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<SupplierDto>();
+        dto.SequenceId = sequenceId;
+        dto.SupplierId = s.Id;
+        dto.Name = s.Name;
+        dto.Email = s.Email;
+        dto.PhoneNumber = s.PhoneNumber;
+        dto.Address = s.Address;
+        dto.TaxCode = s.TaxCode;
+        dto.ContactPerson = s.ContactPerson;
+        dto.Notes = s.Notes;
+        dto.IsActive = s.IsActive;
+        return dto;
     }
 
-    private static void ReturnDtos(IEnumerable<CustomerDto> dtos)
+    private static void ReturnDtos(IEnumerable<SupplierDto> dtos)
     {
         if (dtos == null)
         {
@@ -211,11 +211,15 @@ public sealed class CustomerHandler(ICustomerAppService customerService)
         }
     }
 
-    private static void ReturnToPool(CustomerDto dto)
+    private static void ReturnToPool(SupplierDto dto)
     {
         if (dto != null)
         {
             InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(dto);
         }
     }
+
+
 }
+
+

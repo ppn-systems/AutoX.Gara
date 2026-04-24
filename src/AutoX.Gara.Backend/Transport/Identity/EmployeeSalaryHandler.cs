@@ -1,7 +1,6 @@
-﻿using AutoX.Gara.Api.Handlers.Common;
+using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
@@ -14,15 +13,15 @@ using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
 
-namespace AutoX.Gara.Api.Handlers.Identity;
+namespace AutoX.Gara.Backend.Transport.Identity;
 
 /// <summary>
 /// Packet Handler for employee salary related operations.
 /// </summary>
 [PacketController]
-public sealed class EmployeeSalaryHandler(IEmployeeSalaryAppService salaryService)
+public sealed class EmployeeSalaryHandler(EmployeeSalaryAppService salaryService)
 {
-    private readonly IEmployeeSalaryAppService _salaryService = salaryService ?? throw new ArgumentNullException(nameof(salaryService));
+    private readonly EmployeeSalaryAppService _salaryService = salaryService ?? throw new ArgumentNullException(nameof(salaryService));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -196,3 +195,5 @@ public sealed class EmployeeSalaryHandler(IEmployeeSalaryAppService salaryServic
 
 
 }
+
+

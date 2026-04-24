@@ -1,7 +1,6 @@
-﻿using AutoX.Gara.Api.Handlers.Common;
+using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Vehicles;
@@ -11,15 +10,15 @@ using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.DataFrames.Pooling;
 
-namespace AutoX.Gara.Api.Handlers.Vehicles;
+namespace AutoX.Gara.Backend.Transport.Vehicles;
 
 /// <summary>
 /// Packet Handler for vehicle related operations.
 /// </summary>
 [PacketController]
-public sealed class VehicleHandler(IVehicleAppService vehicleService)
+public sealed class VehicleHandler(VehicleAppService vehicleService)
 {
-    private readonly IVehicleAppService _vehicleService = vehicleService ?? throw new ArgumentNullException(nameof(vehicleService));
+    private readonly VehicleAppService _vehicleService = vehicleService ?? throw new ArgumentNullException(nameof(vehicleService));
     private const int DefaultPageSize = 10;
 
     [PacketEncryption(true)]
@@ -191,3 +190,5 @@ public sealed class VehicleHandler(IVehicleAppService vehicleService)
 
 
 }
+
+

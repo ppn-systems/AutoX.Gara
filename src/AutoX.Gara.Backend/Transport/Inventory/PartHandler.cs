@@ -1,7 +1,6 @@
-﻿using AutoX.Gara.Api.Handlers.Common;
+using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
@@ -14,15 +13,15 @@ using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
 
-namespace AutoX.Gara.Api.Handlers.Inventory;
+namespace AutoX.Gara.Backend.Transport.Inventory;
 
 /// <summary>
 /// Packet Handler for inventory part related operations.
 /// </summary>
 [PacketController]
-public sealed class PartHandler(IPartAppService partService)
+public sealed class PartHandler(PartAppService partService)
 {
-    private readonly IPartAppService _partService = partService ?? throw new ArgumentNullException(nameof(partService));
+    private readonly PartAppService _partService = partService ?? throw new ArgumentNullException(nameof(partService));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -224,3 +223,5 @@ public sealed class PartHandler(IPartAppService partService)
 
 
 }
+
+

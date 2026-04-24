@@ -1,7 +1,6 @@
-﻿using AutoX.Gara.Api.Handlers.Common;
+using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Services;
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
@@ -12,15 +11,15 @@ using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
 using Nalix.Framework.DataFrames.Pooling;
 
-namespace AutoX.Gara.Api.Handlers.Financial;
+namespace AutoX.Gara.Backend.Transport.Financial;
 
 /// <summary>
 /// Packet Handler for service item related operations.
 /// </summary>
 [PacketController]
-public sealed class ServiceItemHandler(IServiceItemAppService serviceItemService)
+public sealed class ServiceItemHandler(ServiceItemAppService serviceItemService)
 {
-    private readonly IServiceItemAppService _serviceItemService = serviceItemService ?? throw new ArgumentNullException(nameof(serviceItemService));
+    private readonly ServiceItemAppService _serviceItemService = serviceItemService ?? throw new ArgumentNullException(nameof(serviceItemService));
 
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
@@ -152,3 +151,5 @@ public sealed class ServiceItemHandler(IServiceItemAppService serviceItemService
 
 
 }
+
+

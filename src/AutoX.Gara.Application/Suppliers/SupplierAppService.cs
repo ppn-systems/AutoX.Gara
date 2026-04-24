@@ -1,10 +1,10 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
-using AutoX.Gara.Application.Abstractions.Persistence;using AutoX.Gara.Application.Abstractions.Services;using AutoX.Gara.Domain.Entities.Suppliers;using AutoX.Gara.Shared.Models;using AutoX.Gara.Shared.Validation;using Microsoft.Extensions.Logging;using Nalix.Common.Networking.Protocols;using System;using System.Collections.Generic;using System.Threading.Tasks;
+using AutoX.Gara.Application.Abstractions.Persistence;using AutoX.Gara.Domain.Entities.Suppliers;using AutoX.Gara.Shared.Models;using AutoX.Gara.Shared.Validation;using Microsoft.Extensions.Logging;using Nalix.Common.Networking.Protocols;using System;using System.Collections.Generic;using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Suppliers;
 
-public sealed class SupplierAppService(IDataSessionFactory dataSessionFactory, ILogger<SupplierAppService> logger) : ISupplierAppService
+public sealed class SupplierAppService(IDataSessionFactory dataSessionFactory, ILogger<SupplierAppService> logger)
 {
     private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory ?? throw new ArgumentNullException(nameof(dataSessionFactory));
     private readonly ILogger<SupplierAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -109,3 +109,5 @@ public sealed class SupplierAppService(IDataSessionFactory dataSessionFactory, I
         }
     }
 }
+
+

@@ -1,9 +1,9 @@
-﻿using Nalix.Common.Networking.Packets;
+using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Framework.DataFrames.SignalFrames;
 
-namespace AutoX.Gara.Api.Handlers.Common;
+namespace AutoX.Gara.Backend.Transport.Common;
 
 public static class HandlerExtensions
 {
@@ -35,3 +35,5 @@ public static class HandlerExtensions
         await context.Connection.TCP.SendAsync(directive).ConfigureAwait(false);
     }
 }
+
+
