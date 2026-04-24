@@ -3,6 +3,7 @@
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
+using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Customer;
 using AutoX.Gara.Shared.Enums;
@@ -121,15 +122,15 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
     ];
 
-    public string[] FilterTypeOptions { get; } = [.. CustomerTypeValues.Select((v, idx) => idx == 0 ? "T?t c? lo?i" : EnumText.Get(v))];
+    public string[] FilterTypeOptions { get; } = [.. CustomerTypeValues.Select((v, idx) => idx == 0 ? UiText.Get("customers.filter.type.all", "Tất cả loại") : EnumText.Get(v))];
 
-    public string[] FilterMembershipOptions { get; } = [.. MembershipValues.Select((v, idx) => idx == 0 ? "T?t c? h?ng" : EnumText.Get(v))];
+    public string[] FilterMembershipOptions { get; } = [.. MembershipValues.Select((v, idx) => idx == 0 ? UiText.Get("customers.filter.membership.all", "Tất cả hạng") : EnumText.Get(v))];
 
-    public string[] FormTypeOptions { get; } = [.. CustomerTypeValues.Select((v, idx) => idx == 0 ? "� ch?n �" : EnumText.Get(v))];
+    public string[] FormTypeOptions { get; } = [.. CustomerTypeValues.Select((v, idx) => idx == 0 ? UiText.Get("common.select.placeholder", "— chọn —") : EnumText.Get(v))];
 
-    public string[] FormMembershipOptions { get; } = [.. MembershipValues.Select((v, idx) => idx == 0 ? "� ch?n �" : EnumText.Get(v))];
+    public string[] FormMembershipOptions { get; } = [.. MembershipValues.Select((v, idx) => idx == 0 ? UiText.Get("common.select.placeholder", "— chọn —") : EnumText.Get(v))];
 
-    public string[] FormGenderOptions { get; } = [.. GenderValues.Select((v, idx) => idx == 0 ? "� ch?n �" : EnumText.Get(v))];
+    public string[] FormGenderOptions { get; } = [.. GenderValues.Select((v, idx) => idx == 0 ? UiText.Get("common.select.placeholder", "— chọn —") : EnumText.Get(v))];
 
     // FIX PICKER: Picker.SelectedIndex (int) thay v� SelectedItem (string?enum kh�ng match)
 
@@ -171,7 +172,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
     [ObservableProperty] public partial string PopupMessage { get; set; } = string.Empty;
 
-    [ObservableProperty] public partial string PopupButtonText { get; set; } = "OK";
+    [ObservableProperty] public partial string PopupButtonText { get; set; } = UiText.Get("common.popup.ok", "OK");
 
     public bool IsPopupNotRetry => !IsPopupRetry;
 
@@ -185,9 +186,15 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
     // FIX: thay StringFormat bool kh�ng ho?t d?ng � d�ng computed property
 
-    public string FormTitle => IsEditing ? "S?a kh�ch h�ng" : "Th�m kh�ch h�ng";
+    public string FormTitle =>
+        IsEditing
+            ? UiText.Get("customers.form.title.edit", "Sửa khách hàng")
+            : UiText.Get("customers.form.title.create", "Thêm khách hàng");
 
-    public string FormSaveText => IsEditing ? "Luu thay d?i" : "Th�m kh�ch h�ng";
+    public string FormSaveText =>
+        IsEditing
+            ? UiText.Get("common.form.save_changes", "Lưu thay đổi")
+            : UiText.Get("customers.form.save.create", "Thêm khách hàng");
 
     [ObservableProperty] public partial string FormName { get; set; } = string.Empty;
 
@@ -492,7 +499,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
             else
 
             {
-                HandleWriteError("T?i danh s�ch th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleWriteError(UiText.Get("customers.error.load_failed", "Tải danh sách thất bại"), result.ErrorMessage!, result.Advice);
 
             }
 
@@ -720,7 +727,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
             else
 
             {
-                SetFormError(result.ErrorMessage ?? "Thao t�c th?t b?i.");
+                SetFormError(result.ErrorMessage ?? UiText.Get("common.error.action_failed", "Thao tác thất bại."));
 
             }
 
@@ -836,7 +843,7 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
             else
 
             {
-                HandleWriteError("X�a th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleWriteError(UiText.Get("customers.error.delete_failed", "Xóa thất bại"), result.ErrorMessage!, result.Advice);
 
             }
 
@@ -976,22 +983,22 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
     {
         ClearFormError();
         if (!CustomerValidation.IsValidName(FormName))
-        { SetFormError("Tên khách hàng không hợp lệ (2-100 ký tự)."); return false; }
+        { SetFormError(UiText.Get("customers.validation.name_invalid", "Tên khách hàng không hợp lệ (2-100 ký tự).")); return false; }
 
         if (!AccountValidation.IsValidEmail(FormEmail))
-        { SetFormError("Email không hợp lệ."); return false; }
+        { SetFormError(UiText.Get("customers.validation.email_invalid", "Email không hợp lệ.")); return false; }
 
         if (!AccountValidation.IsValidVietnamPhoneNumber(FormPhone))
-        { SetFormError("Số điện thoại không hợp lệ (VD: 0901234567)."); return false; }
+        { SetFormError(UiText.Get("customers.validation.phone_invalid", "Số điện thoại không hợp lệ (VD: 0901234567).")); return false; }
 
         if (!CustomerValidation.IsValidDateOfBirth(FormDateOfBirth))
-        { SetFormError("Ngày sinh không hợp lệ."); return false; }
+        { SetFormError(UiText.Get("customers.validation.dob_invalid", "Ngày sinh không hợp lệ.")); return false; }
 
         if (!CustomerValidation.IsValidTaxCode(FormTaxCode, FormType))
-        { SetFormError("Mã số thuế bắt buộc đối với khách hàng doanh nghiệp."); return false; }
+        { SetFormError(UiText.Get("customers.validation.tax_required_business", "Mã số thuế bắt buộc đối với khách hàng doanh nghiệp.")); return false; }
 
         if (!CustomerValidation.IsValidNotes(FormNotes))
-        { SetFormError("Ghi chú không được vượt quá 500 ký tự."); return false; }
+        { SetFormError(UiText.Get("customers.validation.notes_too_long", "Ghi chú không được vượt quá 500 ký tự.")); return false; }
 
         return true;
     }
@@ -1088,7 +1095,9 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
 
         IsPopupRetry = isRetry;
 
-        PopupButtonText = isRetry ? "Th? l?i" : "OK";
+        PopupButtonText = isRetry
+            ? UiText.Get("common.popup.retry", "Thử lại")
+            : UiText.Get("common.popup.ok", "OK");
 
         IsPopupVisible = true;
 

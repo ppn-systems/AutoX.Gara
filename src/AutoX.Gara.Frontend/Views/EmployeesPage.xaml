@@ -18,6 +18,8 @@
 
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
 
+    x:DataType="ctrl:EmployeesViewModel"
+
     Title="Quản lý nhân viên"
 
     BackgroundColor="#0A0A0F">
@@ -322,7 +324,7 @@
 
             <Grid Grid.Row="2">
 
-                <CollectionView ItemsSource="{Binding FilteredEmployees}" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}" Margin="16,0" VerticalOptions="Fill">
+                <CollectionView ItemsSource="{Binding FilteredEmployees}" ItemSizingStrategy="MeasureFirstItem" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}" Margin="16,0" VerticalOptions="Fill">
 
                     <CollectionView.ItemTemplate>
 

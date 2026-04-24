@@ -1,0 +1,378 @@
+{
+  "metadata": {
+    "skill_name": "maui-collectionview",
+    "skill_path": "/Users/davidortinau/work/maui-skills/plugins/maui-skills/skills/maui-collectionview",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-03-05T18:33:38Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 149.2,
+        "tokens": 7450,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CollectionView displays messages from an ObservableCollection",
+          "passed": true,
+          "evidence": "ChatViewModel.cs line 15 declares `public ObservableCollection<Message> Messages { get; } = new();`. ChatPage.xaml line 85 binds `ItemsSource=\"{Binding Messages}\"` on the CollectionView named `MessagesCollectionView`. This is a genuine binding to a live ObservableCollection, not a stub."
+        },
+        {
+          "text": "Message alignment differs by sender \u2014 right-aligned for current user, left-aligned for others",
+          "passed": true,
+          "evidence": "MessageTemplateSelector.cs returns `MyMessageTemplate` when `IsFromMe == true` and `TheirMessageTemplate` otherwise. In ChatPage.xaml: MyMessageTemplate places the Border in `Grid.Column=\"1\"` with a `Width=\"*\"` spacer column on the left (lines 18-38), pushing content right. TheirMessageTemplate places the Border in `Grid.Column=\"0\"` with the spacer on the right (lines 42-70), pushing content left. The selector is wired via `ItemTemplate=\"{StaticResource MessageTemplateSelector}\"`."
+        },
+        {
+          "text": "Code calls CollectionView.ScrollTo() to scroll to the last message when new messages arrive",
+          "passed": true,
+          "evidence": "ChatPage.xaml.cs lines 30-33: `MessagesCollectionView.ScrollTo(item: message, position: ScrollToPosition.End, animate: true);` is called in the `ScrollToBottom(Message message)` method. This method is invoked as a callback registered with the ViewModel, which fires it whenever the CollectionChanged event fires for new items."
+        },
+        {
+          "text": "A CollectionChanged or property-change handler triggers the scroll behavior",
+          "passed": true,
+          "evidence": "ChatViewModel.cs line 39: `Messages.CollectionChanged += OnMessagesCollectionChanged;`. The handler `OnMessagesCollectionChanged` (lines 74-85) checks for `NotifyCollectionChangedAction.Add`, extracts the new message, and calls `_scrollToBottomCallback?.Invoke(newMessage)` on the main thread. This directly ties every new item added to the scroll action."
+        },
+        {
+          "text": "Message model has properties for content/text, a sender or IsFromMe flag, and optionally timestamp",
+          "passed": true,
+          "evidence": "Message.cs defines: `public string Text { get; set; }` (content), `public bool IsFromMe { get; set; }` (sender/direction flag), `public string SenderName { get; set; }` (sender identity), and `public DateTime Timestamp { get; set; }` (optional timestamp). All required properties are present."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 114.7,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CollectionView has IsGrouped='True'",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml line 14: <CollectionView ItemsSource=\"{Binding ProductGroups}\" IsGrouped=\"True\">"
+        },
+        {
+          "text": "GroupHeaderTemplate shows category name and item count",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml lines 17-47: GroupHeaderTemplate DataTemplate binds CategoryName (line 28: Text=\"{Binding CategoryName}\") and ItemCount with StringFormat (line 41: Text=\"{Binding ItemCount, StringFormat='{0} items'}\"). ProductGroup.cs exposes both properties: CategoryName (string) and ItemCount (int, computed as Count)."
+        },
+        {
+          "text": "Price is formatted as currency (StringFormat with C, or similar currency formatting)",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml line 87: Text=\"{Binding Price, StringFormat='{0:C}'}\" \u2014 uses the standard .NET currency format specifier C which formats as locale currency."
+        },
+        {
+          "text": "An 'Add to Cart' button has a Command binding",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml lines 74-83: Button with Text=\"Add to Cart\" and Command=\"{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ProductCatalogViewModel}}, Path=AddToCartCommand}\" and CommandParameter=\"{Binding}\". ProductCatalogViewModel.cs line 38: AddToCartCommand = new Command<Product>(OnAddToCart)."
+        },
+        {
+          "text": "Pull-to-refresh is implemented via RefreshView or IsBusy pattern",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml lines 10-11: <RefreshView IsRefreshing=\"{Binding IsRefreshing}\" Command=\"{Binding RefreshCommand}\"> wrapping the CollectionView. ViewModel has IsRefreshing bool property (lines 22-30) and RefreshCommand (line 37) that calls LoadCatalogAsync and resets IsRefreshing in a finally block (line 68)."
+        },
+        {
+          "text": "CollectionView has an EmptyView defined for the no-results state",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml lines 97-114: <CollectionView.EmptyView> containing a <ContentView> wrapping a VerticalStackLayout with Labels: 'No products found' (FontSize=18, Bold) and 'Pull down to refresh the catalog.'"
+        },
+        {
+          "text": "ViewModel uses a grouped collection structure (ObservableCollection of group objects)",
+          "passed": true,
+          "evidence": "ProductCatalogViewModel.cs lines 9 and 12-19: private ObservableCollection<ProductGroup> _productGroups and public ObservableCollection<ProductGroup> ProductGroups property. ProductGroup inherits List<Product> (ProductGroup.cs line 3), satisfying MAUI's grouping requirement. LoadCatalogAsync groups products using LINQ GroupBy and wraps results in new ObservableCollection<ProductGroup>."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 83.5,
+        "tokens": 0,
+        "tool_calls": 7,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CollectionView uses a 2-column GridItemsLayout (Span=2 or Columns=2)",
+          "passed": true,
+          "evidence": "RecipesPage.xaml lines 16-21: '<GridItemsLayout Orientation=\"Vertical\" Span=\"2\" VerticalItemSpacing=\"12\" HorizontalItemSpacing=\"12\" />'"
+        },
+        {
+          "text": "DataTemplate includes an Image element bound to a photo or image source property",
+          "passed": true,
+          "evidence": "RecipesPage.xaml lines 45-52: '<Image Grid.Row=\"0\" Source=\"{Binding PhotoUrl}\" Aspect=\"AspectFill\" HeightRequest=\"160\">' \u2014 binds to PhotoUrl property on Recipe model"
+        },
+        {
+          "text": "DataTemplate includes a Label bound to recipe Name and a Label bound to prep time",
+          "passed": true,
+          "evidence": "RecipesPage.xaml line 72: '<Label Grid.Row=\"1\" Text=\"{Binding Name}\" .../>' and line 80: '<Label Grid.Row=\"2\" Text=\"{Binding PrepTime, StringFormat=\\'Prep: {0}\\'}\" .../>'"
+        },
+        {
+          "text": "CollectionView has SelectionMode set to Single",
+          "passed": true,
+          "evidence": "RecipesPage.xaml line 11: 'SelectionMode=\"Single\"' on the CollectionView element"
+        },
+        {
+          "text": "ViewModel has a SelectedRecipe or SelectedItem property of the Recipe type with INotifyPropertyChanged",
+          "passed": true,
+          "evidence": "RecipesViewModel.cs lines 23-34: 'public Recipe? SelectedRecipe { get => _selectedRecipe; set { if (_selectedRecipe != value) { _selectedRecipe = value; OnPropertyChanged(); } } }' \u2014 typed as Recipe?, calls OnPropertyChanged(), class inherits BindableObject which provides INotifyPropertyChanged"
+        },
+        {
+          "text": "x:DataType compiled bindings are used on the page and/or DataTemplate",
+          "passed": true,
+          "evidence": "RecipesPage.xaml line 7: 'x:DataType=\"viewmodels:RecipesViewModel\"' on ContentPage, and line 24: 'x:DataType=\"models:Recipe\"' on DataTemplate \u2014 compiled bindings applied at both levels"
+        },
+        {
+          "text": "ViewModel uses ObservableCollection<Recipe> for the items source",
+          "passed": true,
+          "evidence": "RecipesViewModel.cs line 11: 'public ObservableCollection<Recipe> Recipes { get; } = new ObservableCollection<Recipe> { ... }' with 8 seeded items"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 130.4,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CollectionView displays messages from an ObservableCollection",
+          "passed": true,
+          "evidence": "ChatViewModel.cs line 14 declares 'public ObservableCollection<Message> Messages { get; } = new();'. ChatPage.xaml line 115 binds the CollectionView with 'ItemsSource=\"{Binding Messages}\"'. The connection is genuine and complete."
+        },
+        {
+          "text": "Message alignment differs by sender \u2014 right-aligned for current user, left-aligned for others",
+          "passed": true,
+          "evidence": "ChatPage.xaml uses two DataTriggers on a ContentView. When IsMe=true the Grid places a transparent BoxView in Column 0 and the Frame in Column 1 (pushing the bubble right). When IsMe=false the Frame is in Column 0 and the spacer is in Column 1 (keeping the bubble left). This is implemented directly in the XAML at lines 126-198."
+        },
+        {
+          "text": "Code calls CollectionView.ScrollTo() to scroll to the last message when new messages arrive",
+          "passed": true,
+          "evidence": "ChatPage.xaml.cs line 74: 'MessagesCollectionView.ScrollTo(lastMessage, position: ScrollToPosition.End, animate: true);' is called inside ScrollToBottom(). This method is invoked from both the CollectionChanged handler (line 60) and the ViewModel scroll delegate (line 31)."
+        },
+        {
+          "text": "A CollectionChanged or property-change handler triggers the scroll behavior",
+          "passed": true,
+          "evidence": "ChatPage.xaml.cs lines 35 and 53-61: '_viewModel.Messages.CollectionChanged += OnMessagesCollectionChanged;' subscribes in OnBindingContextChanged. OnMessagesCollectionChanged checks for NotifyCollectionChangedAction.Add and calls ScrollToBottom(). Additionally, the ViewModel calls _scrollToBottomAction?.Invoke() directly after Messages.Add() (ChatViewModel.cs lines 63-67 and 85-86)."
+        },
+        {
+          "text": "Message model has properties for content/text, a sender or IsFromMe flag, and optionally timestamp",
+          "passed": true,
+          "evidence": "Message.cs contains: 'public string Text { get; set; }' (content), 'public string SenderName { get; set; }' (sender), 'public bool IsMe { get; set; }' (IsFromMe flag), and 'public DateTime Timestamp { get; set; }' (timestamp). All required properties are present."
+        }
+      ],
+      "notes": [
+        "Frame is deprecated in .NET MAUI; should be replaced with Border + StrokeShape='RoundRectangle 16'",
+        "DataTrigger template switching creates two visual trees per cell; DataTemplateSelector is the idiomatic and more performant pattern",
+        "The 100 ms initial scroll delay is a heuristic workaround \u2014 a SizeChanged-based approach would be more robust",
+        "DataTrigger used instead of DataTemplateSelector to keep all layout in XAML",
+        "100 ms Dispatcher.DispatchDelayed used in OnAppearing to work around layout-timing issues for initial scroll"
+      ]
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 136.6,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CollectionView has IsGrouped='True'",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml line 34: `IsGrouped=\"True\"` is set directly on the CollectionView element. Confirmed in both the XAML output file and described in the transcript Step 3: 'IsGrouped=\"True\" \u2014 enables group header rendering.'"
+        },
+        {
+          "text": "GroupHeaderTemplate shows category name and item count",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml lines 41-78: GroupHeaderTemplate DataTemplate contains a Label bound to `CategoryName` (line 54) and a Border with a Label bound to `ItemCount` with StringFormat '{0} items' (line 70). ProductGroup.cs confirms both properties: `CategoryName` (string) and `ItemCount => Count` (computed int)."
+        },
+        {
+          "text": "Price is formatted as currency (StringFormat with C, or similar currency formatting)",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml line 105: `Text=\"{Binding Price, StringFormat='{0:C}'}\"` on the Price Label. The transcript explicitly notes: 'StringFormat='\\'{0:C}\\'' on the Price label uses the device's current culture to format the decimal as local currency (e.g., \"$89.99\" in en-US).'"
+        },
+        {
+          "text": "An 'Add to Cart' button has a Command binding",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml lines 112-122: Button with `Text=\"Add to Cart\"` has `Command=\"{Binding Source={RelativeSource AncestorType={x:Type vm:ProductCatalogViewModel}}, Path=AddToCartCommand}\"` and `CommandParameter=\"{Binding .}\"`. The ViewModel exposes `public ICommand AddToCartCommand { get; }` initialized as `new Command<Product>(OnAddToCart)` (ProductCatalogViewModel.cs line 37)."
+        },
+        {
+          "text": "Pull-to-refresh is implemented via RefreshView or IsBusy pattern",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml lines 27-28: `<RefreshView Command=\"{Binding RefreshCommand}\" IsRefreshing=\"{Binding IsRefreshing}\" ...>` wraps the CollectionView. ViewModel exposes `IsRefreshing` bool property and `RefreshCommand` (ICommand). The transcript notes: 'RefreshView must be the direct parent of the scrollable view (CollectionView) to intercept the pull gesture.'"
+        },
+        {
+          "text": "CollectionView has an EmptyView defined for the no-results state",
+          "passed": true,
+          "evidence": "ProductCatalogPage.xaml lines 131-159: A VerticalStackLayout with `IsVisible=\"{Binding IsEmpty}\"` is overlaid in the same Grid. It contains a 'No Products Found' heading label, a descriptive subtext label, and a 'Refresh Now' button. The ViewModel sets `IsEmpty = ProductGroups.Count == 0` after loading. Note: this uses a Grid overlay pattern rather than CollectionView's built-in `EmptyView` property, which is a valid but non-standard approach."
+        },
+        {
+          "text": "ViewModel uses a grouped collection structure (ObservableCollection of group objects)",
+          "passed": true,
+          "evidence": "ProductCatalogViewModel.cs line 13: `public ObservableCollection<ProductGroup> ProductGroups` is the bound collection. ProductGroup.cs line 6: `public class ProductGroup : ObservableCollection<Product>` \u2014 each group extends ObservableCollection<Product>, making the overall structure an ObservableCollection of ProductGroup objects. The ViewModel's LoadCatalogAsync builds these via LINQ GroupBy (lines 54-57)."
+        }
+      ],
+      "notes": [
+        "BoolToObjectConverter misuse for IsVisible inversion will cause runtime binding failure \u2014 RefreshView visibility toggling will not work correctly at runtime",
+        "EmptyView implemented as a Grid overlay with IsVisible binding rather than CollectionView.EmptyView property",
+        "BoolToObjectConverter used as InvertedBoolConverter but returns strings instead of booleans \u2014 acknowledged as a known issue requiring MAUI Community Toolkit InvertedBoolConverter in production"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.857,
+        "passed": 6,
+        "failed": 1,
+        "total": 7,
+        "time_seconds": 115.3,
+        "tokens": 0,
+        "tool_calls": 8,
+        "errors": 1
+      },
+      "expectations": [
+        {
+          "text": "CollectionView uses a 2-column GridItemsLayout (Span=2 or Columns=2)",
+          "passed": true,
+          "evidence": "RecipesPage.xaml lines 49-55: '<CollectionView.ItemsLayout><GridItemsLayout Orientation=\"Vertical\" Span=\"2\" HorizontalItemSpacing=\"4\" VerticalItemSpacing=\"4\" /></CollectionView.ItemsLayout>'. Span=2 is explicitly set."
+        },
+        {
+          "text": "DataTemplate includes an Image element bound to a photo or image source property",
+          "passed": true,
+          "evidence": "RecipesPage.xaml lines 85-89: '<Image Grid.Row=\"0\" Aspect=\"AspectFill\" HeightRequest=\"160\" Source=\"{Binding PhotoUrl}\" />'. The Image is inside the DataTemplate and bound to the PhotoUrl property on Recipe."
+        },
+        {
+          "text": "DataTemplate includes a Label bound to recipe Name and a Label bound to prep time",
+          "passed": true,
+          "evidence": "RecipesPage.xaml lines 92-99 show '<Label ... Text=\"{Binding Name}\" />' and lines 109-113 show '<Label FontSize=\"12\" Text=\"{Binding PrepTimeDisplay}\" ... />'. Both are inside the DataTemplate. PrepTimeDisplay is a computed property on Recipe that formats PrepTimeMinutes into a display string."
+        },
+        {
+          "text": "CollectionView has SelectionMode set to Single",
+          "passed": false,
+          "evidence": "RecipesPage.xaml line 47 explicitly sets 'SelectionMode=\"None\"'. The executor made a deliberate design choice to implement selection via TapGestureRecognizer + Command<Recipe> toggle instead of using the built-in CollectionView selection. The transcript Step 2 notes: 'Used CollectionView with SelectionMode=\"None\" and a manual TapGestureRecognizer + command to keep full control over the toggle-selection behaviour.' The expectation requires SelectionMode=Single, which is absent."
+        },
+        {
+          "text": "ViewModel has a SelectedRecipe or SelectedItem property of the Recipe type with INotifyPropertyChanged",
+          "passed": true,
+          "evidence": "RecipesViewModel.cs lines 13-29: the class implements INotifyPropertyChanged, and lines 19-29 define 'public Recipe? SelectedRecipe { get => _selectedRecipe; set { if (_selectedRecipe == value) return; _selectedRecipe = value; OnPropertyChanged(); } }'. The property is of type Recipe?, raises PropertyChanged via OnPropertyChanged(), and the class has the full INotifyPropertyChanged event and handler."
+        },
+        {
+          "text": "x:DataType compiled bindings are used on the page and/or DataTemplate",
+          "passed": true,
+          "evidence": "RecipesPage.xaml line 10: 'x:DataType=\"vm:RecipesViewModel\"' on the ContentPage element. Line 58: 'x:DataType=\"models:Recipe\"' on the DataTemplate element. Both the page-level and DataTemplate-level compiled bindings are present."
+        },
+        {
+          "text": "ViewModel uses ObservableCollection<Recipe> for the items source",
+          "passed": true,
+          "evidence": "RecipesViewModel.cs line 17: 'public ObservableCollection<Recipe> Recipes { get; } = new();'. The property is of type ObservableCollection<Recipe>, initialized inline, and populated in LoadRecipes() with 10 sample Recipe objects."
+        }
+      ],
+      "notes": [
+        "RelativeSource AncestorType binding to the ViewModel type inside a DataTemplate may not resolve correctly at runtime in all MAUI versions \u2014 the executor acknowledged this and suggested binding to the page as a more robust alternative.",
+        "Remote picsum.photos image URLs require internet access at runtime and would not work in an offline or production scenario.",
+        "SelectionMode is None, not Single \u2014 this is a deliberate deviation from what the expectation requires. The toggle-deselect behavior is a functional difference that may or may not be acceptable depending on the task intent.",
+        "IsSelectedConverter return type was corrected from bool to Color during design (caught before writing); this represents a real design pitfall the executor navigated without skill guidance."
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 115.8,
+        "stddev": 32.8638,
+        "min": 83.5,
+        "max": 149.2
+      },
+      "tokens": {
+        "mean": 2483.3333,
+        "stddev": 4301.2595,
+        "min": 0,
+        "max": 7450
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.9523,
+        "stddev": 0.0826,
+        "min": 0.857,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 127.4333,
+        "stddev": 10.9555,
+        "min": 115.3,
+        "max": 136.6
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.05",
+      "time_seconds": "-11.6",
+      "tokens": "+2483"
+    }
+  },
+  "notes": []
+}

@@ -1,0 +1,86 @@
+{
+  "eval_id": "eval-grouped-catalog",
+  "variant": "without_skill",
+  "iteration": 1,
+  "model": "claude-sonnet-4-6",
+  "date": "2026-03-05",
+
+  "requirements": {
+    "grouped_by_category": {
+      "implemented": true,
+      "notes": "ProductGroup extends ObservableCollection<Product>; CollectionView uses IsGrouped=True and ItemsSource bound to ObservableCollection<ProductGroup>"
+    },
+    "group_header_category_name": {
+      "implemented": true,
+      "notes": "GroupHeaderTemplate binds CategoryName label"
+    },
+    "group_header_item_count": {
+      "implemented": true,
+      "notes": "GroupHeaderTemplate binds ItemCount (computed from Count) with badge Border"
+    },
+    "item_product_name": {
+      "implemented": true,
+      "notes": "ItemTemplate Label bound to Name"
+    },
+    "item_price_currency_format": {
+      "implemented": true,
+      "notes": "StringFormat='{0:C}' on Price label"
+    },
+    "item_add_to_cart_button": {
+      "implemented": true,
+      "notes": "Button in ItemTemplate with Command and CommandParameter bindings"
+    },
+    "add_to_cart_fires_command": {
+      "implemented": true,
+      "notes": "AddToCartCommand is ICommand<Product> on ViewModel; RelativeSource AncestorType binding resolves correctly"
+    },
+    "pull_to_refresh": {
+      "implemented": true,
+      "notes": "RefreshView wraps CollectionView; Command=RefreshCommand; IsRefreshing two-way bound"
+    },
+    "empty_state_message": {
+      "implemented": true,
+      "notes": "VerticalStackLayout overlay controlled by IsEmpty binding with heading, subtext, and refresh button"
+    }
+  },
+
+  "correctness": {
+    "xaml_compiles": "likely",
+    "issues": [
+      {
+        "severity": "medium",
+        "description": "BoolToObjectConverter with TrueObject/FalseObject as string 'False'/'True' will not correctly drive IsVisible (a bool property). A proper InvertedBoolConverter returning bool is required. MAUI Community Toolkit provides one out of the box.",
+        "location": "ProductCatalogPage.xaml Resources / RefreshView IsVisible binding"
+      },
+      {
+        "severity": "low",
+        "description": "DisplayAlert called directly on Application.Current.MainPage inside ViewModel breaks MVVM purity. A dialog/navigation service abstraction is preferred.",
+        "location": "ProductCatalogViewModel.cs OnAddToCart"
+      },
+      {
+        "severity": "low",
+        "description": "Task.Run wrapping async LoadCatalogAsync in constructor can cause UI threading issues if ObservableCollection is modified off the main thread. Should use MainThread.BeginInvokeOnMainThread or equivalent.",
+        "location": "ProductCatalogViewModel constructor"
+      }
+    ]
+  },
+
+  "score": {
+    "requirements_met": 9,
+    "requirements_total": 9,
+    "correctness_deductions": 1,
+    "overall": "good",
+    "notes": "All required features are represented. One converter misuse will cause a runtime binding issue on IsVisible; fix is straightforward. Core grouped CollectionView pattern, pull-to-refresh wiring, and command binding are correct."
+  },
+
+  "files_produced": [
+    "Product.cs",
+    "ProductGroup.cs",
+    "BaseViewModel.cs",
+    "ProductCatalogViewModel.cs",
+    "ProductCatalogPage.xaml",
+    "ProductCatalogPage.xaml.cs",
+    "transcript.md",
+    "metrics.json"
+  ]
+}

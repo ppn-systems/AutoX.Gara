@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:EcommerceCatalog.ViewModels"
+             xmlns:models="clr-namespace:EcommerceCatalog.Models"
+             x:Class="EcommerceCatalog.Views.ProductCatalogPage"
+             x:DataType="viewmodels:ProductCatalogViewModel"
+             Title="Product Catalog">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshCommand}">
+
+        <CollectionView ItemsSource="{Binding ProductGroups}"
+                        IsGrouped="True">
+
+            <!-- Group header: category name + item count -->
+            <CollectionView.GroupHeaderTemplate>
+                <DataTemplate x:DataType="models:ProductGroup">
+                    <Grid Padding="16,10,16,6"
+                          BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#1F2937}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Column="0"
+                               Text="{Binding CategoryName}"
+                               FontAttributes="Bold"
+                               FontSize="15"
+                               TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                               VerticalOptions="Center" />
+
+                        <Border Grid.Column="1"
+                                BackgroundColor="{AppThemeBinding Light=#6366F1, Dark=#818CF8}"
+                                StrokeThickness="0"
+                                Padding="8,3"
+                                VerticalOptions="Center">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10" />
+                            </Border.StrokeShape>
+                            <Label Text="{Binding ItemCount, StringFormat='{0} items'}"
+                                   FontSize="12"
+                                   TextColor="White" />
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.GroupHeaderTemplate>
+
+            <!-- Product item template -->
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Product">
+                    <Border Margin="12,4"
+                            Padding="0"
+                            StrokeThickness="1"
+                            Stroke="{AppThemeBinding Light=#E5E7EB, Dark=#374151}"
+                            BackgroundColor="{AppThemeBinding Light=White, Dark=#111827}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+
+                        <Grid Padding="14,12"
+                              ColumnDefinitions="*,Auto"
+                              RowDefinitions="Auto,Auto">
+
+                            <!-- Product name -->
+                            <Label Grid.Row="0" Grid.Column="0"
+                                   Text="{Binding Name}"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                                   VerticalOptions="Center" />
+
+                            <!-- Add to Cart button -->
+                            <Button Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
+                                    Text="Add to Cart"
+                                    FontSize="13"
+                                    Padding="12,8"
+                                    VerticalOptions="Center"
+                                    BackgroundColor="{AppThemeBinding Light=#6366F1, Dark=#818CF8}"
+                                    TextColor="White"
+                                    CornerRadius="6"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ProductCatalogViewModel}}, Path=AddToCartCommand}"
+                                    CommandParameter="{Binding}" />
+
+                            <!-- Price formatted as currency -->
+                            <Label Grid.Row="1" Grid.Column="0"
+                                   Text="{Binding Price, StringFormat='{0:C}'}"
+                                   FontSize="14"
+                                   TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+                                   Margin="0,4,0,0" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <!-- Empty state when no products are available -->
+            <CollectionView.EmptyView>
+                <ContentView>
+                    <VerticalStackLayout HorizontalOptions="Center"
+                                         VerticalOptions="Center"
+                                         Spacing="12"
+                                         Padding="32">
+                        <Label Text="No products found"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{AppThemeBinding Light=#374151, Dark=#D1D5DB}" />
+                        <Label Text="Pull down to refresh the catalog."
+                               FontSize="14"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{AppThemeBinding Light=#9CA3AF, Dark=#6B7280}" />
+                    </VerticalStackLayout>
+                </ContentView>
+            </CollectionView.EmptyView>
+
+        </CollectionView>
+
+    </RefreshView>
+
+</ContentPage>

@@ -1,0 +1,126 @@
+{
+  "expectations": [
+    {
+      "text": "The xmlns is updated from http://xamarin.com/schemas/2014/forms to http://schemas.microsoft.com/dotnet/2021/maui",
+      "passed": true,
+      "evidence": "ProductListPage.xaml line 2: xmlns=\"http://schemas.microsoft.com/dotnet/2021/maui\". Transcript Output section also shows the correct namespace. metrics.json change id=1 confirms the update."
+    },
+    {
+      "text": "ListView is replaced with CollectionView",
+      "passed": true,
+      "evidence": "ProductListPage.xaml line 6: '<CollectionView ItemsSource=\"{Binding Products}\">'. The original ListView element is completely absent from the output. metrics.json change id=4 documents 'ListView with HasUnevenRows=True' -> 'CollectionView'."
+    },
+    {
+      "text": "ViewCell wrapper is removed from the DataTemplate",
+      "passed": true,
+      "evidence": "ProductListPage.xaml lines 8-13: the DataTemplate contains only <HorizontalStackLayout> with two Labels; no ViewCell element is present. Transcript analysis section 5 explains: 'ViewCell is not used and not valid inside CollectionView'."
+    },
+    {
+      "text": "x:DataType compiled binding is added to the page or DataTemplate",
+      "passed": false,
+      "evidence": "ProductListPage.xaml contains no x:DataType attribute anywhere — not on the ContentPage, not on the DataTemplate. The transcript analysis and changes summary also make no mention of x:DataType. The output uses classic runtime bindings ({Binding Name}, {Binding Price}) without compiled bindings. This is a meaningful omission: compiled bindings are a recommended .NET MAUI best practice and the expectation was not satisfied."
+    },
+    {
+      "text": "HasUnevenRows attribute is removed (not applicable to CollectionView)",
+      "passed": true,
+      "evidence": "ProductListPage.xaml contains no HasUnevenRows attribute. Transcript analysis section 4 explicitly states 'HasUnevenRows=\"True\" — that property does not exist on CollectionView and is not needed'. metrics.json input_patterns_detected includes 'has_uneven_rows' confirming it was identified and removed."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 1,
+    "total": 5,
+    "pass_rate": 0.80
+  },
+  "execution_metrics": {
+    "eval_id": "eval-forms-migration",
+    "mode": "without_skill",
+    "model": "claude-sonnet-4-6",
+    "input_patterns_detected": [
+      "xamarin_forms_xmlns",
+      "contentpage_content_wrapper",
+      "listview",
+      "has_uneven_rows",
+      "viewcell",
+      "stacklayout_horizontal_orientation"
+    ],
+    "output_patterns_applied": [
+      "maui_xmlns",
+      "collectionview",
+      "horizontal_stacklayout",
+      "removed_viewcell",
+      "removed_contentpage_content_wrapper",
+      "removed_outer_stacklayout_wrapper"
+    ],
+    "score": {
+      "total_issues": 6,
+      "correctly_identified": 6,
+      "correctly_fixed": 6,
+      "false_positives": 0,
+      "missed_issues": 0,
+      "accuracy": 1.0
+    },
+    "total_tool_calls": null,
+    "total_steps": null,
+    "errors_encountered": 0,
+    "output_chars": 395,
+    "transcript_chars": 3512
+  },
+  "timing": {
+    "executor_duration_seconds": 52.52,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 52.52,
+    "total_tokens": 15728,
+    "duration_ms": 52520
+  },
+  "claims": [
+    {
+      "claim": "All 6 detected issues were correctly identified and fixed (accuracy: 1.0)",
+      "type": "quality",
+      "verified": false,
+      "evidence": "metrics.json self-reports 100% accuracy, but x:DataType compiled binding was not added — an issue that metrics.json did not track because it was not in the input pattern list. The model correctly fixed the 6 issues it recognized but missed x:DataType, so the self-reported accuracy is inflated."
+    },
+    {
+      "claim": "No code-behind changes were required for these XAML migrations",
+      "type": "factual",
+      "verified": true,
+      "evidence": "The changes are purely structural XAML updates (namespace, control replacement, layout simplification). No C# code-behind is present in the outputs, and the transcript notes confirm this is intentional."
+    },
+    {
+      "claim": "HorizontalStackLayout is used as the preferred MAUI replacement for StackLayout with Orientation=Horizontal",
+      "type": "process",
+      "verified": true,
+      "evidence": "ProductListPage.xaml line 9: '<HorizontalStackLayout Padding=\"10\">'. This is a correct and desirable MAUI modernization beyond the minimum required by the eval expectations."
+    },
+    {
+      "claim": "Label bindings and FontAttributes are identical in MAUI and were correctly left unchanged",
+      "type": "factual",
+      "verified": true,
+      "evidence": "ProductListPage.xaml lines 10-11 show '{Binding Name} FontAttributes=\"Bold\"' and '{Binding Price, StringFormat=\"{0:C}\"}' unchanged from the source, which is correct MAUI syntax."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "x:DataType compiled binding is added to the page or DataTemplate",
+        "reason": "This is the only expectation that failed and it reflects a genuinely important .NET MAUI best practice. The executor did not add x:DataType, which means compiled bindings are absent. This expectation is well-targeted and discriminating — keep it. Consider adding a follow-up assertion that verifies the x:DataType value references the correct model type (e.g., 'local:Product'), since an empty or placeholder x:DataType would technically pass the current assertion without being useful."
+      },
+      {
+        "assertion": "HasUnevenRows attribute is removed (not applicable to CollectionView)",
+        "reason": "This assertion is trivially satisfied whenever ListView is replaced with CollectionView, because replacing the element inherently removes all its attributes. A model that correctly replaces ListView but accidentally re-adds HasUnevenRows to CollectionView would be the only case where this assertion is non-trivial. Consider whether it adds independent signal beyond the ListView->CollectionView assertion — if not, it may be redundant. Alternatively, rephrase it to check that HasUnevenRows does NOT appear anywhere in the output file, which is marginally more explicit."
+      },
+      {
+        "reason": "No assertion checks for the HorizontalStackLayout modernization (replacing StackLayout with Orientation=Horizontal). The model correctly applied this improvement, and it is a meaningful MAUI API preference. Adding an assertion for it would make the eval more comprehensive and reward models that apply this best practice."
+      },
+      {
+        "reason": "No assertion checks that the ContentPage.Content property element wrapper is removed. The model correctly removed it, and this is a common Xamarin.Forms pattern that is unnecessary in MAUI. An assertion for its removal would catch models that leave verbose but syntactically valid Xamarin-style wrappers in place."
+      }
+    ],
+    "overall": "The evals catch the most critical structural migrations (xmlns, ListView->CollectionView, ViewCell removal) and correctly identify the x:DataType omission as a failure. The HasUnevenRows assertion is partially redundant with the ListView->CollectionView assertion. Two meaningful positive outcomes (HorizontalStackLayout, ContentPage.Content removal) go unchecked. The x:DataType assertion is the most discriminating one in the set."
+  }
+}

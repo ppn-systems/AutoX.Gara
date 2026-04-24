@@ -25,6 +25,8 @@ Precise attribute docs reduce handler-registration errors and avoid policy misun
 - `src/Nalix.Common/Networking/Packets/PacketConcurrencyLimitAttribute.cs`
 - `src/Nalix.Common/Networking/Packets/PacketEncryptionAttribute.cs`
 - `src/Nalix.Common/Networking/Packets/PacketTimeoutAttribute.cs`
+- `src/Nalix.Common/Networking/Packets/PacketTransportAttribute.cs`
+- `src/Nalix.Common/Networking/NetworkTransport.cs`
 
 ## Attribute Reference
 
@@ -37,6 +39,7 @@ Precise attribute docs reduce handler-registration errors and avoid policy misun
 | `PacketConcurrencyLimitAttribute` | Method | Declares concurrency/queue limits. |
 | `PacketEncryptionAttribute` | Method | Declares encryption requirement and algorithm hint. |
 | `PacketTimeoutAttribute` | Method | Declares handler timeout budget (ms). |
+| `PacketTransportAttribute` | Method | Declares preferred transport protocol (`TCP` or `UDP`). |
 
 ## Why Attributes Exist
 
@@ -58,6 +61,7 @@ public sealed class SecureChatController
     [PacketConcurrencyLimit(100, queue: true, queueMax: 1000)]
     [PacketEncryption(true)]
     [PacketTimeout(5000)]
+    [PacketTransport(NetworkTransport.UDP)]
     public static ValueTask HandleAsync(IPacketContext<ChatPacket> context)
     {
         // Application logic here
@@ -66,7 +70,7 @@ public sealed class SecureChatController
 }
 ```
 
-For a comprehensive walkthrough of handler implementation, including error handling and registration, see the [Implementing Packet Handlers](../../../guides/implementing-packet-handlers.md) guide.
+For a comprehensive walkthrough of handler implementation, including error handling and registration, see the [Implementing Packet Handlers](../../../guides/application/packet-handlers.md) guide.
 
 ## Best Practices
 

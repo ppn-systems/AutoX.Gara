@@ -54,6 +54,11 @@ public class AuditInterceptor : SaveChangesInterceptor
             {
                 entry.State = EntityState.Modified;
                 entry.Entity.DeletedAt = now;
+
+                if (entry.Entity is IAuditEntity auditEntity)
+                {
+                    auditEntity.UpdatedAt = now;
+                }
             }
         }
     }

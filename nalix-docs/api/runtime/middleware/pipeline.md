@@ -1,36 +1,11 @@
 # Middleware Pipeline
 
-Nalix.Network has two middleware layers:
-
-- buffer middleware before deserialization
-- packet middleware around handler execution
+The Nalix runtime supports high-performance packet middleware that executes around handler execution, allowing for cross-cutting concerns like security, throttling, and observability.
 
 ## Source mapping
 
-- `src/Nalix.Runtime/Middleware/NetworkBufferMiddlewarePipeline.cs`
-- `src/Nalix.Common/Middleware/INetworkBufferMiddleware.cs`
 - `src/Nalix.Runtime/Middleware/MiddlewarePipeline.cs`
 - `src/Nalix.Common/Middleware/IPacketMiddleware.cs`
-
-## Buffer middleware
-
-Buffer middleware works on raw `IBufferLease` data before a packet exists.
-
-Use it for:
-
-- decryption
-- decompression
-- low-level validation
-- early frame rejection
-
-Contract:
-
-```csharp
-ValueTask<IBufferLease?> InvokeAsync(
-    IBufferLease buffer,
-    IConnection connection,
-    CancellationToken ct)
-```
 
 ## Packet middleware
 
@@ -86,10 +61,10 @@ Middlewares often need to inspect packet headers for auditing, routing, or secur
 | Field | Type | Purpose |
 | :--- | :--- | :--- |
 | `OpCode` | `ushort` | Identifies the handler/message type. |
-| `SequenceId`| `uint` | Used for request/reply correlation. |
-| `Flags` | `PacketFlags` | Metadata like `IsResponse`, `IsEncrypted`, or `IsCompressed`. |
-| `Priority` | `PacketPriority` | Dispatcher hint (Base, Priority, Urgent). |
-| `Protocol` | `ProtocolType` | Transport layer (TCP/UDP/None). |
+| `SequenceId`| `ushort` | Used for request/reply correlation. |
+| `Flags` | `PacketFlags` | Metadata like `RELIABLE`, `SYSTEM`, or `COMPRESSED`. |
+| `Priority` | `PacketPriority` | Dispatcher hint (`NONE`, `LOW`, `MEDIUM`, `HIGH`, `URGENT`). |
+| `IsReliable` | `bool` | Indicates if the transport provides reliability (TCP). |
 | `Length` | `int` | Total wire size of the packet. |
 | `MagicNumber`| `uint` | Unique type identity hash. |
 
@@ -103,16 +78,15 @@ using Microsoft.Extensions.Logging;
 using Nalix.Common.Middleware;
 using Nalix.Common.Networking.Packets;
 
-public sealed class AuditMiddleware : IPacketMiddleware
+public sealed class AuditMiddleware : IPacketMiddleware<IPacket>
 {
     private readonly ILogger _logger;
 
     public AuditMiddleware(ILogger logger) => _logger = logger;
 
-    public async ValueTask InvokeAsync<TPacket>(
-        IPacketContext<TPacket> context, 
-        Func<CancellationToken, ValueTask> next) 
-        where TPacket : IPacket
+    public async ValueTask InvokeAsync(
+        IPacketContext<IPacket> context,
+        Func<CancellationToken, ValueTask> next)
     {
         var packet = context.Packet;
         
@@ -138,7 +112,7 @@ public sealed class AuditMiddleware : IPacketMiddleware
 
 ```text
 socket buffer
-  -> buffer middleware
+  -> translate IBufferLease
   -> deserialize packet
   -> packet middleware
   -> handler
@@ -151,13 +125,11 @@ socket buffer
 using Nalix.Runtime.Dispatching;
 using Nalix.Network.Hosting;
 
-options.NetworkPipeline.Use(new SampleAuditBufferMiddleware());
-options.PacketPipeline.Use(new SampleAuditMiddleware());
+options.WithMiddleware(new SampleAuditMiddleware());
 ```
 
 ## Related APIs
 
-- [Network Buffer Pipeline](./network-buffer-pipeline.md)
 - [Connection Limiter](../../network/connection/connection-limiter.md)
 - [Concurrency Gate](./concurrency-gate.md)
 - [Policy Rate Limiter](./policy-rate-limiter.md)

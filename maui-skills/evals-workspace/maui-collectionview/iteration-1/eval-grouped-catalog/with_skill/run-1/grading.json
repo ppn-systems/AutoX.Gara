@@ -1,0 +1,137 @@
+{
+  "expectations": [
+    {
+      "text": "CollectionView has IsGrouped='True'",
+      "passed": true,
+      "evidence": "ProductCatalogPage.xaml line 14: <CollectionView ItemsSource=\"{Binding ProductGroups}\" IsGrouped=\"True\">"
+    },
+    {
+      "text": "GroupHeaderTemplate shows category name and item count",
+      "passed": true,
+      "evidence": "ProductCatalogPage.xaml lines 17-47: GroupHeaderTemplate DataTemplate binds CategoryName (line 28: Text=\"{Binding CategoryName}\") and ItemCount with StringFormat (line 41: Text=\"{Binding ItemCount, StringFormat='{0} items'}\"). ProductGroup.cs exposes both properties: CategoryName (string) and ItemCount (int, computed as Count)."
+    },
+    {
+      "text": "Price is formatted as currency (StringFormat with C, or similar currency formatting)",
+      "passed": true,
+      "evidence": "ProductCatalogPage.xaml line 87: Text=\"{Binding Price, StringFormat='{0:C}'}\" \u2014 uses the standard .NET currency format specifier C which formats as locale currency."
+    },
+    {
+      "text": "An 'Add to Cart' button has a Command binding",
+      "passed": true,
+      "evidence": "ProductCatalogPage.xaml lines 74-83: Button with Text=\"Add to Cart\" and Command=\"{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ProductCatalogViewModel}}, Path=AddToCartCommand}\" and CommandParameter=\"{Binding}\". ProductCatalogViewModel.cs line 38: AddToCartCommand = new Command<Product>(OnAddToCart)."
+    },
+    {
+      "text": "Pull-to-refresh is implemented via RefreshView or IsBusy pattern",
+      "passed": true,
+      "evidence": "ProductCatalogPage.xaml lines 10-11: <RefreshView IsRefreshing=\"{Binding IsRefreshing}\" Command=\"{Binding RefreshCommand}\"> wrapping the CollectionView. ViewModel has IsRefreshing bool property (lines 22-30) and RefreshCommand (line 37) that calls LoadCatalogAsync and resets IsRefreshing in a finally block (line 68)."
+    },
+    {
+      "text": "CollectionView has an EmptyView defined for the no-results state",
+      "passed": true,
+      "evidence": "ProductCatalogPage.xaml lines 97-114: <CollectionView.EmptyView> containing a <ContentView> wrapping a VerticalStackLayout with Labels: 'No products found' (FontSize=18, Bold) and 'Pull down to refresh the catalog.'"
+    },
+    {
+      "text": "ViewModel uses a grouped collection structure (ObservableCollection of group objects)",
+      "passed": true,
+      "evidence": "ProductCatalogViewModel.cs lines 9 and 12-19: private ObservableCollection<ProductGroup> _productGroups and public ObservableCollection<ProductGroup> ProductGroups property. ProductGroup inherits List<Product> (ProductGroup.cs line 3), satisfying MAUI's grouping requirement. LoadCatalogAsync groups products using LINQ GroupBy and wraps results in new ObservableCollection<ProductGroup>."
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "eval_id": "eval-grouped-catalog",
+    "variant": "with_skill",
+    "skill": "maui-collectionview",
+    "requirements_met_count": 8,
+    "requirements_total": 8,
+    "requirements_score": 1.0,
+    "skill_rules_applied_count": 10,
+    "skill_rules_total": 10,
+    "skill_compliance_score": 1.0,
+    "output_files": [
+      "Product.cs",
+      "ProductGroup.cs",
+      "ProductCatalogViewModel.cs",
+      "ProductCatalogPage.xaml",
+      "ProductCatalogPage.xaml.cs",
+      "transcript.md",
+      "metrics.json"
+    ],
+    "output_chars": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 114.677,
+    "total_duration_seconds": 114.7,
+    "total_tokens": 23787
+  },
+  "claims": [
+    {
+      "claim": "x:DataType is set on every DataTemplate for compiled bindings",
+      "type": "factual",
+      "verified": true,
+      "evidence": "ProductCatalogPage.xaml: ContentPage has x:DataType=\"viewmodels:ProductCatalogViewModel\" (line 7). GroupHeaderTemplate DataTemplate has x:DataType=\"models:ProductGroup\" (line 18). ItemTemplate DataTemplate has x:DataType=\"models:Product\" (line 51). All three DataTemplates are typed."
+    },
+    {
+      "claim": "EmptyView custom content is wrapped in ContentView per skill gotcha",
+      "type": "process",
+      "verified": true,
+      "evidence": "ProductCatalogPage.xaml lines 97-114: EmptyView contains <ContentView> as the direct child, wrapping the VerticalStackLayout inside it."
+    },
+    {
+      "claim": "IsRefreshing is reset to false in a finally block to ensure it clears on error",
+      "type": "quality",
+      "verified": true,
+      "evidence": "ProductCatalogViewModel.cs lines 66-69: finally { IsRefreshing = false; } \u2014 guarantees reset even when an exception occurs during LoadCatalogAsync."
+    },
+    {
+      "claim": "MainThread.BeginInvokeOnMainThread used when updating ProductGroups after async work",
+      "type": "process",
+      "verified": true,
+      "evidence": "ProductCatalogViewModel.cs lines 61-64: MainThread.BeginInvokeOnMainThread(() => { ProductGroups = new ObservableCollection<ProductGroup>(groups); }); \u2014 collection is updated on the UI thread after the async Task.Delay."
+    },
+    {
+      "claim": "RelativeSource AncestorType used for AddToCartCommand binding inside item DataTemplate",
+      "type": "process",
+      "verified": true,
+      "evidence": "ProductCatalogPage.xaml line 82: Command=\"{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ProductCatalogViewModel}}, Path=AddToCartCommand}\" \u2014 correctly reaches ViewModel command from inside x:DataType=\"models:Product\" DataTemplate."
+    },
+    {
+      "claim": "Sample data covers four categories",
+      "type": "factual",
+      "verified": true,
+      "evidence": "ProductCatalogViewModel.cs GetSampleProducts() returns 12 products across four distinct Category values: Electronics (4), Footwear (3), Clothing (3), Kitchen (2)."
+    },
+    {
+      "claim": "No third-party dependencies; INotifyPropertyChanged implemented manually",
+      "type": "quality",
+      "verified": true,
+      "evidence": "ProductCatalogViewModel.cs: implements INotifyPropertyChanged directly (lines 100-103), uses System.Windows.Input.ICommand and Microsoft.Maui.Controls.Command \u2014 no CommunityToolkit.Mvvm or other packages referenced."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "ViewModel uses a grouped collection structure (ObservableCollection of group objects)",
+        "reason": "The assertion would also pass for an ObservableCollection<List<Product>> that doesn't inherit from List<T> \u2014 MAUI's CollectionView grouping specifically requires the group type to inherit from List<T> (or IList<T>). Consider tightening to 'ViewModel uses ObservableCollection of group objects where each group class inherits from List<T>'."
+      },
+      {
+        "assertion": null,
+        "reason": "No assertion checks that RelativeSource AncestorType is used inside the item DataTemplate for the command binding. This is a known MAUI gotcha (commands inside DataTemplates can't bind directly to the ViewModel context), and the skill explicitly addresses it. It's an important correctness constraint that goes unverified by the current expectations."
+      },
+      {
+        "assertion": null,
+        "reason": "No assertion checks that x:DataType is applied to every DataTemplate, yet this is required for compiled bindings and is a primary skill rule. The current expectations omit this entirely, meaning an output with slow/broken runtime bindings could pass all seven assertions."
+      }
+    ],
+    "overall": "All seven assertions target meaningful behaviors and the outputs satisfy them with genuine, verifiable implementations. The main gap is that cross-cutting concerns from the skill (RelativeSource for commands, x:DataType on all DataTemplates, and the List<T> inheritance requirement for groups) are not explicitly asserted, even though they are the most MAUI-specific correctness requirements the skill is designed to enforce."
+  }
+}

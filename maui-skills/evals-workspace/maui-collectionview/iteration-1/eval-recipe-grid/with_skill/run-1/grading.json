@@ -1,0 +1,139 @@
+{
+  "expectations": [
+    {
+      "text": "CollectionView uses a 2-column GridItemsLayout (Span=2 or Columns=2)",
+      "passed": true,
+      "evidence": "RecipesPage.xaml lines 16-21: '<GridItemsLayout Orientation=\"Vertical\" Span=\"2\" VerticalItemSpacing=\"12\" HorizontalItemSpacing=\"12\" />'"
+    },
+    {
+      "text": "DataTemplate includes an Image element bound to a photo or image source property",
+      "passed": true,
+      "evidence": "RecipesPage.xaml lines 45-52: '<Image Grid.Row=\"0\" Source=\"{Binding PhotoUrl}\" Aspect=\"AspectFill\" HeightRequest=\"160\">' \u2014 binds to PhotoUrl property on Recipe model"
+    },
+    {
+      "text": "DataTemplate includes a Label bound to recipe Name and a Label bound to prep time",
+      "passed": true,
+      "evidence": "RecipesPage.xaml line 72: '<Label Grid.Row=\"1\" Text=\"{Binding Name}\" .../>' and line 80: '<Label Grid.Row=\"2\" Text=\"{Binding PrepTime, StringFormat=\\'Prep: {0}\\'}\" .../>'"
+    },
+    {
+      "text": "CollectionView has SelectionMode set to Single",
+      "passed": true,
+      "evidence": "RecipesPage.xaml line 11: 'SelectionMode=\"Single\"' on the CollectionView element"
+    },
+    {
+      "text": "ViewModel has a SelectedRecipe or SelectedItem property of the Recipe type with INotifyPropertyChanged",
+      "passed": true,
+      "evidence": "RecipesViewModel.cs lines 23-34: 'public Recipe? SelectedRecipe { get => _selectedRecipe; set { if (_selectedRecipe != value) { _selectedRecipe = value; OnPropertyChanged(); } } }' \u2014 typed as Recipe?, calls OnPropertyChanged(), class inherits BindableObject which provides INotifyPropertyChanged"
+    },
+    {
+      "text": "x:DataType compiled bindings are used on the page and/or DataTemplate",
+      "passed": true,
+      "evidence": "RecipesPage.xaml line 7: 'x:DataType=\"viewmodels:RecipesViewModel\"' on ContentPage, and line 24: 'x:DataType=\"models:Recipe\"' on DataTemplate \u2014 compiled bindings applied at both levels"
+    },
+    {
+      "text": "ViewModel uses ObservableCollection<Recipe> for the items source",
+      "passed": true,
+      "evidence": "RecipesViewModel.cs line 11: 'public ObservableCollection<Recipe> Recipes { get; } = new ObservableCollection<Recipe> { ... }' with 8 seeded items"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 1,
+      "Bash": 2,
+      "Write": 6
+    },
+    "total_tool_calls": 7,
+    "total_steps": 9,
+    "errors_encountered": 0,
+    "files_created": 6,
+    "transcript_chars": 3200,
+    "output_chars": 0
+  },
+  "timing": {
+    "total_tokens": 21890,
+    "duration_ms": 83494,
+    "total_duration_seconds": 83.5
+  },
+  "claims": [
+    {
+      "claim": "Used GridItemsLayout with Span=2 for 2-column grid",
+      "type": "factual",
+      "verified": true,
+      "evidence": "RecipesPage.xaml confirms GridItemsLayout with Span=\"2\""
+    },
+    {
+      "claim": "Set x:DataType on DataTemplate for compiled bindings",
+      "type": "process",
+      "verified": true,
+      "evidence": "Both ContentPage (x:DataType=\"viewmodels:RecipesViewModel\") and DataTemplate (x:DataType=\"models:Recipe\") have compiled bindings set"
+    },
+    {
+      "claim": "Used SelectionMode=Single with SelectedItem TwoWay binding",
+      "type": "factual",
+      "verified": true,
+      "evidence": "RecipesPage.xaml: SelectionMode=\"Single\" and SelectedItem=\"{Binding SelectedRecipe, Mode=TwoWay}\" confirmed"
+    },
+    {
+      "claim": "VisualStateManager Selected state applied on template root Grid",
+      "type": "factual",
+      "verified": true,
+      "evidence": "RecipesPage.xaml lines 28-42 show VisualStateManager with Normal and Selected states targeting BackgroundColor on the root Grid"
+    },
+    {
+      "claim": "ObservableCollection<T> used for ItemsSource",
+      "type": "factual",
+      "verified": true,
+      "evidence": "RecipesViewModel.cs line 11 shows ObservableCollection<Recipe> with 8 seeded items"
+    },
+    {
+      "claim": "ViewCell was not used as template root",
+      "type": "process",
+      "verified": true,
+      "evidence": "DataTemplate root in RecipesPage.xaml is a Grid, not ViewCell"
+    },
+    {
+      "claim": "EmptyView custom content wrapped in ContentView",
+      "type": "process",
+      "verified": true,
+      "evidence": "RecipesPage.xaml lines 88-99 show CollectionView.EmptyView containing a ContentView wrapping a VerticalStackLayout"
+    },
+    {
+      "claim": "8 sample recipe items seeded in ViewModel",
+      "type": "factual",
+      "verified": true,
+      "evidence": "RecipesViewModel.cs initializer contains exactly 8 Recipe objects with Name, PhotoUrl, and PrepTime populated"
+    },
+    {
+      "claim": "SelectionChangedCommand wired to ViewModel ICommand",
+      "type": "factual",
+      "verified": true,
+      "evidence": "RecipesPage.xaml line 13: SelectionChangedCommand=\"{Binding RecipeSelectedCommand}\" and RecipesViewModel.cs line 36 exposes 'public ICommand RecipeSelectedCommand { get; }'"
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "ViewModel has a SelectedRecipe or SelectedItem property of the Recipe type with INotifyPropertyChanged",
+        "reason": "The assertion is satisfied here via BindableObject.OnPropertyChanged() rather than a direct INotifyPropertyChanged implementation. This is correct MAUI practice, but the assertion wording ('with INotifyPropertyChanged') could lead a grader to fail a technically valid implementation that uses BindableObject or CommunityToolkit.Mvvm ObservableProperty. Consider phrasing as 'raises property change notification (via INotifyPropertyChanged or OnPropertyChanged)' to avoid ambiguity."
+      },
+      {
+        "reason": "No assertion checks that SelectedItem is bound TwoWay to the SelectedRecipe property, which is the most common gotcha when wiring CollectionView selection. A one-way binding silently breaks the selection-state round-trip. This is important enough to add as a separate expectation."
+      },
+      {
+        "reason": "No assertion verifies that the VisualStateManager 'Selected' state is present on the DataTemplate root, which is the correct way to highlight selected items without relying on broken platform default selection colors. The skill explicitly calls this out as a key pattern; the evals should check it."
+      }
+    ],
+    "overall": "All 7 expectations pass with strong, verifiable evidence directly in the output files. The evals cover the core structural requirements well. The main gaps are: TwoWay binding on SelectedItem is not checked, and VisualStateManager Selected-state highlighting (a key skill pattern) has no assertion."
+  }
+}

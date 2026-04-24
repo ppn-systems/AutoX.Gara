@@ -1,4 +1,11 @@
 using AutoX.Gara.Backend.Transport.Auth;
+using AutoX.Gara.Backend.Transport.Customers;
+using AutoX.Gara.Backend.Transport.Financial;
+using AutoX.Gara.Backend.Transport.Identity;
+using AutoX.Gara.Backend.Transport.Inventory;
+using AutoX.Gara.Backend.Transport.Repairs;
+using AutoX.Gara.Backend.Transport.Suppliers;
+using AutoX.Gara.Backend.Transport.Vehicles;
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Billings;
 using AutoX.Gara.Application.Customers;
@@ -45,12 +52,39 @@ public static class Startup
         // 3. Build Network Application with Hosting API (v12.1.0)
         var packetRegistry = InstanceManager.Instance.GetExistingInstance<IPacketRegistry>()
             ?? throw new InvalidOperationException("IPacketRegistry is not registered. Ensure AppConfig.Register() is called before Startup.Configure().");
+        var inst = InstanceManager.Instance;
 
         return NetworkApplication.CreateBuilder()
             .ConfigureLogging(logger)
             .ConfigurePacketRegistry(packetRegistry)
             .ConfigureDispatch(options => options.WithLogging(logger))
-            .AddHandlers<AccountHandler>()
+            .AddHandler<AccountHandler>(() => new AccountHandler(
+                ResolveRequired<AccountAppService>(inst),
+                ResolveRequired<IDataSessionFactory>(inst)))
+            .AddHandler<CustomerHandler>(() => new CustomerHandler(
+                ResolveRequired<CustomerAppService>(inst)))
+            .AddHandler<EmployeeHandler>(() => new EmployeeHandler(
+                ResolveRequired<EmployeeAppService>(inst)))
+            .AddHandler<EmployeeSalaryHandler>(() => new EmployeeSalaryHandler(
+                ResolveRequired<EmployeeSalaryAppService>(inst)))
+            .AddHandler<PartHandler>(() => new PartHandler(
+                ResolveRequired<PartAppService>(inst)))
+            .AddHandler<SupplierHandler>(() => new SupplierHandler(
+                ResolveRequired<SupplierAppService>(inst)))
+            .AddHandler<VehicleHandler>(() => new VehicleHandler(
+                ResolveRequired<VehicleAppService>(inst)))
+            .AddHandler<InvoiceHandler>(() => new InvoiceHandler(
+                ResolveRequired<InvoiceAppService>(inst)))
+            .AddHandler<TransactionHandler>(() => new TransactionHandler(
+                ResolveRequired<TransactionAppService>(inst)))
+            .AddHandler<ServiceItemHandler>(() => new ServiceItemHandler(
+                ResolveRequired<ServiceItemAppService>(inst)))
+            .AddHandler<RepairOrderHandler>(() => new RepairOrderHandler(
+                ResolveRequired<RepairOrderAppService>(inst)))
+            .AddHandler<RepairOrderItemHandler>(() => new RepairOrderItemHandler(
+                ResolveRequired<RepairOrderItemAppService>(inst)))
+            .AddHandler<RepairTaskHandler>(() => new RepairTaskHandler(
+                ResolveRequired<RepairTaskAppService>(inst)))
             .AddTcp<AutoXProtocol>(57206)
             .Build();
     }
@@ -74,6 +108,11 @@ public static class Startup
     }
 
     public static ILogger CreateBootstrapLogger() => new NLogix(cfg => cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = true)));
+
+    private static T ResolveRequired<T>(InstanceManager inst)
+        where T : class
+        => inst.GetExistingInstance<T>()
+        ?? throw new InvalidOperationException($"Service '{typeof(T).FullName}' is not registered in InstanceManager.");
 }
 
 

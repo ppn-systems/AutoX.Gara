@@ -4,6 +4,7 @@ using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Validation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using System;
@@ -39,6 +40,16 @@ public sealed class SupplierAppService(IDataSessionFactory dataSessionFactory, I
             return ServiceResult<Supplier>.Failure("Tên nhà cung cấp không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
         }
 
+        if (!SupplierValidation.IsValidTaxCode(supplier.TaxCode))
+        {
+            return ServiceResult<Supplier>.Failure("Mã số thuế nhà cung cấp không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (!SupplierValidation.IsValidDates(supplier.ContractStartDate, supplier.ContractEndDate))
+        {
+            return ServiceResult<Supplier>.Failure("Thời hạn hợp đồng không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -61,6 +72,21 @@ public sealed class SupplierAppService(IDataSessionFactory dataSessionFactory, I
 
     public async Task<ServiceResult<Supplier>> UpdateAsync(Supplier supplier)
     {
+        if (!SupplierValidation.IsValidName(supplier.Name))
+        {
+            return ServiceResult<Supplier>.Failure("Tên nhà cung cấp không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (!SupplierValidation.IsValidTaxCode(supplier.TaxCode))
+        {
+            return ServiceResult<Supplier>.Failure("Mã số thuế nhà cung cấp không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (!SupplierValidation.IsValidDates(supplier.ContractStartDate, supplier.ContractEndDate))
+        {
+            return ServiceResult<Supplier>.Failure("Thời hạn hợp đồng không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -72,6 +98,18 @@ public sealed class SupplierAppService(IDataSessionFactory dataSessionFactory, I
                 return ServiceResult<Supplier>.Failure("Không tìm thấy nhà cung cấp.", ProtocolReason.NOT_FOUND);
             }
 
+            bool duplicateDetails = await session.Context.Set<Supplier>()
+                .AsNoTracking()
+                .AnyAsync(s => s.Id != supplier.Id
+                    && ((s.Name != null && s.Name == supplier.Name)
+                        || (s.Email != null && s.Email == supplier.Email)
+                        || (s.PhoneNumber != null && s.PhoneNumber == supplier.PhoneNumber)))
+                .ConfigureAwait(false);
+            if (duplicateDetails)
+            {
+                return ServiceResult<Supplier>.Failure("Thông tin nhà cung cấp bị trùng với bản ghi khác.", ProtocolReason.ALREADY_EXISTS);
+            }
+
             existing.Name = supplier.Name;
             existing.Email = supplier.Email;
             existing.PhoneNumber = supplier.PhoneNumber;
@@ -80,6 +118,11 @@ public sealed class SupplierAppService(IDataSessionFactory dataSessionFactory, I
             existing.ContactPerson = supplier.ContactPerson;
             existing.Notes = supplier.Notes;
             existing.IsActive = supplier.IsActive;
+            existing.ContractStartDate = supplier.ContractStartDate;
+            existing.ContractEndDate = supplier.ContractEndDate;
+            existing.PaymentTerms = supplier.PaymentTerms;
+            existing.Status = supplier.Status;
+            existing.BankAccount = supplier.BankAccount;
 
             repo.Update(existing);
             await repo.SaveChangesAsync().ConfigureAwait(false);

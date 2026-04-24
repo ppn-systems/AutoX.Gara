@@ -1,0 +1,129 @@
+{
+  "expectations": [
+    {
+      "text": "CollectionView displays messages from an ObservableCollection",
+      "passed": true,
+      "evidence": "ChatViewModel.cs line 14 declares 'public ObservableCollection<Message> Messages { get; } = new();'. ChatPage.xaml line 115 binds the CollectionView with 'ItemsSource=\"{Binding Messages}\"'. The connection is genuine and complete."
+    },
+    {
+      "text": "Message alignment differs by sender \u2014 right-aligned for current user, left-aligned for others",
+      "passed": true,
+      "evidence": "ChatPage.xaml uses two DataTriggers on a ContentView. When IsMe=true the Grid places a transparent BoxView in Column 0 and the Frame in Column 1 (pushing the bubble right). When IsMe=false the Frame is in Column 0 and the spacer is in Column 1 (keeping the bubble left). This is implemented directly in the XAML at lines 126-198."
+    },
+    {
+      "text": "Code calls CollectionView.ScrollTo() to scroll to the last message when new messages arrive",
+      "passed": true,
+      "evidence": "ChatPage.xaml.cs line 74: 'MessagesCollectionView.ScrollTo(lastMessage, position: ScrollToPosition.End, animate: true);' is called inside ScrollToBottom(). This method is invoked from both the CollectionChanged handler (line 60) and the ViewModel scroll delegate (line 31)."
+    },
+    {
+      "text": "A CollectionChanged or property-change handler triggers the scroll behavior",
+      "passed": true,
+      "evidence": "ChatPage.xaml.cs lines 35 and 53-61: '_viewModel.Messages.CollectionChanged += OnMessagesCollectionChanged;' subscribes in OnBindingContextChanged. OnMessagesCollectionChanged checks for NotifyCollectionChangedAction.Add and calls ScrollToBottom(). Additionally, the ViewModel calls _scrollToBottomAction?.Invoke() directly after Messages.Add() (ChatViewModel.cs lines 63-67 and 85-86)."
+    },
+    {
+      "text": "Message model has properties for content/text, a sender or IsFromMe flag, and optionally timestamp",
+      "passed": true,
+      "evidence": "Message.cs contains: 'public string Text { get; set; }' (content), 'public string SenderName { get; set; }' (sender), 'public bool IsMe { get; set; }' (IsFromMe flag), and 'public DateTime Timestamp { get; set; }' (timestamp). All required properties are present."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "eval_id": "eval-chat-scroll",
+    "variant": "without_skill",
+    "iteration": 1,
+    "model": "claude-sonnet-4-6",
+    "files_produced": [
+      "Message.cs",
+      "ChatViewModel.cs",
+      "ChatPage.xaml",
+      "ChatPage.xaml.cs",
+      "MauiProgram.cs",
+      "AppShell.xaml"
+    ],
+    "scroll_api_correct": true,
+    "main_thread_guard": true,
+    "observable_collection_used": true,
+    "total_tokens": 20981,
+    "output_chars": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 130.4,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 130.4,
+    "total_tokens": 20981
+  },
+  "claims": [
+    {
+      "claim": "CollectionView.ScrollTo(item, position: ScrollToPosition.End, animate: true) is used",
+      "type": "factual",
+      "verified": true,
+      "evidence": "ChatPage.xaml.cs line 74 contains exactly: 'MessagesCollectionView.ScrollTo(lastMessage, position: ScrollToPosition.End, animate: true);'"
+    },
+    {
+      "claim": "The ViewModel does not reference any MAUI types (fully unit-testable)",
+      "type": "quality",
+      "verified": true,
+      "evidence": "ChatViewModel.cs imports are System.Collections.ObjectModel, System.ComponentModel, System.Runtime.CompilerServices, System.Windows.Input, and ChatApp.Models \u2014 no Microsoft.Maui namespaces. Scroll is triggered via an Action delegate registered by the view."
+    },
+    {
+      "claim": "DataTrigger-based template switching avoids needing a separate DataTemplateSelector class",
+      "type": "process",
+      "verified": true,
+      "evidence": "ChatPage.xaml uses two DataTrigger blocks on a ContentView to swap Content based on IsMe. No DataTemplateSelector subclass file exists in outputs_dir."
+    },
+    {
+      "claim": "Frame is deprecated in .NET MAUI",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Frame was deprecated in .NET MAUI in favor of Border. ChatPage.xaml uses Frame throughout. The transcript and metrics.json both acknowledge this as a known minor issue."
+    },
+    {
+      "claim": "Initial scroll occurs in OnAppearing with a 100 ms delay",
+      "type": "factual",
+      "verified": true,
+      "evidence": "ChatPage.xaml.cs line 49: 'Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(100), ScrollToBottom);' is called in OnAppearing when Messages.Count > 0."
+    },
+    {
+      "claim": "Code compiles and runs correctly",
+      "type": "quality",
+      "verified": false,
+      "evidence": "metrics.json marks 'compiles: likely' and 'runs: likely' \u2014 not confirmed. The DataTrigger Setter.Value approach with complex nested XAML has been known to cause runtime issues in some MAUI versions, and Frame deprecation may produce warnings. Cannot verify without actually building the project."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [
+      "Frame is deprecated in .NET MAUI; should be replaced with Border + StrokeShape='RoundRectangle 16'",
+      "DataTrigger template switching creates two visual trees per cell; DataTemplateSelector is the idiomatic and more performant pattern",
+      "The 100 ms initial scroll delay is a heuristic workaround \u2014 a SizeChanged-based approach would be more robust"
+    ],
+    "workarounds": [
+      "DataTrigger used instead of DataTemplateSelector to keep all layout in XAML",
+      "100 ms Dispatcher.DispatchDelayed used in OnAppearing to work around layout-timing issues for initial scroll"
+    ]
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Code calls CollectionView.ScrollTo() to scroll to the last message when new messages arrive",
+        "reason": "This assertion passes even though the code uses a dual-trigger design (ViewModel delegate AND CollectionChanged). It would also pass for a naive implementation that only scrolls on one path. Consider splitting into two assertions: one for the explicit ScrollTo call and one for correctness of the trigger path (e.g., 'scroll is triggered from a CollectionChanged handler or equivalent observable notification')."
+      },
+      {
+        "reason": "No assertion checks that the code does NOT reference MAUI UI types from the ViewModel, which is a meaningful architectural outcome (testability). The implementation achieves this via an Action delegate pattern, but nothing in the eval would catch a failing implementation that couples the ViewModel directly to CollectionView."
+      },
+      {
+        "reason": "No assertion checks that ScrollTo is called on the main thread. The correct implementation wraps the call in MainThread.BeginInvokeOnMainThread. An incorrect implementation that calls ScrollTo from a background thread (e.g., in SimulateReplyAsync after Task.Delay) would pass all current assertions but crash at runtime."
+      },
+      {
+        "assertion": "Message alignment differs by sender \u2014 right-aligned for current user, left-aligned for others",
+        "reason": "This assertion passes with the DataTrigger approach, but a common incorrect implementation (e.g., a single template with HorizontalOptions set via a converter but no spacer column) might also loosely satisfy it. Consider specifying that separate layout structures exist for each alignment, or that a DataTemplateSelector or equivalent mechanism is used."
+      }
+    ],
+    "overall": "All five expectations are genuinely met by the produced code. The assertions are meaningful and not trivially satisfied. The gaps noted above relate to architectural correctness (main-thread safety, ViewModel decoupling) that the current assertions do not capture \u2014 these would be valuable additions, especially for a 'with skill' vs 'without skill' comparison where the skill might enforce stricter patterns."
+  }
+}

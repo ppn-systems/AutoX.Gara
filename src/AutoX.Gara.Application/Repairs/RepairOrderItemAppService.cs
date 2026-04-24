@@ -1,8 +1,11 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
+using AutoX.Gara.Domain.Entities.Inventory;
+using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using System;
@@ -33,9 +36,38 @@ public sealed class RepairOrderItemAppService(IDataSessionFactory dataSessionFac
 
     public async Task<ServiceResult<RepairOrderItem>> CreateAsync(RepairOrderItem item)
     {
+        if (item is null || item.RepairOrderId <= 0 || item.PartId <= 0)
+        {
+            return ServiceResult<RepairOrderItem>.Failure("Dữ liệu hạng mục không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        if (item.Quantity <= 0)
+        {
+            return ServiceResult<RepairOrderItem>.Failure("Số lượng phụ tùng phải lớn hơn 0.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
+
+            bool repairOrderExists = await session.Context.Set<RepairOrder>()
+                .AsNoTracking()
+                .AnyAsync(ro => ro.Id == item.RepairOrderId)
+                .ConfigureAwait(false);
+            if (!repairOrderExists)
+            {
+                return ServiceResult<RepairOrderItem>.Failure("Không tìm thấy lệnh sửa chữa.", ProtocolReason.NOT_FOUND);
+            }
+
+            bool partExists = await session.Context.Set<Part>()
+                .AsNoTracking()
+                .AnyAsync(p => p.Id == item.PartId)
+                .ConfigureAwait(false);
+            if (!partExists)
+            {
+                return ServiceResult<RepairOrderItem>.Failure("Không tìm thấy phụ tùng.", ProtocolReason.NOT_FOUND);
+            }
+
             await session.RepairOrderItems.AddAsync(item).ConfigureAwait(false);
             await session.RepairOrderItems.SaveChangesAsync().ConfigureAwait(false);
             return ServiceResult<RepairOrderItem>.Success(item);
@@ -49,6 +81,16 @@ public sealed class RepairOrderItemAppService(IDataSessionFactory dataSessionFac
 
     public async Task<ServiceResult<RepairOrderItem>> UpdateAsync(RepairOrderItem item)
     {
+        if (item is null || item.Id <= 0)
+        {
+            return ServiceResult<RepairOrderItem>.Failure("Dữ liệu hạng mục không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        if (item.Quantity <= 0)
+        {
+            return ServiceResult<RepairOrderItem>.Failure("Số lượng phụ tùng phải lớn hơn 0.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();

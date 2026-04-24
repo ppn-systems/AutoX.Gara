@@ -27,7 +27,7 @@ Consistent page shape helps operators quickly compare memory/throughput tuning k
 - Receive context pool (`ReceiveContextCapacity`, `ReceiveContextPreallocate`)
 - Timing wheel timeout task pool (`TimeoutTaskCapacity`, `TimeoutTaskPreallocate`)
 - Connect event context pool (`ConnectEventContextCapacity`, `ConnectEventContextPreallocate`)
-- Reserved process context pool (`TcpListenerContextCapacity`, `TcpListenerContextPreallocate`)
+- Packet context pool (`PacketContextCapacity`, `PacketContextPreallocate` — default increased to 32)
 
 ## Validation Notes
 
@@ -41,5 +41,5 @@ Consistent page shape helps operators quickly compare memory/throughput tuning k
 
 ## Related APIs
 
-- [Timing Wheel](../timing-wheel.md)
+- [Timing Wheel](../time/timing-wheel.md)
 - [TCP Listener](../tcp-listener.md)

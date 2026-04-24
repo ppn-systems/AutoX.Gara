@@ -12,7 +12,10 @@ If you're looking for the core interfaces and classes that drive Nalix:
 - :fontawesome-solid-network-wired: **TCP/UDP transport & protocols** → [Network API](./network/index.md)
 - :fontawesome-solid-mobile-screen: **Client sessions & requests** → [SDK API](./sdk/index.md)
 
-👉 **Important:** Most users should NOT start by reading the API reference. If you are new, follow the [Recommended Path](../index.md#recommended-path) or explore the [Guides](../guides/index.md) first.
+!!! warning "Important"
+    Most users should NOT start by reading the API reference.  
+    If you are new, follow the [Recommended Path](../index.md#recommended-path)  
+    or explore the [Guides](../guides/index.md) first.
 
 ## Source Mapping
 
@@ -60,12 +63,12 @@ This keeps server runtime internals, transport lifecycle, and client APIs indepe
 
 ## Suggested Architecture Diagrams
 
-- Dispatch sequence: `IBufferLease -> NetworkBufferMiddlewarePipeline -> IPacketRegistry -> PacketContext<TPacket> -> handler`.
+- Dispatch sequence: `IBufferLease -> IPacketRegistry -> PacketContext<TPacket> -> handler`.
 - Server layering: Listener (`Nalix.Network`) above runtime dispatch (`Nalix.Runtime`) and shared contracts (`Nalix.Common`).
 - Client-server handshake lifecycle using `Nalix.SDK.Transport.Extensions` + runtime handlers.
 
 ## Related Pages
 
 - [Package Overview](../packages/index.md)
-- [Architecture Concepts](../concepts/architecture.md)
-- [Packet Lifecycle](../concepts/packet-lifecycle.md)
+- [Architecture Concepts](../concepts/fundamentals/architecture.md)
+- [Packet Lifecycle](../concepts/fundamentals/packet-lifecycle.md)

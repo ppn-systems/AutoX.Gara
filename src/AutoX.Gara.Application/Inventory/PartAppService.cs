@@ -2,8 +2,10 @@
 
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Inventory;
+using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Validation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using System;
@@ -44,9 +46,23 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
             return ServiceResult<Part>.Failure("Giá bán không được nhỏ hơn giá nhập.", ProtocolReason.VALIDATION_FAILED);
         }
 
+        if (!PartValidation.IsValidQuantity(part.InventoryQuantity))
+        {
+            return ServiceResult<Part>.Failure("Số lượng tồn kho không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
+            bool supplierExists = await session.Context.Set<Supplier>()
+                .AsNoTracking()
+                .AnyAsync(s => s.Id == part.SupplierId)
+                .ConfigureAwait(false);
+            if (!supplierExists)
+            {
+                return ServiceResult<Part>.Failure("Không tìm thấy nhà cung cấp.", ProtocolReason.NOT_FOUND);
+            }
+
             if (await session.Parts.ExistsByPartCodeAsync(part.PartCode).ConfigureAwait(false))
             {
                 return ServiceResult<Part>.Failure("Mã phụ tùng đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
@@ -66,6 +82,21 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
 
     public async Task<ServiceResult<Part>> UpdateAsync(Part part)
     {
+        if (!PartValidation.IsValidName(part.PartName))
+        {
+            return ServiceResult<Part>.Failure("Tên phụ tùng không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (!PartValidation.IsValidPrice(part.PurchasePrice, part.SellingPrice))
+        {
+            return ServiceResult<Part>.Failure("Giá bán không được nhỏ hơn giá nhập.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (!PartValidation.IsValidQuantity(part.InventoryQuantity))
+        {
+            return ServiceResult<Part>.Failure("Số lượng tồn kho không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -75,7 +106,20 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
                 return ServiceResult<Part>.Failure("Không tìm thấy phụ tùng.", ProtocolReason.NOT_FOUND);
             }
 
+            if (existing.SupplierId != part.SupplierId)
+            {
+                bool supplierExists = await session.Context.Set<Supplier>()
+                    .AsNoTracking()
+                    .AnyAsync(s => s.Id == part.SupplierId)
+                    .ConfigureAwait(false);
+                if (!supplierExists)
+                {
+                    return ServiceResult<Part>.Failure("Không tìm thấy nhà cung cấp mới.", ProtocolReason.NOT_FOUND);
+                }
+            }
+
             existing.PartName = part.PartName;
+            existing.SupplierId = part.SupplierId;
             existing.Manufacturer = part.Manufacturer;
             existing.PartCategory = part.PartCategory;
             existing.PurchasePrice = part.PurchasePrice;

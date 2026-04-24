@@ -1,0 +1,14 @@
+{
+  "eval_id": 2,
+  "eval_name": "grouped-catalog",
+  "prompt": "My .NET MAUI e-commerce app needs a product catalog. Products should be grouped by category — each group needs a header showing the category name and item count. Individual items show product name, price formatted as currency, and an 'Add to Cart' button that fires a command. I also need pull-to-refresh to reload the catalog and an empty state message when there are no results.",
+  "assertions": [
+    "CollectionView has IsGrouped='True'",
+    "GroupHeaderTemplate shows category name and item count",
+    "Price is formatted as currency (StringFormat with C, or similar currency formatting)",
+    "An 'Add to Cart' button has a Command binding",
+    "Pull-to-refresh is implemented via RefreshView or IsBusy pattern",
+    "CollectionView has an EmptyView defined for the no-results state",
+    "ViewModel uses a grouped collection structure (ObservableCollection of group objects)"
+  ]
+}

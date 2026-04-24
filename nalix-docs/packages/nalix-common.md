@@ -14,14 +14,17 @@ flowchart LR
 ```
 
 ### Core contracts
+
 These contracts keep SDK and server code aligned.
 They cover both built-in packet types and custom packet types through the generic packet context model.
 
-**Key Components**
+`**Key Components**`
+
 - `IPacket`
 - `IConnection`
 - `PacketControllerAttribute`
 - `PacketOpcodeAttribute`
+- `PacketTransportAttribute`
 
 ### Quick example
 
@@ -30,6 +33,7 @@ They cover both built-in packet types and custom packet types through the generi
 public class SamplePingHandlers
 {
     [PacketOpcode(1)]
+    [PacketTransport(NetworkTransport.TCP)]
     public Control HandlePing(PacketContext<Control> request)
         => request.Packet;
 }
@@ -38,9 +42,11 @@ public class SamplePingHandlers
 Custom packet handlers are fully supported. `PacketContext<TPacket>` is the preferred shape when you need context, sender, or metadata access, while legacy `(TPacket, IConnection[, CancellationToken])` handlers remain available for compatibility.
 
 ### Metadata and attributes
+
 Metadata is built once during handler registration and later exposed through `PacketContext<TPacket>`.
 
-**Key Components**
+`**Key Components**`
+
 - `PacketMetadata`
 - `IPacketContext<TPacket>`
 
@@ -51,16 +57,18 @@ Metadata is built once during handler registration and later exposed through `Pa
 public Control HandlePing(PacketContext<Control> request) => request.Packet;
 ```
 
-### Middleware primitives
+### Middleware
+
 Middleware runs over packet contexts and can short-circuit outbound flows.
 The same middleware contracts work with custom packet types as long as the generic argument matches the handler pipeline.
 
-**Key Components**
+`**Key Components**`
+
 - `IPacketMiddleware<TPacket>`
 - `IPacketContext<TPacket>`
 - `IPacketSender<TPacket>`
 
-### Quick example
+### Quick example 
 
 ```csharp
 public sealed class SamplePacketMiddleware : IPacketMiddleware<IPacket>
@@ -77,11 +85,14 @@ public sealed class SamplePacketMiddleware : IPacketMiddleware<IPacket>
 Swap `IPacket` for a custom packet type when your middleware is bound to a custom handler pipeline.
 
 ### Shared enums
+
 Enums keep policies consistent across the stack.
 
-**Key Components**
+`**Key Components**`
+
 - `CipherSuiteType`
 - `DropPolicy`
+- `NetworkTransport`
 
 ## Key API pages
 

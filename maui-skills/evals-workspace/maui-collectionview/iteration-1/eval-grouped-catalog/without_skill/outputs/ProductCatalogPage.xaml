@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="ECommerce.Views.ProductCatalogPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:ECommerce.ViewModels"
+    xmlns:models="clr-namespace:ECommerce.Models"
+    x:DataType="vm:ProductCatalogViewModel"
+    Title="Product Catalog">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <BoolToObjectConverter
+                x:Key="InvertedBoolConverter"
+                TrueObject="False"
+                FalseObject="True" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.BindingContext>
+        <vm:ProductCatalogViewModel />
+    </ContentPage.BindingContext>
+
+    <Grid>
+
+        <!-- RefreshView wraps the CollectionView to enable pull-to-refresh -->
+        <RefreshView
+            Command="{Binding RefreshCommand}"
+            IsRefreshing="{Binding IsRefreshing}"
+            IsVisible="{Binding IsEmpty, Converter={StaticResource InvertedBoolConverter}}">
+
+            <CollectionView
+                ItemsSource="{Binding ProductGroups}"
+                IsGrouped="True">
+
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="1" />
+                </CollectionView.ItemsLayout>
+
+                <!-- Group header: category name + item count badge -->
+                <CollectionView.GroupHeaderTemplate>
+                    <DataTemplate x:DataType="models:ProductGroup">
+                        <Grid
+                            Padding="16,12,16,8"
+                            BackgroundColor="{AppThemeBinding Light=#F2F2F7, Dark=#2C2C2E}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Category name -->
+                            <Label
+                                Grid.Column="0"
+                                Text="{Binding CategoryName}"
+                                FontSize="16"
+                                FontAttributes="Bold"
+                                TextColor="{AppThemeBinding Light=#1C1C1E, Dark=#F2F2F7}"
+                                VerticalOptions="Center" />
+
+                            <!-- Item count badge -->
+                            <Border
+                                Grid.Column="1"
+                                BackgroundColor="{AppThemeBinding Light=#007AFF, Dark=#0A84FF}"
+                                VerticalOptions="Center"
+                                StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10" />
+                                </Border.StrokeShape>
+                                <Label
+                                    Text="{Binding ItemCount, StringFormat='{0} items'}"
+                                    FontSize="12"
+                                    FontAttributes="Bold"
+                                    TextColor="White"
+                                    Margin="8,4" />
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.GroupHeaderTemplate>
+
+                <!-- Product item row -->
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Product">
+                        <Grid
+                            Padding="16,12"
+                            BackgroundColor="{AppThemeBinding Light=White, Dark=#1C1C1E}"
+                            ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Product name -->
+                            <Label
+                                Grid.Column="0"
+                                Text="{Binding Name}"
+                                FontSize="15"
+                                TextColor="{AppThemeBinding Light=#1C1C1E, Dark=#F2F2F7}"
+                                VerticalOptions="Center"
+                                LineBreakMode="TailTruncation" />
+
+                            <!-- Price formatted as currency -->
+                            <Label
+                                Grid.Column="1"
+                                Text="{Binding Price, StringFormat='{0:C}'}"
+                                FontSize="15"
+                                FontAttributes="Bold"
+                                TextColor="{AppThemeBinding Light=#34C759, Dark=#30D158}"
+                                VerticalOptions="Center" />
+
+                            <!-- Add to Cart button -->
+                            <Button
+                                Grid.Column="2"
+                                Text="Add to Cart"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProductCatalogViewModel}}, Path=AddToCartCommand}"
+                                CommandParameter="{Binding .}"
+                                FontSize="13"
+                                Padding="12,6"
+                                BackgroundColor="{AppThemeBinding Light=#007AFF, Dark=#0A84FF}"
+                                TextColor="White"
+                                CornerRadius="8"
+                                HeightRequest="36" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Empty state: shown when IsEmpty is true -->
+        <VerticalStackLayout
+            IsVisible="{Binding IsEmpty}"
+            VerticalOptions="Center"
+            HorizontalOptions="Center"
+            Spacing="16"
+            Padding="40,0">
+
+            <Label
+                Text="No Products Found"
+                FontSize="22"
+                FontAttributes="Bold"
+                HorizontalTextAlignment="Center"
+                TextColor="{AppThemeBinding Light=#1C1C1E, Dark=#F2F2F7}" />
+
+            <Label
+                Text="The catalog is currently empty.&#10;Pull down to refresh or check back later."
+                FontSize="15"
+                HorizontalTextAlignment="Center"
+                TextColor="{AppThemeBinding Light=#6C6C70, Dark=#8E8E93}" />
+
+            <Button
+                Text="Refresh Now"
+                Command="{Binding RefreshCommand}"
+                BackgroundColor="{AppThemeBinding Light=#007AFF, Dark=#0A84FF}"
+                TextColor="White"
+                CornerRadius="10"
+                Padding="24,12"
+                HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+    </Grid>
+</ContentPage>

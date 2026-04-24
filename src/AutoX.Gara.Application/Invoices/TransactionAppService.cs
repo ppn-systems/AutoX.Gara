@@ -1,16 +1,15 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
+using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
 using AutoX.Gara.Shared.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Invoices;
@@ -37,9 +36,19 @@ public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory
 
     public async Task<ServiceResult<Transaction>> CreateAsync(Transaction transaction)
     {
+        if (transaction is null || transaction.InvoiceId <= 0)
+        {
+            return ServiceResult<Transaction>.Failure("Dữ liệu giao dịch không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
         if (transaction.Amount <= 0)
         {
             return ServiceResult<Transaction>.Failure("Số tiền giao dịch phải lớn hơn 0.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        if (transaction.PaymentMethod == PaymentMethod.None)
+        {
+            return ServiceResult<Transaction>.Failure("Phương thức thanh toán không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
         }
 
         try
@@ -51,35 +60,28 @@ public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory
             await using var tx = await session.BeginTransactionAsync().ConfigureAwait(false);
             try
             {
-                // 1. Record Transaction
-                transaction.TransactionDate = DateTime.UtcNow;
+                var invoice = await session.Invoices.GetInvoiceWithFullGraphTrackedAsync(transaction.InvoiceId).ConfigureAwait(false);
+                if (invoice is null)
+                {
+                    return ServiceResult<Transaction>.Failure("Không tìm thấy hóa đơn.", ProtocolReason.NOT_FOUND);
+                }
+
+                if ((invoice.PaymentStatus == PaymentStatus.Canceled || invoice.PaymentStatus == PaymentStatus.Refunded)
+                    && transaction.Type == TransactionType.Revenue
+                    && !transaction.IsReversed)
+                {
+                    return ServiceResult<Transaction>.Failure("Hóa đơn đã hủy/hoàn tiền, không thể ghi nhận thu.", ProtocolReason.VALIDATION_FAILED);
+                }
+
+                transaction.TransactionDate = transaction.TransactionDate == default
+                    ? DateTime.UtcNow
+                    : transaction.TransactionDate;
+
                 await session.Transactions.AddAsync(transaction).ConfigureAwait(false);
                 await session.SaveChangesAsync().ConfigureAwait(false);
 
-                // 2. Update Invoice Status
-                var invoice = await session.Invoices.GetInvoiceWithFullGraphTrackedAsync(transaction.InvoiceId).ConfigureAwait(false);
-                if (invoice != null)
-                {
-                    // Calculate total paid across all successful transactions
-                    var allTransactions = await session.Context.Set<Transaction>()
-                        .Where(t => t.InvoiceId == invoice.Id && t.Status == TransactionStatus.Completed && !t.IsReversed)
-                        .ToListAsync().ConfigureAwait(false);
-
-                    var totalPaid = allTransactions.Sum(t => t.Amount);
-
-
-
-                    if (totalPaid >= invoice.TotalAmount)
-                    {
-                        invoice.PaymentStatus = PaymentStatus.Paid;
-                    }
-                    else if (totalPaid > 0)
-                    {
-                        invoice.PaymentStatus = PaymentStatus.PartiallyPaid;
-                    }
-
-                    await session.SaveChangesAsync().ConfigureAwait(false);
-                }
+                ApplyInvoicePaymentState(invoice);
+                await session.SaveChangesAsync().ConfigureAwait(false);
 
                 await tx.CommitAsync().ConfigureAwait(false);
                 return ServiceResult<Transaction>.Success(transaction);
@@ -116,20 +118,10 @@ public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory
                 session.Transactions.Delete(existing);
                 await session.SaveChangesAsync().ConfigureAwait(false);
 
-                // Re-calculate invoice status after deletion
                 var invoice = await session.Invoices.GetInvoiceWithFullGraphTrackedAsync(invoiceId).ConfigureAwait(false);
                 if (invoice != null)
                 {
-                    var allTransactions = await session.Context.Set<Transaction>()
-                        .Where(t => t.InvoiceId == invoiceId && t.Status == TransactionStatus.Completed && !t.IsReversed)
-                        .ToListAsync().ConfigureAwait(false);
-
-                    var totalPaid = allTransactions.Sum(t => t.Amount);
-
-
-
-                    invoice.PaymentStatus = totalPaid >= invoice.TotalAmount ? PaymentStatus.Paid : totalPaid > 0 ? PaymentStatus.PartiallyPaid : PaymentStatus.Unpaid;
-
+                    ApplyInvoicePaymentState(invoice);
                     await session.SaveChangesAsync().ConfigureAwait(false);
                 }
 
@@ -148,6 +140,28 @@ public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory
             _logger.LogError(ex, "Error deleting transaction {Id}.", transactionId);
             return ServiceResult<bool>.Failure("Lỗi khi xóa giao dịch.");
         }
+    }
+
+    private static void ApplyInvoicePaymentState(Invoice invoice)
+    {
+        invoice.Recalculate();
+
+        if (invoice.PaymentStatus == PaymentStatus.Canceled || invoice.PaymentStatus == PaymentStatus.Refunded)
+        {
+            return;
+        }
+
+        decimal paidAmount = invoice.AmountPaid();
+
+        if (invoice.BalanceDue <= 0 || paidAmount >= invoice.TotalAmount)
+        {
+            invoice.PaymentStatus = PaymentStatus.Paid;
+            return;
+        }
+
+        invoice.PaymentStatus = paidAmount > 0
+            ? PaymentStatus.PartiallyPaid
+            : PaymentStatus.Unpaid;
     }
 }
 

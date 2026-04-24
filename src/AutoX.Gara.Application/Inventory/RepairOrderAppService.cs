@@ -1,8 +1,11 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Application.Abstractions.Persistence;
+using AutoX.Gara.Domain.Entities.Customers;
+using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using System;
@@ -33,14 +36,30 @@ public sealed class RepairOrderAppService(IDataSessionFactory dataSessionFactory
 
     public async Task<ServiceResult<RepairOrder>> CreateAsync(RepairOrder order)
     {
+        var validation = ValidateOrderPayload(order);
+        if (!validation.IsSuccess)
+        {
+            return ServiceResult<RepairOrder>.Failure(validation.ErrorMessage!, validation.Reason);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
+            var relationValidation = await ValidateOrderRelationsAsync(session, order).ConfigureAwait(false);
+            if (!relationValidation.IsSuccess)
+            {
+                return ServiceResult<RepairOrder>.Failure(relationValidation.ErrorMessage!, relationValidation.Reason);
+            }
 
             order.OrderDate = DateTime.UtcNow;
             if (order.ExpectedCompletionDate.HasValue && order.ExpectedCompletionDate.Value < order.OrderDate)
             {
                 return ServiceResult<RepairOrder>.Failure("Ngày hoàn thành dự kiến không thể trước ngày đặt lệnh.", ProtocolReason.MALFORMED_PACKET);
+            }
+
+            if (order.CompletionDate.HasValue && order.CompletionDate.Value < order.OrderDate)
+            {
+                return ServiceResult<RepairOrder>.Failure("Ngày hoàn thành không thể trước ngày đặt lệnh.", ProtocolReason.MALFORMED_PACKET);
             }
 
             await session.RepairOrders.AddAsync(order).ConfigureAwait(false);
@@ -57,6 +76,12 @@ public sealed class RepairOrderAppService(IDataSessionFactory dataSessionFactory
 
     public async Task<ServiceResult<RepairOrder>> UpdateAsync(RepairOrder order)
     {
+        var validation = ValidateOrderPayload(order);
+        if (!validation.IsSuccess)
+        {
+            return ServiceResult<RepairOrder>.Failure(validation.ErrorMessage!, validation.Reason);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -66,6 +91,22 @@ public sealed class RepairOrderAppService(IDataSessionFactory dataSessionFactory
             if (existing is null)
             {
                 return ServiceResult<RepairOrder>.Failure("Không tìm thấy lệnh sửa chữa.", ProtocolReason.NOT_FOUND);
+            }
+
+            var relationValidation = await ValidateOrderRelationsAsync(session, order).ConfigureAwait(false);
+            if (!relationValidation.IsSuccess)
+            {
+                return ServiceResult<RepairOrder>.Failure(relationValidation.ErrorMessage!, relationValidation.Reason);
+            }
+
+            if (order.ExpectedCompletionDate.HasValue && order.ExpectedCompletionDate.Value < existing.OrderDate)
+            {
+                return ServiceResult<RepairOrder>.Failure("Ngày hoàn thành dự kiến không thể trước ngày đặt lệnh.", ProtocolReason.VALIDATION_FAILED);
+            }
+
+            if (order.CompletionDate.HasValue && order.CompletionDate.Value < existing.OrderDate)
+            {
+                return ServiceResult<RepairOrder>.Failure("Ngày hoàn thành không thể trước ngày đặt lệnh.", ProtocolReason.VALIDATION_FAILED);
             }
 
             existing.VehicleId = order.VehicleId;
@@ -109,6 +150,69 @@ public sealed class RepairOrderAppService(IDataSessionFactory dataSessionFactory
             _logger.LogError(ex, "Error deleting repair order {Id}.", orderId);
             return ServiceResult<bool>.Failure("Lỗi khi xóa lệnh sửa chữa.");
         }
+    }
+
+    private static ServiceResult<bool> ValidateOrderPayload(RepairOrder order)
+    {
+        if (order is null)
+        {
+            return ServiceResult<bool>.Failure("Dữ liệu lệnh sửa chữa không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        if (order.CustomerId <= 0)
+        {
+            return ServiceResult<bool>.Failure("Khách hàng không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        if (order.VehicleId.HasValue && order.VehicleId.Value <= 0)
+        {
+            return ServiceResult<bool>.Failure("Xe không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        if (order.EmployeeId.HasValue && order.EmployeeId.Value <= 0)
+        {
+            return ServiceResult<bool>.Failure("Nhân viên phụ trách không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        return ServiceResult<bool>.Success(true);
+    }
+
+    private static async Task<ServiceResult<bool>> ValidateOrderRelationsAsync(IDataSession session, RepairOrder order)
+    {
+        bool customerExists = await session.Context.Set<Customer>()
+            .AsNoTracking()
+            .AnyAsync(c => c.Id == order.CustomerId)
+            .ConfigureAwait(false);
+        if (!customerExists)
+        {
+            return ServiceResult<bool>.Failure("Không tìm thấy khách hàng.", ProtocolReason.NOT_FOUND);
+        }
+
+        if (order.VehicleId.HasValue)
+        {
+            bool vehicleExists = await session.Context.Set<Vehicle>()
+                .AsNoTracking()
+                .AnyAsync(v => v.Id == order.VehicleId.Value && v.CustomerId == order.CustomerId)
+                .ConfigureAwait(false);
+            if (!vehicleExists)
+            {
+                return ServiceResult<bool>.Failure("Xe không thuộc khách hàng này hoặc không tồn tại.", ProtocolReason.VALIDATION_FAILED);
+            }
+        }
+
+        if (order.EmployeeId.HasValue)
+        {
+            bool employeeExists = await session.Context.Set<Employee>()
+                .AsNoTracking()
+                .AnyAsync(e => e.Id == order.EmployeeId.Value)
+                .ConfigureAwait(false);
+            if (!employeeExists)
+            {
+                return ServiceResult<bool>.Failure("Không tìm thấy nhân viên phụ trách.", ProtocolReason.NOT_FOUND);
+            }
+        }
+
+        return ServiceResult<bool>.Success(true);
     }
 }
 

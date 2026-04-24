@@ -1,0 +1,33 @@
+{
+  "eval_id": "eval-deprecated-device",
+  "skill": "maui-current-apis",
+  "condition": "with_skill",
+  "model": "claude-sonnet-4-6",
+  "date": "2026-03-05",
+
+  "deprecated_apis_in_input": [
+    "Device.OpenUri()"
+  ],
+  "deprecated_apis_in_output": [],
+
+  "deprecated_api_detected": true,
+  "deprecated_api_replaced": true,
+  "correct_replacement_used": true,
+  "replacement_api": "Launcher.OpenAsync()",
+  "replacement_namespace": "Microsoft.Maui.ApplicationModel",
+
+  "async_signature_updated": true,
+  "using_directive_added": true,
+  "xamarin_namespace_introduced": false,
+  "compatibility_namespace_introduced": false,
+
+  "reasoning_steps_followed": {
+    "step1_target_framework_checked": "not_available",
+    "step2_library_versions_checked": "not_available",
+    "step3_api_currency_verified": true,
+    "step4_decision_rules_applied": true
+  },
+
+  "score": 1.0,
+  "notes": "Device.OpenUri() was correctly identified as deprecated using the skill's Device & Platform APIs table. The fix correctly replaces it with Launcher.OpenAsync(), adds the async keyword to the event handler, and adds the required using directive. No deprecated APIs remain in the output."
+}

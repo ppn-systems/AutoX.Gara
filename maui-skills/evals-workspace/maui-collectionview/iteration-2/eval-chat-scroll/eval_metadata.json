@@ -1,0 +1,12 @@
+{
+  "eval_id": 3,
+  "eval_name": "chat-scroll",
+  "prompt": "I have a MAUI chat app where new messages arrive via an ObservableCollection. I need a CollectionView that displays messages and automatically scrolls to the bottom when a new message is added. Messages from me should appear on the right, messages from others on the left. How do I implement this?",
+  "assertions": [
+    "CollectionView displays messages from an ObservableCollection",
+    "Message alignment differs by sender — right-aligned for current user, left-aligned for others",
+    "Code calls CollectionView.ScrollTo() to scroll to the last message when new messages arrive",
+    "A CollectionChanged or property-change handler triggers the scroll behavior",
+    "Message model has properties for content/text, a sender or IsFromMe flag, and optionally timestamp"
+  ]
+}

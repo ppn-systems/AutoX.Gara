@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="ChatApp.Views.ChatPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:ChatApp.Models"
+    xmlns:vm="clr-namespace:ChatApp.ViewModels"
+    Title="Chat"
+    Shell.NavBarHasShadow="True">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Bubble color for messages from the current user -->
+            <Color x:Key="MyBubbleColor">#0078D7</Color>
+            <!-- Bubble color for messages from others -->
+            <Color x:Key="OtherBubbleColor">#E5E5EA</Color>
+
+            <Color x:Key="MyTextColor">White</Color>
+            <Color x:Key="OtherTextColor">#1C1C1E</Color>
+
+            <!-- DataTemplate for messages sent by the current user (right-aligned) -->
+            <DataTemplate x:Key="MyMessageTemplate" x:DataType="models:Message">
+                <Grid Padding="8,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Spacer pushes the bubble to the right -->
+                    <BoxView Grid.Column="0" Color="Transparent" />
+
+                    <VerticalStackLayout
+                        Grid.Column="1"
+                        MaximumWidthRequest="280"
+                        HorizontalOptions="End">
+                        <Frame
+                            BackgroundColor="{StaticResource MyBubbleColor}"
+                            BorderColor="Transparent"
+                            CornerRadius="16"
+                            HasShadow="False"
+                            Padding="12,8">
+                            <Label
+                                Text="{Binding Text}"
+                                TextColor="{StaticResource MyTextColor}"
+                                FontSize="15"
+                                LineBreakMode="WordWrap" />
+                        </Frame>
+                        <Label
+                            Text="{Binding FormattedTime}"
+                            TextColor="#8E8E93"
+                            FontSize="11"
+                            HorizontalOptions="End"
+                            Margin="0,2,4,0" />
+                    </VerticalStackLayout>
+                </Grid>
+            </DataTemplate>
+
+            <!-- DataTemplate for messages from others (left-aligned) -->
+            <DataTemplate x:Key="OtherMessageTemplate" x:DataType="models:Message">
+                <Grid Padding="8,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <VerticalStackLayout
+                        Grid.Column="0"
+                        MaximumWidthRequest="280"
+                        HorizontalOptions="Start">
+                        <Label
+                            Text="{Binding SenderName}"
+                            TextColor="#0078D7"
+                            FontSize="12"
+                            FontAttributes="Bold"
+                            Margin="4,0,0,2" />
+                        <Frame
+                            BackgroundColor="{StaticResource OtherBubbleColor}"
+                            BorderColor="Transparent"
+                            CornerRadius="16"
+                            HasShadow="False"
+                            Padding="12,8">
+                            <Label
+                                Text="{Binding Text}"
+                                TextColor="{StaticResource OtherTextColor}"
+                                FontSize="15"
+                                LineBreakMode="WordWrap" />
+                        </Frame>
+                        <Label
+                            Text="{Binding FormattedTime}"
+                            TextColor="#8E8E93"
+                            FontSize="11"
+                            HorizontalOptions="Start"
+                            Margin="4,2,0,0" />
+                    </VerticalStackLayout>
+
+                    <!-- Spacer on the right -->
+                    <BoxView Grid.Column="1" Color="Transparent" />
+                </Grid>
+            </DataTemplate>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="*, Auto" BackgroundColor="White">
+
+        <!-- Message list -->
+        <CollectionView
+            x:Name="MessagesCollectionView"
+            Grid.Row="0"
+            ItemsSource="{Binding Messages}"
+            Margin="0,8,0,0">
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Message">
+                    <!--
+                        A single Grid hosts both templates; visibility is toggled
+                        via IsVisible bindings so that only one renders at a time.
+                        This avoids needing a DataTemplateSelector subclass while
+                        keeping all layout declarative in XAML.
+                    -->
+                    <Grid>
+                        <!-- My message (right side) -->
+                        <Grid
+                            IsVisible="{Binding IsFromMe}"
+                            Padding="8,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <BoxView Grid.Column="0" Color="Transparent" />
+
+                            <VerticalStackLayout
+                                Grid.Column="1"
+                                MaximumWidthRequest="280"
+                                HorizontalOptions="End">
+                                <Frame
+                                    BackgroundColor="{StaticResource MyBubbleColor}"
+                                    BorderColor="Transparent"
+                                    CornerRadius="16"
+                                    HasShadow="False"
+                                    Padding="12,8">
+                                    <Label
+                                        Text="{Binding Text}"
+                                        TextColor="{StaticResource MyTextColor}"
+                                        FontSize="15"
+                                        LineBreakMode="WordWrap" />
+                                </Frame>
+                                <Label
+                                    Text="{Binding FormattedTime}"
+                                    TextColor="#8E8E93"
+                                    FontSize="11"
+                                    HorizontalOptions="End"
+                                    Margin="0,2,4,0" />
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Other person's message (left side) -->
+                        <Grid
+                            IsVisible="{Binding IsFromMe, Converter={x:StaticResource InvertedBoolConverter}}"
+                            Padding="8,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <VerticalStackLayout
+                                Grid.Column="0"
+                                MaximumWidthRequest="280"
+                                HorizontalOptions="Start">
+                                <Label
+                                    Text="{Binding SenderName}"
+                                    TextColor="#0078D7"
+                                    FontSize="12"
+                                    FontAttributes="Bold"
+                                    Margin="4,0,0,2" />
+                                <Frame
+                                    BackgroundColor="{StaticResource OtherBubbleColor}"
+                                    BorderColor="Transparent"
+                                    CornerRadius="16"
+                                    HasShadow="False"
+                                    Padding="12,8">
+                                    <Label
+                                        Text="{Binding Text}"
+                                        TextColor="{StaticResource OtherTextColor}"
+                                        FontSize="15"
+                                        LineBreakMode="WordWrap" />
+                                </Frame>
+                                <Label
+                                    Text="{Binding FormattedTime}"
+                                    TextColor="#8E8E93"
+                                    FontSize="11"
+                                    HorizontalOptions="Start"
+                                    Margin="4,2,0,0" />
+                            </VerticalStackLayout>
+
+                            <BoxView Grid.Column="1" Color="Transparent" />
+                        </Grid>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Input bar -->
+        <Grid
+            Grid.Row="1"
+            ColumnDefinitions="*, Auto"
+            Padding="12,8"
+            BackgroundColor="White">
+            <Grid.Shadow>
+                <Shadow
+                    Brush="Black"
+                    Offset="0,-2"
+                    Radius="4"
+                    Opacity="0.08" />
+            </Grid.Shadow>
+
+            <Entry
+                x:Name="MessageEntry"
+                Grid.Column="0"
+                Placeholder="Type a message…"
+                Text="{Binding NewMessageText}"
+                ReturnType="Send"
+                ReturnCommand="{Binding SendMessageCommand}"
+                VerticalOptions="Center"
+                BackgroundColor="#F2F2F7"
+                FontSize="15" />
+
+            <Button
+                Grid.Column="1"
+                Text="Send"
+                Command="{Binding SendMessageCommand}"
+                BackgroundColor="{StaticResource MyBubbleColor}"
+                TextColor="White"
+                CornerRadius="20"
+                Margin="8,0,0,0"
+                HeightRequest="44"
+                WidthRequest="72" />
+        </Grid>
+    </Grid>
+
+</ContentPage>

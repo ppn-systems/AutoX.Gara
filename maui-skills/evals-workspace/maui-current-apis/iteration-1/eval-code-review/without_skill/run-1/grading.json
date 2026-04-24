@@ -1,0 +1,103 @@
+{
+  "expectations": [
+    {
+      "text": "The Xamarin.Forms using/namespace is replaced with Microsoft.Maui.Controls or removed",
+      "passed": true,
+      "evidence": "In SettingsPage.cs (line 2): 'using Microsoft.Maui.Controls;' replaces the original 'using Xamarin.Forms;'. The transcript's Issue 1 fix also confirms: 'Replace using Xamarin.Forms; with using Microsoft.Maui.Controls;'"
+    },
+    {
+      "text": "Device.BeginInvokeOnMainThread is replaced with MainThread.BeginInvokeOnMainThread or MainThread.InvokeOnMainThreadAsync",
+      "passed": true,
+      "evidence": "In SettingsPage.cs (line 15): 'MainThread.BeginInvokeOnMainThread(() => {' replaces the original 'Device.BeginInvokeOnMainThread(...)'. The transcript Issue 2 fix confirms this replacement using the correct MAUI API from Microsoft.Maui.ApplicationModel."
+    },
+    {
+      "text": "DependencyService.Get is replaced with constructor injection (ISettingsService injected via constructor parameter)",
+      "passed": true,
+      "evidence": "In SettingsPage.cs (lines 9-12): 'private readonly ISettingsService _settingsService;' and constructor parameter 'ISettingsService settingsService' with '_settingsService = settingsService;' replace the original 'DependencyService.Get<ISettingsService>()'. The transcript Issue 3 fix confirms the migration to constructor injection."
+    },
+    {
+      "text": "SetUseSafeArea or the Xamarin.Forms.PlatformConfiguration.iOS platform-specific is replaced with SafeAreaEdges property on the page",
+      "passed": false,
+      "evidence": "In SettingsPage.cs (lines 24-25), the fixed code retains 'On<Microsoft.Maui.Controls.PlatformConfiguration.iOS>().SetUseSafeArea(true);' \u2014 it only updates the namespace from Xamarin.Forms to Microsoft.Maui.Controls, but does NOT replace the pattern with the SafeAreaEdges property. The expectation requires migrating away from SetUseSafeArea entirely to use the SafeAreaEdges property directly on the page, which the output fails to do. The transcript Issue 4 analysis only addresses the namespace change, not the API replacement to SafeAreaEdges."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 1,
+    "total": 4,
+    "pass_rate": 0.75
+  },
+  "execution_metrics": {
+    "eval_id": "eval-code-review",
+    "mode": "without_skill",
+    "model": "claude-sonnet-4-6",
+    "issues_in_original_code": 4,
+    "issues_identified": 4,
+    "issues_fixed": 4,
+    "issues_missed": 0,
+    "false_positives": 0,
+    "identification_accuracy": 1.0,
+    "fix_accuracy": 1.0,
+    "output_files": [
+      "SettingsPage.cs",
+      "transcript.md",
+      "metrics.json"
+    ],
+    "total_tool_calls": null,
+    "total_steps": null,
+    "errors_encountered": 0,
+    "output_chars": 0,
+    "transcript_chars": 4180
+  },
+  "timing": {
+    "executor_duration_seconds": 56.4,
+    "total_duration_seconds": 56.4,
+    "total_tokens": 15739
+  },
+  "claims": [
+    {
+      "claim": "All 4 issues identified and fixed using general knowledge without skill guidance",
+      "type": "quality",
+      "verified": false,
+      "evidence": "metrics.json claims fix_accuracy of 1.0 and issues_fixed of 4, but expectation 4 reveals Issue 4 was not correctly fixed: the model updated the namespace on SetUseSafeArea instead of replacing it with the SafeAreaEdges property as required by MAUI best practices. The metrics.json self-assessment is inaccurate."
+    },
+    {
+      "claim": "Device -> MainThread migration is correct",
+      "type": "factual",
+      "verified": true,
+      "evidence": "SettingsPage.cs line 15 confirms MainThread.BeginInvokeOnMainThread is used correctly with the proper Microsoft.Maui.ApplicationModel using directive on line 1."
+    },
+    {
+      "claim": "Constructor injection replaces DependencyService",
+      "type": "factual",
+      "verified": true,
+      "evidence": "SettingsPage.cs lines 9-13 and 23 confirm ISettingsService is injected via constructor, stored as _settingsService, and used via _settingsService?.Load()."
+    },
+    {
+      "claim": "Platform-specific safe area API is migrated to MAUI equivalent",
+      "type": "quality",
+      "verified": false,
+      "evidence": "The model migrated the namespace but retained the deprecated platform-specific On<>().SetUseSafeArea(true) pattern. The correct MAUI approach is to use the SafeAreaEdges property directly on the page, eliminating the platform-specific configuration block entirely. The model lacked knowledge of this specific MAUI property."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "SetUseSafeArea or the Xamarin.Forms.PlatformConfiguration.iOS platform-specific is replaced with SafeAreaEdges property on the page",
+        "reason": "This assertion is well-targeted and discriminating \u2014 it specifically requires SafeAreaEdges as the replacement, not merely a namespace update. The model's failure here reveals a genuine knowledge gap about the new MAUI-native API. The assertion correctly caught what a surface-level fix would miss. Consider making it even more explicit by specifying that the On<>() platform-specific block must be removed entirely, not just updated."
+      },
+      {
+        "reason": "The metrics.json produced by the executor claims fix_accuracy of 1.0 and issues_fixed of 4, but this is self-reported and inaccurate \u2014 the executor graded its own output incorrectly. No assertion currently checks whether the executor's self-reported metrics are accurate. An assertion like 'The executor does not self-report perfect scores' or external verification of the metrics would catch this overconfidence pattern."
+      },
+      {
+        "reason": "No assertion checks that the On<>() platform-specific configuration block is fully removed. A partial fix (updating namespace but keeping SetUseSafeArea) would pass a weaker version of expectation 4 that only checks for namespace replacement. The current assertion correctly requires SafeAreaEdges, but adding an explicit assertion that SetUseSafeArea is absent from the output would make the eval more robust."
+      }
+    ],
+    "overall": "The evals are well-designed for this task. Expectation 4 is the most valuable assertion \u2014 it catches the difference between a knowledgeable MAUI migration and a surface-level namespace fix. The other three expectations are straightforward to satisfy and the model handled them correctly. The main gap is the lack of a check on self-reported metrics accuracy."
+  }
+}

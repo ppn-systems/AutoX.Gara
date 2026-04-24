@@ -1,0 +1,40 @@
+{
+  "eval_id": "eval-chat-scroll",
+  "variant": "with_skill",
+  "skill": "maui-collectionview",
+  "skill_path": "/Users/davidortinau/work/maui-skills/plugins/maui-skills/skills/maui-collectionview/SKILL.md",
+  "task_summary": "Implement a MAUI chat CollectionView with auto-scroll-to-bottom and left/right message bubbles driven by ObservableCollection.",
+  "files_produced": [
+    "Message.cs",
+    "ChatViewModel.cs",
+    "MessageTemplateSelector.cs",
+    "ChatPage.xaml",
+    "ChatPage.xaml.cs"
+  ],
+  "skill_sections_used": [
+    "DataTemplateSelector",
+    "Scrolling / ScrollTo",
+    "Basic setup (ObservableCollection + x:DataType)",
+    "EmptyView",
+    "ItemSpacing / LinearItemsLayout",
+    "Common gotchas (MainThread, EmptyView ContentView wrap, no ViewCell)"
+  ],
+  "correctness": {
+    "uses_observable_collection": true,
+    "uses_data_template_selector": true,
+    "left_right_alignment_implemented": true,
+    "auto_scroll_on_add": true,
+    "scroll_on_ui_thread": true,
+    "x_data_type_on_data_templates": true,
+    "no_view_cell_used": true,
+    "empty_view_wrapped_in_content_view": true,
+    "scroll_to_position_end_used": true,
+    "linear_items_layout_used": true
+  },
+  "skill_usefulness_rating": 5,
+  "skill_usefulness_notes": "Every technique required by the task (DataTemplateSelector, ScrollTo, ObservableCollection, MainThread gotcha, EmptyView wrapper) was explicitly documented in the skill. The skill reduced ambiguity to zero — no external documentation search was needed.",
+  "completeness_rating": 5,
+  "completeness_notes": "All requested artifacts produced: XAML page, ViewModel, Message model, DataTemplateSelector, code-behind with scroll wiring.",
+  "code_quality_rating": 5,
+  "code_quality_notes": "Follows MAUI best practices: compiled bindings via x:DataType, ObservableCollection for reactivity, UI thread safety for scroll, callback pattern keeps ViewModel free of UI references, no ViewCell usage."
+}

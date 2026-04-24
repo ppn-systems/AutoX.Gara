@@ -513,6 +513,7 @@
                 <CollectionView
 
                     ItemsSource="{Binding Customers}"
+                    ItemSizingStrategy="MeasureFirstItem"
 
                     IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}"
 

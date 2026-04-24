@@ -1,0 +1,101 @@
+{
+  "expectations": [
+    {
+      "text": "Device.OpenUri is replaced with Launcher.OpenAsync or Launcher.Default.OpenAsync",
+      "passed": true,
+      "evidence": "MainPage.cs line 9 shows: 'await Launcher.OpenAsync(new Uri(\"https://example.com\"));'. The transcript analysis section also states: 'Replaced Device.OpenUri(new Uri(\"https://example.com\")) with await Launcher.OpenAsync(new Uri(\"https://example.com\"))'. The metrics.json confirms correct_api_used=true and correct_api=\"Launcher.OpenAsync\"."
+    },
+    {
+      "text": "The handler is made async to properly await the Launcher call",
+      "passed": true,
+      "evidence": "MainPage.cs line 7 shows: 'private async void OnHelpClicked(object sender, EventArgs e)'. The transcript explicitly notes change #2: 'Changed the event handler signature from private void to private async void to support await'. The metrics.json confirms async_handler_used=true."
+    },
+    {
+      "text": "No Device.* API calls remain in the output code",
+      "passed": true,
+      "evidence": "MainPage.cs contains no Device.* calls anywhere. The only content is: using statement, namespace declaration, partial class with a single async event handler using Launcher.OpenAsync. No 'Device.' string appears in the output file."
+    },
+    {
+      "text": "The output explicitly notes or comments that Device.OpenUri is deprecated/removed in .NET MAUI",
+      "passed": true,
+      "evidence": "The transcript's Problem Identified section states: 'In .NET MAUI, the Device class has been significantly restructured and Device.OpenUri() is not available. Calling it will result in a compile error or runtime failure depending on the MAUI version.' The transcript further says: 'Device.OpenUri()...was carried over from Xamarin.Forms.' The metrics.json confirms deprecated_api_identified=true. Note: the corrected code file itself (MainPage.cs) does not contain an inline comment about the deprecation, but the transcript output clearly documents it."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "eval_id": "eval-deprecated-device",
+    "variant": "without_skill",
+    "model": "claude-sonnet-4-6",
+    "date": "2026-03-05",
+    "deprecated_api_identified": true,
+    "deprecated_api": "Device.OpenUri",
+    "correct_api_used": true,
+    "correct_api": "Launcher.OpenAsync",
+    "correct_namespace": true,
+    "namespace_used": "Microsoft.Maui.ApplicationModel",
+    "async_handler_used": true,
+    "error_handling_added": false,
+    "used_try_open_async": false,
+    "explanation_provided": true,
+    "total_tokens": 13649,
+    "output_chars": 184,
+    "transcript_chars": 2437
+  },
+  "timing": {
+    "executor_duration_seconds": 33.6,
+    "total_duration_seconds": 33.6,
+    "total_tokens": 13649,
+    "duration_ms": 33614
+  },
+  "claims": [
+    {
+      "claim": "Device.OpenUri() is not available in .NET MAUI and will cause a compile error or runtime failure",
+      "type": "factual",
+      "verified": true,
+      "evidence": "This is an accurate statement of the .NET MAUI migration from Xamarin.Forms. Device.OpenUri was removed in .NET MAUI and Launcher.OpenAsync is the documented replacement."
+    },
+    {
+      "claim": "Launcher.OpenAsync is the well-established .NET MAUI replacement for Device.OpenUri",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Launcher.OpenAsync in Microsoft.Maui.ApplicationModel is the documented replacement for Device.OpenUri per the official .NET MAUI migration guide."
+    },
+    {
+      "claim": "using Microsoft.Maui.ApplicationModel; was added to bring Launcher into scope",
+      "type": "process",
+      "verified": true,
+      "evidence": "MainPage.cs line 1 shows 'using Microsoft.Maui.ApplicationModel;'. metrics.json confirms correct_namespace=true."
+    },
+    {
+      "claim": "No error handling (TryOpenAsync or try/catch) was added",
+      "type": "quality",
+      "verified": true,
+      "evidence": "MainPage.cs contains no try/catch block and uses Launcher.OpenAsync (not TryOpenAsync). metrics.json confirms error_handling_added=false and used_try_open_async=false. The metrics notes this as a minor omission for production code."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "The output explicitly notes or comments that Device.OpenUri is deprecated/removed in .NET MAUI",
+        "reason": "This assertion is satisfied by the transcript explanation, but the corrected code file (MainPage.cs) contains no inline comment about the deprecation. If the intent is to ensure the generated code itself is self-documenting for developers who receive it, this should require an inline code comment in the output file, not just in the prose explanation. As written, the assertion passes even if the code file is silent on why the change was made."
+      },
+      {
+        "reason": "No assertion checks whether the correct using directive (Microsoft.Maui.ApplicationModel) was added to the output code. The corrected code will not compile without it, and an eval that only checks the method call but not the namespace import would miss a common migration error."
+      },
+      {
+        "reason": "No assertion checks whether error handling is present. The executor's own notes flag the absence of TryOpenAsync or try/catch as a potential production concern. An assertion like 'TryOpenAsync is used or a try/catch wraps the call' would distinguish a minimally correct migration from a production-quality one."
+      }
+    ],
+    "overall": "All four assertions pass and reflect genuine task completion. The main gap is that assertion 4 (deprecation noted) is satisfied by the prose transcript rather than requiring the output code to be self-documenting. Consider also adding assertions for the required using directive and optional but recommended error handling."
+  }
+}

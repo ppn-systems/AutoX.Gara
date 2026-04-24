@@ -1,0 +1,392 @@
+{
+  "metadata": {
+    "skill_name": "maui-collectionview",
+    "skill_path": "/Users/davidortinau/work/maui-skills/plugins/maui-skills/skills/maui-collectionview",
+    "executor_model": "claude-sonnet-4-6",
+    "analyzer_model": "claude-sonnet-4-6",
+    "timestamp": "2026-03-26T00:00:00Z",
+    "evals_run": [1, 2, 3],
+    "runs_per_configuration": 1,
+    "iteration": 2,
+    "notes": "Iteration 2: testing leaner refactored SKILL.md (92 lines, reference content moved to references/collectionview-api.md). Added 2 new assertions to eval 1 based on iteration-1 grader feedback."
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "recipe-grid",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "time_seconds": 75.6,
+        "tokens": 18699,
+        "tool_calls": 9,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CollectionView uses a 2-column GridItemsLayout (Span=2 or Columns=2)",
+          "passed": true,
+          "evidence": "<GridItemsLayout Orientation=\"Vertical\" Span=\"2\" VerticalItemSpacing=\"12\" HorizontalItemSpacing=\"12\" />"
+        },
+        {
+          "text": "DataTemplate includes an Image element bound to a photo or image source property",
+          "passed": true,
+          "evidence": "<Image Source=\"{Binding PhotoUrl}\" Aspect=\"AspectFill\" HeightRequest=\"120\" HorizontalOptions=\"Fill\" />"
+        },
+        {
+          "text": "DataTemplate includes a Label bound to recipe Name and a Label bound to prep time",
+          "passed": true,
+          "evidence": "<Label Text=\"{Binding Name}\" FontAttributes=\"Bold\" ... /> and <Label Text=\"{Binding PrepTime}\" FontSize=\"12\" ... />"
+        },
+        {
+          "text": "CollectionView has SelectionMode set to Single",
+          "passed": true,
+          "evidence": "<CollectionView ItemsSource=\"{Binding Recipes}\" SelectionMode=\"Single\" SelectedItem=\"{Binding SelectedRecipe, Mode=TwoWay}\" ...>"
+        },
+        {
+          "text": "ViewModel has a SelectedRecipe or SelectedItem property with property change notification",
+          "passed": true,
+          "evidence": "[ObservableProperty] private Recipe? _selectedRecipe; (CommunityToolkit.Mvvm source-generates INotifyPropertyChanged for SelectedRecipe)"
+        },
+        {
+          "text": "x:DataType compiled bindings are used on the page and/or DataTemplate",
+          "passed": true,
+          "evidence": "x:DataType=\"viewmodels:RecipesViewModel\" on ContentPage and x:DataType=\"models:Recipe\" on DataTemplate"
+        },
+        {
+          "text": "ViewModel uses ObservableCollection<Recipe> for the items source",
+          "passed": true,
+          "evidence": "[ObservableProperty] private ObservableCollection<Recipe> _recipes = [];"
+        },
+        {
+          "text": "SelectedItem is bound TwoWay (or uses SelectionChanged event) to the SelectedRecipe property",
+          "passed": true,
+          "evidence": "SelectedItem=\"{Binding SelectedRecipe, Mode=TwoWay}\""
+        },
+        {
+          "text": "VisualState Named 'Selected' is defined on the DataTemplate root to highlight selected items",
+          "passed": true,
+          "evidence": "<VisualState Name=\"Selected\"><VisualState.Setters><Setter Property=\"BackgroundColor\" .../></VisualState.Setters></VisualState> defined on the DataTemplate root Grid"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "recipe-grid",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.89,
+        "passed": 8,
+        "failed": 1,
+        "total": 9,
+        "time_seconds": 97.1,
+        "tokens": 15851,
+        "tool_calls": 6,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CollectionView uses a 2-column GridItemsLayout (Span=2 or Columns=2)",
+          "passed": true,
+          "evidence": "<GridItemsLayout HorizontalItemSpacing=\"10\" Orientation=\"Vertical\" Span=\"2\" VerticalItemSpacing=\"10\" />"
+        },
+        {
+          "text": "DataTemplate includes an Image element bound to a photo or image source property",
+          "passed": true,
+          "evidence": "<Image Grid.Row=\"0\" Aspect=\"AspectFill\" Source=\"{Binding PhotoUrl}\">"
+        },
+        {
+          "text": "DataTemplate includes a Label bound to recipe Name and a Label bound to prep time",
+          "passed": true,
+          "evidence": "<Label Text=\"{Binding Name}\" ...> and <Label Text=\"{Binding PrepTimeDisplay}\" ...>"
+        },
+        {
+          "text": "CollectionView has SelectionMode set to Single",
+          "passed": true,
+          "evidence": "<CollectionView ... SelectedItem=\"{Binding SelectedRecipe, Mode=TwoWay}\" SelectionMode=\"Single\">"
+        },
+        {
+          "text": "ViewModel has a SelectedRecipe or SelectedItem property with property change notification",
+          "passed": true,
+          "evidence": "public Recipe? SelectedRecipe { get => _selectedRecipe; set { ... OnPropertyChanged(); } } with INotifyPropertyChanged implemented"
+        },
+        {
+          "text": "x:DataType compiled bindings are used on the page and/or DataTemplate",
+          "passed": true,
+          "evidence": "x:DataType=\"vm:RecipesViewModel\" on ContentPage and x:DataType=\"models:Recipe\" on DataTemplate"
+        },
+        {
+          "text": "ViewModel uses ObservableCollection<Recipe> for the items source",
+          "passed": true,
+          "evidence": "public ObservableCollection<Recipe> Recipes { get; } = new();"
+        },
+        {
+          "text": "SelectedItem is bound TwoWay (or uses SelectionChanged event) to the SelectedRecipe property",
+          "passed": true,
+          "evidence": "SelectedItem=\"{Binding SelectedRecipe, Mode=TwoWay}\""
+        },
+        {
+          "text": "VisualState Named 'Selected' is defined on the DataTemplate root to highlight selected items",
+          "passed": false,
+          "evidence": "No VisualState defined. Selection highlighting uses a DataTrigger on Border element instead — functional but not the MAUI-idiomatic VisualStateManager pattern."
+        }
+      ],
+      "notes": [
+        "DataTrigger used for selection highlighting instead of VisualStateManager — works but is not the recommended pattern for CollectionView selection feedback."
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "grouped-catalog",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 80.6,
+        "tokens": 19471,
+        "tool_calls": 11,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CollectionView has IsGrouped='True'",
+          "passed": true,
+          "evidence": "<CollectionView ItemsSource=\"{Binding GroupedProducts}\" IsGrouped=\"True\">"
+        },
+        {
+          "text": "GroupHeaderTemplate shows category name and item count",
+          "passed": true,
+          "evidence": "<Label Text=\"{Binding CategoryName}\" /> and <Label Text=\"{Binding ItemCount, StringFormat='{0} items'}\" />"
+        },
+        {
+          "text": "Price is formatted as currency (StringFormat with C, or similar currency formatting)",
+          "passed": true,
+          "evidence": "<Label Text=\"{Binding Price, StringFormat='{0:C}'}\" />"
+        },
+        {
+          "text": "An 'Add to Cart' button has a Command binding",
+          "passed": true,
+          "evidence": "<Button Text=\"Add to Cart\" Command=\"{Binding Source={RelativeSource AncestorType={x:Type viewmodels:CatalogViewModel}}, Path=AddToCartCommand}\" CommandParameter=\"{Binding}\" />"
+        },
+        {
+          "text": "Pull-to-refresh is implemented via RefreshView or IsBusy pattern",
+          "passed": true,
+          "evidence": "<RefreshView IsRefreshing=\"{Binding IsRefreshing}\" Command=\"{Binding RefreshCommand}\">"
+        },
+        {
+          "text": "CollectionView has an EmptyView defined for the no-results state",
+          "passed": true,
+          "evidence": "<CollectionView.EmptyView><ContentView><VerticalStackLayout><Label Text=\"No products found\" /></VerticalStackLayout></ContentView></CollectionView.EmptyView>"
+        },
+        {
+          "text": "ViewModel uses a grouped collection structure (ObservableCollection of group objects)",
+          "passed": true,
+          "evidence": "ObservableCollection<ProductGroup> GroupedProducts where ProductGroup : List<Product>"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "grouped-catalog",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 97.6,
+        "tokens": 16122,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CollectionView has IsGrouped='True'",
+          "passed": true,
+          "evidence": "<CollectionView ItemsSource=\"{Binding ProductGroups}\" IsGrouped=\"True\" SelectionMode=\"None\">"
+        },
+        {
+          "text": "GroupHeaderTemplate shows category name and item count",
+          "passed": true,
+          "evidence": "<Label Text=\"{Binding CategoryName}\" /> and <Label Text=\"{Binding ItemCount, StringFormat='{0} item(s)'}\" />"
+        },
+        {
+          "text": "Price is formatted as currency (StringFormat with C, or similar currency formatting)",
+          "passed": true,
+          "evidence": "<Label Text=\"{Binding Price, StringFormat='{0:C}'}\" />"
+        },
+        {
+          "text": "An 'Add to Cart' button has a Command binding",
+          "passed": true,
+          "evidence": "<Button Command=\"{Binding Source={RelativeSource AncestorType={x:Type vm:CatalogViewModel}}, Path=AddToCartCommand}\" CommandParameter=\"{Binding .}\" />"
+        },
+        {
+          "text": "Pull-to-refresh is implemented via RefreshView or IsBusy pattern",
+          "passed": true,
+          "evidence": "<RefreshView Command=\"{Binding RefreshCommand}\" IsRefreshing=\"{Binding IsRefreshing, Mode=TwoWay}\">"
+        },
+        {
+          "text": "CollectionView has an EmptyView defined for the no-results state",
+          "passed": true,
+          "evidence": "<CollectionView.EmptyView><VerticalStackLayout><Label Text=\"No products found\" /></VerticalStackLayout></CollectionView.EmptyView>"
+        },
+        {
+          "text": "ViewModel uses a grouped collection structure (ObservableCollection of group objects)",
+          "passed": true,
+          "evidence": "ObservableCollection<ProductGroup> where ProductGroup : ObservableCollection<Product>"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "chat-scroll",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 99.0,
+        "tokens": 20018,
+        "tool_calls": 9,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CollectionView displays messages from an ObservableCollection",
+          "passed": true,
+          "evidence": "ObservableCollection<Message> Messages in ViewModel, bound via ItemsSource=\"{Binding Messages}\""
+        },
+        {
+          "text": "Message alignment differs by sender — right-aligned for current user, left-aligned for others",
+          "passed": true,
+          "evidence": "Message.HorizontalAlignment computed property returns LayoutOptions.End (IsFromMe) or Start; bound in XAML to HorizontalOptions"
+        },
+        {
+          "text": "Code calls CollectionView.ScrollTo() to scroll to the last message when new messages arrive",
+          "passed": true,
+          "evidence": "MessagesCollectionView.ScrollTo(item: message, position: ScrollToPosition.End, animate: true);"
+        },
+        {
+          "text": "A CollectionChanged or property-change handler triggers the scroll behavior",
+          "passed": true,
+          "evidence": "Messages.CollectionChanged += OnMessagesCollectionChanged; plus MessageAdded event — both trigger ScrollTo"
+        },
+        {
+          "text": "Message model has properties for content/text, a sender or IsFromMe flag, and optionally timestamp",
+          "passed": true,
+          "evidence": "Text, SenderName, IsFromMe, Timestamp all present on Message.cs"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "chat-scroll",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 100.5,
+        "tokens": 16211,
+        "tool_calls": 6,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CollectionView displays messages from an ObservableCollection",
+          "passed": true,
+          "evidence": "ObservableCollection<Message> Messages in ViewModel, ItemsSource=\"{Binding Messages}\""
+        },
+        {
+          "text": "Message alignment differs by sender — right-aligned for current user, left-aligned for others",
+          "passed": true,
+          "evidence": "Two Grid layouts with IsVisible toggled by IsFromMe — right-aligned for sender, left for others"
+        },
+        {
+          "text": "Code calls CollectionView.ScrollTo() to scroll to the last message when new messages arrive",
+          "passed": true,
+          "evidence": "MessagesCollectionView.ScrollTo(item: lastMessage, position: ScrollToPosition.End, animate: true);"
+        },
+        {
+          "text": "A CollectionChanged or property-change handler triggers the scroll behavior",
+          "passed": true,
+          "evidence": "MessageAdded event triggers scroll in code-behind via OnMessageAdded handler"
+        },
+        {
+          "text": "Message model has properties for content/text, a sender or IsFromMe flag, and optionally timestamp",
+          "passed": true,
+          "evidence": "Text, IsFromMe, SenderName, Timestamp all present on Message.cs"
+        }
+      ],
+      "notes": [
+        "Used deprecated Frame instead of Border/RoundRectangle for message bubbles",
+        "Dual-template visibility toggle is heavier than DataTemplateSelector approach"
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 85.1,
+        "stddev": 10.1,
+        "min": 75.6,
+        "max": 99.0
+      },
+      "tokens": {
+        "mean": 19396,
+        "stddev": 541,
+        "min": 18699,
+        "max": 20018
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.963,
+        "stddev": 0.052,
+        "min": 0.89,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 98.4,
+        "stddev": 1.5,
+        "min": 97.1,
+        "max": 100.5
+      },
+      "tokens": {
+        "mean": 16061,
+        "stddev": 153,
+        "min": 15851,
+        "max": 16211
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.04",
+      "time_seconds": "-13.3",
+      "tokens": "+3335"
+    }
+  },
+  "notes": []
+}

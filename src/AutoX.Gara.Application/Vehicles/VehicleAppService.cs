@@ -3,6 +3,7 @@
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using System;
@@ -50,9 +51,24 @@ public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, IL
 
     public async Task<ServiceResult<Vehicle>> CreateAsync(Vehicle vehicle)
     {
+        var validation = ValidateVehiclePayload(vehicle);
+        if (!validation.IsSuccess)
+        {
+            return ServiceResult<Vehicle>.Failure(validation.ErrorMessage!, validation.Reason);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
+            bool customerExists = await session.Context.Set<Customer>()
+                .AsNoTracking()
+                .AnyAsync(c => c.Id == vehicle.CustomerId)
+                .ConfigureAwait(false);
+            if (!customerExists)
+            {
+                return ServiceResult<Vehicle>.Failure("Không tìm thấy khách hàng của xe.", ProtocolReason.NOT_FOUND);
+            }
+
             if (await session.Vehicles.ExistsAsync(vehicle.LicensePlate, vehicle.EngineNumber, vehicle.FrameNumber).ConfigureAwait(false))
             {
                 return ServiceResult<Vehicle>.Failure("Xe đã tồn tại (trùng BKS hoặc số máy/số khung).", ProtocolReason.ALREADY_EXISTS);
@@ -72,6 +88,12 @@ public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, IL
 
     public async Task<ServiceResult<Vehicle>> UpdateAsync(Vehicle vehicle)
     {
+        var validation = ValidateVehiclePayload(vehicle);
+        if (!validation.IsSuccess)
+        {
+            return ServiceResult<Vehicle>.Failure(validation.ErrorMessage!, validation.Reason);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -79,6 +101,27 @@ public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, IL
             if (existing is null || existing.DeletedAt != null)
             {
                 return ServiceResult<Vehicle>.Failure("Không tìm thấy xe.", ProtocolReason.NOT_FOUND);
+            }
+
+            bool customerExists = await session.Context.Set<Customer>()
+                .AsNoTracking()
+                .AnyAsync(c => c.Id == vehicle.CustomerId)
+                .ConfigureAwait(false);
+            if (!customerExists)
+            {
+                return ServiceResult<Vehicle>.Failure("Không tìm thấy khách hàng của xe.", ProtocolReason.NOT_FOUND);
+            }
+
+            bool duplicateExists = await session.Context.Set<Vehicle>()
+                .AsNoTracking()
+                .AnyAsync(v => v.Id != vehicle.Id
+                    && ((!string.IsNullOrWhiteSpace(vehicle.LicensePlate) && v.LicensePlate == vehicle.LicensePlate)
+                        || (!string.IsNullOrWhiteSpace(vehicle.EngineNumber) && v.EngineNumber == vehicle.EngineNumber)
+                        || (!string.IsNullOrWhiteSpace(vehicle.FrameNumber) && v.FrameNumber == vehicle.FrameNumber)))
+                .ConfigureAwait(false);
+            if (duplicateExists)
+            {
+                return ServiceResult<Vehicle>.Failure("Xe đã tồn tại (trùng BKS hoặc số máy/số khung).", ProtocolReason.ALREADY_EXISTS);
             }
 
             existing.CustomerId = vehicle.CustomerId;
@@ -127,6 +170,31 @@ public sealed class VehicleAppService(IDataSessionFactory dataSessionFactory, IL
             _logger.LogError(ex, "Error deleting vehicle {Id}.", vehicleId);
             return ServiceResult<bool>.Failure("Lỗi khi xóa xe.");
         }
+    }
+
+    private static ServiceResult<bool> ValidateVehiclePayload(Vehicle vehicle)
+    {
+        if (vehicle is null || vehicle.CustomerId <= 0 || string.IsNullOrWhiteSpace(vehicle.LicensePlate))
+        {
+            return ServiceResult<bool>.Failure("Dữ liệu xe không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        if (vehicle.Year < 1900 || vehicle.Year > DateTime.UtcNow.Year + 1)
+        {
+            return ServiceResult<bool>.Failure("Năm sản xuất xe không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (vehicle.Mileage < 0)
+        {
+            return ServiceResult<bool>.Failure("Số km đã đi không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (vehicle.InsuranceExpiryDate.HasValue && vehicle.InsuranceExpiryDate.Value < vehicle.RegistrationDate)
+        {
+            return ServiceResult<bool>.Failure("Ngày hết hạn bảo hiểm không thể trước ngày đăng ký.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        return ServiceResult<bool>.Success(true);
     }
 }
 

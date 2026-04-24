@@ -1,0 +1,118 @@
+{
+  "expectations": [
+    {
+      "text": "The Xamarin.Forms using/namespace is replaced with Microsoft.Maui.Controls or removed",
+      "passed": true,
+      "evidence": "SettingsPage.cs line 1: 'using Microsoft.Maui.Controls;' \u2014 the Xamarin.Forms namespace is gone. Transcript Step 3 Issue 1 also documents: 'Fix: Replace using Xamarin.Forms; with using Microsoft.Maui.Controls;' and the Step 4 summary table confirms the fix was applied."
+    },
+    {
+      "text": "Device.BeginInvokeOnMainThread is replaced with MainThread.BeginInvokeOnMainThread or MainThread.InvokeOnMainThreadAsync",
+      "passed": true,
+      "evidence": "SettingsPage.cs line 14: 'MainThread.BeginInvokeOnMainThread(() => {'. Transcript Step 3 Issue 2 identifies the deprecated Device.BeginInvokeOnMainThread call and documents the fix using 'Microsoft.Maui.ApplicationModel.MainThread'. The using directive 'using Microsoft.Maui.ApplicationModel;' is also present at line 2."
+    },
+    {
+      "text": "DependencyService.Get is replaced with constructor injection (ISettingsService injected via constructor parameter)",
+      "passed": true,
+      "evidence": "SettingsPage.cs shows: a private readonly field '_settingsService' (line 8), a constructor parameter 'ISettingsService settingsService' (line 10), and assignment '_settingsService = settingsService;' (line 13). No DependencyService call remains. Transcript Step 3 Issue 3 confirms: 'inject ISettingsService via the constructor'. metrics.json issue_detail[2] fix_applied: 'Constructor injection via IServiceProvider'."
+    },
+    {
+      "text": "SetUseSafeArea or the Xamarin.Forms.PlatformConfiguration.iOS platform-specific is replaced with SafeAreaEdges property on the page",
+      "passed": true,
+      "evidence": "SettingsPage.cs line 23: 'SafeAreaEdges = Microsoft.Maui.Primitives.SafeAreaEdges.All;' inside OnAppearing(). The Xamarin.Forms.PlatformConfiguration.iOS call is completely removed. Transcript Step 3 Issue 4 documents both sub-problems (removed Xamarin type reference and deprecated SetUseSafeArea) and specifies the fix. metrics.json confirms fix_applied: 'SafeAreaEdges = Microsoft.Maui.Primitives.SafeAreaEdges.All'."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "eval": "eval-code-review",
+    "variant": "with_skill",
+    "skill": "maui-current-apis",
+    "model": "claude-sonnet-4-6",
+    "issues": {
+      "total_in_input": 4,
+      "total_detected": 4,
+      "total_fixed": 4,
+      "detection_rate": 1.0,
+      "fix_rate": 1.0,
+      "false_positives": 0
+    },
+    "skill_coverage": {
+      "skill_tables_consulted": [
+        "Device & Platform APIs",
+        "Safe Area & Layout",
+        "NuGet Packages"
+      ],
+      "quick_rules_applied": [
+        3,
+        5
+      ],
+      "reasoning_steps_followed": [
+        "Step 1 (TFM detection)",
+        "Step 2 (Library versions)",
+        "Step 3 (API currency)",
+        "Step 4 (Decision rules)"
+      ]
+    },
+    "output_files": [
+      "SettingsPage.cs",
+      "transcript.md",
+      "metrics.json"
+    ],
+    "output_chars": 0
+  },
+  "timing": {
+    "total_tokens": 19633,
+    "total_duration_seconds": 61.4,
+    "duration_ms": 61406
+  },
+  "claims": [
+    {
+      "claim": "4 issues were detected and 4 were fixed (100% detection and fix rate)",
+      "type": "factual",
+      "verified": true,
+      "evidence": "metrics.json confirms detection_rate: 1.0 and fix_rate: 1.0. The output SettingsPage.cs shows no remaining Xamarin.Forms patterns; all four deprecated/wrong APIs are replaced with their MAUI equivalents."
+    },
+    {
+      "claim": "0 false positives were introduced",
+      "type": "quality",
+      "verified": true,
+      "evidence": "metrics.json reports false_positives: 0. The corrected SettingsPage.cs does not introduce any extraneous changes beyond the four targeted fixes. Code compiles structurally with no spurious additions."
+    },
+    {
+      "claim": "SafeAreaEdges is set inside OnAppearing() rather than the constructor",
+      "type": "factual",
+      "verified": true,
+      "evidence": "SettingsPage.cs lines 19-24 show SafeAreaEdges assignment inside OnAppearing(). The transcript notes this is placed alongside the existing _settingsService?.Load() call. This is a reasonable placement, though setting a property on every appearance is slightly unusual \u2014 it could equally live in the constructor or as a property initializer. Not incorrect, but worth noting."
+    },
+    {
+      "claim": "The skill followed its prescribed reasoning steps (TFM detection, library versions, API currency, decision rules)",
+      "type": "process",
+      "verified": true,
+      "evidence": "Transcript Steps 1-4 map directly to these phases. Step 1 addresses TFM detection (defaulting to .NET MAUI 10 due to absent .csproj). Step 2 confirms no third-party package version checks needed. Steps 3 and 4 enumerate all issues with skill rule citations."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "DependencyService.Get is replaced with constructor injection (ISettingsService injected via constructor parameter)",
+        "reason": "The expectation passes because the constructor parameter is present and the field is assigned, but it does not verify that the null-conditional call pattern (_settingsService?.Load()) was either preserved or resolved. The original Xamarin code likely used DependencyService.Get which could return null; the fix retains the null-conditional operator but the injection pattern should guarantee a non-null instance if wired correctly. A stronger assertion would check that no null guard is needed or that a guard comment is present explaining why it remains."
+      },
+      {
+        "reason": "No assertion verifies that the corrected file compiles without errors (e.g., that 'using Microsoft.Maui.ApplicationModel;' was added alongside the MainThread replacement). The skill did add it correctly, but this is a common failure mode \u2014 replacing an API call without adding the required using directive \u2014 and no assertion catches it."
+      },
+      {
+        "reason": "No assertion checks that the output SettingsPage.cs contains no remaining Xamarin.* references. All four specific patterns are asserted individually, but a blanket check for any residual Xamarin namespace usage would catch regressions if the input had more instances of these patterns or similar patterns not enumerated in the expectations."
+      }
+    ],
+    "overall": "All four expectations are well-targeted to the actual deprecated patterns and each is directly verifiable in the output file. The main gap is that correctness of the surrounding code (required using directives, null-safety semantics) goes unchecked."
+  }
+}

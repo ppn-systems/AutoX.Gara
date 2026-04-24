@@ -1,0 +1,45 @@
+{
+  "expectations": [
+    {
+      "text": "CollectionView has IsGrouped='True'",
+      "passed": true,
+      "evidence": "<CollectionView ItemsSource=\"{Binding ProductGroups}\" IsGrouped=\"True\" SelectionMode=\"None\">"
+    },
+    {
+      "text": "GroupHeaderTemplate shows category name and item count",
+      "passed": true,
+      "evidence": "<Label Grid.Column=\"0\" Text=\"{Binding CategoryName}\" Style=\"{StaticResource CategoryHeaderStyle}\" ... />\n<Label Grid.Column=\"1\" Text=\"{Binding ItemCount, StringFormat='{0} item(s)'}\" Style=\"{StaticResource ItemCountStyle}\" ... />"
+    },
+    {
+      "text": "Price is formatted as currency (StringFormat with C, or similar currency formatting)",
+      "passed": true,
+      "evidence": "<Label Grid.Row=\"1\" Grid.Column=\"0\" Text=\"{Binding Price, StringFormat='{0:C}'}\" Style=\"{StaticResource PriceStyle}\" ... />"
+    },
+    {
+      "text": "An 'Add to Cart' button has a Command binding",
+      "passed": true,
+      "evidence": "<Button ... Style=\"{StaticResource AddToCartButtonStyle}\" Command=\"{Binding Source={RelativeSource AncestorType={x:Type vm:CatalogViewModel}}, Path=AddToCartCommand}\" CommandParameter=\"{Binding .}\" ... />"
+    },
+    {
+      "text": "Pull-to-refresh is implemented via RefreshView or IsBusy pattern",
+      "passed": true,
+      "evidence": "<RefreshView Command=\"{Binding RefreshCommand}\" IsRefreshing=\"{Binding IsRefreshing, Mode=TwoWay}\">"
+    },
+    {
+      "text": "CollectionView has an EmptyView defined for the no-results state",
+      "passed": true,
+      "evidence": "<CollectionView.EmptyView>\n  <VerticalStackLayout ...>\n    <Label Text=\"No products found\" ... />\n    <Label Text=\"Pull down to refresh and check again.\" ... />\n  </VerticalStackLayout>\n</CollectionView.EmptyView>"
+    },
+    {
+      "text": "ViewModel uses a grouped collection structure (ObservableCollection of group objects)",
+      "passed": true,
+      "evidence": "private ObservableCollection<ProductGroup> _productGroups = [];\npublic ObservableCollection<ProductGroup> ProductGroups { get => _productGroups; ... }\n// ProductGroup : ObservableCollection<Product> with CategoryName and ItemCount properties"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  }
+}

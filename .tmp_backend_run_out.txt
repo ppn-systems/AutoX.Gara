@@ -1,0 +1,18 @@
+Using launch settings from src\AutoX.Gara.Backend\Properties\launchSettings.json...
+    _   __      ___
+   / | / /___ _/ (_)  __
+  /  |/ / __ `/ / / |/_/
+ / /|  / /_/ / / />  <
+/_/ |_/\__,_/_/_/_/|_|  SERVER CORE
+[INIT] Version   : 12.1.0.0
+[INIT] PID       : 25120
+[INIT] OS        : Microsoft Windows NT 10.0.26200.0
+[INIT] Arch      : X64
+[INIT] Runtime   : .NET 10.0.5
+[INIT] Config    : C:\ProgramData\Nalix\config\server.ini
+[INIT] GC Mode   : Workstation GC
+[INIT] Processors: 16
+
+
+[WARN] Server GC is NOT enabled. Performance may be degraded in high-load scenarios.
+------------------------------------------------------------------

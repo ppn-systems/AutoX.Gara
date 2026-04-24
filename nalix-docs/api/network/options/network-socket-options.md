@@ -33,17 +33,15 @@ Accurate defaults are critical for production rollout and troubleshooting.
 | `KeepAlive` | TCP keepalive behavior. | `true` |
 | `ReuseAddress` | Address reuse behavior. | `true` |
 | `MaxGroupConcurrency` | Worker group concurrency cap. | `8` |
-| `TuneThreadPool` | Thread pool tuning switch. | `true` |
 | `DualMode` | IPv4+IPv6 dual mode. | `true` |
-| `ExclusiveAddressUse` | Exclusive bind behavior. | `true` |
-| `ProcessChannelCapacity` | Accepted-connection process queue size. | `128` |
-| `MaxUdpDatagramSize` | Max inbound UDP datagram bytes. | `1400` |
+| `ProcessChannelCapacity` | Accepted-connection process queue size. | `256` |
 
 ## Best Practices
 
 - Validate options before listener activation.
 - Tune `MaxParallel`, `ProcessChannelCapacity`, and connection limits together.
 - Keep `MaxUdpDatagramSize` below fragmentation-prone values for your network profile.
+- Keep `UdpReplayWindowSize` high enough for your real packet reordering profile.
 
 ## Related APIs
 

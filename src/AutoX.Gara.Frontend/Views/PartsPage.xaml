@@ -18,6 +18,8 @@
 
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
 
+    x:DataType="ctrl:PartsViewModel"
+
     Title="Quản lý phụ tùng"
 
     BackgroundColor="#0A0A0F">
@@ -429,6 +431,7 @@
             <Grid Grid.Row="2">
 
                 <CollectionView ItemsSource="{Binding Parts}"
+                                ItemSizingStrategy="MeasureFirstItem"
 
                                 IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}"
 

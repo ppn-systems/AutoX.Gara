@@ -67,7 +67,7 @@ dotnet add package Nalix.Framework
 
 ## Configuration File
 
-Most server setups and many SDK examples load options from a `default.ini` file through `ConfigurationManager`. Create this file in your project output directory:
+Most server setups and many SDK examples load options from the `default.ini` file via `ConfigurationManager`. This file will be automatically generated in your project's output directory:
 
 ```ini
 [NetworkSocketOptions]
@@ -75,7 +75,9 @@ Port=57206
 Backlog=512
 
 [DispatchOptions]
-WorkerCount=0
+MaxPerConnectionQueue=4096
+DropPolicy=DropNewest
+BlockTimeout=00:00:01
 
 [TransportOptions]
 Address=127.0.0.1
@@ -84,17 +86,18 @@ ConnectTimeoutMillis=7000
 MaxPacketSize=65536
 ```
 
-!!! note "WorkerCount=0"
-    Setting `WorkerCount` to `0` tells the dispatcher to auto-scale workers to the logical CPU core count.
+!!! note "Dispatch loop scaling"
+    Worker-loop count is configured on `PacketDispatchOptions<TPacket>` in code via `WithDispatchLoopCount(...)`.
+    Use `WithDispatchLoopCount(null)` to keep auto-scaling behavior.
 
 ## Validate Options at Startup
 
 Validate options before opening sockets or creating sessions. Invalid configuration is cheaper to catch during startup than during live traffic.
 
 ```csharp
-using Nalix.Framework.Configuration;
-using Nalix.Network.Options;
 using Nalix.SDK.Options;
+using Nalix.Network.Options;
+using Nalix.Framework.Configuration;
 
 // Server
 NetworkSocketOptions socket = ConfigurationManager.Instance.Get<NetworkSocketOptions>();

@@ -1,0 +1,112 @@
+{
+  "expectations": [
+    {
+      "text": "The xmlns is updated from http://xamarin.com/schemas/2014/forms to http://schemas.microsoft.com/dotnet/2021/maui",
+      "passed": true,
+      "evidence": "ProductListPage.xaml line 2: `xmlns=\"http://schemas.microsoft.com/dotnet/2021/maui\"`. The transcript Step 3 also explicitly lists this as pattern #1 replaced. metrics.json confirms `correctly_replaced: true`."
+    },
+    {
+      "text": "ListView is replaced with CollectionView",
+      "passed": true,
+      "evidence": "ProductListPage.xaml line 6: `<CollectionView ItemsSource=\"{Binding Products}\">`. The original `<ListView HasUnevenRows=\"True\">` is entirely absent from the output. Transcript Step 3 row #4 confirms the replacement. metrics.json entry `<ListView HasUnevenRows=\"True\">` has `correctly_replaced: true`."
+    },
+    {
+      "text": "ViewCell wrapper is removed from the DataTemplate",
+      "passed": true,
+      "evidence": "ProductListPage.xaml lines 8-13: The DataTemplate contains `<HorizontalStackLayout>` directly with no `<ViewCell>` wrapper. Transcript Step 3 row #6 confirms `<ViewCell>` was removed as it is deprecated in .NET 10 and not needed inside CollectionView.ItemTemplate."
+    },
+    {
+      "text": "x:DataType compiled binding is added to the page or DataTemplate",
+      "passed": false,
+      "evidence": "ProductListPage.xaml contains no `x:DataType` attribute anywhere — not on `<ContentPage>`, not on `<DataTemplate>`. The transcript makes no mention of adding `x:DataType`. metrics.json's `skill_guidance_coverage` section does not include a `compiled_bindings` or `x:DataType` entry, indicating the skill did not prompt for it. This is a genuine omission: compiled bindings via `x:DataType` are a best practice in .NET MAUI and required for x:Bind-style safety, and migrating from Xamarin.Forms is a natural point to introduce it."
+    },
+    {
+      "text": "HasUnevenRows attribute is removed (not applicable to CollectionView)",
+      "passed": true,
+      "evidence": "ProductListPage.xaml contains no `HasUnevenRows` attribute. Transcript Step 4 explicitly states: '`HasUnevenRows=\"True\"` was dropped: `CollectionView` measures each item's actual size automatically; there is no equivalent property because it is the default behavior.'"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 1,
+    "total": 5,
+    "pass_rate": 0.80
+  },
+  "execution_metrics": {
+    "eval_id": 3,
+    "eval_name": "forms-migration",
+    "skill": "maui-current-apis",
+    "condition": "with_skill",
+    "target_framework": "net10.0",
+    "total_deprecated_patterns_found": 7,
+    "total_deprecated_patterns_replaced": 7,
+    "total_valid_patterns_preserved": 7,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "replacement_accuracy": 1.0,
+    "preservation_accuracy": 1.0,
+    "output_chars": 377,
+    "transcript_chars": 4200
+  },
+  "timing": {
+    "executor_duration_seconds": 84.9,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 84.9,
+    "total_tokens": 22669,
+    "duration_ms": 84865
+  },
+  "claims": [
+    {
+      "claim": "All 7 deprecated patterns were correctly replaced",
+      "type": "quality",
+      "verified": true,
+      "evidence": "metrics.json summary: `total_deprecated_patterns_replaced: 7`, `replacement_accuracy: 1.0`. Each entry in the deprecated_patterns_in_input array has `correctly_replaced: true`. The output XAML confirms the replacements directly."
+    },
+    {
+      "claim": "All valid MAUI patterns were preserved unchanged",
+      "type": "quality",
+      "verified": true,
+      "evidence": "metrics.json: `total_valid_patterns_preserved: 7`, `preservation_accuracy: 1.0`. Output XAML retains x:Class, Title, all Binding expressions, FontAttributes, and Padding unchanged."
+    },
+    {
+      "claim": "The skill provided direct guidance for all 7 deprecated patterns",
+      "type": "process",
+      "verified": true,
+      "evidence": "metrics.json: `skill_provided_direct_guidance_for: 7`. Transcript Step 3 maps each pattern to a specific skill table entry."
+    },
+    {
+      "claim": "Binding expressions Name and Price with StringFormat are valid in MAUI and were preserved",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Output XAML lines 10-11 show `{Binding Name}` and `{Binding Price, StringFormat='{0:C}'}` unchanged from input."
+    },
+    {
+      "claim": "x:DataType compiled binding is present in the migrated output",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Neither the ContentPage nor the DataTemplate in ProductListPage.xaml contains an x:DataType attribute. The transcript does not mention adding compiled bindings. This claim is implicitly made by the eval expectation but is not met."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "x:DataType compiled binding is added to the page or DataTemplate",
+        "reason": "This expectation FAILED and correctly identifies a meaningful gap: the migrated output omits x:DataType entirely. This is a high-value assertion because compiled bindings are a first-class .NET MAUI best practice and a common migration oversight. The assertion is discriminating — it catches a real deficiency that the model (and apparently the skill) did not address. Consider updating the skill's guidance to explicitly require x:DataType when migrating from Xamarin.Forms, since the model data type must be declared for compiled bindings to work."
+      },
+      {
+        "assertion": null,
+        "reason": "No assertion checks that the output is well-formed XML. The migrated XAML is valid XML, but adding a structural validity check (or a compilation smoke test) would catch truncation or malformed output that the current assertions would miss."
+      },
+      {
+        "assertion": null,
+        "reason": "No assertion checks that the original data bindings were preserved without modification. The output correctly keeps `{Binding Products}`, `{Binding Name}`, and `{Binding Price, StringFormat='{0:C}'}`, but there is no expectation guarding against the model accidentally dropping or altering these bindings during migration."
+      }
+    ],
+    "overall": "Four of five assertions are well-chosen and discriminating — they test genuine migration outcomes, not just file existence. The x:DataType assertion correctly catches a real omission. The main gap is that the skill itself does not appear to include guidance on adding x:DataType compiled bindings during Xamarin.Forms migration, which caused the failure. Adding compiled-binding guidance to the skill would likely close this gap."
+  }
+}

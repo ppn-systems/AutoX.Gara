@@ -18,6 +18,8 @@
 
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
 
+    x:DataType="ctrl:SuppliersViewModel"
+
     Title="Quản lý nhà cung cấp"
 
     BackgroundColor="#0A0A0F">
@@ -302,7 +304,7 @@
 
             <Grid Grid.Row="2">
 
-                <CollectionView ItemsSource="{Binding Suppliers}" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}" Margin="16,0" VerticalOptions="Fill">
+                <CollectionView ItemsSource="{Binding Suppliers}" ItemSizingStrategy="MeasureFirstItem" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}" Margin="16,0" VerticalOptions="Fill">
 
                     <CollectionView.ItemTemplate>
 

@@ -25,15 +25,25 @@ The public API surface revolves around two main types:
 ## Startup Flow
 
 ```mermaid
-flowchart LR
-    A["NetworkApplication.CreateBuilder()"] --> B["Configure options, logger, connection hub, packets, handlers"]
-    B --> C["Build()"]
-    C --> D["ActivateAsync()"]
-    D --> E["Apply options & Register logger / connection hub"]
-    E --> F["Register Packet Registry"]
-    F --> G["Create & Activate PacketDispatchChannel"]
-    G --> H["Create protocol instances"]
-    H --> I["Start TCP/UDP listeners"]
+graph LR
+    subgraph Configuration ["Phase 1: Configuration"]
+        Create["CreateBuilder()"] --> Config["Configure Loggers, Options, Hubs"]
+        Config --> Discover["AddPacket()/AddPacketNamespace() & AddHandlers()"]
+        Discover --> Bind["AddTcp() / AddUdp()"]
+    end
+
+    subgraph Composition ["Phase 2: Composition"]
+        Bind --> Build["Build()"]
+        Build --> Prep["Initialize Context"]
+    end
+
+    subgraph Activation ["Phase 3: Activation"]
+        Prep --> Run["ActivateAsync()"]
+        Run --> Infra["Infrastructure"]
+        Infra --> Registry["Build Registry"]
+        Registry --> Dispatch["Initialize Dispatch"]
+        Dispatch --> Listeners["Start Listeners"]
+    end
 ```
 
 ## Public members at a glance
@@ -41,7 +51,7 @@ flowchart LR
 | Type | Public members |
 |---|---|
 | `NetworkApplication` | `CreateBuilder()`, `ActivateAsync(...)`, `DeactivateAsync(...)`, `RunAsync(...)`, `Dispose()` |
-| `INetworkApplicationBuilder` | `ConfigureLogging(...)`, `ConfigureConnectionHub(...)`, `ConfigureBufferPoolManager(...)`, `Configure<TOptions>(...)`, `AddPacket(...)`, `AddHandlers(...)`, `AddHandler(...)`, `AddMetadataProvider(...)`, `ConfigureDispatch(...)`, `AddTcp(...)`, `AddUdp(...)`, `Build()` |
+| `INetworkApplicationBuilder` | `ConfigureLogging(...)`, `ConfigureConnectionHub(...)`, `ConfigureBufferPoolManager(...)`, `ConfigureCertificate(...)`, `Configure<TOptions>(...)`, `ConfigurePacketRegistry(...)`, `AddPacket(...)`, `AddPacketNamespace(...)`, `AddHandlers(...)`, `AddHandler(...)`, `AddMetadataProvider(...)`, `ConfigureDispatch(...)`, `AddTcp(...)`, `AddUdp(...)`, `Build()` |
 
 ## `NetworkApplication`
 
@@ -51,6 +61,8 @@ The hosted pipeline remains generic-friendly, so the same builder flow works for
 ### Lifecycle methods
 
 - `ActivateAsync(...)`: Starts the application. It initializes the packet registry, activates the dispatcher, and starts all registered TCP and UDP listeners.
+!!! note
+    Middleware in context is registered globally but executed in the sharded dispatch loop. Ensure your custom middleware is thread-safe or uses localized state.
 - `RunAsync(...)`: Activates the application and waits indefinitely until cancellation is requested, then deactivates it.
 - `DeactivateAsync(...)`: Gracefully stops all listeners and disposes of protocols and the dispatcher.
 - `Dispose()`: Synchronous cleanup that calls `DeactivateAsync`.
@@ -64,18 +76,22 @@ The builder uses a fluent API to configure the host before it is built.
 - `ConfigureLogging(ILogger)`: Registers the logger into the `InstanceManager`.
 - `ConfigureConnectionHub(IConnectionHub)`: Registers the shared connection hub into the `InstanceManager`.
 - `ConfigureBufferPoolManager(BufferPoolManager)`: Explicitly registers a custom buffer pool manager and binds `BufferLease.ByteArrayPool` to that manager for pooled receive/send paths.
+- `ConfigureCertificate(string path)`: Configures the absolute path to the server identity certificate (`certificate.private`).
 - `Configure<TOptions>(Action<TOptions>)`: Configures a specific options type. This is applied during the activation phase.
 
-> [!NOTE]
-> If you do not configure a connection hub or buffer pool manager, the builder can create default instances during build/activation.
-> The built-in handler set is registered automatically before user-defined handler discovery runs.
->
-> The builder also re-binds `BufferLease.ByteArrayPool` during startup, so the server receive path stays on pooled buffers even if `BufferLease` was touched before host wiring.
+!!! note
+    If you do not configure a connection hub or buffer pool manager, the builder can create default instances during build/activation. The built-in handler set is registered automatically before user-defined handler discovery runs.
+    
+    The builder also re-binds `BufferLease.ByteArrayPool` during startup, so the server receive path stays on pooled buffers even if `BufferLease` was touched before host wiring.
 
 ### Packet and Handler Discovery
 
 - `AddPacket(assembly, requirePacketAttribute)`: Scans an assembly for packet types.
+- `AddPacket(assemblyPath, requirePacketAttribute)`: Loads a `.dll` path and scans it for packet types.
 - `AddPacket<TMarker>(...)`: Marker-type shortcut for scanning packets.
+- `AddPacketNamespace(packetNamespace, recursive)`: Scans currently loaded assemblies and includes matching packet namespaces.
+- `AddPacketNamespace(assemblyPath, packetNamespace, recursive)`: Scopes namespace discovery to one assembly path.
+- `ConfigurePacketRegistry(IPacketRegistry)`: Uses a pre-built registry and skips hosting auto-registration.
 - `AddHandlers(assembly)`: Scans an assembly for `[PacketController]` classes.
 - `AddHandlers<TMarker>()`: Marker-type shortcut for scanning handlers.
 - `AddHandler<THandler>()`: Manually registers a handler type.
@@ -131,4 +147,5 @@ To keep message reading allocation-free on the server hot path:
 - [UDP Listener](../network/udp-listener.md)
 - [Packet Dispatch](../runtime/routing/packet-dispatch.md)
 - [Packet Registry](../framework/packets/packet-registry.md)
-- [Configuration & DI](../framework/runtime/configuration.md)
+- [Configuration](../framework/runtime/configuration.md)
+- [Instance Manager (DI)](../framework/runtime/instance-manager.md)

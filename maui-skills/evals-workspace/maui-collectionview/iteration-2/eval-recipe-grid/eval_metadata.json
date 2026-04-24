@@ -1,0 +1,16 @@
+{
+  "eval_id": 1,
+  "eval_name": "recipe-grid",
+  "prompt": "I'm building a recipe app in .NET MAUI. I need to show a 2-column grid of recipes where each card shows the recipe photo, name, and prep time. Users should be able to tap a card to select it — I want to highlight the selected item. The project uses MVVM. Can you implement this?",
+  "assertions": [
+    "CollectionView uses a 2-column GridItemsLayout (Span=2 or Columns=2)",
+    "DataTemplate includes an Image element bound to a photo or image source property",
+    "DataTemplate includes a Label bound to recipe Name and a Label bound to prep time",
+    "CollectionView has SelectionMode set to Single",
+    "ViewModel has a SelectedRecipe or SelectedItem property with property change notification",
+    "x:DataType compiled bindings are used on the page and/or DataTemplate",
+    "ViewModel uses ObservableCollection<Recipe> for the items source",
+    "SelectedItem is bound TwoWay (or uses SelectionChanged event) to the SelectedRecipe property",
+    "VisualState Named 'Selected' is defined on the DataTemplate root to highlight selected items"
+  ]
+}

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:RecipeApp.ViewModels"
+             xmlns:models="clr-namespace:RecipeApp.Models"
+             x:Class="RecipeApp.Views.RecipesPage"
+             x:DataType="viewmodels:RecipesViewModel"
+             Title="Recipes">
+
+    <CollectionView ItemsSource="{Binding Recipes}"
+                    SelectionMode="Single"
+                    SelectedItem="{Binding SelectedRecipe, Mode=TwoWay}"
+                    SelectionChangedCommand="{Binding SelectRecipeCommand}"
+                    SelectionChangedCommandParameter="{Binding SelectedRecipe}">
+
+        <CollectionView.ItemsLayout>
+            <GridItemsLayout Orientation="Vertical"
+                             Span="2"
+                             VerticalItemSpacing="12"
+                             HorizontalItemSpacing="12" />
+        </CollectionView.ItemsLayout>
+
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="models:Recipe">
+                <Grid Padding="4">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor" Value="Transparent" />
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState Name="Selected">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor"
+                                            Value="{AppThemeBinding Light=#1A6200EE, Dark=#336200EE}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+
+                    <Border StrokeShape="RoundRectangle 12"
+                            Stroke="{AppThemeBinding Light=#E0E0E0, Dark=#3A3A3A}"
+                            StrokeThickness="1"
+                            BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}">
+                        <VerticalStackLayout Spacing="0">
+                            <Image Source="{Binding PhotoUrl}"
+                                   Aspect="AspectFill"
+                                   HeightRequest="120"
+                                   HorizontalOptions="Fill" />
+                            <VerticalStackLayout Padding="10,8" Spacing="4">
+                                <Label Text="{Binding Name}"
+                                       FontAttributes="Bold"
+                                       FontSize="14"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="2" />
+                                <HorizontalStackLayout Spacing="4">
+                                    <Label Text="&#x23F1;"
+                                           FontSize="12"
+                                           TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                                    <Label Text="{Binding PrepTime}"
+                                           FontSize="12"
+                                           TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+
+        <CollectionView.EmptyView>
+            <ContentView>
+                <VerticalStackLayout HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Spacing="12"
+                                     Padding="32">
+                    <Label Text="No recipes found."
+                           HorizontalTextAlignment="Center"
+                           FontSize="16"
+                           TextColor="{AppThemeBinding Light=#888888, Dark=#AAAAAA}" />
+                </VerticalStackLayout>
+            </ContentView>
+        </CollectionView.EmptyView>
+
+    </CollectionView>
+
+</ContentPage>

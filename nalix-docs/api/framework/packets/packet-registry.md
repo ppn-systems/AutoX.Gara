@@ -1,45 +1,46 @@
 # Packet Registry
 
-This page covers the packet catalog APIs in `Nalix.Framework.DataFrames`.
+This page covers packet discovery and registry APIs in `Nalix.Framework.DataFrames`.
 
 ## Source mapping
 
 - `src/Nalix.Framework/DataFrames/PacketRegistryFactory.cs`
 - `src/Nalix.Framework/DataFrames/PacketRegistry.cs`
+- `src/Nalix.Framework/DataFrames/PacketRegister.cs`
 
 ## Main types
 
 - `PacketRegistryFactory`
 - `PacketRegistry`
+- `PacketRegister`
 
 ## Public members at a glance
 
 | Type | Public members |
 |---|---|
-| `PacketRegistryFactory` | `RegisterPacket`, `IncludeAssembly`, `IncludeCurrentDomain`, `IncludeNamespace`, `IncludeNamespaceRecursive`, `CreateCatalog`, `Compute` |
-| `PacketRegistry` | `IsKnownMagic`, `IsRegistered`, `TryDeserialize`, `TryGetDeserializer`, `DeserializerCount` |
-
-## Source notes
-
-The default factory now pre-registers these built-in packet types:
-
-- `Control`
-- `Handshake`
+| `PacketRegistryFactory` | `RegisterPacket`, `RegisterAllPackets`, `RegisterPacketAssembly`, `IncludeAssembly`, `IncludeCurrentDomain`, `RegisterCurrentDomainPackets`, `IncludeNamespace`, `IncludeNamespaceRecursive`, `CreateCatalog`, `Compute` |
+| `PacketRegistry` | `LoadFromNamespace(...)`, `LoadFromAssemblyPath(...)`, `IsKnownMagic`, `IsRegistered`, `Deserialize`, `TryDeserialize`, `DeserializerCount` |
+| `PacketRegister` | `CreateCatalogFromCurrentDomain(...)`, `CreateCatalogFromAssemblyPath(...)`, `CreateCatalogFromAssemblies(...)`, `CreateCatalogFromAssemblyPaths(...)` |
 
 ## PacketRegistryFactory
 
-`PacketRegistryFactory` builds an immutable `PacketRegistry` by registering packet types explicitly or by scanning assemblies and namespaces.
+`PacketRegistryFactory` is the fluent builder for an immutable `PacketRegistry`.
 
-It is the object you typically use when you want the same packet catalog on both server and client.
+The constructor pre-registers built-in signal packets:
 
-### Typical responsibilities
+- `Control`
+- `Handshake`
+- `SessionResume`
+- `Directive`
 
-- register built-in packet types
-- scan application assemblies or namespaces
-- compute magic numbers from packet types
-- build the frozen registry once, then reuse it
+### Common workflows
 
-## Basic usage
+- Register explicit packet types.
+- Register all packet types from an `Assembly`.
+- Register all packet types from a `.dll` file path.
+- Scan loaded assemblies, then filter by namespace.
+
+### Basic usage
 
 ```csharp
 PacketRegistryFactory factory = new();
@@ -50,71 +51,62 @@ factory.IncludeCurrentDomain()
 PacketRegistry registry = factory.CreateCatalog();
 ```
 
-### Common public methods
+### Assembly path usage
 
-- `RegisterPacket<TPacket>()`
-- `IncludeAssembly(assembly)`
-- `IncludeCurrentDomain()`
-- `IncludeNamespace(namespace)`
-- `IncludeNamespaceRecursive(namespace)`
-- `CreateCatalog()`
-- `Compute(type)`
+```csharp
+PacketRegistryFactory factory = new();
+factory.RegisterPacketAssembly(@"C:\apps\MyPackets.dll", requireAttribute: true);
 
-### Practical notes
-
-- `CreateCatalog()` is the handoff point from builder-style setup to runtime lookup.
-- `Compute(type)` is used to derive the magic number for a packet type.
-- the factory is the right place to centralize packet registration instead of sprinkling manual registrations across startup files.
-
-### Common pitfalls
-
-- calling `CreateCatalog()` before all packet assemblies are registered
-- registering the same packet type in multiple startup paths
-- assuming the catalog auto-discovers types without scanning or explicit registration
+PacketRegistry registry = factory.CreateCatalog();
+```
 
 ## PacketRegistry
 
-`PacketRegistry` is the immutable runtime catalog used by listeners and SDK sessions.
+`PacketRegistry` is the runtime, immutable, thread-safe lookup catalog.
 
-Once created, it is intended to be shared and treated as read-only.
+### What it provides
 
-### What it gives you
+- Fast magic-number lookup.
+- Packet-type registration checks.
+- Deserialization from raw packet bytes.
 
-- fast magic-number lookup
-- type registration checks
-- deserializer resolution
-- a single source of truth for packet discovery at runtime
-
-## Basic usage
+### Runtime use
 
 ```csharp
 if (registry.TryDeserialize(buffer, out IPacket? packet))
 {
     Console.WriteLine(packet.OpCode);
 }
-
-bool known = registry.IsKnownMagic(magic);
-bool registered = registry.IsRegistered<Handshake>();
 ```
 
-### Common public methods
+### Static convenience loaders
 
-- `IsKnownMagic(magic)`
-- `IsRegistered<TPacket>()`
-- `TryDeserialize(raw, out packet)`
-- `TryGetDeserializer(magic, out deserializer)`
-- `DeserializerCount`
+- `LoadFromAssemblyPath(assemblyPath, requirePacketAttribute)`
+- `LoadFromNamespace(packetNamespace, recursive)`
+- `LoadFromNamespace(assemblyPath, packetNamespace, recursive)`
 
-### Practical notes
+## PacketRegister
 
-- listeners use the registry while decoding inbound traffic
-- SDK sessions use the same registry to stay aligned with the server packet catalog
-- if the registry and packet types drift apart, deserialization usually fails fast rather than silently producing the wrong packet
+`PacketRegister` is a static convenience API for quick catalog creation without manually handling a factory.
 
-### Common pitfalls
+### Helpers
 
-- treating the registry as mutable after startup
-- deserializing with a registry built from a different packet set than the sender
+- `CreateCatalogFromCurrentDomain(...)`
+- `CreateCatalogFromAssemblyPath(...)`
+- `CreateCatalogFromAssemblies(...)`
+- `CreateCatalogFromAssemblyPaths(...)`
+
+### Example
+
+```csharp
+PacketRegistry registry = PacketRegister.CreateCatalogFromCurrentDomain(requirePacketAttribute: true);
+```
+
+## Practical notes
+
+- Use one shared registry instance across server runtime and client SDK whenever possible.
+- Prefer `ConfigurePacketRegistry(...)` in hosting if you already have a pre-built registry.
+- Prefer namespace filters when you want tighter discovery boundaries than full assembly scans.
 
 ## Related APIs
 
@@ -123,3 +115,4 @@ bool registered = registry.IsRegistered<Handshake>();
 - [Packet Contracts](../../common/packet-contracts.md)
 - [SDK Overview](../../sdk/index.md)
 - [Packet Dispatch](../../runtime/routing/packet-dispatch.md)
+- [Network Application (Hosting)](../../hosting/network-application.md)

@@ -24,7 +24,7 @@ These methods are primary extension points for `TcpSession`.
 
 | Method | Returns | Description |
 |---|---|---|
-| `ResumeSessionAsync` | `Task<bool>` | Explicitly attempts to resume the session on a connected transport. |
+| `ResumeSessionAsync` | `Task<ProtocolReason>` | Explicitly attempts to resume the session on a connected transport. `ProtocolReason.NONE` means success. |
 | `ConnectWithResumeAsync` | `Task<bool>` | Connects the transport, attempts resume, and falls back to a handshake when allowed. |
 
 ---
@@ -55,11 +55,14 @@ if (resumed)
 For granular control over the connection lifecycle, you can use `ResumeSessionAsync` directly after a manual `ConnectAsync`.
 
 ```csharp
+using Nalix.Common.Networking.Protocols;
+
 await session.ConnectAsync();
 
-if (session.Options.HasResumeState())
+if (!session.Options.SessionToken.IsEmpty && session.Options.Secret.Length > 0)
 {
-    if (await session.ResumeSessionAsync())
+    ProtocolReason reason = await session.ResumeSessionAsync();
+    if (reason == ProtocolReason.NONE)
     {
         // Resume succeeded
     }
@@ -71,8 +74,9 @@ if (session.Options.HasResumeState())
 ## 4. Operational Notes
 
 - **Encryption Switch**: Upon a successful resume, the SDK automatically sets `Options.EncryptionEnabled = true`.
+- **Structural Validation**: Receiving a malformed or out-of-sequence resume response now throws a `NetworkException` thanks to strict structural validation via `IPacketValidatable`.
 - **Handshake Fallback**: `ConnectWithResumeAsync()` reconnects before falling back to a fresh handshake when resume fails.
-- **MTU Considerations**: `SESSION_SIGNAL` packets are fixed at 23 bytes and are designed to fit within the smallest MTU windows (e.g., restricted cellular networks).
+- **MTU Considerations**: `SESSION_SIGNAL` packets are fixed at 52 bytes and are designed to fit within standard MTU windows.
 - **UDP Specifics**: While these extensions focus on TCP, the `SessionToken` logic is shared with `UdpSession` for datagram authentication.
 
 ---

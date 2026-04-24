@@ -1,6 +1,7 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Frontend.Abstractions;
+using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Models.Results.Accounts;
 using AutoX.Gara.Shared.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -16,14 +17,11 @@ using System.Threading.Tasks;
 
 namespace AutoX.Gara.UI.ViewModels;
 
-/// <summary>
-/// ViewModel quản lý luồng nghiệp vụ cho màn hình Đăng nhập.
-/// Áp dụng Pattern MVVM chuẩn công nghiệp, SRP và Clean Code.
-/// </summary>
 public sealed partial class LoginViewModel : ObservableObject
 {
-    private readonly IAccountService _loginService;
-    private readonly INavigationService _navigation;
+    private readonly IAccountService _accountService;
+    private readonly INavigationService _navigationService;
+    private readonly UiTextOptions _loginText;
     private CancellationTokenSource? _loginCts;
 
     [ObservableProperty] public partial bool HasError { get; set; }
@@ -34,47 +32,43 @@ public sealed partial class LoginViewModel : ObservableObject
     [ObservableProperty] public partial string Username { get; set; } = string.Empty;
     [ObservableProperty] public partial string Password { get; set; } = string.Empty;
 
-    // -- Popup State --
     [ObservableProperty] public partial bool IsPopupRetry { get; set; }
     [ObservableProperty] public partial bool IsPopupVisible { get; set; }
-    [ObservableProperty] public partial string PopupButtonText { get; set; } = "OK";
+    [ObservableProperty] public partial string PopupButtonText { get; set; } = string.Empty;
     [ObservableProperty] public partial string PopupTitle { get; set; } = string.Empty;
     [ObservableProperty] public partial string PopupMessage { get; set; } = string.Empty;
 
-    // -- Computed Properties --
     public bool IsPopupNotRetry => !IsPopupRetry;
     public bool IsNetworkNotReady => !IsNetworkReady;
     public string PasswordIcon => IsPasswordHidden ? "eye_off.png" : "eye.png";
+    public string AppTitleText => _loginText.LoginAppTitle;
+    public string AppSubtitleText => _loginText.LoginAppSubtitle;
+    public string UsernameLabelText => _loginText.LoginUsernameLabel;
+    public string UsernamePlaceholderText => _loginText.LoginUsernamePlaceholder;
+    public string PasswordLabelText => _loginText.LoginPasswordLabel;
+    public string PasswordPlaceholderText => _loginText.LoginPasswordPlaceholder;
+    public string LoginButtonText => _loginText.LoginButtonText;
+    public string RegisterButtonText => _loginText.RegisterButtonText;
+    public string NetworkWarningText => _loginText.LoginNetworkWarningText;
+    public string LoadingText => _loginText.LoginLoadingText;
+    public string PopupOkButtonText => _loginText.PopupOkButtonText;
 
-    /// <summary>
-    /// Khởi tạo ViewModel với các dependencies được inject từ MauiProgram.
-    /// </summary>
-    public LoginViewModel(IAccountService loginService, INavigationService navigation)
+    public LoginViewModel(IAccountService accountService, INavigationService navigationService)
     {
-        _loginService = loginService ?? throw new ArgumentNullException(nameof(loginService));
-        _navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
-
-        // Tự động khởi tạo kết nối khi ViewModel được tạo
+        _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
+        _navigationService = navigationService ?? throw new ArgumentNullException(nameof(navigationService));
+        _loginText = UiTextConfiguration.Current;
+        PopupButtonText = _loginText.PopupOkButtonText;
         _ = InitConnectionAsync();
     }
 
     partial void OnIsPopupRetryChanged(bool value) => OnPropertyChanged(nameof(IsPopupNotRetry));
     partial void OnIsNetworkReadyChanged(bool value) => OnPropertyChanged(nameof(IsNetworkNotReady));
 
-    /// <summary>
-    /// Xử lý lệnh đăng nhập. Bao gồm validate, auth và chuyển trang.
-    /// </summary>
     [RelayCommand]
     private async Task LoginAsync()
     {
-        // Tránh race-condition: Hủy tiến trình login cũ nếu đang chạy
-        _loginCts?.Cancel();
-        _loginCts = new CancellationTokenSource();
-        var ct = _loginCts.Token;
-
-        ClearError();
-
-        if (!ValidateInputs())
+        if (!PrepareAuthRequest())
         {
             return;
         }
@@ -82,15 +76,15 @@ public sealed partial class LoginViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var result = await _loginService.AuthenticateAsync(Username, Password, ct);
+            var result = await _accountService.AuthenticateAsync(Username, Password, _loginCts!.Token);
             if (result.IsSuccess)
             {
                 SetupKeepAlive();
-                await _navigation.GoToMainPageAsync();
+                await _navigationService.GoToMainPageAsync();
                 return;
             }
 
-            HandleFailedLogin(result);
+            HandleFailedAuth(result, _loginText.LoginFailedTitleText);
         }
         finally
         {
@@ -98,13 +92,45 @@ public sealed partial class LoginViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    /// Thiết lập định kỳ gửi Heartbeat để duy trì phiên làm việc Nalix.
-    /// </summary>
+    [RelayCommand]
+    private async Task RegisterAsync()
+    {
+        if (!PrepareAuthRequest())
+        {
+            return;
+        }
+
+        IsLoading = true;
+        try
+        {
+            var result = await _accountService.RegisterAsync(Username, Password, _loginCts!.Token);
+            if (result.IsSuccess)
+            {
+                ShowPopup(_loginText.RegisterSuccessTitleText, _loginText.RegisterSuccessMessageText, isRetry: false);
+                return;
+            }
+
+            HandleFailedAuth(result, _loginText.RegisterFailedTitleText);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private bool PrepareAuthRequest()
+    {
+        _loginCts?.Cancel();
+        _loginCts?.Dispose();
+        _loginCts = new CancellationTokenSource();
+        ClearError();
+        return ValidateInputs();
+    }
+
     private void SetupKeepAlive()
     {
         var client = InstanceManager.Instance.GetExistingInstance<TcpSession>();
-        if (client == null)
+        if (client is null)
         {
             return;
         }
@@ -113,8 +139,7 @@ public sealed partial class LoginViewModel : ObservableObject
         taskManager.ScheduleRecurring(
             "KeepAlive",
             TimeSpan.FromSeconds(30),
-            async (token) => await client.SendAsync(new Directive { Type = ControlType.HEARTBEAT }, token)
-        );
+            async token => await client.SendAsync(new Directive { Type = ControlType.HEARTBEAT }, token));
     }
 
     [RelayCommand]
@@ -144,25 +169,25 @@ public sealed partial class LoginViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(Username))
         {
-            SetError("Tên đăng nhập không được để trống.");
+            SetError(_loginText.UsernameRequiredErrorText);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(Password))
         {
-            SetError("Mật khẩu không được để trống.");
+            SetError(_loginText.PasswordRequiredErrorText);
             return false;
         }
 
         if (!AccountValidation.IsValidUsername(Username))
         {
-            SetError("Tên đăng nhập không hợp lệ (5-50 ký tự).");
+            SetError(_loginText.UsernameInvalidErrorText);
             return false;
         }
 
         if (!AccountValidation.IsValidPassword(Password))
         {
-            SetError("Mật khẩu không đủ mạnh (tối thiểu 8 ký tự, bao gồm chữ hoa/thường/số/đặc biệt).");
+            SetError(_loginText.PasswordInvalidErrorText);
             return false;
         }
 
@@ -175,18 +200,20 @@ public sealed partial class LoginViewModel : ObservableObject
         HasError = true;
     }
 
-    private void HandleFailedLogin(LoginResult result)
+    private void HandleFailedAuth(LoginResult result, string fallbackTitle)
     {
         switch (result.Advice)
         {
             case ProtocolAdvice.DO_NOT_RETRY:
-                ShowPopup("Lỗi nghiêm trọng", result.ErrorMessage ?? "Máy chủ từ chối đăng nhập.", false);
+                ShowPopup(fallbackTitle, result.ErrorMessage ?? _loginText.AuthRejectedMessageText, isRetry: false);
                 break;
+
             case ProtocolAdvice.BACKOFF_RETRY:
-                ShowPopup("Tài khoản bị khóa", result.ErrorMessage ?? "Thử lại sau vài phút.", true);
+                ShowPopup(fallbackTitle, result.ErrorMessage ?? _loginText.RetryLaterMessageText, isRetry: false);
                 break;
+
             default:
-                SetError(result.ErrorMessage ?? "Thông tin đăng nhập không chính xác.");
+                SetError(result.ErrorMessage ?? fallbackTitle);
                 break;
         }
     }
@@ -196,7 +223,7 @@ public sealed partial class LoginViewModel : ObservableObject
         PopupTitle = title;
         PopupMessage = message;
         IsPopupRetry = isRetry;
-        PopupButtonText = isRetry ? "Thử lại" : "Đã hiểu";
+        PopupButtonText = isRetry ? _loginText.PopupRetryButtonText : _loginText.PopupOkButtonText;
         IsPopupVisible = true;
     }
 
@@ -205,7 +232,7 @@ public sealed partial class LoginViewModel : ObservableObject
         IsLoading = true;
         IsNetworkReady = false;
 
-        var result = await _loginService.ConnectAsync();
+        var result = await _accountService.ConnectAsync();
 
         IsLoading = false;
         if (result.IsSuccess)
@@ -214,7 +241,7 @@ public sealed partial class LoginViewModel : ObservableObject
         }
         else
         {
-            ShowPopup("Lỗi máy chủ", result.ErrorMessage ?? "Không thể kết nối tới hạ tầng Nalix.", true);
+            ShowPopup(_loginText.ServerErrorTitleText, result.ErrorMessage ?? _loginText.ConnectFailedMessageText, isRetry: true);
         }
     }
 }

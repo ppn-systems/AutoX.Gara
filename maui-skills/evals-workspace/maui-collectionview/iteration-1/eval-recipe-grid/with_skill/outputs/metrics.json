@@ -1,0 +1,57 @@
+{
+  "eval": "eval-recipe-grid",
+  "variant": "with_skill",
+  "skill_used": "maui-collectionview",
+  "timestamp": "2026-03-05T00:00:00Z",
+  "tool_calls": {
+    "total": 7,
+    "breakdown": {
+      "Read": 1,
+      "Bash": 2,
+      "Write": 6
+    }
+  },
+  "steps": [
+    "Read SKILL.md",
+    "Check output directory exists",
+    "List output directory",
+    "Create Recipe.cs (Model)",
+    "Create RecipesViewModel.cs (ViewModel)",
+    "Create RecipesPage.xaml (View)",
+    "Create RecipesPage.xaml.cs (Code-behind)",
+    "Create transcript.md",
+    "Create metrics.json"
+  ],
+  "files_created": [
+    "Recipe.cs",
+    "RecipesViewModel.cs",
+    "RecipesPage.xaml",
+    "RecipesPage.xaml.cs",
+    "transcript.md",
+    "metrics.json"
+  ],
+  "errors": [],
+  "skill_rules_applied": [
+    "GridItemsLayout Span=2 for 2-column grid",
+    "x:DataType on DataTemplate for compiled bindings",
+    "SelectionMode=Single with SelectedItem TwoWay binding",
+    "VisualStateManager Selected state on template root Grid",
+    "ObservableCollection<T> for ItemsSource",
+    "No ViewCell — Grid used as template root",
+    "EmptyView custom content wrapped in ContentView",
+    "SelectionChangedCommand wired to ViewModel command"
+  ],
+  "gotchas_avoided": [
+    "Did not use ViewCell",
+    "Wrapped EmptyView content in ContentView",
+    "Used ObservableCollection not List",
+    "Used VisualState Selected for highlight instead of manual trigger"
+  ],
+  "code_quality_notes": {
+    "compiled_bindings": true,
+    "mvvm_pattern": true,
+    "sample_data_included": true,
+    "empty_view_included": true,
+    "selection_highlight": "VisualStateManager with AppThemeBinding light/dark colors"
+  }
+}

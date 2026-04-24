@@ -29,7 +29,8 @@ A typical Nalix application involves five clean steps:
 4. :fontawesome-solid-server: **Run the server**: Start the host using the `NetworkApplicationBuilder`.
 5. :fontawesome-solid-plug: **Connect using SDK**: Leverage the client-side session to communicate.
 
-👉 See [Quickstart](./quickstart.md) for a full, copy-pasteable example.
+!!! tip "Quickstart"
+    See [Quickstart](./quickstart.md) for a full, copy-pasteable example.
 
 ---
 
@@ -38,12 +39,13 @@ A typical Nalix application involves five clean steps:
 If you're new to Nalix, follow this path to go from zero to production-ready:
 
 1. :fontawesome-solid-book-open: [Introduction](./introduction.md) — Understand the design philosophy and mental model.
-2. :fontawesome-solid-sitemap: [Architecture](./concepts/architecture.md) — Explore the layered component system.
+2. :fontawesome-solid-sitemap: [Architecture](./concepts/fundamentals/architecture.md) — Explore the layered component system.
 3. :fontawesome-solid-bolt: [Quickstart](./quickstart.md) — Build your first Ping/Pong server in minutes.
-4. :fontawesome-solid-vial: [End-to-End Guide](./guides/end-to-end.md) — Move beyond basics with a full feature implementation.
-5. :fontawesome-solid-shield-halved: [Middleware](./guides/middleware.md) — Learn how to secure and scale your traffic.
+4. :fontawesome-solid-vial: [End-to-End Guide](./guides/deployment/production-example.md) — Move beyond basics with a full feature implementation.
+5. :fontawesome-solid-shield-halved: [Middleware](./guides/application/middleware-usage.md) — Learn how to secure and scale your traffic.
 
-👉 After this, you can explore the [API Reference](./api/index.md) as needed.
+!!! tip "Next"
+    Explore the [API Reference](./api/index.md) as needed.
 
 ---
 
@@ -77,7 +79,7 @@ Handler exceptions are trapped and logged without affecting other connections or
 | **Unified packet model** | Define packet types once in a shared assembly. Both `Nalix.Network` (server) and `Nalix.SDK` (client) consume the same contracts, attributes, and serialization metadata. |
 | **Zero-allocation data paths** | Pooled buffers (`BufferLease`), pooled packet contexts, frozen registry lookups (`FrozenDictionary`), and function-pointer–based deserialization eliminate GC pressure on hot paths. |
 | **Shard-aware dispatch** | `PacketDispatchChannel` distributes work across multiple worker loops to prevent head-of-line blocking. Workers scale to logical CPU core count. |
-| **Middleware pipeline** | Two-layer middleware system: buffer middleware for raw frame processing (decryption, decompression, validation) and packet middleware for application policy (permissions, rate limiting, timeouts). |
+| **Middleware pipeline** | Production-grade packet middleware system (`MiddlewarePipeline`) for application policy (permissions, rate limiting, timeouts) and observability. |
 | **Production transport** | Built-in connection guarding, token-bucket rate limiting, policy-based throttling, concurrency gates, and timing-wheel–based idle timeout management. |
 
 ## Architecture Overview
@@ -118,15 +120,13 @@ graph TD
 Choose the path that matches your role.
 
 === "Server Developer"
-
     1. [Introduction](./introduction.md) — Design philosophy and mental model
     2. [Installation](./installation.md) — Package selection and prerequisites
     3. [Quickstart](./quickstart.md) — Build a Ping/Pong server end-to-end
-    4. [Architecture](./concepts/architecture.md) — Layered component overview
-    5. [Server Blueprint](./guides/server-blueprint.md) — Production-oriented project structure
+    4. [Architecture](./concepts/fundamentals/architecture.md) — Layered component overview
+    5. [Server Blueprint](./guides/getting-started/server-blueprint.md) — Production-oriented project structure
 
 === "Client Developer"
-
     1. [Introduction](./introduction.md) — Design philosophy and mental model
     2. [Installation](./installation.md) — Package selection and prerequisites
     3. [Quickstart](./quickstart.md) — Connect a client to your first server
@@ -134,24 +134,23 @@ Choose the path that matches your role.
     5. [TCP Session](./api/sdk/tcp-session.md) — Detailed session API
 
 === "Middleware / Extension Author"
-
-    1. [Choose the Right Building Block](./concepts/choose-the-right-building-block.md) — Decision guide
-    2. [Middleware](./concepts/middleware.md) — Buffer vs. packet middleware
-    3. [Custom Middleware Guide](./guides/custom-middleware-end-to-end.md) — End-to-end walkthrough
-    4. [Custom Metadata Provider](./guides/custom-metadata-provider.md) — Convention-based metadata
+    1. [Selecting Building Blocks](./concepts/runtime/building-blocks.md) — Decision guide
+    2. [Middleware](./concepts/runtime/middleware-pipeline.md) — Middleware Pipeline and lifecycle
+    3. [Custom Middleware Guide](./guides/extensibility/custom-middleware.md) — End-to-end walkthrough
+    4. [Custom Metadata Provider](./guides/extensibility/metadata-providers.md) — Convention-based metadata
 
 === "Contributor"
-
-    1. [Architecture](./concepts/architecture.md) — System design and component boundaries
-    2. [Packet System](./concepts/packet-system.md) — Serialization and wire format
-    3. [Packet Lifecycle](./concepts/packet-lifecycle.md) — Request path from socket to handler
-    4. [Error Reporting](./concepts/error-reporting.md) — Runtime and protocol signaling
-    5. [Glossary](./concepts/glossary.md) — Term definitions
+    1. [Architecture](./concepts/fundamentals/architecture.md) — System design and component boundaries
+    2. [Packet System](./concepts/fundamentals/packet-system.md) — Serialization and unified packet model
+    3. [Binary Specification](./concepts/serialization/binary-spec.md) — Detailed wire format and layout rules
+    4. [Packet Lifecycle](./concepts/fundamentals/packet-lifecycle.md) — Request path from socket to handler
+    5. [Error Reporting](./concepts/fundamentals/errors-and-diagnostics.md) — Runtime and protocol signaling
+    6. [Glossary](./concepts/glossary.md) — Term definitions
 
 ## Core Packages
 
 | Package | Purpose |
-|---|---|
+| :--- | :--- |
 | [**Nalix.Network**](./packages/nalix-network.md) | TCP/UDP listeners, connections, protocol logic, and transport infrastructure |
 | [**Nalix.Runtime**](./packages/nalix-runtime.md) | Packet dispatch, middleware execution, handler compilation, and session resume |
 | [**Nalix.SDK**](./packages/nalix-sdk.md) | Client-side transport sessions, request/response helpers, and handshake flows |

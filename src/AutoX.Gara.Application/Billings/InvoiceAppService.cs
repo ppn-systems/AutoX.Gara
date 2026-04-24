@@ -2,13 +2,16 @@
 
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Billings;
+using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Invoices;
+using AutoX.Gara.Domain.Enums.Transactions;
 using AutoX.Gara.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AutoX.Gara.Application.Billings;
@@ -35,10 +38,24 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
 
     public async Task<ServiceResult<Invoice>> CreateAsync(Invoice invoice, int? repairOrderId = null)
     {
+        var validation = ValidateInvoicePayload(invoice);
+        if (!validation.IsSuccess)
+        {
+            return ServiceResult<Invoice>.Failure(validation.ErrorMessage!, validation.Reason);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
 
+            bool customerExists = await session.Context.Set<Customer>()
+                .AsNoTracking()
+                .AnyAsync(c => c.Id == invoice.CustomerId)
+                .ConfigureAwait(false);
+            if (!customerExists)
+            {
+                return ServiceResult<Invoice>.Failure("Không tìm thấy khách hàng của hóa đơn.", ProtocolReason.NOT_FOUND);
+            }
 
 
             if (await session.Invoices.ExistsByInvoiceNumberAsync(invoice.InvoiceNumber).ConfigureAwait(false))
@@ -94,6 +111,12 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
 
     public async Task<ServiceResult<Invoice>> UpdateAsync(Invoice invoice, int? repairOrderId = null)
     {
+        var validation = ValidateInvoicePayload(invoice);
+        if (!validation.IsSuccess)
+        {
+            return ServiceResult<Invoice>.Failure(validation.ErrorMessage!, validation.Reason);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -103,6 +126,15 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
             if (existing is null)
             {
                 return ServiceResult<Invoice>.Failure("Không tìm thấy hóa đơn.", ProtocolReason.NOT_FOUND);
+            }
+
+            bool customerExists = await session.Context.Set<Customer>()
+                .AsNoTracking()
+                .AnyAsync(c => c.Id == invoice.CustomerId)
+                .ConfigureAwait(false);
+            if (!customerExists)
+            {
+                return ServiceResult<Invoice>.Failure("Không tìm thấy khách hàng của hóa đơn.", ProtocolReason.NOT_FOUND);
             }
 
             if (!string.Equals(existing.InvoiceNumber, invoice.InvoiceNumber, StringComparison.Ordinal))
@@ -173,15 +205,18 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
         try
         {
             await using var session = _dataSessionFactory.Create();
-            var existing = await session.Invoices.GetByIdAsync(invoiceId).ConfigureAwait(false);
+            var existing = await session.Invoices.GetInvoiceWithFullGraphTrackedAsync(invoiceId).ConfigureAwait(false);
             if (existing is null)
             {
                 return ServiceResult<bool>.Failure("Không tìm thấy hóa đơn.", ProtocolReason.NOT_FOUND);
             }
 
-
-
-            // Invoices might not support hard delete, but for this refactor we follow the CRUD pattern
+            bool hasPaidTransaction = existing.Transactions != null
+                && existing.Transactions.Any(t => t.Status == TransactionStatus.Completed && !t.IsReversed);
+            if (hasPaidTransaction)
+            {
+                return ServiceResult<bool>.Failure("Không thể xóa hóa đơn đã có giao dịch thanh toán.", ProtocolReason.VALIDATION_FAILED);
+            }
 
             session.Invoices.Delete(existing);
             await session.Invoices.SaveChangesAsync().ConfigureAwait(false);
@@ -193,6 +228,27 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
             _logger.LogError(ex, "Error deleting invoice {Id}.", invoiceId);
             return ServiceResult<bool>.Failure("Lỗi khi xóa hóa đơn.");
         }
+    }
+
+    private static ServiceResult<bool> ValidateInvoicePayload(Invoice invoice)
+    {
+        if (invoice is null || invoice.CustomerId <= 0 || string.IsNullOrWhiteSpace(invoice.InvoiceNumber))
+        {
+            return ServiceResult<bool>.Failure("Dữ liệu hóa đơn không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        if (invoice.DiscountType == AutoX.Gara.Domain.Enums.DiscountType.Percentage
+            && (invoice.Discount < 0 || invoice.Discount > 100))
+        {
+            return ServiceResult<bool>.Failure("Giảm giá phần trăm phải trong khoảng 0-100.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (invoice.DiscountType != AutoX.Gara.Domain.Enums.DiscountType.Percentage && invoice.Discount < 0)
+        {
+            return ServiceResult<bool>.Failure("Giảm giá không được âm.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        return ServiceResult<bool>.Success(true);
     }
 }
 

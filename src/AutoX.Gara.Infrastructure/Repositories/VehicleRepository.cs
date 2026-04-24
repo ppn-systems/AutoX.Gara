@@ -105,41 +105,21 @@ public sealed class VehicleRepository(AutoXDbContext context) : IVehicleReposito
 
     {
 
-        IQueryable<Vehicle> q = _context.Vehicles.Where(v => v.DeletedAt == null);
+        bool hasLicensePlate = !string.IsNullOrWhiteSpace(licensePlate);
+        bool hasEngineNumber = !string.IsNullOrWhiteSpace(engineNumber);
+        bool hasFrameNumber = !string.IsNullOrWhiteSpace(frameNumber);
 
-
-
-        if (!string.IsNullOrWhiteSpace(licensePlate))
-
+        if (!hasLicensePlate && !hasEngineNumber && !hasFrameNumber)
         {
-
-            q = q.Where(v => v.LicensePlate == licensePlate);
-
+            return Task.FromResult(false);
         }
 
-
-
-        if (!string.IsNullOrWhiteSpace(engineNumber))
-
-        {
-
-            q = q.Where(v => v.EngineNumber == engineNumber);
-
-        }
-
-
-
-        if (!string.IsNullOrWhiteSpace(frameNumber))
-
-        {
-
-            q = q.Where(v => v.FrameNumber == frameNumber);
-
-        }
-
-
-
-        return q.AnyAsync(ct);
+        return _context.Vehicles
+            .AnyAsync(v =>
+                (hasLicensePlate && v.LicensePlate == licensePlate) ||
+                (hasEngineNumber && v.EngineNumber == engineNumber) ||
+                (hasFrameNumber && v.FrameNumber == frameNumber),
+                ct);
 
     }
 

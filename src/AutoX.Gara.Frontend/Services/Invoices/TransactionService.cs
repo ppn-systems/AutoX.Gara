@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
+using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Invoices;
 using Nalix.Common.Networking.Protocols;

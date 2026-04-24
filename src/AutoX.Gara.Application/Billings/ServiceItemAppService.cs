@@ -33,6 +33,16 @@ public sealed class ServiceItemAppService(IDataSessionFactory dataSessionFactory
 
     public async Task<ServiceResult<ServiceItem>> CreateAsync(ServiceItem item)
     {
+        if (item is null || string.IsNullOrWhiteSpace(item.Description))
+        {
+            return ServiceResult<ServiceItem>.Failure("Dữ liệu dịch vụ không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        if (item.UnitPrice < 0)
+        {
+            return ServiceResult<ServiceItem>.Failure("Đơn giá dịch vụ không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -49,6 +59,16 @@ public sealed class ServiceItemAppService(IDataSessionFactory dataSessionFactory
 
     public async Task<ServiceResult<ServiceItem>> UpdateAsync(ServiceItem item)
     {
+        if (item is null || item.Id <= 0 || string.IsNullOrWhiteSpace(item.Description))
+        {
+            return ServiceResult<ServiceItem>.Failure("Dữ liệu dịch vụ không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        if (item.UnitPrice < 0)
+        {
+            return ServiceResult<ServiceItem>.Failure("Đơn giá dịch vụ không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();

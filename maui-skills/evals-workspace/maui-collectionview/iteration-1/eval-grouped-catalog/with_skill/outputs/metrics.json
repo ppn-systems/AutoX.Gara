@@ -1,0 +1,70 @@
+{
+  "eval_id": "eval-grouped-catalog",
+  "variant": "with_skill",
+  "skill": "maui-collectionview",
+  "date": "2026-03-05",
+  "task_requirements": [
+    "Products grouped by category",
+    "Group header shows category name and item count",
+    "Item shows product name",
+    "Item shows price formatted as currency",
+    "Item has Add to Cart button firing a command",
+    "Pull-to-refresh reloads the catalog",
+    "Empty state message when no results"
+  ],
+  "requirements_met": {
+    "grouped_by_category": true,
+    "group_header_category_name": true,
+    "group_header_item_count": true,
+    "item_product_name": true,
+    "item_price_currency_formatted": true,
+    "add_to_cart_command": true,
+    "pull_to_refresh": true,
+    "empty_state_message": true
+  },
+  "requirements_met_count": 8,
+  "requirements_total": 8,
+  "requirements_score": 1.0,
+  "skill_rules_applied": {
+    "group_class_inherits_list_t": true,
+    "is_grouped_true": true,
+    "x_data_type_on_all_datatemplates": true,
+    "observable_collection_used": true,
+    "empty_view_wrapped_in_content_view": true,
+    "ui_thread_update_after_async": true,
+    "relative_source_ancestor_for_command": true,
+    "refresh_view_wraps_collection_view": true,
+    "is_refreshing_reset_to_false": true,
+    "no_view_cell_used": true
+  },
+  "skill_rules_applied_count": 10,
+  "skill_rules_total": 10,
+  "skill_compliance_score": 1.0,
+  "code_quality": {
+    "compiled_bindings": true,
+    "async_refresh_with_finally": true,
+    "main_thread_safe_collection_update": true,
+    "command_parameter_typed": true,
+    "price_string_format_currency": true,
+    "item_count_computed_property": true,
+    "theme_aware_colors": true
+  },
+  "output_files": [
+    "Product.cs",
+    "ProductGroup.cs",
+    "ProductCatalogViewModel.cs",
+    "ProductCatalogPage.xaml",
+    "ProductCatalogPage.xaml.cs",
+    "transcript.md",
+    "metrics.json"
+  ],
+  "notes": [
+    "StringFormat='{0:C}' used for currency formatting in XAML binding.",
+    "AddToCartCommand uses RelativeSource AncestorType to bind from inside the item DataTemplate.",
+    "EmptyView wrapped in ContentView per skill gotcha guidance.",
+    "IsRefreshing reset in a finally block to ensure it clears even on error.",
+    "MainThread.BeginInvokeOnMainThread used when updating ProductGroups after async delay.",
+    "ProductGroup.ItemCount returns Count (inherited from List<T>) as a computed property.",
+    "No third-party dependencies assumed; INotifyPropertyChanged implemented manually."
+  ]
+}

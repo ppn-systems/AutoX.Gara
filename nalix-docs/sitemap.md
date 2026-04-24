@@ -14,29 +14,30 @@ This page provides a comprehensive index of all documentation available for the 
 ## 🧱 Core Concepts
 
 - [**Concepts Overview**](./concepts/index.md) — Landing page for core ideas.
-- [**Choose the Right Building Block**](./concepts/choose-the-right-building-block.md) — Middleware vs. Protocol vs. Handler.
-- [**Architecture**](./concepts/architecture.md) — The 4-layer system overview.
-- [**Performance Optimizations**](./concepts/performance-optimizations.md) — Zero-allocation data paths.
-- [**Packet System**](./concepts/packet-system.md) — Serialization and wire format.
-- [**Packet Lifecycle**](./concepts/packet-lifecycle.md) — The request journey.
-- [**Middleware**](./concepts/middleware.md) — Intercepting and modifying traffic.
-- [**Configuration and Runtime**](./concepts/configuration-and-runtime.md) — Managing options and services.
-- [**Real-time Engine**](./concepts/real-time.md) — Tick-based execution.
-- [**Security Model**](./concepts/security-model.md) — Auth, Handshake, and Encryption.
-- [**Error Reporting**](./concepts/error-reporting.md) — Runtime signaling.
+- [**Selecting Building Blocks**](./concepts/runtime/building-blocks.md) — Middleware vs. Protocol vs. Handler.
+- [**Architecture**](./concepts/fundamentals/architecture.md) — The 4-layer system overview.
+- [**Performance Optimizations**](./concepts/internals/performance-optimizations.md) — Zero-allocation data paths.
+- [**Packet System**](./concepts/fundamentals/packet-system.md) — Serialization and wire format.
+- [**Packet Lifecycle**](./concepts/fundamentals/packet-lifecycle.md) — The request journey.
+- [**Middleware Pipeline**](./concepts/runtime/middleware-pipeline.md) — Intercepting and modifying traffic.
+- [**Configuration System**](./concepts/runtime/configuration.md) — Managing options and services.
+- [**Real-time Engine**](./concepts/runtime/real-time-engine.md) — Tick-based execution.
+- [**Security Architecture**](./concepts/security/security-architecture.md) — Auth, Handshake, and Encryption.
+- [**Errors and Diagnostics**](./concepts/fundamentals/errors-and-diagnostics.md) — Runtime signaling.
 - [**Glossary**](./concepts/glossary.md) — Terminology definitions.
 
 ### 🎓 Advanced Reliability & Internals
-- [**Reliability Overview**](./concepts/advanced/reliability-model.md) — The production confidence layer.
-- [**Guarantees & Invariants**](./concepts/advanced/guarantees-and-invariants.md) — Ordering and Concurrency contracts.
-- [**Failure Model**](./concepts/advanced/failure-model.md) — Resilience and observable behavior.
-- [**Design Tradeoffs**](./concepts/advanced/design-tradeoffs.md) — Performance vs. Convenience.
+- [**Reliability Model**](./concepts/internals/reliability.md) — The production confidence layer.
+- [**System Guarantees**](./concepts/internals/guarantees-and-invariants.md) — Ordering and Concurrency contracts.
+- [**Failure Handling**](./concepts/internals/failure-handling.md) — Resilience and observable behavior.
+- [**Design Tradeoffs**](./concepts/internals/design-tradeoffs.md) — Performance vs. Convenience.
 
 ### Advanced Concepts
-- [**Buffer & Memory Management**](./api/framework/memory/buffer-and-pooling.md) — Pooled allocation strategies.
-- [**Shard-Aware Dispatch**](./guides/shard-aware-dispatch.md) — Scaling and worker affinity.
-- [**Zero-Allocation Hot Path**](./guides/zero-allocation-hot-path.md) — Extreme performance engineering.
-- [**Design Trade-offs**](./concepts/advanced/design-tradeoffs.md) — Performance vs latency.
+- [**Buffer Management**](./api/framework/memory/buffer-management.md) — Pooled allocation strategies.
+- [**Object Pooling**](./api/framework/memory/object-pooling.md) — Object recycling strategies.
+- [**Sharding & Concurrency**](./concepts/internals/sharding.md) — Scaling and worker affinity.
+- [**Zero-Allocation Path**](./concepts/internals/zero-allocation.md) — Extreme performance engineering.
+- [**Design Trade-offs**](./concepts/internals/design-tradeoffs.md) — Performance vs latency.
 
 ---
 
@@ -45,27 +46,27 @@ This page provides a comprehensive index of all documentation available for the 
 - [**Guides Overview**](./guides/index.md) — Navigating the available guides.
 
 ### Build a Server
-- [**Starter Template**](./guides/starter-template.md) — Basic boilerplate.
-- [**Implement Packet Handlers**](./guides/implementing-packet-handlers.md) — Defining and routing message logic.
-- [**End-to-End Sample**](./guides/end-to-end.md) — Feature walkthrough.
-- [**Production End-to-End**](./guides/production-end-to-end.md) — Real-world implementation.
-- [**Project Setup**](./guides/project-setup.md) — Framework bootstrap.
-- [**Server Blueprint**](./guides/server-blueprint.md) — Enterprise structure.
+- [**Server Boilerplate**](./guides/getting-started/server-boilerplate.md) — Production-ready starting point.
+- [**Implement Packet Handlers**](./guides/application/packet-handlers.md) — Defining and routing message logic.
+- [**Minimal Server Guide**](./guides/networking/minimal-server.md) — Feature walkthrough.
+- [**Production Server Example**](./guides/deployment/production-example.md) — Real-world implementation.
+- [**Project Setup**](./guides/getting-started/project-setup.md) — Framework bootstrap.
+- [**Server Blueprint**](./guides/getting-started/server-blueprint.md) — Enterprise structure.
 
 ### Extend Behavior
-- [**Middleware Guide**](./guides/middleware.md) — Adding standard policies.
-- [**Custom Middleware**](./guides/custom-middleware-end-to-end.md) — Building your own logic.
-- [**Custom Metadata Provider**](./guides/custom-metadata-provider.md) — Attribute-driven logic.
+- [**Middleware Usage Guide**](./guides/application/middleware-usage.md) — Adding standard policies.
+- [**Custom Middleware**](./guides/extensibility/custom-middleware.md) — Building your own logic.
+- [**Custom Metadata Provider**](./guides/extensibility/metadata-providers.md) — Attribute-driven logic.
 
 ### Networking Patterns
-- [**Client Session Connect**](./guides/client-session-connect.md) — SDK client session bootstrap.
-- [**TCP Request/Response**](./guides/tcp-request-response.md) — Ordered communication.
-- [**UDP Server**](./guides/udp-server.md) — Low-latency datagrams.
-- [**UDP Auth Flow**](./guides/udp-auth-flow.md) — Secure session bootstrap.
+- [**Client Session Guide**](./guides/networking/connecting-clients.md) — SDK client session bootstrap.
+- [**TCP Patterns Guide**](./guides/networking/tcp-patterns.md) — Ordered communication.
+- [**UDP Server**](./guides/networking/udp-server.md) — Low-latency datagrams.
+- [**UDP Security Guide**](./guides/networking/udp-security.md) — Secure session bootstrap.
 
 ### Operations & Debugging
-- [**Production Checklist**](./guides/production-checklist.md) — Pre-deployment audit.
-- [**Troubleshooting**](./guides/troubleshooting.md) — Diagnostic strategies.
+- [**Production Checklist**](./guides/deployment/production-checklist.md) — Pre-deployment audit.
+- [**Troubleshooting**](./guides/deployment/troubleshooting.md) — Diagnostic strategies.
 
 ---
 
@@ -103,6 +104,7 @@ This page provides a comprehensive index of all documentation available for the 
 ### Framework Internals
 - [**Directories**](./api/framework/environment/directories.md)
 - [**Configuration**](./api/framework/runtime/configuration.md)
+- [**Instance Manager (DI)**](./api/framework/runtime/instance-manager.md)
 - [**Task Manager**](./api/framework/runtime/task-manager.md)
 - [**Snowflake**](./api/framework/runtime/snowflake.md)
 - [**Clock**](./api/framework/runtime/clock.md)
@@ -118,8 +120,10 @@ This page provides a comprehensive index of all documentation available for the 
 - [**Fragmentation**](./api/framework/packets/fragmentation.md)
 - [**IO Extensions**](./api/framework/packets/reader-writer-and-header-extensions.md)
 - [**LZ4**](./api/framework/memory/lz4.md)
-- [**Buffers**](./api/framework/memory/buffer-and-pooling.md)
-- [**Object Pools**](./api/framework/memory/object-map-and-typed-pools.md)
+- [**Buffer Management**](./api/framework/memory/buffer-management.md)
+- [**Object Pooling**](./api/framework/memory/object-pooling.md)
+- [**Object Map**](./api/framework/memory/object-map.md)
+- [**Typed Object Pools**](./api/framework/memory/typed-object-pools.md)
 
 ### Security & Crypto
 - [**Cryptography**](./api/security/cryptography.md)
@@ -139,7 +143,6 @@ This page provides a comprehensive index of all documentation available for the 
 - [**Dispatcher**](./api/runtime/routing/packet-dispatch.md)
 - [**Return Types**](./api/runtime/routing/handler-results.md)
 - [**Pipeline**](./api/runtime/middleware/pipeline.md)
-- [**Buffer Pipeline**](./api/runtime/middleware/network-buffer-pipeline.md)
 - [**Rate Limiters**](./api/runtime/middleware/token-bucket-limiter.md)
 
 ### Network Transport
@@ -149,7 +152,7 @@ This page provides a comprehensive index of all documentation available for the 
 - [**UDP Listener**](./api/network/udp-listener.md)
 - [**Connections**](./api/network/connection/connection.md)
 - [**Hubs**](./api/network/connection/connection-hub.md)
-- [**Timing Wheel**](./api/network/timing-wheel.md)
+- [**Timing Wheel**](./api/network/time/timing-wheel.md)
 - [**Options**](./api/network/options/options.md)
 
 ### SDK (Client)
@@ -160,6 +163,14 @@ This page provides a comprehensive index of all documentation available for the 
 - [**Resumption**](./api/sdk/resume-extensions.md)
 - [**Subscriptions**](./api/sdk/subscriptions.md)
 - [**Transport Options**](./api/sdk/options/transport-options.md)
+
+---
+
+## 🛠️ Developer Tools
+
+- [**Tools Overview**](./guides/tools/index.md) — Landing page for internal utilities.
+- [**Identity Certificate Tool**](./guides/tools/certificate-tool.md) — Generating X25519 keys.
+- [**Packet Visualizer**](./guides/tools/packet-visualizer.md) — Debugging network frames in real-time.
 
 ---
 

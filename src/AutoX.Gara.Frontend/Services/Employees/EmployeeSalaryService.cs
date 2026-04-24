@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Employees;
+using AutoX.Gara.Frontend.Models.Results.Employees;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Employees;
 using Nalix.Common.Networking.Protocols;

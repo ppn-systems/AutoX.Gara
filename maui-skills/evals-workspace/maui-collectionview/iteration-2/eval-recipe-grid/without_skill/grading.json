@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "text": "CollectionView uses a 2-column GridItemsLayout (Span=2 or Columns=2)",
+      "passed": true,
+      "evidence": "<GridItemsLayout HorizontalItemSpacing=\"10\" Orientation=\"Vertical\" Span=\"2\" VerticalItemSpacing=\"10\" />"
+    },
+    {
+      "text": "DataTemplate includes an Image element bound to a photo or image source property",
+      "passed": true,
+      "evidence": "<Image Grid.Row=\"0\" Aspect=\"AspectFill\" Source=\"{Binding PhotoUrl}\"> (in the CollectionView.ItemTemplate DataTemplate)"
+    },
+    {
+      "text": "DataTemplate includes a Label bound to recipe Name and a Label bound to prep time",
+      "passed": true,
+      "evidence": "<Label ... Text=\"{Binding Name}\" ...> and <Label FontSize=\"12\" Text=\"{Binding PrepTimeDisplay}\" ...> (PrepTimeDisplay is a computed property on Recipe that formats PrepTimeMinutes)"
+    },
+    {
+      "text": "CollectionView has SelectionMode set to Single",
+      "passed": true,
+      "evidence": "<CollectionView Grid.Row=\"1\" ItemsSource=\"{Binding Recipes}\" SelectedItem=\"{Binding SelectedRecipe, Mode=TwoWay}\" SelectionMode=\"Single\">"
+    },
+    {
+      "text": "ViewModel has a SelectedRecipe or SelectedItem property with property change notification",
+      "passed": true,
+      "evidence": "public Recipe? SelectedRecipe { get => _selectedRecipe; set { if (_selectedRecipe == value) return; _selectedRecipe = value; OnPropertyChanged(); } } with INotifyPropertyChanged implemented"
+    },
+    {
+      "text": "x:DataType compiled bindings are used on the page and/or DataTemplate",
+      "passed": true,
+      "evidence": "x:DataType=\"vm:RecipesViewModel\" on ContentPage and x:DataType=\"models:Recipe\" on both the resource DataTemplate and the CollectionView.ItemTemplate DataTemplate"
+    },
+    {
+      "text": "ViewModel uses ObservableCollection<Recipe> for the items source",
+      "passed": true,
+      "evidence": "public ObservableCollection<Recipe> Recipes { get; } = new();"
+    },
+    {
+      "text": "SelectedItem is bound TwoWay (or uses SelectionChanged event) to the SelectedRecipe property",
+      "passed": true,
+      "evidence": "SelectedItem=\"{Binding SelectedRecipe, Mode=TwoWay}\""
+    },
+    {
+      "text": "VisualState Named 'Selected' is defined on the DataTemplate root to highlight selected items",
+      "passed": false,
+      "evidence": "No VisualState is defined anywhere in the file. Selection highlighting is implemented via a DataTrigger on the Border: <DataTrigger Binding=\"{Binding Source={RelativeSource AncestorType={x:Type vm:RecipesViewModel}}, Path=SelectedRecipe}\" TargetType=\"Border\" Value=\"{Binding .}\"><Setter Property=\"Stroke\" Value=\"{AppThemeBinding Light=#FF6B35, Dark=#FF8C5A}\" />...</DataTrigger>"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 1,
+    "total": 9,
+    "pass_rate": 0.89
+  }
+}

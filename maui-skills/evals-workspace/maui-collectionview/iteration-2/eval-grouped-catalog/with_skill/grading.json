@@ -1,0 +1,45 @@
+{
+  "expectations": [
+    {
+      "text": "CollectionView has IsGrouped='True'",
+      "passed": true,
+      "evidence": "<CollectionView ItemsSource=\"{Binding GroupedProducts}\" IsGrouped=\"True\">"
+    },
+    {
+      "text": "GroupHeaderTemplate shows category name and item count",
+      "passed": true,
+      "evidence": "<Label Grid.Column=\"0\" Text=\"{Binding CategoryName}\" ... />\n<Label Grid.Column=\"1\" Text=\"{Binding ItemCount, StringFormat='{0} items'}\" ... />"
+    },
+    {
+      "text": "Price is formatted as currency (StringFormat with C, or similar currency formatting)",
+      "passed": true,
+      "evidence": "<Label Grid.Column=\"1\" Text=\"{Binding Price, StringFormat='{0:C}'}\" ... />"
+    },
+    {
+      "text": "An 'Add to Cart' button has a Command binding",
+      "passed": true,
+      "evidence": "<Button Grid.Column=\"2\" Text=\"Add to Cart\" ... Command=\"{Binding Source={RelativeSource AncestorType={x:Type viewmodels:CatalogViewModel}}, Path=AddToCartCommand}\" CommandParameter=\"{Binding}\" />"
+    },
+    {
+      "text": "Pull-to-refresh is implemented via RefreshView or IsBusy pattern",
+      "passed": true,
+      "evidence": "<RefreshView IsRefreshing=\"{Binding IsRefreshing}\" Command=\"{Binding RefreshCommand}\">"
+    },
+    {
+      "text": "CollectionView has an EmptyView defined for the no-results state",
+      "passed": true,
+      "evidence": "<CollectionView.EmptyView>\n  <ContentView>\n    <VerticalStackLayout ...>\n      <Label Text=\"No products found\" ... />\n      <Label Text=\"Pull down to refresh or check back later.\" ... />\n    </VerticalStackLayout>\n  </ContentView>\n</CollectionView.EmptyView>"
+    },
+    {
+      "text": "ViewModel uses a grouped collection structure (ObservableCollection of group objects)",
+      "passed": true,
+      "evidence": "private ObservableCollection<ProductGroup> _groupedProducts = new();\npublic ObservableCollection<ProductGroup> GroupedProducts { get => _groupedProducts; ... }\n// ProductGroup : List<Product> with CategoryName and ItemCount properties"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  }
+}

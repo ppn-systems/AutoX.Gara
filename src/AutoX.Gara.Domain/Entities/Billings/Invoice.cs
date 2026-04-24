@@ -161,7 +161,9 @@ public class Invoice : AuditEntity<int>
     /// </summary>
     public decimal AmountPaid() =>
         Transactions?
-            .Where(t => t.Type == TransactionType.Revenue && !t.IsReversed)
+            .Where(t => t.Type == TransactionType.Revenue
+                && t.Status == TransactionStatus.Completed
+                && !t.IsReversed)
             .Sum(t => t.Amount) ?? 0;
 
     /// <summary>

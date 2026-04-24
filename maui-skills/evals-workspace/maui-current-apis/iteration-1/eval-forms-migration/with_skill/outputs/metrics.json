@@ -1,0 +1,110 @@
+{
+  "eval_id": 3,
+  "eval_name": "forms-migration",
+  "skill": "maui-current-apis",
+  "condition": "with_skill",
+  "target_framework": "net10.0",
+  "deprecated_patterns_in_input": [
+    {
+      "pattern": "xmlns=\"http://xamarin.com/schemas/2014/forms\"",
+      "category": "XAML & Markup",
+      "skill_table_entry": "Never generate Xamarin.Forms namespaces",
+      "replaced_with": "xmlns=\"http://schemas.microsoft.com/dotnet/2021/maui\"",
+      "correctly_replaced": true
+    },
+    {
+      "pattern": "<ContentPage.Content>",
+      "category": "Page & Navigation",
+      "skill_table_entry": "Xamarin.Forms pattern not needed in MAUI",
+      "replaced_with": "Removed (implicit content)",
+      "correctly_replaced": true
+    },
+    {
+      "pattern": "<StackLayout> (outer wrapper)",
+      "category": "Controls",
+      "skill_table_entry": "Compatibility.StackLayout -> VerticalStackLayout/HorizontalStackLayout",
+      "replaced_with": "Removed (CollectionView is direct page content)",
+      "correctly_replaced": true
+    },
+    {
+      "pattern": "<ListView HasUnevenRows=\"True\">",
+      "category": "Controls",
+      "skill_table_entry": "ListView -> CollectionView (deprecated in .NET 10)",
+      "replaced_with": "<CollectionView>",
+      "correctly_replaced": true
+    },
+    {
+      "pattern": "<ListView.ItemTemplate>",
+      "category": "Controls",
+      "skill_table_entry": "ListView -> CollectionView (deprecated in .NET 10)",
+      "replaced_with": "<CollectionView.ItemTemplate>",
+      "correctly_replaced": true
+    },
+    {
+      "pattern": "<ViewCell>",
+      "category": "Controls",
+      "skill_table_entry": "ViewCell deprecated in .NET 10 (listed with ListView)",
+      "replaced_with": "Removed (not needed in CollectionView.ItemTemplate)",
+      "correctly_replaced": true
+    },
+    {
+      "pattern": "<StackLayout Orientation=\"Horizontal\">",
+      "category": "Controls",
+      "skill_table_entry": "Compatibility.StackLayout -> HorizontalStackLayout",
+      "replaced_with": "<HorizontalStackLayout>",
+      "correctly_replaced": true
+    }
+  ],
+  "valid_patterns_preserved": [
+    {
+      "pattern": "x:Class=\"MyApp.ProductListPage\"",
+      "note": "Valid MAUI, preserved"
+    },
+    {
+      "pattern": "Title=\"Products\"",
+      "note": "Valid MAUI, preserved"
+    },
+    {
+      "pattern": "{Binding Products}",
+      "note": "Valid MAUI data binding, preserved"
+    },
+    {
+      "pattern": "{Binding Name}",
+      "note": "Valid MAUI data binding, preserved"
+    },
+    {
+      "pattern": "FontAttributes=\"Bold\"",
+      "note": "Valid MAUI, preserved"
+    },
+    {
+      "pattern": "{Binding Price, StringFormat='{0:C}'}",
+      "note": "Valid MAUI data binding with StringFormat, preserved"
+    },
+    {
+      "pattern": "Padding=\"10\"",
+      "note": "Valid MAUI, preserved"
+    }
+  ],
+  "summary": {
+    "total_deprecated_patterns_found": 7,
+    "total_deprecated_patterns_replaced": 7,
+    "total_valid_patterns_preserved": 7,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "skill_provided_direct_guidance_for": 7,
+    "replacement_accuracy": 1.0,
+    "preservation_accuracy": 1.0
+  },
+  "skill_guidance_coverage": {
+    "namespace_migration": true,
+    "listview_to_collectionview": true,
+    "viewcell_removal": true,
+    "stacklayout_to_typed_layouts": true,
+    "contentpage_content_wrapper_removal": true
+  },
+  "output_files": [
+    "ProductListPage.xaml",
+    "transcript.md",
+    "metrics.json"
+  ]
+}

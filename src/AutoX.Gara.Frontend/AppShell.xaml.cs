@@ -43,6 +43,7 @@ public partial class AppShell : Shell
         {
             options.EncryptionEnabled = false;
             options.Secret = Bytes32.Zero;
+            options.ServerPublicKey = "2CBA6DF1C0440662D7FAD1DFC59640C5669C4B5A03885813C9DF20CE69832274";
         }
 
         var session = new TcpSession(options, catalog!);

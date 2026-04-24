@@ -2,7 +2,7 @@
 
 This page provides a detailed list of diagnostic codes emitted by `Nalix.Analyzers`. These rules help ensure that your application uses the framework correctly and efficiently.
 
-## Usage Codes (NALIX001 - NALIX012, NALIX017 - NALIX019, NALIX047 - NALIX048, NALIX050, NALIX052, NALIX054 - NALIX056, NALIX058)
+## Usage Codes (NALIX001 - NALIX012, NALIX017 - NALIX018, NALIX047 - NALIX048, NALIX050, NALIX052, NALIX054 - NALIX056, NALIX058)
 
 | ID | Title | Severity | Category | Description |
 |---|---|---|---|---|
@@ -15,17 +15,16 @@ This page provides a detailed list of diagnostic codes emitted by `Nalix.Analyze
 | `NALIX009` | Registered packet type is missing static Deserialize | Warning | Usage | Nalix packet registry only binds packet types that expose the required static Deserialize(ReadOnlySpan<byte>) member. |
 | `NALIX010` | PacketBase<TSelf> should use the containing packet type | Warning | Usage | Nalix packet types should use themselves as the TSelf argument when inheriting from PacketBase<TSelf>. |
 | `NALIX011` | IPacketDeserializer<T> should use the containing packet type | Warning | Usage | Nalix packet deserializer contracts should target the containing packet type for consistent registry binding. |
-| `NALIX012` | PacketBase packet should expose static Deserialize | Warning | Usage | Nalix packet types built on PacketBase<TSelf> should expose a static Deserialize(ReadOnlySpan<byte>) helper for registry scanning and discoverability. |
+| `NALIX012` | PacketBase packet should expose static Deserialize | Warning | Usage | Nalix packet types built on PacketBase<TSelf> should have an accessible static Deserialize(ReadOnlySpan<byte>) entry point, declared on the type or inherited from PacketBase hierarchy. |
 | `NALIX017` | Packet Deserialize signature is invalid | Warning | Usage | Nalix packet types should expose a public static Deserialize(ReadOnlySpan<byte>) helper with the packet type as return value. |
 | `NALIX018` | Registered packet type must be concrete | Warning | Usage | Nalix packet registry should register only concrete, non-abstract, non-generic packet types. |
-| `NALIX019` | Registered buffer middleware does not implement INetworkBufferMiddleware | Warning | Usage | Nalix buffer middleware registration should pass a type implementing INetworkBufferMiddleware. |
 | `NALIX047` | Dispatch loop count is out of supported range | Warning | Usage | `WithDispatchLoopCount` expects a value in the range `1..64`. |
 | `NALIX048` | Packet controller handler return type is unsupported | Warning | Usage | Handler return type is not supported by Nalix return handlers. |
 | `NALIX050` | PacketOpcode is declared on a non-controller type | Info | Usage | `[PacketOpcode]` is expected on methods inside `[PacketController]` types. |
 | `NALIX052` | Packet Deserialize overload should include ReadOnlySpan<byte> | Warning | Usage | Packet types should expose `Deserialize(ReadOnlySpan<byte>)` for stable registry/discovery behavior. |
 | `NALIX054` | PacketController name is duplicated | Info | Usage | Duplicate `PacketController` names can reduce routing and diagnostics clarity. |
 | `NALIX055` | Redundant cast on PacketContext<T>.Packet | Info | Usage | In `PacketContext<T>` handlers, casting `context.Packet` to `T` is unnecessary. |
-| `NALIX056` | Middleware registration uses null | Warning | Usage | `WithMiddleware`/`WithBufferMiddleware` should not receive null middleware instances. |
+| `NALIX056` | Middleware registration uses null | Warning | Usage | `WithMiddleware` should not receive null middleware instances. |
 | `NALIX058` | Packet handler method should not be generic | Warning | Usage | Generic `[PacketOpcode]` handlers are not recommended for predictable dispatch binding. |
 
 ## Serialization Codes (NALIX013 - NALIX016, NALIX021 - NALIX022, NALIX034, NALIX046, NALIX051)
@@ -42,16 +41,14 @@ This page provides a detailed list of diagnostic codes emitted by `Nalix.Analyze
 | `NALIX046` | `SerializeOrder` gap is unusually large | Info | Serialization | `SerializeOrder` is ordering metadata, not a byte offset. Large jumps are allowed but may indicate accidental numbering. |
 | `NALIX051` | `IFixedSizeSerializable` type contains dynamic serialization member | Warning | Serialization | Fixed-size serializable types should avoid variable-size members such as `string`, arrays, or nested packets. |
 
-## Middleware and Routing Codes (NALIX006 - NALIX007, NALIX025 - NALIX026, NALIX030 - NALIX033)
+## Middleware and Routing Codes (NALIX006, NALIX025 - NALIX026, NALIX030, NALIX032 - NALIX033, NALIX035 - NALIX036, NALIX038)
 
 | ID | Title | Severity | Category | Description |
 |---|---|---|---|---|
 | `NALIX006` | Registered middleware type does not match dispatcher packet type | Warning | Usage | Nalix packet middleware should be registered against a compatible PacketDispatchOptions<TPacket>. |
-| `NALIX007` | Network buffer middleware ignores MiddlewareStageAttribute | Info | Usage | Nalix network buffer middleware ordering uses MiddlewareOrderAttribute only. |
 | `NALIX025` | Packet metadata provider clears Opcode | Warning | Routing | Nalix packet metadata providers should not clear builder.Opcode because packet metadata requires a non-null opcode. |
 | `NALIX026` | Packet metadata provider overwrites Opcode without guard | Info | Routing | Nalix packet metadata providers usually should augment metadata instead of unconditionally replacing an existing PacketOpcodeAttribute. |
 | `NALIX030` | Packet middleware should declare MiddlewareOrder | Info | Middleware | Nalix packet middleware ordering is more predictable when each middleware declares MiddlewareOrderAttribute explicitly. |
-| `NALIX031` | Buffer middleware should declare MiddlewareOrder | Info | Middleware | Nalix network buffer middleware ordering is determined solely by MiddlewareOrderAttribute. |
 | `NALIX032` | Inbound middleware ignores AlwaysExecute | Info | Middleware | Nalix AlwaysExecute only changes outbound middleware behavior. It has no effect on inbound-only middleware. |
 | `NALIX033` | Registered middleware shares `MiddlewareOrder` with another | Info | Middleware | Nalix middleware registration chains are easier to reason about when `MiddlewareOrder` values are unique within the same builder chain. |
 | `NALIX035` | `PacketOpcode` is in reserved range | Warning | Routing | OpCodes between `0x0000` and `0x00FF` are reserved for internal Nalix system packets. |

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Parts;
+using AutoX.Gara.Frontend.Models.Results.Parts;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Protocol.Inventory;
 using Nalix.Common.Networking.Protocols;

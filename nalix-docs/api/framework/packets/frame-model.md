@@ -20,8 +20,8 @@ This page covers the core `Nalix.Framework.DataFrames` abstractions that sit und
 
 | Type | Public members |
 |---|---|
-| `FrameBase` | `MagicNumber`, `OpCode`, `Flags`, `Priority`, `Protocol`, `SequenceId`, `Length`, `Serialize()`, `Serialize(Span<byte>)`, `ResetForPool()` |
-| `PacketBase<TSelf>` | frame members plus `GenerateReport()`, `GetReportData()`, `Deserialize(ReadOnlySpan<byte>)` |
+| `FrameBase` | `MagicNumber`, `OpCode`, `Flags`, `Priority`, `SequenceId`, `Length`, `Serialize()`, `Serialize(Span<byte>)`, `ResetForPool()` |
+| `PacketBase<TSelf>` | frame members plus `GenerateReport()`, `GetReportData()`, `Deserialize(ReadOnlySpan<byte>)`, `Deserialize(ReadOnlySpan<byte>, ref TSelf)` |
 | `FrameTransformer` | low-level payload transform helpers and size calculations |
 | `PacketCipher` | shared framed packet encrypt/decrypt helper |
 | `PacketCompression` | shared framed packet compress/decompress helper |
@@ -36,7 +36,6 @@ It exposes the fields that every packet carries:
 - `OpCode`
 - `Flags`
 - `Priority`
-- `Protocol`
 - `SequenceId`
 - `Length`
 
@@ -80,6 +79,7 @@ public sealed class ChatMessage : PacketBase<ChatMessage>
 - `MagicNumber` is restored automatically during `ResetForPool()`, so pooled packets keep stable type identity.
 - fixed-size packets get a cached `Length`; dynamic fields such as `string` and `byte[]` are measured at runtime.
 - static `Deserialize(ReadOnlySpan<byte>)` throws on empty or malformed input instead of silently returning a partial packet.
+- static `Deserialize(ReadOnlySpan<byte>, ref TSelf)` supports reusing an existing packet instance while keeping the same validation behavior.
 
 ## FrameTransformer
 
@@ -108,10 +108,11 @@ For higher-level frame workflows, prefer the shared helpers:
 
 ```csharp
 int maxCipher = FrameTransformer.GetMaxCiphertextSize(
-    CipherSuiteType.CHACHA20_POLY1305,
+    CipherSuiteType.Chacha20Poly1305,
     plaintextSize: payloadSize);
 
-bool encrypted = FrameTransformer.Encrypt(sourceLease, destLease, key, CipherSuiteType.CHACHA20_POLY1305);
+FrameTransformer.Encrypt(sourceLease, destLease, key, CipherSuiteType.Chacha20Poly1305);
+int encryptedLength = destLease.Length;
 ```
 
 ### Operational model
@@ -144,4 +145,5 @@ bool encrypted = FrameTransformer.Encrypt(sourceLease, destLease, key, CipherSui
 - [Built-in Frames](./built-in-frames.md)
 - [Fragmentation](./fragmentation.md)
 - [Serialization](./serialization.md)
-- [Buffer and Pooling](../memory/buffer-and-pooling.md)
+- [Buffer Management](../memory/buffer-management.md)
+- [Object Pooling](../memory/object-pooling.md)

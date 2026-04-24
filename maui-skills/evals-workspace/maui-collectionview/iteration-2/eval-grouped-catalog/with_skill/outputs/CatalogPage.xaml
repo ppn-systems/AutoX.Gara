@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:EcommerceCatalog.ViewModels"
+             xmlns:models="clr-namespace:EcommerceCatalog.Models"
+             x:Class="EcommerceCatalog.Views.CatalogPage"
+             x:DataType="viewmodels:CatalogViewModel"
+             Title="Product Catalog">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshCommand}">
+
+        <CollectionView ItemsSource="{Binding GroupedProducts}"
+                        IsGrouped="True">
+
+            <!-- Group header: category name + item count -->
+            <CollectionView.GroupHeaderTemplate>
+                <DataTemplate x:DataType="models:ProductGroup">
+                    <Grid Padding="16,10,16,4"
+                          BackgroundColor="{AppThemeBinding Light=#F3F4F6, Dark=#1F2937}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Column="0"
+                               Text="{Binding CategoryName}"
+                               FontAttributes="Bold"
+                               FontSize="15"
+                               VerticalOptions="Center" />
+
+                        <Label Grid.Column="1"
+                               Text="{Binding ItemCount, StringFormat='{0} items'}"
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+                               VerticalOptions="Center" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.GroupHeaderTemplate>
+
+            <!-- Item template: name, price, Add to Cart button -->
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Product">
+                    <Grid Padding="16,10"
+                          ColumnSpacing="12"
+                          RowSpacing="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Column="0"
+                               Text="{Binding Name}"
+                               FontSize="14"
+                               VerticalOptions="Center"
+                               LineBreakMode="TailTruncation" />
+
+                        <Label Grid.Column="1"
+                               Text="{Binding Price, StringFormat='{0:C}'}"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#111827, Dark=#F9FAFB}"
+                               VerticalOptions="Center" />
+
+                        <Button Grid.Column="2"
+                                Text="Add to Cart"
+                                FontSize="12"
+                                Padding="10,6"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:CatalogViewModel}}, Path=AddToCartCommand}"
+                                CommandParameter="{Binding}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <!-- Empty state -->
+            <CollectionView.EmptyView>
+                <ContentView>
+                    <VerticalStackLayout HorizontalOptions="Center"
+                                         VerticalOptions="Center"
+                                         Spacing="12"
+                                         Padding="32">
+                        <Label Text="No products found"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               HorizontalTextAlignment="Center" />
+                        <Label Text="Pull down to refresh or check back later."
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#6B7280, Dark=#9CA3AF}"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </ContentView>
+            </CollectionView.EmptyView>
+
+        </CollectionView>
+    </RefreshView>
+
+</ContentPage>

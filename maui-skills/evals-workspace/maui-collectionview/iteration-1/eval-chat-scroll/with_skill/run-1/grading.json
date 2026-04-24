@@ -1,0 +1,116 @@
+{
+  "expectations": [
+    {
+      "text": "CollectionView displays messages from an ObservableCollection",
+      "passed": true,
+      "evidence": "ChatViewModel.cs line 15 declares `public ObservableCollection<Message> Messages { get; } = new();`. ChatPage.xaml line 85 binds `ItemsSource=\"{Binding Messages}\"` on the CollectionView named `MessagesCollectionView`. This is a genuine binding to a live ObservableCollection, not a stub."
+    },
+    {
+      "text": "Message alignment differs by sender — right-aligned for current user, left-aligned for others",
+      "passed": true,
+      "evidence": "MessageTemplateSelector.cs returns `MyMessageTemplate` when `IsFromMe == true` and `TheirMessageTemplate` otherwise. In ChatPage.xaml: MyMessageTemplate places the Border in `Grid.Column=\"1\"` with a `Width=\"*\"` spacer column on the left (lines 18-38), pushing content right. TheirMessageTemplate places the Border in `Grid.Column=\"0\"` with the spacer on the right (lines 42-70), pushing content left. The selector is wired via `ItemTemplate=\"{StaticResource MessageTemplateSelector}\"`."
+    },
+    {
+      "text": "Code calls CollectionView.ScrollTo() to scroll to the last message when new messages arrive",
+      "passed": true,
+      "evidence": "ChatPage.xaml.cs lines 30-33: `MessagesCollectionView.ScrollTo(item: message, position: ScrollToPosition.End, animate: true);` is called in the `ScrollToBottom(Message message)` method. This method is invoked as a callback registered with the ViewModel, which fires it whenever the CollectionChanged event fires for new items."
+    },
+    {
+      "text": "A CollectionChanged or property-change handler triggers the scroll behavior",
+      "passed": true,
+      "evidence": "ChatViewModel.cs line 39: `Messages.CollectionChanged += OnMessagesCollectionChanged;`. The handler `OnMessagesCollectionChanged` (lines 74-85) checks for `NotifyCollectionChangedAction.Add`, extracts the new message, and calls `_scrollToBottomCallback?.Invoke(newMessage)` on the main thread. This directly ties every new item added to the scroll action."
+    },
+    {
+      "text": "Message model has properties for content/text, a sender or IsFromMe flag, and optionally timestamp",
+      "passed": true,
+      "evidence": "Message.cs defines: `public string Text { get; set; }` (content), `public bool IsFromMe { get; set; }` (sender/direction flag), `public string SenderName { get; set; }` (sender identity), and `public DateTime Timestamp { get; set; }` (optional timestamp). All required properties are present."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "eval_id": "eval-chat-scroll",
+    "variant": "with_skill",
+    "skill": "maui-collectionview",
+    "files_produced": [
+      "Message.cs",
+      "ChatViewModel.cs",
+      "MessageTemplateSelector.cs",
+      "ChatPage.xaml",
+      "ChatPage.xaml.cs"
+    ],
+    "skill_usefulness_rating": 5,
+    "completeness_rating": 5,
+    "code_quality_rating": 5,
+    "total_tokens": 24206,
+    "transcript_chars": 3218,
+    "output_chars": 7450
+  },
+  "timing": {
+    "executor_duration_seconds": 149.2,
+    "total_duration_seconds": 149.2,
+    "total_tokens": 24206
+  },
+  "claims": [
+    {
+      "claim": "DataTemplateSelector is used to route left/right bubble templates",
+      "type": "process",
+      "verified": true,
+      "evidence": "MessageTemplateSelector.cs implements DataTemplateSelector, and ChatPage.xaml wires it as `ItemTemplate=\"{StaticResource MessageTemplateSelector}\"` with both MyMessageTemplate and TheirMessageTemplate properties populated."
+    },
+    {
+      "claim": "ScrollTo is called on the UI thread via MainThread.BeginInvokeOnMainThread",
+      "type": "process",
+      "verified": true,
+      "evidence": "ChatViewModel.cs lines 80-83: `Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() => { _scrollToBottomCallback?.Invoke(newMessage); });`"
+    },
+    {
+      "claim": "ViewModel has no direct UI dependency — scroll is triggered via a callback delegate",
+      "type": "quality",
+      "verified": true,
+      "evidence": "ChatViewModel.cs uses `Action<Message>? _scrollToBottomCallback` (line 13) registered via `SetScrollToBottomCallback`. The ViewModel never references any UI type. ChatPage.xaml.cs (lines 18, 25-34) owns the actual `MessagesCollectionView.ScrollTo(...)` call."
+    },
+    {
+      "claim": "x:DataType is applied to both DataTemplate resources for compiled bindings",
+      "type": "quality",
+      "verified": true,
+      "evidence": "ChatPage.xaml line 16: `x:DataType=\"models:Message\"` on MyMessageTemplate. Line 43: `x:DataType=\"models:Message\"` on TheirMessageTemplate."
+    },
+    {
+      "claim": "EmptyView is wrapped in ContentView per skill gotcha guidance",
+      "type": "process",
+      "verified": true,
+      "evidence": "ChatPage.xaml lines 92-101: `<CollectionView.EmptyView><ContentView>...</ContentView></CollectionView.EmptyView>`"
+    },
+    {
+      "claim": "No ViewCell is used in any template",
+      "type": "quality",
+      "verified": true,
+      "evidence": "Inspected all DataTemplate content in ChatPage.xaml — templates use Grid, Border, VerticalStackLayout, Label. No ViewCell element anywhere in the file."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Message alignment differs by sender — right-aligned for current user, left-aligned for others",
+        "reason": "The assertion passes based on XAML column placement, but no assertion checks that the DataTemplateSelector actually routes correctly at runtime (i.e., that IsFromMe=true selects MyMessageTemplate). The selector logic is simple and correct here, but a stronger assertion would specify that the template selector returns the correct template based on the IsFromMe flag, not just that two templates with different column placement exist."
+      },
+      {
+        "reason": "No assertion verifies that the scroll actually targets the *last* message (i.e., the most recently added item). The code correctly uses `e.NewItems[e.NewItems.Count - 1]` to get the last added item, but the expectation only says 'scrolls to the last message when new messages arrive' without checking this detail. A transcript-only check could pass even if the code always scrolled to the first item."
+      },
+      {
+        "reason": "No assertion covers thread safety — the skill explicitly flags that ScrollTo must be called on the UI thread. The code correctly uses MainThread.BeginInvokeOnMainThread, which is a meaningful correctness property. This is worth asserting since omitting it is a common bug."
+      }
+    ],
+    "overall": "All five assertions pass with strong evidence. The evals cover the core functional requirements well. The main gap is that alignment and scroll-target correctness rely on structural inspection rather than behavioral verification. Adding assertions about DataTemplateSelector routing logic and UI-thread safety for scroll would make the eval more discriminating."
+  }
+}

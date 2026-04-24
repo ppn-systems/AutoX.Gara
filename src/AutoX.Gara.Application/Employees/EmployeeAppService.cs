@@ -5,6 +5,7 @@ using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Validation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using System;
@@ -43,6 +44,11 @@ public sealed class EmployeeAppService(IDataSessionFactory dataSessionFactory, I
         if (!EmployeeValidation.IsValidDateOfBirth(employee.DateOfBirth))
         {
             return ServiceResult<Employee>.Failure("Ngày sinh không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (!EmployeeValidation.IsValidDates(employee.StartDate, employee.EndDate))
+        {
+            return ServiceResult<Employee>.Failure("Khoảng thời gian làm việc không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
         }
 
         try
@@ -85,6 +91,11 @@ public sealed class EmployeeAppService(IDataSessionFactory dataSessionFactory, I
             return ServiceResult<Employee>.Failure("Ngày sinh không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
         }
 
+        if (!EmployeeValidation.IsValidDates(employee.StartDate, employee.EndDate))
+        {
+            return ServiceResult<Employee>.Failure("Khoảng thời gian làm việc không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -94,6 +105,32 @@ public sealed class EmployeeAppService(IDataSessionFactory dataSessionFactory, I
             if (existing is null)
             {
                 return ServiceResult<Employee>.Failure("Không tìm thấy nhân viên.", ProtocolReason.NOT_FOUND);
+            }
+
+            bool emailChanged = !string.Equals(existing.Email, employee.Email, StringComparison.OrdinalIgnoreCase);
+            if (emailChanged)
+            {
+                bool duplicateEmail = await session.Context.Set<Employee>()
+                    .AsNoTracking()
+                    .AnyAsync(e => e.Id != employee.Id && e.Email == employee.Email)
+                    .ConfigureAwait(false);
+                if (duplicateEmail)
+                {
+                    return ServiceResult<Employee>.Failure("Email đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
+                }
+            }
+
+            bool phoneChanged = !string.Equals(existing.PhoneNumber, employee.PhoneNumber, StringComparison.OrdinalIgnoreCase);
+            if (phoneChanged && !string.IsNullOrWhiteSpace(employee.PhoneNumber))
+            {
+                bool duplicatePhone = await session.Context.Set<Employee>()
+                    .AsNoTracking()
+                    .AnyAsync(e => e.Id != employee.Id && e.PhoneNumber == employee.PhoneNumber)
+                    .ConfigureAwait(false);
+                if (duplicatePhone)
+                {
+                    return ServiceResult<Employee>.Failure("Số điện thoại đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
+                }
             }
 
 

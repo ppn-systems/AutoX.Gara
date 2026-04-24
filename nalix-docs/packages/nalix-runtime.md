@@ -1,6 +1,9 @@
 # Nalix.Runtime
 
-`Nalix.Runtime` is the orchestration layer of the Nalix framework. It provides the packet dispatch pipeline, middleware execution engine, handler compilation, and session resume infrastructure. This package bridges the gap between raw network transport (`Nalix.Network`) and your application logic.
+`Nalix.Runtime` is the high-performance orchestration layer of the Nalix framework, specifically designed to power **Server-Side** packet processing. It provides the multi-threaded dispatch pipeline, middleware execution engine, handler compilation, and session state infrastructure.
+
+!!! info "The Engine of the Server"
+    While `Nalix.SDK` is designed for client-side consumption, `Nalix.Runtime` is the engine that handles the heavy lifting on the server, managing worker affinity, request routing, and industrial-grade session persistence.
 
 !!! note "Typically consumed via Nalix.Network.Hosting"
     Most projects consume `Nalix.Runtime` indirectly through `Nalix.Network.Hosting`, which wires up the dispatcher and middleware automatically. Use `Nalix.Runtime` directly only when you need full control over the dispatch pipeline.
@@ -22,9 +25,9 @@ flowchart LR
 `PacketDispatchChannel` is the engine that processes all incoming network traffic. It manages:
 
 - **Shard-aware worker loops** — Multiple workers (scaled to CPU core count) pull from the dispatch queue in parallel, preventing head-of-line blocking.
-- **Priority queueing** — Packets are prioritized by `PacketPriority` (Urgent, System, High, Normal, Low).
+- **Priority queueing** — Packets are prioritized by `PacketPriority` (`URGENT`, `HIGH`, `MEDIUM`, `LOW`, `NONE`).
 - **Deserialization** — Uses the `PacketRegistry` to convert raw bytes into typed packet instances.
-- **Middleware execution** — Runs the configured middleware chain before handler invocation.
+- **Packet middleware execution** — Runs the configured middleware chain before handler invocation.
 - **Handler invocation** — Calls the matched handler method with the appropriate context.
 - **Return handling** — Translates handler return values into outbound network responses.
 
@@ -46,11 +49,10 @@ dispatch.Activate();
 
 ### Middleware Pipeline
 
-The runtime supports two middleware layers:
+The runtime supports specialized middleware that executes before high-level handler invocation:
 
 | Layer | Interface | Access | Use case |
-|---|---|---|---|
-| Buffer middleware | `INetworkBufferMiddleware` | Raw `IBufferLease` | Decryption, decompression, frame validation |
+| :--- | :--- | :--- | :--- |
 | Packet middleware | `IPacketMiddleware<TPacket>` | `PacketContext<TPacket>` | Permissions, rate limiting, timeouts, auditing |
 
 Middleware is registered during dispatch construction and executes in registration order.
@@ -95,7 +97,7 @@ public sealed class AccountHandlers
 The dispatch pipeline supports multiple return shapes. The internal return handler converts each into the appropriate outbound behavior:
 
 | Return type | Behavior |
-|---|---|
+| :--- | :--- |
 | `TPacket` | Serializes and sends the packet to the caller |
 | `Task<TPacket>` / `ValueTask<TPacket>` | Awaits, then serializes and sends |
 | `string` | Sends as a text response |
@@ -122,6 +124,7 @@ Call `dispatch.GenerateReport()` to inspect runtime state:
 ## Key API Pages
 
 - [Packet Dispatch](../api/runtime/routing/packet-dispatch.md)
+- [Packet Dispatch Options](../api/runtime/routing/packet-dispatch-options.md)
 - [Middleware Pipeline](../api/runtime/middleware/pipeline.md)
 - [Packet Attributes](../api/runtime/routing/packet-attributes.md)
 - [Handler Return Types](../api/runtime/routing/handler-results.md)

@@ -4,6 +4,7 @@ using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Shared.Models;
 using AutoX.Gara.Shared.Validation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using System;
@@ -44,6 +45,11 @@ public sealed class CustomerAppService(IDataSessionFactory dataSessionFactory, I
             return ServiceResult<Customer>.Failure("Mã số thuế không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
         }
 
+        if (!CustomerValidation.IsValidDateOfBirth(customer.DateOfBirth))
+        {
+            return ServiceResult<Customer>.Failure("Ngày sinh khách hàng không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -76,6 +82,11 @@ public sealed class CustomerAppService(IDataSessionFactory dataSessionFactory, I
             return ServiceResult<Customer>.Failure("Mã số thuế không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
         }
 
+        if (!CustomerValidation.IsValidDateOfBirth(customer.DateOfBirth))
+        {
+            return ServiceResult<Customer>.Failure("Ngày sinh khách hàng không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -83,6 +94,17 @@ public sealed class CustomerAppService(IDataSessionFactory dataSessionFactory, I
             if (existing is null)
             {
                 return ServiceResult<Customer>.Failure("Không tìm thấy khách hàng.", ProtocolReason.NOT_FOUND);
+            }
+
+            bool duplicateContact = await session.Context.Set<Customer>()
+                .AsNoTracking()
+                .AnyAsync(c => c.Id != customer.Id
+                    && ((c.Email != null && c.Email == customer.Email)
+                        || (c.PhoneNumber != null && c.PhoneNumber == customer.PhoneNumber)))
+                .ConfigureAwait(false);
+            if (duplicateContact)
+            {
+                return ServiceResult<Customer>.Failure("Email hoặc số điện thoại đã được dùng cho khách hàng khác.", ProtocolReason.ALREADY_EXISTS);
             }
 
             existing.Name = customer.Name;

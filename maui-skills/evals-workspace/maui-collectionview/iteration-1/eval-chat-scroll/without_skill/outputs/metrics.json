@@ -1,0 +1,74 @@
+{
+  "eval_id": "eval-chat-scroll",
+  "variant": "without_skill",
+  "iteration": 1,
+  "date": "2026-03-05",
+  "model": "claude-sonnet-4-6",
+  "task_summary": "MAUI CollectionView chat page with auto-scroll to bottom and left/right message bubbles",
+
+  "files_produced": [
+    "Message.cs",
+    "ChatViewModel.cs",
+    "ChatPage.xaml",
+    "ChatPage.xaml.cs",
+    "MauiProgram.cs",
+    "AppShell.xaml"
+  ],
+
+  "correctness": {
+    "compiles": "likely",
+    "runs": "likely",
+    "scroll_to_bottom_implemented": true,
+    "scroll_api_correct": true,
+    "scroll_api_used": "CollectionView.ScrollTo(item, position: ScrollToPosition.End, animate: true)",
+    "main_thread_guard": true,
+    "left_right_alignment": true,
+    "observable_collection_used": true,
+    "send_command_implemented": true,
+    "initial_scroll_on_appearing": true
+  },
+
+  "issues": [
+    {
+      "severity": "minor",
+      "description": "DataTrigger-based template selection is less efficient than a DataTemplateSelector class. Two full visual trees are created per cell; only one is visible at a time."
+    },
+    {
+      "severity": "minor",
+      "description": "Frame is deprecated in .NET MAUI in favour of Border. Should use Border with StrokeShape='RoundRectangle 16'."
+    },
+    {
+      "severity": "minor",
+      "description": "The 100 ms initial scroll delay in OnAppearing is a heuristic workaround rather than a layout-event-driven solution."
+    },
+    {
+      "severity": "info",
+      "description": "No DataTemplateSelector class was produced. The XAML DataTrigger approach works but a DataTemplateSelector is the idiomatic MAUI pattern for this scenario."
+    }
+  ],
+
+  "scroll_to_bottom": {
+    "approach": "delegate + CollectionChanged subscription",
+    "delegate_registered_in": "OnBindingContextChanged",
+    "collection_changed_subscription": true,
+    "main_thread_invocation": "MainThread.BeginInvokeOnMainThread",
+    "initial_scroll": true,
+    "initial_scroll_mechanism": "Dispatcher.DispatchDelayed(100ms)"
+  },
+
+  "left_right_alignment": {
+    "approach": "DataTrigger on ContentView swapping Content based on IsMe",
+    "alternative_mentioned_in_transcript": "DataTemplateSelector subclass",
+    "my_messages_side": "right",
+    "their_messages_side": "left",
+    "my_bubble_color": "#0A84FF",
+    "their_bubble_color": "#E5E5EA"
+  },
+
+  "scores": {
+    "task_completion": 0.85,
+    "code_quality": 0.75,
+    "maui_idioms": 0.70,
+    "notes": "Core functionality (scroll + left/right bubbles + ObservableCollection) is correctly implemented. The DataTrigger template approach is functional but not idiomatic; a DataTemplateSelector would be preferred. Frame deprecation not addressed."
+  }
+}

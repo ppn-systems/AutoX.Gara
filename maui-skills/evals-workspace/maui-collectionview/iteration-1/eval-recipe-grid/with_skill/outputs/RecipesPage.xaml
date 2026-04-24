@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:RecipeApp.ViewModels"
+             xmlns:models="clr-namespace:RecipeApp.Models"
+             x:Class="RecipeApp.Views.RecipesPage"
+             x:DataType="viewmodels:RecipesViewModel"
+             Title="Recipes">
+
+    <CollectionView ItemsSource="{Binding Recipes}"
+                    SelectionMode="Single"
+                    SelectedItem="{Binding SelectedRecipe, Mode=TwoWay}"
+                    SelectionChangedCommand="{Binding RecipeSelectedCommand}"
+                    SelectionChangedCommandParameter="{Binding SelectedRecipe}">
+
+        <CollectionView.ItemsLayout>
+            <GridItemsLayout Orientation="Vertical"
+                             Span="2"
+                             VerticalItemSpacing="12"
+                             HorizontalItemSpacing="12" />
+        </CollectionView.ItemsLayout>
+
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="models:Recipe">
+                <Grid Padding="4"
+                      RowDefinitions="160,Auto,Auto">
+
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup Name="CommonStates">
+                            <VisualState Name="Normal">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor" Value="Transparent" />
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState Name="Selected">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor"
+                                            Value="{AppThemeBinding Light=#E8F4FD, Dark=#1A3A4A}" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+
+                    <!-- Recipe Photo -->
+                    <Image Grid.Row="0"
+                           Source="{Binding PhotoUrl}"
+                           Aspect="AspectFill"
+                           HeightRequest="160">
+                        <Image.Clip>
+                            <RoundRectangleGeometry Rect="0,0,1000,160" CornerRadius="12,12,0,0" />
+                        </Image.Clip>
+                    </Image>
+
+                    <!-- Selection Indicator Border -->
+                    <Border Grid.Row="0"
+                            Stroke="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                            StrokeThickness="3"
+                            BackgroundColor="Transparent">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12,12,0,0" />
+                        </Border.StrokeShape>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border"
+                                         Binding="{Binding Source={RelativeSource Self}, Path=IsVisible}"
+                                         Value="True">
+                            </DataTrigger>
+                        </Border.Triggers>
+                    </Border>
+
+                    <!-- Recipe Name -->
+                    <Label Grid.Row="1"
+                           Text="{Binding Name}"
+                           FontAttributes="Bold"
+                           FontSize="14"
+                           Margin="8,6,8,2"
+                           LineBreakMode="WordWrap" />
+
+                    <!-- Prep Time -->
+                    <Label Grid.Row="2"
+                           Text="{Binding PrepTime, StringFormat='Prep: {0}'}"
+                           FontSize="12"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
+                           Margin="8,0,8,8" />
+                </Grid>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+
+        <CollectionView.EmptyView>
+            <ContentView>
+                <VerticalStackLayout HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Spacing="12">
+                    <Label Text="No recipes found."
+                           HorizontalTextAlignment="Center"
+                           FontSize="16"
+                           TextColor="{StaticResource Gray500}" />
+                </VerticalStackLayout>
+            </ContentView>
+        </CollectionView.EmptyView>
+    </CollectionView>
+
+</ContentPage>

@@ -1,0 +1,100 @@
+{
+  "expectations": [
+    {
+      "text": "Device.OpenUri is replaced with Launcher.OpenAsync or Launcher.Default.OpenAsync",
+      "passed": true,
+      "evidence": "Output file MainPage.cs line 7: 'await Launcher.OpenAsync(new Uri(\"https://example.com\"));'. Transcript 'Changes Made' section: 'Replaced Device.OpenUri(new Uri(...)) with await Launcher.OpenAsync(new Uri(...))'. metrics.json confirms: correct_replacement_used=true, replacement_api='Launcher.OpenAsync()'."
+    },
+    {
+      "text": "The handler is made async to properly await the Launcher call",
+      "passed": true,
+      "evidence": "Output file MainPage.cs line 5: 'private async void OnHelpClicked(object sender, EventArgs e)'. Transcript Step 4 states 'Launcher.OpenAsync() is an async method, so the event handler must be changed from void to async void.' metrics.json confirms: async_signature_updated=true."
+    },
+    {
+      "text": "No Device.* API calls remain in the output code",
+      "passed": true,
+      "evidence": "Output file MainPage.cs contains no Device. references. The only API call is 'await Launcher.OpenAsync(...)'. metrics.json confirms: deprecated_apis_in_output=[] and deprecated_api_replaced=true."
+    },
+    {
+      "text": "The output explicitly notes or comments that Device.OpenUri is deprecated/removed in .NET MAUI",
+      "passed": true,
+      "evidence": "The transcript (which is the full output of the task run) explicitly states in Step 3: 'The Device class is fully deprecated in .NET MAUI. Device.OpenUri() must be replaced with Launcher.OpenAsync()' and in 'Issues Identified': 'Device.OpenUri() \u2014 deprecated; the entire Device class is deprecated in .NET MAUI.' Note: the code file itself (MainPage.cs) contains no inline comment about deprecation \u2014 the deprecation notice appears only in the transcript reasoning, not as a code comment. If the expectation specifically requires an inline code comment, this would be a FAIL. Graded as PASS based on the transcript being the primary output artifact."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "eval_id": "eval-deprecated-device",
+    "skill": "maui-current-apis",
+    "condition": "with_skill",
+    "model": "claude-sonnet-4-6",
+    "deprecated_apis_in_input": [
+      "Device.OpenUri()"
+    ],
+    "deprecated_apis_in_output": [],
+    "deprecated_api_detected": true,
+    "deprecated_api_replaced": true,
+    "correct_replacement_used": true,
+    "replacement_api": "Launcher.OpenAsync()",
+    "replacement_namespace": "Microsoft.Maui.ApplicationModel",
+    "async_signature_updated": true,
+    "using_directive_added": true,
+    "xamarin_namespace_introduced": false,
+    "compatibility_namespace_introduced": false,
+    "score": 1.0,
+    "output_chars": 0
+  },
+  "timing": {
+    "total_tokens": 24845,
+    "executor_duration_ms": 66380,
+    "executor_duration_seconds": 66.4,
+    "total_duration_seconds": 66.4
+  },
+  "claims": [
+    {
+      "claim": "Device.OpenUri() was correctly identified as deprecated using the skill's Device & Platform APIs table",
+      "type": "process",
+      "verified": true,
+      "evidence": "Transcript Step 3 shows the skill's deprecated API table was consulted and the entry for Device.OpenUri() was found, giving the replacement Launcher.OpenAsync() and namespace Microsoft.Maui.ApplicationModel."
+    },
+    {
+      "claim": "No deprecated APIs remain in the output",
+      "type": "quality",
+      "verified": true,
+      "evidence": "Output MainPage.cs contains no Device.* calls. metrics.json: deprecated_apis_in_output=[]."
+    },
+    {
+      "claim": "The fix is valid across all supported .NET MAUI versions (.NET 8, 9, and 10)",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Launcher.OpenAsync() is part of Microsoft.Maui.ApplicationModel which ships in all .NET MAUI versions. The claim is technically correct, though no .csproj was available to verify the target framework in use."
+    },
+    {
+      "claim": "No additional NuGet packages are required for the replacement",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Launcher.OpenAsync() is built into the Microsoft.Maui.ApplicationModel namespace included in the .NET MAUI SDK \u2014 no extra package references needed."
+    }
+  ],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "The output explicitly notes or comments that Device.OpenUri is deprecated/removed in .NET MAUI",
+        "reason": "This assertion is ambiguous: 'output' could mean the code file (MainPage.cs, which has no deprecation comment) or the full transcript output (which does explain deprecation). The code file itself contains no inline comment. If the intent is to verify that the generated code communicates the deprecation reason to a developer reading it, the assertion would fail \u2014 a developer looking only at MainPage.cs would see no deprecation notice. Consider clarifying whether 'output' means the code artifact or the full response, and whether a code comment is required."
+      },
+      {
+        "reason": "No assertion checks that the correct using directive (using Microsoft.Maui.ApplicationModel;) was added to the output code. Without this directive, Launcher would be unresolved. This is a meaningful correctness check that the current assertions miss \u2014 metrics.json tracks it (using_directive_added=true) but no expectation validates it."
+      }
+    ],
+    "overall": "The assertions cover the core behavioral outcomes well. The main gap is the ambiguity in expectation 4 (what 'output' refers to) and the absence of a check for the required using directive, which is a necessary part of a compilable fix."
+  }
+}

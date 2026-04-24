@@ -34,6 +34,12 @@ public sealed class EmployeeSalaryAppService(IDataSessionFactory dataSessionFact
 
     public async Task<ServiceResult<EmployeeSalary>> CreateAsync(EmployeeSalary salary)
     {
+        var validation = ValidateSalaryPayload(salary);
+        if (!validation.IsSuccess)
+        {
+            return ServiceResult<EmployeeSalary>.Failure(validation.ErrorMessage!, validation.Reason);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -58,6 +64,12 @@ public sealed class EmployeeSalaryAppService(IDataSessionFactory dataSessionFact
 
     public async Task<ServiceResult<EmployeeSalary>> UpdateAsync(EmployeeSalary salary)
     {
+        var validation = ValidateSalaryPayload(salary);
+        if (!validation.IsSuccess)
+        {
+            return ServiceResult<EmployeeSalary>.Failure(validation.ErrorMessage!, validation.Reason);
+        }
+
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -119,6 +131,26 @@ public sealed class EmployeeSalaryAppService(IDataSessionFactory dataSessionFact
             _logger.LogError(ex, "Error deleting salary record {Id}.", salaryId);
             return ServiceResult<bool>.Failure("Lỗi khi xóa bản ghi lương.");
         }
+    }
+
+    private static ServiceResult<bool> ValidateSalaryPayload(EmployeeSalary salary)
+    {
+        if (salary is null || salary.EmployeeId <= 0)
+        {
+            return ServiceResult<bool>.Failure("Dữ liệu lương không hợp lệ.", ProtocolReason.MALFORMED_PACKET);
+        }
+
+        if (salary.Salary <= 0)
+        {
+            return ServiceResult<bool>.Failure("Mức lương phải lớn hơn 0.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        if (salary.EffectiveTo.HasValue && salary.EffectiveTo.Value < salary.EffectiveFrom)
+        {
+            return ServiceResult<bool>.Failure("Ngày kết thúc hiệu lực không thể trước ngày bắt đầu.", ProtocolReason.VALIDATION_FAILED);
+        }
+
+        return ServiceResult<bool>.Success(true);
     }
 }
 

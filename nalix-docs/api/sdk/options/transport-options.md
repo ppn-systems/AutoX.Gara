@@ -32,8 +32,8 @@ Tuning a network client involves balancing latency, memory usage, and resilience
 | Property | Default | Description |
 |---|---|---|
 | `NoDelay` | `true` | Disables Nagle's algorithm for lower latency. |
-| `BufferSize` | `8192` | Socket send/receive buffer size in bytes. |
-| `MaxPacketSize` | `65536` | Maximum allowed packet size. |
+| `BufferSize` | `65536` | Socket send/receive buffer size in bytes. |
+| `AsyncQueueCapacity` | `1024` | Capacity of the internal async message queue. |
 | `MaxUdpDatagramSize` | `1400` | Maximum MTU for UDP (including 7-byte Token). |
 
 ### Security & Compression
@@ -41,16 +41,25 @@ Tuning a network client involves balancing latency, memory usage, and resilience
 |---|---|---|
 | `CompressionEnabled` | `true` | Enables LZ4 compression for outbound packets. |
 | `CompressionThreshold` | `512` | Minimum bytes to trigger compression. |
-| `EncryptionEnabled` | `false` | Enables AEAD packet encryption. |
+| `EncryptionEnabled` | `true` | Enables AEAD packet encryption. |
 | `Algorithm` | `Chacha20Poly1305`| Cipher suite for encrypted communication. |
-| `Secret` | `[]` | **[Ignored]** Runtime encryption key. |
+| `ServerPublicKey` | `null` | **[NEW]** Pinned X25519 Public Key (Hex) for server identity verification. |
+| `Secret` | `Bytes32.Zero` | **[Ignored]** Runtime zero-allocation encryption key. |
+
+### Session Resume & Time Sync
+| Property | Default | Description |
+|---|---|---|
+| `SessionToken` | `default` | **[Ignored]** Runtime session token for resume flows. |
+| `ResumeEnabled` | `true` | Attempts session resume before full handshake. |
+| `ResumeTimeoutMillis` | `3000` | Timeout for resume request/response. |
+| `ResumeFallbackToHandshake` | `true` | Reconnects with full handshake when resume fails. |
+| `TimeSyncEnabled` | `true` | Allows this session to update the global clock during sync. |
 
 ## Validation
 
 The `Validate()` method should be called after loading configuration to ensure constraints are met. Common validation errors include:
 - `Port` outside [1, 65535].
-- `BufferSize` outside [1KB, 1MB].
-- `MaxPacketSize` outside [512B, 64KB].
+- `BufferSize` outside [2KB, 10MB].
 - `ReconnectBaseDelayMillis` > `ReconnectMaxDelayMillis`.
 
 ## Basic usage

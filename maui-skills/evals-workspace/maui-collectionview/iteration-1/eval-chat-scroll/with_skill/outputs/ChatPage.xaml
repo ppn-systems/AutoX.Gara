@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:ChatApp.Models"
+             xmlns:selectors="clr-namespace:ChatApp.Selectors"
+             xmlns:viewmodels="clr-namespace:ChatApp.ViewModels"
+             x:Class="ChatApp.Views.ChatPage"
+             x:DataType="viewmodels:ChatViewModel"
+             Title="Chat">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+
+            <!-- Template for messages sent by me (right-aligned) -->
+            <DataTemplate x:Key="MyMessageTemplate"
+                          x:DataType="models:Message">
+                <Grid Padding="8,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="1"
+                            BackgroundColor="{AppThemeBinding Light=#0078D4, Dark=#1A8FE3}"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 16,4,16,16"
+                            Padding="12,8"
+                            MaximumWidthRequest="280">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding Text}"
+                                   TextColor="White"
+                                   FontSize="15" />
+                            <Label Text="{Binding Timestamp, StringFormat='{0:HH:mm}'}"
+                                   TextColor="#CCFFFFFF"
+                                   FontSize="11"
+                                   HorizontalOptions="End" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+            </DataTemplate>
+
+            <!-- Template for messages from others (left-aligned) -->
+            <DataTemplate x:Key="TheirMessageTemplate"
+                          x:DataType="models:Message">
+                <Grid Padding="8,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0"
+                            BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2C2C2E}"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 4,16,16,16"
+                            Padding="12,8"
+                            MaximumWidthRequest="280">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding SenderName}"
+                                   TextColor="{AppThemeBinding Light=#555, Dark=#AAA}"
+                                   FontSize="11"
+                                   FontAttributes="Bold" />
+                            <Label Text="{Binding Text}"
+                                   TextColor="{AppThemeBinding Light=#1C1C1E, Dark=#F2F2F7}"
+                                   FontSize="15" />
+                            <Label Text="{Binding Timestamp, StringFormat='{0:HH:mm}'}"
+                                   TextColor="{AppThemeBinding Light=#888, Dark=#666}"
+                                   FontSize="11"
+                                   HorizontalOptions="End" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+            </DataTemplate>
+
+            <!-- DataTemplateSelector -->
+            <selectors:MessageTemplateSelector x:Key="MessageTemplateSelector"
+                                               MyMessageTemplate="{StaticResource MyMessageTemplate}"
+                                               TheirMessageTemplate="{StaticResource TheirMessageTemplate}" />
+
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="*, Auto">
+
+        <!-- Message list -->
+        <CollectionView x:Name="MessagesCollectionView"
+                        Grid.Row="0"
+                        ItemsSource="{Binding Messages}"
+                        ItemTemplate="{StaticResource MessageTemplateSelector}"
+                        SelectionMode="None">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical"
+                                   ItemSpacing="2" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.EmptyView>
+                <ContentView>
+                    <Label Text="No messages yet. Say hello!"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           TextColor="{AppThemeBinding Light=#888, Dark=#666}"
+                           FontSize="16"
+                           Margin="0,40" />
+                </ContentView>
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <!-- Input bar -->
+        <Border Grid.Row="1"
+                BackgroundColor="{AppThemeBinding Light=White, Dark=#1C1C1E}"
+                StrokeThickness="0"
+                Padding="8">
+            <Border.Shadow>
+                <Shadow Brush="#33000000" Offset="0,-2" Radius="4" />
+            </Border.Shadow>
+            <Grid ColumnDefinitions="*, Auto, Auto" ColumnSpacing="8">
+                <Border Grid.Column="0"
+                        StrokeShape="RoundRectangle 20"
+                        BackgroundColor="{AppThemeBinding Light=#F0F0F0, Dark=#2C2C2E}"
+                        StrokeThickness="0"
+                        Padding="12,8">
+                    <Entry x:Name="MessageEntry"
+                           Text="{Binding MessageText}"
+                           Placeholder="Type a message…"
+                           PlaceholderColor="{AppThemeBinding Light=#888, Dark=#555}"
+                           ReturnCommand="{Binding SendCommand}"
+                           ReturnType="Send"
+                           FontSize="15" />
+                </Border>
+
+                <Button Grid.Column="1"
+                        Text="Send"
+                        Command="{Binding SendCommand}"
+                        BackgroundColor="{AppThemeBinding Light=#0078D4, Dark=#1A8FE3}"
+                        TextColor="White"
+                        CornerRadius="20"
+                        Padding="16,8"
+                        FontSize="14" />
+
+                <!-- Button to simulate an incoming message for demo purposes -->
+                <Button Grid.Column="2"
+                        Text="+"
+                        Command="{Binding SimulateIncomingCommand}"
+                        BackgroundColor="{AppThemeBinding Light=#E0E0E0, Dark=#3A3A3C}"
+                        TextColor="{AppThemeBinding Light=#333, Dark=#EEE}"
+                        CornerRadius="20"
+                        WidthRequest="44"
+                        HeightRequest="44"
+                        FontSize="20"
+                        ToolTipProperties.Text="Simulate incoming message" />
+            </Grid>
+        </Border>
+
+    </Grid>
+</ContentPage>

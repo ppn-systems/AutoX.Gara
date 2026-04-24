@@ -1,0 +1,80 @@
+{
+  "eval_id": "eval-forms-migration",
+  "mode": "without_skill",
+  "model": "claude-sonnet-4-6",
+  "date": "2026-03-05",
+  "input_patterns_detected": [
+    "xamarin_forms_xmlns",
+    "contentpage_content_wrapper",
+    "listview",
+    "has_uneven_rows",
+    "viewcell",
+    "stacklayout_horizontal_orientation"
+  ],
+  "output_patterns_applied": [
+    "maui_xmlns",
+    "collectionview",
+    "horizontal_stacklayout",
+    "removed_viewcell",
+    "removed_contentpage_content_wrapper",
+    "removed_outer_stacklayout_wrapper"
+  ],
+  "changes": [
+    {
+      "id": 1,
+      "category": "xml_namespace",
+      "from": "http://xamarin.com/schemas/2014/forms",
+      "to": "http://schemas.microsoft.com/dotnet/2021/maui",
+      "correct": true
+    },
+    {
+      "id": 2,
+      "category": "page_structure",
+      "from": "ContentPage.Content property element wrapper",
+      "to": "Removed (implicit content property)",
+      "correct": true
+    },
+    {
+      "id": 3,
+      "category": "layout",
+      "from": "Outer StackLayout wrapper",
+      "to": "Removed (unnecessary single-child wrapper)",
+      "correct": true
+    },
+    {
+      "id": 4,
+      "category": "control",
+      "from": "ListView with HasUnevenRows=True",
+      "to": "CollectionView",
+      "correct": true
+    },
+    {
+      "id": 5,
+      "category": "cell",
+      "from": "ViewCell",
+      "to": "Removed (not applicable to CollectionView)",
+      "correct": true
+    },
+    {
+      "id": 6,
+      "category": "layout",
+      "from": "StackLayout Orientation=Horizontal",
+      "to": "HorizontalStackLayout",
+      "correct": true
+    }
+  ],
+  "score": {
+    "total_issues": 6,
+    "correctly_identified": 6,
+    "correctly_fixed": 6,
+    "false_positives": 0,
+    "missed_issues": 0,
+    "accuracy": 1.0
+  },
+  "notes": [
+    "Label bindings and FontAttributes are identical in MAUI; correctly left unchanged.",
+    "StringFormat currency binding correctly left unchanged.",
+    "No code-behind changes were needed for these XAML-level migrations.",
+    "HorizontalStackLayout is the preferred MAUI API over StackLayout with Orientation=Horizontal."
+  ]
+}

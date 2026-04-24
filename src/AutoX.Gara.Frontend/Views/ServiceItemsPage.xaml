@@ -16,6 +16,8 @@
 
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
 
+    x:DataType="ctrl:ServiceItemsViewModel"
+
     Title="Quản lý dịch vụ"
 
     BackgroundColor="#0A0A0F">
@@ -308,7 +310,7 @@
 
             <Grid Grid.Row="2">
 
-                <CollectionView ItemsSource="{Binding ServiceItems}" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}" Margin="16,0" VerticalOptions="Fill">
+                <CollectionView ItemsSource="{Binding ServiceItems}" ItemSizingStrategy="MeasureFirstItem" IsVisible="{Binding IsLoading, Converter={StaticResource InverseBool}}" Margin="16,0" VerticalOptions="Fill">
 
                     <CollectionView.ItemTemplate>
 

@@ -1,0 +1,18 @@
+{
+  "eval_id": "eval-deprecated-device",
+  "variant": "without_skill",
+  "model": "claude-sonnet-4-6",
+  "date": "2026-03-05",
+  "task": "Fix deprecated Device.OpenUri usage in .NET MAUI",
+  "deprecated_api_identified": true,
+  "deprecated_api": "Device.OpenUri",
+  "correct_api_used": true,
+  "correct_api": "Launcher.OpenAsync",
+  "correct_namespace": true,
+  "namespace_used": "Microsoft.Maui.ApplicationModel",
+  "async_handler_used": true,
+  "error_handling_added": false,
+  "used_try_open_async": false,
+  "explanation_provided": true,
+  "notes": "Correctly identified Device.OpenUri as deprecated/unavailable in .NET MAUI and replaced with Launcher.OpenAsync. Made event handler async. Did not add error handling (e.g. TryOpenAsync or try/catch), which could be considered a minor omission in production code."
+}

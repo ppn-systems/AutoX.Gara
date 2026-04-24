@@ -1,0 +1,68 @@
+{
+  "eval": "eval-code-review",
+  "variant": "with_skill",
+  "skill": "maui-current-apis",
+  "date": "2026-03-05",
+  "model": "claude-sonnet-4-6",
+  "task": "Review and fix deprecated/wrong API patterns in SettingsPage.cs",
+  "issues": {
+    "total_in_input": 4,
+    "total_detected": 4,
+    "total_fixed": 4,
+    "detection_rate": 1.0,
+    "fix_rate": 1.0,
+    "false_positives": 0
+  },
+  "issue_detail": [
+    {
+      "id": 1,
+      "pattern": "using Xamarin.Forms",
+      "category": "wrong_namespace",
+      "skill_table": "NuGet Packages / Quick Rule #3",
+      "detected": true,
+      "fixed": true,
+      "fix_applied": "using Microsoft.Maui.Controls"
+    },
+    {
+      "id": 2,
+      "pattern": "Device.BeginInvokeOnMainThread",
+      "category": "deprecated_device_api",
+      "skill_table": "Device & Platform APIs",
+      "detected": true,
+      "fixed": true,
+      "fix_applied": "MainThread.BeginInvokeOnMainThread (Microsoft.Maui.ApplicationModel)"
+    },
+    {
+      "id": 3,
+      "pattern": "DependencyService.Get<T>()",
+      "category": "deprecated_dependency_service",
+      "skill_table": "Device & Platform APIs",
+      "detected": true,
+      "fixed": true,
+      "fix_applied": "Constructor injection via IServiceProvider"
+    },
+    {
+      "id": 4,
+      "pattern": "On<Xamarin.Forms.PlatformConfiguration.iOS>().SetUseSafeArea(true)",
+      "category": "deprecated_safe_area_api + wrong_namespace",
+      "skill_table": "Safe Area & Layout / Quick Rule #3",
+      "detected": true,
+      "fixed": true,
+      "fix_applied": "SafeAreaEdges = Microsoft.Maui.Primitives.SafeAreaEdges.All"
+    }
+  ],
+  "skill_coverage": {
+    "skill_tables_consulted": [
+      "Device & Platform APIs",
+      "Safe Area & Layout",
+      "NuGet Packages"
+    ],
+    "quick_rules_applied": [3, 5],
+    "reasoning_steps_followed": ["Step 1 (TFM detection)", "Step 2 (Library versions)", "Step 3 (API currency)", "Step 4 (Decision rules)"]
+  },
+  "output_files": [
+    "SettingsPage.cs",
+    "transcript.md",
+    "metrics.json"
+  ]
+}

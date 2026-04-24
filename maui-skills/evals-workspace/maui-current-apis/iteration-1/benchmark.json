@@ -1,0 +1,303 @@
+{
+  "metadata": {
+    "skill_name": "maui-current-apis",
+    "skill_path": "/Users/davidortinau/work/maui-skills/plugins/maui-skills/skills/maui-current-apis",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-03-05T18:33:38Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 61.4,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The Xamarin.Forms using/namespace is replaced with Microsoft.Maui.Controls or removed",
+          "passed": true,
+          "evidence": "SettingsPage.cs line 1: 'using Microsoft.Maui.Controls;' \u2014 the Xamarin.Forms namespace is gone. Transcript Step 3 Issue 1 also documents: 'Fix: Replace using Xamarin.Forms; with using Microsoft.Maui.Controls;' and the Step 4 summary table confirms the fix was applied."
+        },
+        {
+          "text": "Device.BeginInvokeOnMainThread is replaced with MainThread.BeginInvokeOnMainThread or MainThread.InvokeOnMainThreadAsync",
+          "passed": true,
+          "evidence": "SettingsPage.cs line 14: 'MainThread.BeginInvokeOnMainThread(() => {'. Transcript Step 3 Issue 2 identifies the deprecated Device.BeginInvokeOnMainThread call and documents the fix using 'Microsoft.Maui.ApplicationModel.MainThread'. The using directive 'using Microsoft.Maui.ApplicationModel;' is also present at line 2."
+        },
+        {
+          "text": "DependencyService.Get is replaced with constructor injection (ISettingsService injected via constructor parameter)",
+          "passed": true,
+          "evidence": "SettingsPage.cs shows: a private readonly field '_settingsService' (line 8), a constructor parameter 'ISettingsService settingsService' (line 10), and assignment '_settingsService = settingsService;' (line 13). No DependencyService call remains. Transcript Step 3 Issue 3 confirms: 'inject ISettingsService via the constructor'. metrics.json issue_detail[2] fix_applied: 'Constructor injection via IServiceProvider'."
+        },
+        {
+          "text": "SetUseSafeArea or the Xamarin.Forms.PlatformConfiguration.iOS platform-specific is replaced with SafeAreaEdges property on the page",
+          "passed": true,
+          "evidence": "SettingsPage.cs line 23: 'SafeAreaEdges = Microsoft.Maui.Primitives.SafeAreaEdges.All;' inside OnAppearing(). The Xamarin.Forms.PlatformConfiguration.iOS call is completely removed. Transcript Step 3 Issue 4 documents both sub-problems (removed Xamarin type reference and deprecated SetUseSafeArea) and specifies the fix. metrics.json confirms fix_applied: 'SafeAreaEdges = Microsoft.Maui.Primitives.SafeAreaEdges.All'."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 66.4,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Device.OpenUri is replaced with Launcher.OpenAsync or Launcher.Default.OpenAsync",
+          "passed": true,
+          "evidence": "Output file MainPage.cs line 7: 'await Launcher.OpenAsync(new Uri(\"https://example.com\"));'. Transcript 'Changes Made' section: 'Replaced Device.OpenUri(new Uri(...)) with await Launcher.OpenAsync(new Uri(...))'. metrics.json confirms: correct_replacement_used=true, replacement_api='Launcher.OpenAsync()'."
+        },
+        {
+          "text": "The handler is made async to properly await the Launcher call",
+          "passed": true,
+          "evidence": "Output file MainPage.cs line 5: 'private async void OnHelpClicked(object sender, EventArgs e)'. Transcript Step 4 states 'Launcher.OpenAsync() is an async method, so the event handler must be changed from void to async void.' metrics.json confirms: async_signature_updated=true."
+        },
+        {
+          "text": "No Device.* API calls remain in the output code",
+          "passed": true,
+          "evidence": "Output file MainPage.cs contains no Device. references. The only API call is 'await Launcher.OpenAsync(...)'. metrics.json confirms: deprecated_apis_in_output=[] and deprecated_api_replaced=true."
+        },
+        {
+          "text": "The output explicitly notes or comments that Device.OpenUri is deprecated/removed in .NET MAUI",
+          "passed": true,
+          "evidence": "The transcript (which is the full output of the task run) explicitly states in Step 3: 'The Device class is fully deprecated in .NET MAUI. Device.OpenUri() must be replaced with Launcher.OpenAsync()' and in 'Issues Identified': 'Device.OpenUri() \u2014 deprecated; the entire Device class is deprecated in .NET MAUI.' Note: the code file itself (MainPage.cs) contains no inline comment about deprecation \u2014 the deprecation notice appears only in the transcript reasoning, not as a code comment. If the expectation specifically requires an inline code comment, this would be a FAIL. Graded as PASS based on the transcript being the primary output artifact."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 4,
+        "failed": 1,
+        "total": 5,
+        "time_seconds": 84.9,
+        "tokens": 377,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The xmlns is updated from http://xamarin.com/schemas/2014/forms to http://schemas.microsoft.com/dotnet/2021/maui",
+          "passed": true,
+          "evidence": "ProductListPage.xaml line 2: `xmlns=\"http://schemas.microsoft.com/dotnet/2021/maui\"`. The transcript Step 3 also explicitly lists this as pattern #1 replaced. metrics.json confirms `correctly_replaced: true`."
+        },
+        {
+          "text": "ListView is replaced with CollectionView",
+          "passed": true,
+          "evidence": "ProductListPage.xaml line 6: `<CollectionView ItemsSource=\"{Binding Products}\">`. The original `<ListView HasUnevenRows=\"True\">` is entirely absent from the output. Transcript Step 3 row #4 confirms the replacement. metrics.json entry `<ListView HasUnevenRows=\"True\">` has `correctly_replaced: true`."
+        },
+        {
+          "text": "ViewCell wrapper is removed from the DataTemplate",
+          "passed": true,
+          "evidence": "ProductListPage.xaml lines 8-13: The DataTemplate contains `<HorizontalStackLayout>` directly with no `<ViewCell>` wrapper. Transcript Step 3 row #6 confirms `<ViewCell>` was removed as it is deprecated in .NET 10 and not needed inside CollectionView.ItemTemplate."
+        },
+        {
+          "text": "x:DataType compiled binding is added to the page or DataTemplate",
+          "passed": false,
+          "evidence": "ProductListPage.xaml contains no `x:DataType` attribute anywhere \u2014 not on `<ContentPage>`, not on `<DataTemplate>`. The transcript makes no mention of adding `x:DataType`. metrics.json's `skill_guidance_coverage` section does not include a `compiled_bindings` or `x:DataType` entry, indicating the skill did not prompt for it. This is a genuine omission: compiled bindings via `x:DataType` are a best practice in .NET MAUI and required for x:Bind-style safety, and migrating from Xamarin.Forms is a natural point to introduce it."
+        },
+        {
+          "text": "HasUnevenRows attribute is removed (not applicable to CollectionView)",
+          "passed": true,
+          "evidence": "ProductListPage.xaml contains no `HasUnevenRows` attribute. Transcript Step 4 explicitly states: '`HasUnevenRows=\"True\"` was dropped: `CollectionView` measures each item's actual size automatically; there is no equivalent property because it is the default behavior.'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 56.4,
+        "tokens": 0,
+        "tool_calls": null,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The Xamarin.Forms using/namespace is replaced with Microsoft.Maui.Controls or removed",
+          "passed": true,
+          "evidence": "In SettingsPage.cs (line 2): 'using Microsoft.Maui.Controls;' replaces the original 'using Xamarin.Forms;'. The transcript's Issue 1 fix also confirms: 'Replace using Xamarin.Forms; with using Microsoft.Maui.Controls;'"
+        },
+        {
+          "text": "Device.BeginInvokeOnMainThread is replaced with MainThread.BeginInvokeOnMainThread or MainThread.InvokeOnMainThreadAsync",
+          "passed": true,
+          "evidence": "In SettingsPage.cs (line 15): 'MainThread.BeginInvokeOnMainThread(() => {' replaces the original 'Device.BeginInvokeOnMainThread(...)'. The transcript Issue 2 fix confirms this replacement using the correct MAUI API from Microsoft.Maui.ApplicationModel."
+        },
+        {
+          "text": "DependencyService.Get is replaced with constructor injection (ISettingsService injected via constructor parameter)",
+          "passed": true,
+          "evidence": "In SettingsPage.cs (lines 9-12): 'private readonly ISettingsService _settingsService;' and constructor parameter 'ISettingsService settingsService' with '_settingsService = settingsService;' replace the original 'DependencyService.Get<ISettingsService>()'. The transcript Issue 3 fix confirms the migration to constructor injection."
+        },
+        {
+          "text": "SetUseSafeArea or the Xamarin.Forms.PlatformConfiguration.iOS platform-specific is replaced with SafeAreaEdges property on the page",
+          "passed": false,
+          "evidence": "In SettingsPage.cs (lines 24-25), the fixed code retains 'On<Microsoft.Maui.Controls.PlatformConfiguration.iOS>().SetUseSafeArea(true);' \u2014 it only updates the namespace from Xamarin.Forms to Microsoft.Maui.Controls, but does NOT replace the pattern with the SafeAreaEdges property. The expectation requires migrating away from SetUseSafeArea entirely to use the SafeAreaEdges property directly on the page, which the output fails to do. The transcript Issue 4 analysis only addresses the namespace change, not the API replacement to SafeAreaEdges."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 33.6,
+        "tokens": 184,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Device.OpenUri is replaced with Launcher.OpenAsync or Launcher.Default.OpenAsync",
+          "passed": true,
+          "evidence": "MainPage.cs line 9 shows: 'await Launcher.OpenAsync(new Uri(\"https://example.com\"));'. The transcript analysis section also states: 'Replaced Device.OpenUri(new Uri(\"https://example.com\")) with await Launcher.OpenAsync(new Uri(\"https://example.com\"))'. The metrics.json confirms correct_api_used=true and correct_api=\"Launcher.OpenAsync\"."
+        },
+        {
+          "text": "The handler is made async to properly await the Launcher call",
+          "passed": true,
+          "evidence": "MainPage.cs line 7 shows: 'private async void OnHelpClicked(object sender, EventArgs e)'. The transcript explicitly notes change #2: 'Changed the event handler signature from private void to private async void to support await'. The metrics.json confirms async_handler_used=true."
+        },
+        {
+          "text": "No Device.* API calls remain in the output code",
+          "passed": true,
+          "evidence": "MainPage.cs contains no Device.* calls anywhere. The only content is: using statement, namespace declaration, partial class with a single async event handler using Launcher.OpenAsync. No 'Device.' string appears in the output file."
+        },
+        {
+          "text": "The output explicitly notes or comments that Device.OpenUri is deprecated/removed in .NET MAUI",
+          "passed": true,
+          "evidence": "The transcript's Problem Identified section states: 'In .NET MAUI, the Device class has been significantly restructured and Device.OpenUri() is not available. Calling it will result in a compile error or runtime failure depending on the MAUI version.' The transcript further says: 'Device.OpenUri()...was carried over from Xamarin.Forms.' The metrics.json confirms deprecated_api_identified=true. Note: the corrected code file itself (MainPage.cs) does not contain an inline comment about the deprecation, but the transcript output clearly documents it."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 4,
+        "failed": 1,
+        "total": 5,
+        "time_seconds": 52.52,
+        "tokens": 395,
+        "tool_calls": null,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "The xmlns is updated from http://xamarin.com/schemas/2014/forms to http://schemas.microsoft.com/dotnet/2021/maui",
+          "passed": true,
+          "evidence": "ProductListPage.xaml line 2: xmlns=\"http://schemas.microsoft.com/dotnet/2021/maui\". Transcript Output section also shows the correct namespace. metrics.json change id=1 confirms the update."
+        },
+        {
+          "text": "ListView is replaced with CollectionView",
+          "passed": true,
+          "evidence": "ProductListPage.xaml line 6: '<CollectionView ItemsSource=\"{Binding Products}\">'. The original ListView element is completely absent from the output. metrics.json change id=4 documents 'ListView with HasUnevenRows=True' -> 'CollectionView'."
+        },
+        {
+          "text": "ViewCell wrapper is removed from the DataTemplate",
+          "passed": true,
+          "evidence": "ProductListPage.xaml lines 8-13: the DataTemplate contains only <HorizontalStackLayout> with two Labels; no ViewCell element is present. Transcript analysis section 5 explains: 'ViewCell is not used and not valid inside CollectionView'."
+        },
+        {
+          "text": "x:DataType compiled binding is added to the page or DataTemplate",
+          "passed": false,
+          "evidence": "ProductListPage.xaml contains no x:DataType attribute anywhere \u2014 not on the ContentPage, not on the DataTemplate. The transcript analysis and changes summary also make no mention of x:DataType. The output uses classic runtime bindings ({Binding Name}, {Binding Price}) without compiled bindings. This is a meaningful omission: compiled bindings are a recommended .NET MAUI best practice and the expectation was not satisfied."
+        },
+        {
+          "text": "HasUnevenRows attribute is removed (not applicable to CollectionView)",
+          "passed": true,
+          "evidence": "ProductListPage.xaml contains no HasUnevenRows attribute. Transcript analysis section 4 explicitly states 'HasUnevenRows=\"True\" \u2014 that property does not exist on CollectionView and is not needed'. metrics.json input_patterns_detected includes 'has_uneven_rows' confirming it was identified and removed."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 0.9333,
+        "stddev": 0.1155,
+        "min": 0.8,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 70.9,
+        "stddev": 12.3794,
+        "min": 61.4,
+        "max": 84.9
+      },
+      "tokens": {
+        "mean": 125.6667,
+        "stddev": 217.6611,
+        "min": 0,
+        "max": 377
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.85,
+        "stddev": 0.1323,
+        "min": 0.75,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 47.5067,
+        "stddev": 12.1988,
+        "min": 33.6,
+        "max": 56.4
+      },
+      "tokens": {
+        "mean": 193.0,
+        "stddev": 197.6537,
+        "min": 0,
+        "max": 395
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.08",
+      "time_seconds": "+23.4",
+      "tokens": "-67"
+    }
+  },
+  "notes": []
+}

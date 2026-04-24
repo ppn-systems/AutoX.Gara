@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="RecipeApp.Views.RecipesPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:RecipeApp.Models"
+    xmlns:vm="clr-namespace:RecipeApp.ViewModels"
+    x:DataType="vm:RecipesViewModel"
+    Title="Recipes">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+
+            <!-- Card shadow / elevation feel -->
+            <Shadow
+                x:Key="CardShadow"
+                Brush="Black"
+                Offset="0,2"
+                Radius="8"
+                Opacity="0.15" />
+
+            <!-- Per-item DataTemplate -->
+            <DataTemplate x:Key="RecipeCardTemplate" x:DataType="models:Recipe">
+                <Grid Padding="0" RowDefinitions="Auto,Auto,Auto">
+
+                    <!-- Selection highlight border wrapping the entire card -->
+                    <Border
+                        Grid.RowSpan="3"
+                        BackgroundColor="Transparent"
+                        StrokeShape="RoundRectangle 12"
+                        StrokeThickness="3">
+                        <Border.Stroke>
+                            <MultiBinding>
+                                <!-- Stroke is evaluated in code-behind via converter;
+                                     for pure-XAML approach we rely on VisualState below. -->
+                                <Binding Path="." />
+                            </MultiBinding>
+                        </Border.Stroke>
+                    </Border>
+
+                    <!-- Card surface -->
+                    <Border
+                        Grid.RowSpan="3"
+                        BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+                        Shadow="{StaticResource CardShadow}"
+                        StrokeShape="RoundRectangle 12"
+                        StrokeThickness="0" />
+
+                    <!-- Recipe photo -->
+                    <Image
+                        Grid.Row="0"
+                        Aspect="AspectFill"
+                        HeightRequest="130"
+                        Source="{Binding PhotoUrl}">
+                        <Image.Clip>
+                            <RoundRectangleGeometry
+                                CornerRadius="12,12,0,0"
+                                Rect="0,0,300,130" />
+                        </Image.Clip>
+                    </Image>
+
+                    <!-- Recipe name -->
+                    <Label
+                        Grid.Row="1"
+                        FontAttributes="Bold"
+                        FontSize="14"
+                        LineBreakMode="TailTruncation"
+                        MaxLines="2"
+                        Padding="10,8,10,2"
+                        Text="{Binding Name}"
+                        TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#F5F5F5}" />
+
+                    <!-- Prep time -->
+                    <HorizontalStackLayout Grid.Row="2" Padding="10,2,10,10" Spacing="4">
+                        <Image
+                            HeightRequest="14"
+                            Source="clock_icon.png"
+                            VerticalOptions="Center"
+                            WidthRequest="14" />
+                        <Label
+                            FontSize="12"
+                            Text="{Binding PrepTimeDisplay}"
+                            TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                            VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                </Grid>
+            </DataTemplate>
+
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*" Padding="12,8">
+
+        <!-- Page header -->
+        <Label
+            Grid.Row="0"
+            FontAttributes="Bold"
+            FontSize="24"
+            Margin="4,8,0,12"
+            Text="My Recipes"
+            TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#F5F5F5}" />
+
+        <!-- Recipe grid -->
+        <CollectionView
+            Grid.Row="1"
+            ItemsSource="{Binding Recipes}"
+            SelectedItem="{Binding SelectedRecipe, Mode=TwoWay}"
+            SelectionMode="Single">
+
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout
+                    HorizontalItemSpacing="10"
+                    Orientation="Vertical"
+                    Span="2"
+                    VerticalItemSpacing="10" />
+            </CollectionView.ItemsLayout>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Recipe">
+                    <Border
+                        BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+                        Margin="0"
+                        Padding="0"
+                        Shadow="{StaticResource CardShadow}"
+                        StrokeShape="RoundRectangle 12"
+                        StrokeThickness="3">
+
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:RecipesViewModel}}, Path=SelectRecipeCommand}"
+                                CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+
+                        <Border.Triggers>
+                            <DataTrigger
+                                Binding="{Binding Source={RelativeSource AncestorType={x:Type vm:RecipesViewModel}}, Path=SelectedRecipe}"
+                                TargetType="Border"
+                                Value="{Binding .}">
+                                <Setter Property="Stroke" Value="{AppThemeBinding Light=#FF6B35, Dark=#FF8C5A}" />
+                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FFF5F0, Dark=#2A1A10}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+
+                        <!-- Default (unselected) stroke — set as property so trigger overrides it -->
+                        <Border.Stroke>
+                            <SolidColorBrush Color="Transparent" />
+                        </Border.Stroke>
+
+                        <Grid RowDefinitions="130,Auto,Auto">
+
+                            <!-- Recipe photo -->
+                            <Image
+                                Grid.Row="0"
+                                Aspect="AspectFill"
+                                Source="{Binding PhotoUrl}">
+                                <Image.Clip>
+                                    <RoundRectangleGeometry
+                                        CornerRadius="12,12,0,0"
+                                        Rect="0,0,500,130" />
+                                </Image.Clip>
+                            </Image>
+
+                            <!-- Recipe name -->
+                            <Label
+                                Grid.Row="1"
+                                FontAttributes="Bold"
+                                FontSize="14"
+                                LineBreakMode="TailTruncation"
+                                MaxLines="2"
+                                Padding="10,8,10,2"
+                                Text="{Binding Name}"
+                                TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#F5F5F5}" />
+
+                            <!-- Prep time -->
+                            <HorizontalStackLayout Grid.Row="2" Padding="10,2,10,10" Spacing="4">
+                                <Label
+                                    FontFamily="FontAwesome"
+                                    FontSize="12"
+                                    Text="&#xf017;"
+                                    TextColor="{AppThemeBinding Light=#FF6B35, Dark=#FF8C5A}"
+                                    VerticalOptions="Center" />
+                                <Label
+                                    FontSize="12"
+                                    Text="{Binding PrepTimeDisplay}"
+                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                                    VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <!-- Empty state -->
+            <CollectionView.EmptyView>
+                <VerticalStackLayout
+                    HorizontalOptions="Center"
+                    Spacing="12"
+                    VerticalOptions="Center">
+                    <Label
+                        FontSize="48"
+                        HorizontalOptions="Center"
+                        Text="&#x1F37D;" />
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="18"
+                        HorizontalOptions="Center"
+                        Text="No recipes yet"
+                        TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                    <Label
+                        FontSize="14"
+                        HorizontalOptions="Center"
+                        Text="Add your first recipe to get started."
+                        TextColor="{AppThemeBinding Light=#999999, Dark=#777777}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

@@ -1,0 +1,53 @@
+{
+  "eval_id": "eval-code-review",
+  "mode": "without_skill",
+  "timestamp": "2026-03-05T00:00:00Z",
+  "model": "claude-sonnet-4-6",
+  "issues_in_original_code": 4,
+  "issues_identified": 4,
+  "issues_fixed": 4,
+  "issues_missed": 0,
+  "false_positives": 0,
+  "identification_accuracy": 1.0,
+  "fix_accuracy": 1.0,
+  "issues_detail": [
+    {
+      "id": 1,
+      "description": "Wrong namespace: using Xamarin.Forms instead of Microsoft.Maui.Controls",
+      "severity": "critical",
+      "identified": true,
+      "fixed": true,
+      "fix": "Replaced with using Microsoft.Maui.Controls;"
+    },
+    {
+      "id": 2,
+      "description": "Deprecated API: Device.BeginInvokeOnMainThread",
+      "severity": "high",
+      "identified": true,
+      "fixed": true,
+      "fix": "Replaced with MainThread.BeginInvokeOnMainThread from Microsoft.Maui.ApplicationModel"
+    },
+    {
+      "id": 3,
+      "description": "Deprecated API: DependencyService.Get<T>() - obsolete service locator pattern",
+      "severity": "high",
+      "identified": true,
+      "fixed": true,
+      "fix": "Replaced with constructor injection of ISettingsService"
+    },
+    {
+      "id": 4,
+      "description": "Wrong namespace in platform-specific API: Xamarin.Forms.PlatformConfiguration.iOS",
+      "severity": "medium",
+      "identified": true,
+      "fixed": true,
+      "fix": "Replaced with Microsoft.Maui.Controls.PlatformConfiguration.iOS"
+    }
+  ],
+  "output_files": [
+    "SettingsPage.cs",
+    "transcript.md",
+    "metrics.json"
+  ],
+  "notes": "All issues identified and fixed using general knowledge of .NET MAUI migration from Xamarin.Forms without any skill guidance. The key changes reflect well-documented breaking changes in the Xamarin.Forms to .NET MAUI migration path."
+}

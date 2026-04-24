@@ -1,0 +1,48 @@
+{
+  "eval": "recipe-grid",
+  "mode": "without_skill",
+  "model": "claude-sonnet-4-6",
+  "date": "2026-03-05",
+
+  "tool_calls": {
+    "total": 8,
+    "breakdown": {
+      "Bash (mkdir)": 1,
+      "Write": 7
+    }
+  },
+
+  "steps": 8,
+
+  "files_created": [
+    "Recipe.cs",
+    "RecipesViewModel.cs",
+    "IsSelectedConverter.cs",
+    "RecipesPage.xaml",
+    "RecipesPage.xaml.cs",
+    "transcript.md",
+    "metrics.json"
+  ],
+  "files_created_count": 7,
+
+  "errors": [
+    {
+      "type": "design_correction",
+      "description": "IsSelectedConverter initially drafted to return bool. Corrected before saving final version to return Color (DodgerBlue / Transparent) because Border.Stroke is of type Brush, not bool.",
+      "severity": "minor",
+      "caught_before_writing": true
+    }
+  ],
+  "errors_count": 1,
+
+  "observations": {
+    "used_skill_guidance": false,
+    "mvvm_pattern": "Manual INotifyPropertyChanged + Command<T> (no CommunityToolkit.Mvvm)",
+    "selection_mechanism": "TapGestureRecognizer + Command<Recipe> toggle (SelectionMode=None)",
+    "highlight_mechanism": "MultiBinding on Border.Stroke via IsSelectedConverter returning Color",
+    "layout": "GridItemsLayout Span=2",
+    "image_source": "Remote placeholder URLs (picsum.photos)",
+    "theme_support": "AppThemeBinding for light/dark colors",
+    "notable_pattern": "RelativeSource AncestorType used inside DataTemplate to reach ViewModel"
+  }
+}
