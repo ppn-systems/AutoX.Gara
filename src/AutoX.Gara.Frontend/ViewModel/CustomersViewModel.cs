@@ -5,9 +5,9 @@ using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Customer;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Customers;
-using AutoX.Gara.Shared.Validation;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Customers;
+using AutoX.Gara.Contracts.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
@@ -606,3 +606,4 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         IsPopupVisible = true;
     }
 }
+

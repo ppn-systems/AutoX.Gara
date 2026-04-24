@@ -6,7 +6,7 @@ using AutoX.Gara.Frontend.Services.Billings;
 using AutoX.Gara.Frontend.Services.Inventory;
 using AutoX.Gara.Frontend.Services.Invoices;
 using AutoX.Gara.Frontend.Services.Repairs;
-using AutoX.Gara.Shared.Protocol.Customers;
+using AutoX.Gara.Contracts.Protocol.Customers;
 using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
 using System;
@@ -106,3 +106,4 @@ public partial class InvoicesPage : ContentPage
     private async void OnPaymentStatusTapped(Object? sender, TappedEventArgs e)
         => await PickerActionSheetHelper.ShowAsync(sender as VisualElement, UiTextConfiguration.Current.InvoicesPickerPaymentStatusText, _vm.PaymentStatusOptions, idx => _vm.PickerPaymentStatusIndex = idx);
 }
+

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Billings;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Models;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using System;
@@ -101,3 +101,4 @@ public sealed class ServiceItemAppService(IDataSessionFactory dataSessionFactory
         }
     }
 }
+

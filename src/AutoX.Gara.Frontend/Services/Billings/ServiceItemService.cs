@@ -1,8 +1,8 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Frontend.Models.Results.ServiceItems;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Billings;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Billings;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
@@ -72,3 +72,4 @@ public sealed class ServiceItemService
         catch (Exception ex) { return ServiceItemWriteResult.Failure(ex.Message, ProtocolAdvice.NONE); }
     }
 }
+

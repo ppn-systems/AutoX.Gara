@@ -1,6 +1,6 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Entities.Customers;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,3 +44,4 @@ public interface ICustomerRepository
     /// <summary>Persist t?t c? thay d?i dang ch? xu?ng DB.</summary>
     Task SaveChangesAsync(CancellationToken ct = default);
 }
+

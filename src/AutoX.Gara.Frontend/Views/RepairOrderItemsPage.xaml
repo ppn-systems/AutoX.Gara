@@ -12,7 +12,7 @@
 
     xmlns:ctrl="clr-namespace:AutoX.Gara.Frontend.Controllers.Billings"
 
-    xmlns:pkt="clr-namespace:AutoX.Gara.Shared.Protocol.Billings;assembly=AutoX.Gara.Shared"
+    xmlns:pkt="clr-namespace:AutoX.Gara.Contracts.Protocol.Billings;assembly=AutoX.Gara.Contracts"
 
     x:DataType="ctrl:RepairOrderItemsViewModel"
 
@@ -273,4 +273,5 @@
     </Grid>
 
 </ContentPage>
+
 

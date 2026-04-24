@@ -11,12 +11,12 @@ using AutoX.Gara.Frontend.Services.Billings;
 using AutoX.Gara.Frontend.Services.Inventory;
 using AutoX.Gara.Frontend.Services.Invoices;
 using AutoX.Gara.Frontend.Services.Repairs;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Billings;
-using AutoX.Gara.Shared.Protocol.Customers;
-using AutoX.Gara.Shared.Protocol.Inventory;
-using AutoX.Gara.Shared.Protocol.Invoices;
-using AutoX.Gara.Shared.Protocol.Repairs;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Billings;
+using AutoX.Gara.Contracts.Protocol.Customers;
+using AutoX.Gara.Contracts.Protocol.Inventory;
+using AutoX.Gara.Contracts.Protocol.Invoices;
+using AutoX.Gara.Contracts.Protocol.Repairs;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -968,3 +968,4 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
         PreviewTotalAmount = subtotal - discountAmount + taxAmount;
     }
 }
+

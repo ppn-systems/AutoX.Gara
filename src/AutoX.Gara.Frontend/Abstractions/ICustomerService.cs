@@ -1,8 +1,8 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Models.Results.Customer;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Customers;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Customers;
 namespace AutoX.Gara.Frontend.Abstractions;
 /// <summary>
 /// Abstraction cho T?t c? network operations li�n quan d?n Customer.
@@ -36,3 +36,4 @@ public interface ICustomerService
         CustomerDto data,
         System.Threading.CancellationToken ct = default);
 }
+

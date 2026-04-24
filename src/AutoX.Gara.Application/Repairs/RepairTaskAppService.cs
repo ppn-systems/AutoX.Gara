@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Entities.Repairs;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
@@ -167,3 +167,4 @@ public sealed class RepairTaskAppService(IDataSessionFactory dataSessionFactory,
         return ServiceResult<bool>.Success(true);
     }
 }
+

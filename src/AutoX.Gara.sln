@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.11205.157
@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Application", "A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Infrastructure", "AutoX.Gara.Infrastructure\AutoX.Gara.Infrastructure.csproj", "{F52916FE-F1E5-419B-9A4B-A7162B06B810}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Shared", "AutoX.Gara.Shared\AutoX.Gara.Shared.csproj", "{A74233AF-C60C-4C56-9AC6-3AB15DF450CE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Contracts", "AutoX.Gara.Contracts\AutoX.Gara.Contracts.csproj", "{A74233AF-C60C-4C56-9AC6-3AB15DF450CE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoX.Gara.Frontend", "AutoX.Gara.Frontend\AutoX.Gara.Frontend.csproj", "{E3BE00AF-D34D-661E-4AEE-56A202914B79}"
 EndProject
@@ -126,3 +126,4 @@ Global
 		SolutionGuid = {F73D42D9-0E72-4453-A87F-5F1409E896BD}
 	EndGlobalSection
 EndGlobal
+

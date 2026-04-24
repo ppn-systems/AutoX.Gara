@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Shared;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
+using AutoX.Gara.Contracts;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
 using Nalix.Common.Networking.Packets;
@@ -42,3 +42,4 @@ public partial class AppShell : Shell
         base.GoToAsync("///LoginPage");
     }
 }
+

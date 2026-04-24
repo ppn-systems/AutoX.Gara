@@ -1,7 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Identity;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
@@ -130,3 +130,4 @@ public sealed class EmployeeSalaryAppService(IDataSessionFactory dataSessionFact
         return ServiceResult<bool>.Success(true);
     }
 }
+

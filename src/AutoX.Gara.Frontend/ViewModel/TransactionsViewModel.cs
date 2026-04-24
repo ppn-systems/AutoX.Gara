@@ -6,8 +6,8 @@ using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Messages;
 using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Frontend.Services.Invoices;
-using AutoX.Gara.Shared.Protocol.Billings;
-using AutoX.Gara.Shared.Protocol.Invoices;
+using AutoX.Gara.Contracts.Protocol.Billings;
+using AutoX.Gara.Contracts.Protocol.Invoices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -229,3 +229,4 @@ public sealed partial class TransactionsViewModel : ObservableObject, System.IDi
         ErrorMessage = message;
     }
 }
+

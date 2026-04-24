@@ -3,7 +3,7 @@
     "path": "AutoX.Gara.sln",
     "projects": [
       "AutoX.Gara.Domain\\AutoX.Gara.Domain.csproj",
-      "AutoX.Gara.Shared\\AutoX.Gara.Shared.csproj",
+      "AutoX.Gara.Contracts\\AutoX.Gara.Contracts.csproj",
       "AutoX.Gara.Frontend\\AutoX.Gara.Frontend.csproj",
     ]
   }

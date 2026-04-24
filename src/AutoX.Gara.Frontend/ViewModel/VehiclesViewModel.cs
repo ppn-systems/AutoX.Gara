@@ -4,8 +4,8 @@ using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Vehicles;
 using AutoX.Gara.Frontend.Services.Vehicles;
-using AutoX.Gara.Shared.Protocol.Customers;
-using AutoX.Gara.Shared.Protocol.Vehicles;
+using AutoX.Gara.Contracts.Protocol.Customers;
+using AutoX.Gara.Contracts.Protocol.Vehicles;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
@@ -564,3 +564,4 @@ public sealed partial class VehiclesViewModel : ObservableObject, System.IDispos
         IsPopupVisible = true;
     }
 }
+

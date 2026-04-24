@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums.Transactions;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
@@ -211,3 +211,4 @@ public sealed class InvoiceAppService(IDataSessionFactory dataSessionFactory, IL
         return ServiceResult<bool>.Success(true);
     }
 }
+

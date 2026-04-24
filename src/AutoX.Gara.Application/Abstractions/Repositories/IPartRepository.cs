@@ -1,5 +1,5 @@
-﻿using AutoX.Gara.Domain.Entities.Inventory;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Domain.Entities.Inventory;
+using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
 namespace AutoX.Gara.Application.Abstractions.Repositories;
 public interface IPartRepository
@@ -12,3 +12,4 @@ public interface IPartRepository
     void Delete(Part part);
     System.Threading.Tasks.Task SaveChangesAsync();
 }
+

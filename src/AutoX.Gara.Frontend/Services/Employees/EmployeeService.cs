@@ -1,9 +1,9 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Frontend.Models.Results.Employees;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Employees;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Employees;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
@@ -93,3 +93,4 @@ public interface IEmployeeService
     System.Threading.Tasks.Task<EmployeeWriteResult> UpdateAsync(EmployeeDto data, System.Threading.CancellationToken ct = default);
     System.Threading.Tasks.Task<EmployeeWriteResult> ChangeStatusAsync(EmployeeDto data, System.Threading.CancellationToken ct = default);
 }
+

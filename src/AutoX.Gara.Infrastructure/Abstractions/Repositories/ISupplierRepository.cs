@@ -1,6 +1,6 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Entities.Suppliers;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
 namespace AutoX.Gara.Infrastructure.Abstractions.Repositories;
 /// <summary>
@@ -44,3 +44,4 @@ public interface ISupplierRepository
     System.Threading.Tasks.Task SaveChangesAsync(
         System.Threading.CancellationToken ct = default);
 }
+

@@ -2,7 +2,7 @@
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Models.Results.Accounts;
-using AutoX.Gara.Shared.Validation;
+using AutoX.Gara.Contracts.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
@@ -211,3 +211,4 @@ public sealed partial class LoginViewModel : ObservableObject
         }
     }
 }
+

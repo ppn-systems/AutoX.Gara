@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Shared.Protocol.Repairs;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
+using AutoX.Gara.Contracts.Protocol.Repairs;
 using Nalix.Common.Networking.Protocols;
 using System.Collections.Generic;
 namespace AutoX.Gara.Frontend.Models.Results.Billings;
@@ -32,3 +32,4 @@ public sealed class RepairOrderItemListResult
             Advice = ProtocolAdvice.BACKOFF_RETRY
         };
 }
+

@@ -4,7 +4,7 @@ using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Services.Billings;
-using AutoX.Gara.Shared.Protocol.Billings;
+using AutoX.Gara.Contracts.Protocol.Billings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
@@ -83,7 +83,7 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
                 pageSize: DefaultPageSize,
                 filterCustomerId: 0, // 0 = global
                 searchTerm: SearchTerm,
-                sortBy: AutoX.Gara.Shared.Enums.InvoiceSortField.InvoiceDate,
+                sortBy: AutoX.Gara.Contracts.Enums.InvoiceSortField.InvoiceDate,
                 sortDescending: true,
                 filterPaymentStatus: SelectedPaymentStatus,
                 filterFromDate: from,
@@ -180,3 +180,4 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
         public Boolean IsFullyPaid => Dto.IsFullyPaid || Dto.PaymentStatus == PaymentStatus.Paid;
     }
 }
+

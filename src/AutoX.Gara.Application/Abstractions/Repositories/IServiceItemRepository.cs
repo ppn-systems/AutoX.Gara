@@ -1,5 +1,5 @@
-﻿using AutoX.Gara.Domain.Entities.Billings;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Domain.Entities.Billings;
+using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
 namespace AutoX.Gara.Application.Abstractions.Repositories;
 public interface IServiceItemRepository
@@ -11,3 +11,4 @@ public interface IServiceItemRepository
     void Delete(ServiceItem serviceItem);
     System.Threading.Tasks.Task SaveChangesAsync();
 }
+

@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Models;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using System;
@@ -139,3 +139,4 @@ public sealed class TransactionAppService(IDataSessionFactory dataSessionFactory
             : PaymentStatus.Unpaid;
     }
 }
+

@@ -1,7 +1,7 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Enums.Repairs;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Repairs;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Repairs;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -51,3 +51,4 @@ public sealed class RepairTaskQueryCache
     }
     public void Invalidate() => _store.Clear();
 }
+

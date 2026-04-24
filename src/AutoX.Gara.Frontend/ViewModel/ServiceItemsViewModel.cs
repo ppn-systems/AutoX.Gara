@@ -4,8 +4,8 @@ using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.ServiceItems;
 using AutoX.Gara.Frontend.Services.Billings;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Billings;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Billings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
@@ -510,3 +510,4 @@ public sealed partial class ServiceItemsViewModel : ObservableObject, System.IDi
         IsPopupVisible = true;
     }
 }
+

@@ -1,5 +1,5 @@
-﻿using AutoX.Gara.Domain.Entities.Billings;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Domain.Entities.Billings;
+using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
 namespace AutoX.Gara.Application.Abstractions.Repositories;
 public interface IInvoiceRepository
@@ -14,3 +14,4 @@ public interface IInvoiceRepository
     void Delete(Invoice invoice);
     System.Threading.Tasks.Task SaveChangesAsync();
 }
+

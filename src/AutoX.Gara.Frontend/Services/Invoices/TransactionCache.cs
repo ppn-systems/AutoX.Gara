@@ -1,8 +1,8 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Invoices;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Invoices;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -52,3 +52,4 @@ public sealed class TransactionQueryCache
     }
     public void Invalidate() => _store.Clear();
 }
+

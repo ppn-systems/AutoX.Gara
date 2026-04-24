@@ -2,9 +2,9 @@ using AutoX.Gara.Application.Invoices;
 using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Entities.Invoices;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Protocol.Invoices;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Models;
+using AutoX.Gara.Contracts.Protocol.Invoices;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
@@ -120,3 +120,4 @@ public sealed class TransactionHandler(TransactionAppService transactionService)
         IsReversed = t.IsReversed
     };
 }
+

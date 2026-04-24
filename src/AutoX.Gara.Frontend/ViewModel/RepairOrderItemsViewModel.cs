@@ -3,9 +3,9 @@ using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Frontend.Services.Inventory;
 using AutoX.Gara.Frontend.Services.Repairs;
-using AutoX.Gara.Shared.Protocol.Inventory;
-using AutoX.Gara.Shared.Protocol.Invoices;
-using AutoX.Gara.Shared.Protocol.Repairs;
+using AutoX.Gara.Contracts.Protocol.Inventory;
+using AutoX.Gara.Contracts.Protocol.Invoices;
+using AutoX.Gara.Contracts.Protocol.Repairs;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -388,3 +388,4 @@ public sealed partial class RepairOrderItemsViewModel : ObservableObject, System
     }
     private void ClearError() { HasError = false; ErrorMessage = null; }
 }
+

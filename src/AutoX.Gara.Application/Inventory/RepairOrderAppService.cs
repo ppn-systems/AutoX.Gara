@@ -3,7 +3,7 @@ using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Entities.Invoices;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
@@ -184,3 +184,4 @@ public sealed class RepairOrderAppService(IDataSessionFactory dataSessionFactory
         return ServiceResult<bool>.Success(true);
     }
 }
+

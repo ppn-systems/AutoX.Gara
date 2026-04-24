@@ -6,7 +6,7 @@
       "AutoX.Gara.Backend\\AutoX.Gara.Backend.csproj",
       "AutoX.Gara.Domain\\AutoX.Gara.Domain.csproj",
       "AutoX.Gara.Infrastructure\\AutoX.Gara.Infrastructure.csproj",
-      "AutoX.Gara.Shared\\AutoX.Gara.Shared.csproj"
+      "AutoX.Gara.Contracts\\AutoX.Gara.Contracts.csproj"
     ]
   }
 }

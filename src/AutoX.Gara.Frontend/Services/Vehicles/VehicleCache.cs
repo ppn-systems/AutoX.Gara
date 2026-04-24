@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Shared.Protocol.Vehicles;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
+using AutoX.Gara.Contracts.Protocol.Vehicles;
 using System;
 using System.Collections.Generic;
 namespace AutoX.Gara.Frontend.Services.Vehicles;
@@ -69,3 +69,4 @@ public sealed class VehicleQueryCache
     /// <summary>X�a to�n b? cache (d�ng khi kh�ng bi?t customerId).</summary>
     public void InvalidateAll() => _store.Clear();
 }
+

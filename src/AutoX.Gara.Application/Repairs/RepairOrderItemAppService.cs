@@ -3,7 +3,7 @@ using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Entities.Repairs;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
@@ -118,3 +118,4 @@ public sealed class RepairOrderItemAppService(IDataSessionFactory dataSessionFac
         }
     }
 }
+

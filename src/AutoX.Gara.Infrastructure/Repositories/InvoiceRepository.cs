@@ -1,9 +1,9 @@
-﻿using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Application.Abstractions.Repositories;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -140,3 +140,4 @@ public sealed class InvoiceRepository
     }
     public Task SaveChangesAsync() => _dbContext.SaveChangesAsync();
 }
+

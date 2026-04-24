@@ -3,8 +3,8 @@ using AutoX.Gara.Application.Abstractions.Repositories;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -87,3 +87,4 @@ public sealed class CustomerRepository(AutoXDbContext context) : ICustomerReposi
     /// <inheritdoc/>
     public System.Threading.Tasks.Task SaveChangesAsync(System.Threading.CancellationToken ct = default) => _context.SaveChangesAsync(ct);
 }
+

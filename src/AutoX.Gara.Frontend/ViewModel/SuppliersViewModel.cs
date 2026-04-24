@@ -5,8 +5,8 @@ using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Suppliers;
 using AutoX.Gara.Frontend.Services.Suppliers;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Suppliers;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Suppliers;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
@@ -627,3 +627,4 @@ public sealed partial class SuppliersViewModel : ObservableObject, System.IDispo
     }
     private static bool IsValidPhoneNumber(string phone) => System.Text.RegularExpressions.Regex.IsMatch(phone, @"^(\+?\d{1,3}[-.\s]?)?\d{10,15}$");
 }
+

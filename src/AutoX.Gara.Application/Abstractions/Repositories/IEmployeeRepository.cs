@@ -1,5 +1,5 @@
 using AutoX.Gara.Domain.Entities.Identity;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
 namespace AutoX.Gara.Application.Abstractions.Repositories;
 public interface IEmployeeRepository
@@ -13,3 +13,4 @@ public interface IEmployeeRepository
     void Delete(Employee employee);
     System.Threading.Tasks.Task SaveChangesAsync(System.Threading.CancellationToken ct = default);
 }
+

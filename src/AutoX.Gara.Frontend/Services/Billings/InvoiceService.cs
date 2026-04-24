@@ -1,8 +1,8 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Frontend.Models.Results.Billings;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Billings;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Billings;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
@@ -74,3 +74,4 @@ public sealed class InvoiceService
         catch (Exception ex) { return InvoiceWriteResult.Failure(ex.Message, ProtocolAdvice.NONE); }
     }
 }
+

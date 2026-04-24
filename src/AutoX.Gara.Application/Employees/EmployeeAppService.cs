@@ -2,8 +2,8 @@
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Enums.Employees;
-using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Validation;
+using AutoX.Gara.Contracts.Models;
+using AutoX.Gara.Contracts.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
@@ -157,3 +157,4 @@ public sealed class EmployeeAppService(IDataSessionFactory dataSessionFactory, I
         }
     }
 }
+

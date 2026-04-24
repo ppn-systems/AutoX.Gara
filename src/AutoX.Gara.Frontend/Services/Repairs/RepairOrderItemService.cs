@@ -1,7 +1,7 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Frontend.Models.Results.Billings;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Repairs;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Repairs;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
@@ -70,3 +70,4 @@ public sealed class RepairOrderItemService
         catch (Exception ex) { return RepairOrderItemWriteResult.Failure(ex.Message, ProtocolAdvice.NONE); }
     }
 }
+

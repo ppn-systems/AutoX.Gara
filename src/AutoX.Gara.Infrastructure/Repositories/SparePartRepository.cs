@@ -1,9 +1,9 @@
-﻿using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Application.Abstractions.Repositories;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -148,3 +148,4 @@ public sealed class PartRepository
     /// </summary>
     public async Task SaveChangesAsync() => await _dbContext.SaveChangesAsync();
 }
+

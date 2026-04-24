@@ -1,5 +1,5 @@
 using AutoX.Gara.Infrastructure.Database;
-using AutoX.Gara.Shared;
+using AutoX.Gara.Contracts;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Concurrency;
 using Nalix.Framework.Injection;
@@ -141,3 +141,4 @@ public static class Program
         }
     }
 }
+

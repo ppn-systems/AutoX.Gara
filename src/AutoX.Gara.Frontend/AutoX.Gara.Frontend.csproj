@@ -68,7 +68,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\AutoX.Gara.Shared\AutoX.Gara.Shared.csproj" />
+		<ProjectReference Include="..\AutoX.Gara.Contracts\AutoX.Gara.Contracts.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -96,3 +96,4 @@
 	</ItemGroup>
 
 </Project>
+

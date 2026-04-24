@@ -2,9 +2,9 @@ using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Entities.Customers;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Protocol.Customers;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Models;
+using AutoX.Gara.Contracts.Protocol.Customers;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
@@ -194,3 +194,4 @@ public sealed class CustomerHandler(CustomerAppService customerService)
         }
     }
 }
+

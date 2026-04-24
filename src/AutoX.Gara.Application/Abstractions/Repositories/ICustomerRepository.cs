@@ -1,5 +1,5 @@
 using AutoX.Gara.Domain.Entities.Customers;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
 namespace AutoX.Gara.Application.Abstractions.Repositories;
 public interface ICustomerRepository
@@ -12,3 +12,4 @@ public interface ICustomerRepository
     void Delete(Customer customer);
     System.Threading.Tasks.Task SaveChangesAsync(System.Threading.CancellationToken ct = default);
 }
+

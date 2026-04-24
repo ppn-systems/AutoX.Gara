@@ -1,8 +1,8 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Identity;
-using AutoX.Gara.Shared.Models;
-using AutoX.Gara.Shared.Validation;
+using AutoX.Gara.Contracts.Models;
+using AutoX.Gara.Contracts.Validation;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Security;
@@ -109,3 +109,4 @@ public sealed class AccountAppService(IDataSessionFactory dataSessionFactory, IL
         }
     }
 }
+

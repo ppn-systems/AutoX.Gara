@@ -1,9 +1,9 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Models.Results.Customer;
-using AutoX.Gara.Shared.Enums;
-using AutoX.Gara.Shared.Protocol.Customers;
+using AutoX.Gara.Contracts.Enums;
+using AutoX.Gara.Contracts.Protocol.Customers;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
@@ -83,3 +83,4 @@ public sealed class CustomerService : ICustomerService
         catch (Exception ex) { return CustomerWriteResult.Failure(ex.Message, ProtocolAdvice.NONE); }
     }
 }
+

@@ -29,8 +29,9 @@
 		<PackageReference Include="Nalix.Network" Version="12.1.0" />
 		<PackageReference Include="Nalix.Runtime" Version="12.1.0" />
 		<ProjectReference Include="..\AutoX.Gara.Domain\AutoX.Gara.Domain.csproj" />
-		<ProjectReference Include="..\AutoX.Gara.Shared\AutoX.Gara.Shared.csproj" />
+		<ProjectReference Include="..\AutoX.Gara.Contracts\AutoX.Gara.Contracts.csproj" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
 	</ItemGroup>
 
 </Project>
+

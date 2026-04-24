@@ -1,5 +1,5 @@
-﻿using AutoX.Gara.Domain.Entities.Invoices;
-using AutoX.Gara.Shared.Models;
+using AutoX.Gara.Domain.Entities.Invoices;
+using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
 namespace AutoX.Gara.Application.Abstractions.Repositories;
 public interface IRepairOrderRepository
@@ -11,3 +11,4 @@ public interface IRepairOrderRepository
     void Delete(RepairOrder repairOrder);
     System.Threading.Tasks.Task SaveChangesAsync();
 }
+

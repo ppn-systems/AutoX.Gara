@@ -2,9 +2,9 @@
 using AutoX.Gara.Frontend.Controllers.Billings;
 using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Services.Repairs;
-using AutoX.Gara.Shared.Protocol.Billings;
-using AutoX.Gara.Shared.Protocol.Customers;
-using AutoX.Gara.Shared.Protocol.Vehicles;
+using AutoX.Gara.Contracts.Protocol.Billings;
+using AutoX.Gara.Contracts.Protocol.Customers;
+using AutoX.Gara.Contracts.Protocol.Vehicles;
 using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
 using System;
@@ -95,3 +95,4 @@ public partial class RepairOrdersPage : ContentPage
     }
 #endif
 }
+

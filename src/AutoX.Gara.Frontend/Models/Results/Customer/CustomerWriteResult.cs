@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Shared.Protocol.Customers;
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
+using AutoX.Gara.Contracts.Protocol.Customers;
 using Nalix.Common.Networking.Protocols;
 namespace AutoX.Gara.Frontend.Models.Results.Customer;
 /// <summary>
@@ -37,3 +37,4 @@ public sealed class CustomerWriteResult
             Advice = ProtocolAdvice.BACKOFF_RETRY
         };
 }
+
