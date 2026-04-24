@@ -2,10 +2,9 @@
 using AutoX.Gara.Domain.Enums.Parts;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
-namespace AutoX.Gara.Contracts.Protocol.Inventory;
+namespace AutoX.Gara.Contracts.Inventory;
 // -----------------------------------------------------------------------------
 // PART QUERY REQUEST
 // -----------------------------------------------------------------------------
@@ -18,59 +17,59 @@ public sealed class PartQueryRequest : PacketBase<PartQueryRequest>
 {
     // --- Fixed-size fields ----------------------------------------------------
     /// <summary>S? trang c?n l?y (b?t d?u t? 1).</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int Page { get; set; } = 1;
     /// <summary>S? b?n ghi t?i da tr�n m?i trang.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int PageSize { get; set; } = 20;
     /// <summary>C?t d�ng d? s?p x?p k?t qu?.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public PartSortField SortBy { get; set; } = PartSortField.PartName;
     /// <summary><c>true</c> = gi?m d?n, <c>false</c> = tang d?n.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public bool SortDescending { get; set; } = false;
     /// <summary>
     /// L?c theo nh� cung c?p.
     /// <c>0</c> (m?c d?nh) = kh�ng filter.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public int FilterSupplierId { get; set; } = 0;
     /// <summary>
     /// L?c theo lo?i ph? t�ng.
     /// <c>null</c> = kh�ng filter.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public PartCategory? FilterCategory { get; set; } = null;
     /// <summary>
     /// L?c theo tr?ng th�i t?n kho.
     /// <c>null</c> = kh�ng filter.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public bool? FilterInStock { get; set; } = null;
     /// <summary>
     /// L?c theo tr?ng th�i l?i.
     /// <c>null</c> = kh�ng filter.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public bool? FilterDefective { get; set; } = null;
     /// <summary>
     /// L?c theo tr?ng th�i h?t h?n.
     /// <c>null</c> = kh�ng filter.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 9)]
+    [SerializeOrder(8)]
     public bool? FilterExpired { get; set; } = null;
     /// <summary>
     /// L?c theo tr?ng th�i ng?ng b�n.
     /// <c>null</c> = kh�ng filter.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 10)]
+    [SerializeOrder(9)]
     public bool? FilterDiscontinued { get; set; } = null;
     // --- Dynamic-size field ---------------------------------------------------
     /// <summary>
     /// T? kh�a t�m ki?m theo t�n, m� SKU ho?c nh� s?n xu?t.
     /// R?ng = kh�ng �p d?ng filter.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 11)]
+    [SerializeOrder(10)]
     public string SearchTerm { get; set; } = string.Empty;
     // --- Constructor ---------------------------------------------------------
     public PartQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
@@ -94,4 +93,6 @@ public sealed class PartQueryRequest : PacketBase<PartQueryRequest>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

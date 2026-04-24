@@ -3,10 +3,9 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
-namespace AutoX.Gara.Contracts.Protocol.Employees;
+namespace AutoX.Gara.Contracts.Employees;
 /// <summary>
 /// Packet g?i t? client l�n server d? truy v?n danh s�ch nh�n vi�n
 /// c� h? tr? ph�n trang, t�m ki?m, l?c theo ch?c v?/tr?ng th�i/gi?i t�nh v� s?p x?p.
@@ -14,22 +13,22 @@ namespace AutoX.Gara.Contracts.Protocol.Employees;
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class EmployeeQueryRequest : PacketBase<EmployeeQueryRequest>
 {
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int Page { get; set; } = 1;
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int PageSize { get; set; } = 20;
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public EmployeeSortField SortBy { get; set; } = EmployeeSortField.Name;
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public bool SortDescending { get; set; } = false;
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public Position FilterPosition { get; set; } = Position.None;
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public EmploymentStatus FilterStatus { get; set; } = EmploymentStatus.None;
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public Gender FilterGender { get; set; } = Gender.None;
     // --- Dynamic-size field ---------------------------------------------------
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public string SearchTerm { get; set; } = string.Empty;
     // --- Constructor -----------------------------------------------------------
     public EmployeeQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
@@ -49,4 +48,6 @@ public sealed class EmployeeQueryRequest : PacketBase<EmployeeQueryRequest>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

@@ -5,7 +5,7 @@ using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Services.Billings;
 using AutoX.Gara.Frontend.Services.Employees;
 using AutoX.Gara.Frontend.Services.Invoices;
-using AutoX.Gara.Contracts.Protocol.Invoices;
+using AutoX.Gara.Contracts.Invoices;
 using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
 namespace AutoX.Gara.Frontend.Views;
@@ -43,4 +43,5 @@ public partial class RepairTasksPage : ContentPage
         await PickerActionSheetHelper.ShowAsync(sender as VisualElement, UiTextConfiguration.Current.RepairTasksPickerStatusText, vm.StatusOptions, idx => vm.PickerStatusIndex = idx);
     }
 }
+
 

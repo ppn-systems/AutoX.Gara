@@ -4,10 +4,10 @@ using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Frontend.Services.Repairs;
-using AutoX.Gara.Contracts.Protocol.Billings;
-using AutoX.Gara.Contracts.Protocol.Customers;
-using AutoX.Gara.Contracts.Protocol.Invoices;
-using AutoX.Gara.Contracts.Protocol.Vehicles;
+using AutoX.Gara.Contracts.Billings;
+using AutoX.Gara.Contracts.Customers;
+using AutoX.Gara.Contracts.Invoices;
+using AutoX.Gara.Contracts.Vehicles;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
@@ -347,4 +347,5 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
         IsPopupVisible = true;
     }
 }
+
 

@@ -4,7 +4,7 @@ using AutoX.Gara.Backend.Transport.Common;
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Models;
-using AutoX.Gara.Contracts.Protocol.Invoices;
+using AutoX.Gara.Contracts.Invoices;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
@@ -142,4 +142,5 @@ public sealed class RepairOrderHandler(RepairOrderAppService repairOrderService)
         CompletionDate = o.CompletionDate
     };
 }
+
 

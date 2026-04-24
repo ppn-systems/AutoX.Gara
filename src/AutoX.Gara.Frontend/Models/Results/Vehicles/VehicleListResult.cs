@@ -1,5 +1,5 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Contracts.Protocol.Vehicles;
+using AutoX.Gara.Contracts.Vehicles;
 using Nalix.Common.Networking.Protocols;
 using System.Collections.Generic;
 namespace AutoX.Gara.Frontend.Models.Results.Vehicles;
@@ -47,4 +47,5 @@ public sealed class VehicleListResult
             Advice = ProtocolAdvice.BACKOFF_RETRY
         };
 }
+
 

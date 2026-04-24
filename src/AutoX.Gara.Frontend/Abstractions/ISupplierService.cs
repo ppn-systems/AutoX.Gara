@@ -4,7 +4,7 @@ using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Frontend.Models.Results.Suppliers;
 using AutoX.Gara.Frontend.Services.Suppliers;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Suppliers;
+using AutoX.Gara.Contracts.Suppliers;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,4 +30,5 @@ public interface ISupplierQueryCache
     void Set(SupplierCacheKey key, List<SupplierDto> suppliers, int totalCount);
     void Invalidate();
 }
+
 

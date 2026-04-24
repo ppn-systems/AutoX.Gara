@@ -2,7 +2,7 @@
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Billings;
+using AutoX.Gara.Contracts.Billings;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
@@ -74,4 +74,5 @@ public sealed class InvoiceService
         catch (Exception ex) { return InvoiceWriteResult.Failure(ex.Message, ProtocolAdvice.NONE); }
     }
 }
+
 

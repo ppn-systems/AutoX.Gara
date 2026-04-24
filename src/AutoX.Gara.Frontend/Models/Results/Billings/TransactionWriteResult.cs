@@ -1,5 +1,5 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Contracts.Protocol.Invoices;
+using AutoX.Gara.Contracts.Invoices;
 using Nalix.Common.Networking.Protocols;
 namespace AutoX.Gara.Frontend.Models.Results.Billings;
 public sealed class TransactionWriteResult
@@ -20,4 +20,5 @@ public sealed class TransactionWriteResult
             Advice = ProtocolAdvice.BACKOFF_RETRY
         };
 }
+
 

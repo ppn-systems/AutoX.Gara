@@ -3,11 +3,10 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using System;
-namespace AutoX.Gara.Contracts.Protocol.Suppliers;
+namespace AutoX.Gara.Contracts.Suppliers;
 /// <summary>
 /// Packet mang dữ liệu nhà cung c?p, dùng cho các thao tác Create, Update và Query.
 /// <para>
@@ -22,50 +21,50 @@ public sealed class SupplierDto : PacketBase<SupplierDto>
     /// <summary>
     /// ID nhà cung c?p. <c>null</c> khi t?o m?i.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int? SupplierId { get; set; }
     /// <summary>Tr?ng thái nhà cung c?p.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public SupplierStatus? Status { get; set; }
     /// <summary>Ði?u kho?n thanh toán.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public PaymentTerms? PaymentTerms { get; set; }
     /// <summary>Ngày b?t d?u h?p tác.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public DateTime? ContractStartDate { get; set; }
     /// <summary>Ngày k?t thúc h?p tác (n?u có).</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public DateTime? ContractEndDate { get; set; }
     // --- Dynamic-size fields --------------------------------------------------
     /// <summary>Tên nhà cung c?p.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public string Name { get; set; }
     /// <summary>Email nhà cung c?p.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public string Email { get; set; }
     /// <summary>Ð?a ch? nhà cung c?p.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public string Address { get; set; }
     /// <summary>Mã s? thu?.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 9)]
+    [SerializeOrder(8)]
     public string TaxCode { get; set; }
     /// <summary>Tài kho?n ngân hàng.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 10)]
+    [SerializeOrder(9)]
     public string BankAccount { get; set; }
     /// <summary>
     /// Danh sách SÐT liên h?, phân cách b?ng d?u ph?y.
     /// VD: "0901234567,0912345678"
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 11)]
+    [SerializeOrder(10)]
     public string PhoneNumbers { get; set; }
     /// <summary>Ghi chú n?i b?. T?i da 500 ký t?.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 12)]
+    [SerializeOrder(11)]
     public string Notes { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 13)]
+    [SerializeOrder(12)]
     public string PhoneNumber { get; set; } = string.Empty;
-    [SerializeOrder(PacketHeaderOffset.Region + 14)]
+    [SerializeOrder(13)]
     public string ContactPerson { get; set; } = string.Empty;
-    [SerializeOrder(PacketHeaderOffset.Region + 15)]
+    [SerializeOrder(14)]
     public bool IsActive { get; set; } = true;
     // --- Constructor ----------------------------------------------------------
     /// <summary>Kh?i t?o <see cref="SupplierDto"/> v?i giá tr? m?c d?nh r?ng.</summary>
@@ -107,4 +106,6 @@ public sealed class SupplierDto : PacketBase<SupplierDto>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

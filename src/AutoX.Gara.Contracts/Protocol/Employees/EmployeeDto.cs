@@ -3,11 +3,10 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using System;
-namespace AutoX.Gara.Contracts.Protocol.Employees;
+namespace AutoX.Gara.Contracts.Employees;
 /// <summary>
 /// Packet mang dữ liệu nh�n vi�n, d�ng cho c�c thao t�c Create, Update, Query.
 /// <para>
@@ -19,38 +18,38 @@ public sealed class EmployeeDto : PacketBase<EmployeeDto>
 {
     // --- Fixed-size fields ----------------------------------------------------
     /// <summary>ID nh�n vi�n. Null khi t?o m?i.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int? EmployeeId { get; set; }
     /// <summary>Gi?i t�nh.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public Gender? Gender { get; set; }
     /// <summary>Ch?c v?.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public Position? Position { get; set; }
     /// <summary>Tr?ng th�i l�m vi?c.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public EmploymentStatus? Status { get; set; }
     /// <summary>Ng�y sinh.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public DateTime? DateOfBirth { get; set; }
     /// <summary>Ng�y b?t d?u l�m vi?c.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public DateTime? StartDate { get; set; }
     /// <summary>Ng�y k?t th�c h?p d?ng.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public DateTime? EndDate { get; set; }
     // --- Dynamic-size fields --------------------------------------------------
     /// <summary>T�n nh�n vi�n.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public string Name { get; set; }
     /// <summary>�?a ch? nh�n vi�n.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 9)]
+    [SerializeOrder(8)]
     public string Address { get; set; }
     /// <summary>S? di?n tho?i nh�n vi�n.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 10)]
+    [SerializeOrder(9)]
     public string PhoneNumber { get; set; }
     /// <summary>Email nh�n vi�n.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 11)]
+    [SerializeOrder(10)]
     public string Email { get; set; }
     // --- Constructor ----------------------------------------------------------
     public EmployeeDto()
@@ -80,4 +79,6 @@ public sealed class EmployeeDto : PacketBase<EmployeeDto>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

@@ -1,6 +1,6 @@
 using AutoX.Gara.Contracts.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Contracts.Protocol.Repairs;
+using AutoX.Gara.Contracts.Repairs;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -48,4 +48,5 @@ public sealed class RepairOrderItemQueryCache
     }
     public void Invalidate() => _store.Clear();
 }
+
 

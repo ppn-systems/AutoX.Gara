@@ -3,7 +3,7 @@ using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Models.Results.Accounts;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Auth;
+using AutoX.Gara.Contracts.Auth;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Common.Primitives;
@@ -123,4 +123,5 @@ public sealed class AccountService : IAccountService
         return LoginResult.Failure(message, advice);
     }
 }
+
 

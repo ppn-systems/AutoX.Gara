@@ -2,7 +2,7 @@
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Customers;
+using AutoX.Gara.Contracts.Customers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -73,4 +73,5 @@ public sealed class CustomerQueryCache : ICustomerQueryCache
     /// <inheritdoc/>
     public void Invalidate() => _store.Clear();
 }
+
 

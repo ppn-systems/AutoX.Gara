@@ -1,5 +1,5 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Contracts.Protocol.Employees;
+using AutoX.Gara.Contracts.Employees;
 using Nalix.Common.Networking.Protocols;
 namespace AutoX.Gara.Frontend.Models.Results.Employees;
 public sealed class EmployeeSalaryWriteResult
@@ -22,4 +22,5 @@ public sealed class EmployeeSalaryWriteResult
             Advice = ProtocolAdvice.BACKOFF_RETRY
         };
 }
+
 

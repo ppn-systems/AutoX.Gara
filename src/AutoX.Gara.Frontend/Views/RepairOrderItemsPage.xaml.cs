@@ -2,7 +2,7 @@
 using AutoX.Gara.Frontend.Controllers.Billings;
 using AutoX.Gara.Frontend.Services.Inventory;
 using AutoX.Gara.Frontend.Services.Repairs;
-using AutoX.Gara.Contracts.Protocol.Invoices;
+using AutoX.Gara.Contracts.Invoices;
 using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
 namespace AutoX.Gara.Frontend.Views;
@@ -30,4 +30,5 @@ public partial class RepairOrderItemsPage : ContentPage
         await Shell.Current.Navigation.PopAsync();
     }
 }
+
 

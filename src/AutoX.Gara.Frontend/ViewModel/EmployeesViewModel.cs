@@ -6,7 +6,7 @@ using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Employees;
 using AutoX.Gara.Frontend.Services.Employees;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Employees;
+using AutoX.Gara.Contracts.Employees;
 using AutoX.Gara.Contracts.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -1006,4 +1006,5 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         IsPopupVisible = true;
     }
 }
+
 

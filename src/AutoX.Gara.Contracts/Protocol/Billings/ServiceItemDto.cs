@@ -2,20 +2,19 @@
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
-namespace AutoX.Gara.Contracts.Protocol.Billings;
+namespace AutoX.Gara.Contracts.Billings;
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class ServiceItemDto : PacketBase<ServiceItemDto>
 {
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int? ServiceItemId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public ServiceType Type { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public decimal UnitPrice { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public string Description { get; set; }
     public ServiceItemDto()
     {
@@ -35,4 +34,6 @@ public sealed class ServiceItemDto : PacketBase<ServiceItemDto>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

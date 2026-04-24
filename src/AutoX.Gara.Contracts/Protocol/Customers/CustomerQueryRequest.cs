@@ -2,10 +2,9 @@
 using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
-namespace AutoX.Gara.Contracts.Protocol.Customers;
+namespace AutoX.Gara.Contracts.Customers;
 /// <summary>
 /// Packet g?i t? client l�n server d? truy v?n danh s�ch kh�ch h�ng
 /// c� h? tr? ph�n trang, t�m ki?m, l?c v� s?p x?p.
@@ -17,34 +16,34 @@ public sealed class CustomerQueryRequest : PacketBase<CustomerQueryRequest>
     // T?t c? field c? d?nh k�ch thu?c ph?i d?ng tru?c dynamic field (SearchTerm)
     // d? PacketBase t�nh Length ch�nh x�c.
     /// <summary>S? trang c?n l?y (b?t d?u t? 1).</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int Page { get; set; } = 1;
     /// <summary>S? b?n ghi t?i da tr�n m?i trang.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int PageSize { get; set; } = 20;
     /// <summary>
     /// C?t d�ng d? s?p x?p k?t qu?.
     /// M?c d?nh: <see cref="CustomerSortField.CreatedAt"/>.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public CustomerSortField SortBy { get; set; } = CustomerSortField.CreatedAt;
     /// <summary>
     /// <c>true</c> = s?p x?p gi?m d?n (m?i nh?t l�n d?u),
     /// <c>false</c> = s?p x?p tang d?n.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public bool SortDescending { get; set; } = true;
     /// <summary>
     /// L?c theo lo?i kh�ch h�ng.
     /// <c>CustomerType.None</c> (m?c d?nh) = kh�ng filter, tr? v? t?t c?.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public CustomerType FilterType { get; set; } = CustomerType.None;
     /// <summary>
     /// L?c theo h?ng th�nh vi�n.
     /// <c>MembershipLevel.None</c> (m?c d?nh) = kh�ng filter, tr? v? t?t c?.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public MembershipLevel FilterMembership { get; set; } = MembershipLevel.None;
     // --- Dynamic-size field (d?t cu?i) ---------------------------------------
     /// <summary>
@@ -55,7 +54,7 @@ public sealed class CustomerQueryRequest : PacketBase<CustomerQueryRequest>
     /// t�nh d�ng wire-size (UTF-8 byte count).
     /// </para>
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public string SearchTerm { get; set; } = string.Empty;
     // --- Constructor ---------------------------------------------------------
     public CustomerQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
@@ -75,4 +74,6 @@ public sealed class CustomerQueryRequest : PacketBase<CustomerQueryRequest>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

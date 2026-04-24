@@ -1,14 +1,14 @@
 using AutoX.Gara.Contracts.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Contracts.Extensions;
-using AutoX.Gara.Contracts.Protocol.Customers;
-using Nalix.Common.Networking.Packets;
+using AutoX.Gara.Contracts.Customers;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
 using System.Collections.Generic;
-namespace AutoX.Gara.Contracts.Protocol.Vehicles;
+using Nalix.Common.Networking.Packets;
+namespace AutoX.Gara.Contracts.Vehicles;
 /// <summary>
 /// Represents a packet that carries a collection of customer records,
 /// used for paging and bulk query operations.
@@ -58,13 +58,13 @@ public sealed class VehiclesQueryResponse : PacketBase<VehiclesQueryResponse>
     /// bất kỳ fixed field n�o d?ng sau List s? b? b? qua khi serialize.
     /// </para>
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int TotalCount { get; set; }
     /// <summary>
     /// Gets or sets the list of customer records for the current page.
     /// Dynamic field ? ph?i d?ng CU?I C�NG trong SerializeOrder.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public List<VehicleDto> Vehicles { get; set; } = [];
     /// <summary>
     /// Initializes a new instance of <see cref="CustomerQueryResponse"/> with default values.
@@ -96,4 +96,7 @@ public sealed class VehiclesQueryResponse : PacketBase<VehiclesQueryResponse>
         base.ResetForPool();
     }
 }
+
+
+
 

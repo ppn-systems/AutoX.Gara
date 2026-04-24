@@ -3,7 +3,7 @@ using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Employees;
 using AutoX.Gara.Backend.Transport.Common;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Auth;
+using AutoX.Gara.Contracts.Auth;
 using Microsoft.Extensions.Logging;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
@@ -80,4 +80,5 @@ public sealed class AccountHandler(AccountAppService accountService, IDataSessio
         }
     }
 }
+
 

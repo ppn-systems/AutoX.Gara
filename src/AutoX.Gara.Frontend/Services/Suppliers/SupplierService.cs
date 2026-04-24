@@ -3,7 +3,7 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Frontend.Models.Results.Suppliers;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Suppliers;
+using AutoX.Gara.Contracts.Suppliers;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
@@ -91,4 +91,5 @@ public interface ISupplierService
     System.Threading.Tasks.Task<SupplierWriteResult> UpdateAsync(SupplierDto data, System.Threading.CancellationToken ct = default);
     System.Threading.Tasks.Task<SupplierWriteResult> ChangeStatusAsync(SupplierDto data, System.Threading.CancellationToken ct = default);
 }
+
 

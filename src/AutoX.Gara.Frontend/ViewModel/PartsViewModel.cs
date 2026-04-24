@@ -5,7 +5,7 @@ using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Parts;
 using AutoX.Gara.Frontend.Services.Inventory;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Inventory;
+using AutoX.Gara.Contracts.Inventory;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
@@ -659,4 +659,5 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
         IsPopupVisible = true;
     }
 }
+
 

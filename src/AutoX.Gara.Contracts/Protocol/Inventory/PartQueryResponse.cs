@@ -1,14 +1,14 @@
 using AutoX.Gara.Contracts.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using Nalix.Framework.Extensions;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
 using System.Collections.Generic;
-namespace AutoX.Gara.Contracts.Protocol.Inventory;
+using Nalix.Common.Networking.Packets;
+namespace AutoX.Gara.Contracts.Inventory;
 // -----------------------------------------------------------------------------
 // PART QUERY RESPONSE
 // -----------------------------------------------------------------------------
@@ -41,10 +41,10 @@ public sealed class PartQueryResponse : PacketBase<PartQueryResponse>
     /// T?ng s? ph? t�ng kh?p filter (tru?c khi ph�n trang).
     /// <para>Ph?i d?ng tru?c <see cref="Parts"/> ? fixed field ph?i tru?c dynamic field.</para>
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int TotalCount { get; set; }
     /// <summary>Danh s�ch ph? t�ng c?a trang hi?n t?i. Dynamic ? d?t cu?i c�ng.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public List<PartDto> Parts { get; set; } = [];
     /// <summary>Kh?i t?o v?i gi� tr? m?c d?nh.</summary>
     public PartQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();
@@ -83,4 +83,7 @@ public sealed class PartQueryResponse : PacketBase<PartQueryResponse>
         return packet;
     }
 }
+
+
+
 

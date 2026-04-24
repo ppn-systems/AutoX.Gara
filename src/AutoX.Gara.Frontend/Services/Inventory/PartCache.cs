@@ -1,7 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Enums.Parts;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Inventory;
+using AutoX.Gara.Contracts.Inventory;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -102,4 +102,5 @@ public interface IPartQueryCache
     /// </summary>
     void Invalidate();
 }
+
 

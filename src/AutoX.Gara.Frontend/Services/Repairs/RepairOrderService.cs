@@ -2,7 +2,7 @@
 using AutoX.Gara.Domain.Enums.Repairs;
 using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Invoices;
+using AutoX.Gara.Contracts.Invoices;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
@@ -74,4 +74,5 @@ public sealed class RepairOrderService
         catch (Exception ex) { return RepairOrderWriteResult.Failure(ex.Message, ProtocolAdvice.NONE); }
     }
 }
+
 

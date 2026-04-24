@@ -1,13 +1,13 @@
 using AutoX.Gara.Contracts.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
 using System.Collections.Generic;
-namespace AutoX.Gara.Contracts.Protocol.Employees;
+using Nalix.Common.Networking.Packets;
+namespace AutoX.Gara.Contracts.Employees;
 /// <summary>
 /// Packet tr? v? danh s�ch nh�n vi�n theo trang t? server xu?ng client.
 /// </summary>
@@ -30,9 +30,9 @@ public sealed class EmployeeQueryResponse : PacketBase<EmployeeQueryResponse>
             return total;
         }
     }
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int TotalCount { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public List<EmployeeDto> Employees { get; set; } = [];
     public EmployeeQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();
     public override void ResetForPool()
@@ -55,4 +55,7 @@ public sealed class EmployeeQueryResponse : PacketBase<EmployeeQueryResponse>
         base.ResetForPool();
     }
 }
+
+
+
 

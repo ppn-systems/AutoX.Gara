@@ -2,35 +2,34 @@
 using AutoX.Gara.Domain.Enums.Repairs;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using System;
-namespace AutoX.Gara.Contracts.Protocol.Repairs;
+namespace AutoX.Gara.Contracts.Repairs;
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class RepairTaskQueryRequest : PacketBase<RepairTaskQueryRequest>
 {
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int Page { get; set; } = 1;
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int PageSize { get; set; } = 20;
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public RepairTaskSortField SortBy { get; set; } = RepairTaskSortField.Id;
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public bool SortDescending { get; set; } = true;
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public int FilterRepairOrderId { get; set; } = 0;
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public int FilterEmployeeId { get; set; } = 0;
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public int FilterServiceItemId { get; set; } = 0;
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public RepairOrderStatus? FilterStatus { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 9)]
+    [SerializeOrder(8)]
     public DateTime? FilterFromDate { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 10)]
+    [SerializeOrder(9)]
     public DateTime? FilterToDate { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 11)]
+    [SerializeOrder(10)]
     public string SearchTerm { get; set; } = string.Empty;
     public RepairTaskQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
     public override void ResetForPool()
@@ -51,4 +50,6 @@ public sealed class RepairTaskQueryRequest : PacketBase<RepairTaskQueryRequest>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

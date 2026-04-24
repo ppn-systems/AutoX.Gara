@@ -3,11 +3,10 @@ using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using System;
-namespace AutoX.Gara.Contracts.Protocol.Billings;
+namespace AutoX.Gara.Contracts.Billings;
 /// <summary>
 /// Packet mang du lieu hoa don (Invoice), dung cho create/update va query response.
 /// </summary>
@@ -15,46 +14,46 @@ namespace AutoX.Gara.Contracts.Protocol.Billings;
 public sealed class InvoiceDto : PacketBase<InvoiceDto>
 {
     // Fixed-size fields
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int? InvoiceId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int CustomerId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public DateTime InvoiceDate { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public PaymentStatus PaymentStatus { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public TaxRateType TaxRate { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public DiscountType DiscountType { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public decimal Discount { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public decimal Subtotal { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 9)]
+    [SerializeOrder(8)]
     public decimal DiscountAmount { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 10)]
+    [SerializeOrder(9)]
     public decimal TaxAmount { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 11)]
+    [SerializeOrder(10)]
     public decimal TotalAmount { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 12)]
+    [SerializeOrder(11)]
     public decimal BalanceDue { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 13)]
+    [SerializeOrder(12)]
     public decimal ServiceSubtotal { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 14)]
+    [SerializeOrder(13)]
     public decimal PartsSubtotal { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 15)]
+    [SerializeOrder(14)]
     public bool IsFullyPaid { get; set; }
     /// <summary>
     /// Optional: RepairOrderId to link this invoice with a specific repair order when creating/updating.
     /// 0 means no link request.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 16)]
+    [SerializeOrder(15)]
     public int RepairOrderId { get; set; }
     // Dynamic-size fields (string) - must be last
-    [SerializeOrder(PacketHeaderOffset.Region + 17)]
+    [SerializeOrder(16)]
     public string InvoiceNumber { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 18)]
+    [SerializeOrder(17)]
     public string Notes { get; set; }
     public InvoiceDto()
     {
@@ -92,4 +91,6 @@ public sealed class InvoiceDto : PacketBase<InvoiceDto>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

@@ -2,31 +2,30 @@
 using AutoX.Gara.Domain.Enums.Repairs;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using System;
-namespace AutoX.Gara.Contracts.Protocol.Repairs;
+namespace AutoX.Gara.Contracts.Repairs;
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class RepairTaskDto : PacketBase<RepairTaskDto>
 {
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int? RepairTaskId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int RepairOrderId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public int EmployeeId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public int ServiceItemId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public RepairOrderStatus Status { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public DateTime? StartDate { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public double EstimatedDuration { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public DateTime? CompletionDate { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 9)]
+    [SerializeOrder(8)]
     public bool IsCompleted { get; set; }
     public RepairTaskDto()
     {
@@ -61,4 +60,6 @@ public sealed class RepairTaskDto : PacketBase<RepairTaskDto>
         return packet;
     }
 }
+
+
 

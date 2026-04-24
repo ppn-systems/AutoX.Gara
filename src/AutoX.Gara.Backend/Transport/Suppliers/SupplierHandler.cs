@@ -4,7 +4,7 @@ using AutoX.Gara.Backend.Transport.Common;
 using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Models;
-using AutoX.Gara.Contracts.Protocol.Suppliers;
+using AutoX.Gara.Contracts.Suppliers;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
@@ -193,4 +193,5 @@ public sealed class SupplierHandler(SupplierAppService supplierService)
         }
     }
 }
+
 

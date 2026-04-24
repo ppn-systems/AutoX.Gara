@@ -1,20 +1,19 @@
 using AutoX.Gara.Contracts.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
-namespace AutoX.Gara.Contracts.Protocol.Repairs;
+namespace AutoX.Gara.Contracts.Repairs;
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class RepairOrderItemDto : PacketBase<RepairOrderItemDto>
 {
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int? RepairOrderItemId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int RepairOrderId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public int PartId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public int Quantity { get; set; }
     public RepairOrderItemDto() => OpCode = OpCommand.NONE.AsUInt16();
     public override void ResetForPool()
@@ -38,4 +37,6 @@ public sealed class RepairOrderItemDto : PacketBase<RepairOrderItemDto>
         return packet;
     }
 }
+
+
 

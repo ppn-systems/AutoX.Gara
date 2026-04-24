@@ -3,39 +3,38 @@ using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using System;
-namespace AutoX.Gara.Contracts.Protocol.Invoices;
+namespace AutoX.Gara.Contracts.Invoices;
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class TransactionQueryRequest : PacketBase<TransactionQueryRequest>
 {
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int Page { get; set; } = 1;
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int PageSize { get; set; } = 20;
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public TransactionSortField SortBy { get; set; } = TransactionSortField.TransactionDate;
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public bool SortDescending { get; set; } = true;
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public int FilterInvoiceId { get; set; } = 0;
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public TransactionType? FilterType { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public TransactionStatus? FilterStatus { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public PaymentMethod? FilterPaymentMethod { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 9)]
+    [SerializeOrder(8)]
     public decimal? FilterMinAmount { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 10)]
+    [SerializeOrder(9)]
     public decimal? FilterMaxAmount { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 11)]
+    [SerializeOrder(10)]
     public DateTime? FilterFromDate { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 12)]
+    [SerializeOrder(11)]
     public DateTime? FilterToDate { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 13)]
+    [SerializeOrder(12)]
     public string SearchTerm { get; set; } = string.Empty;
     public TransactionQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
     public override void ResetForPool()
@@ -58,4 +57,6 @@ public sealed class TransactionQueryRequest : PacketBase<TransactionQueryRequest
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

@@ -3,7 +3,7 @@ using AutoX.Gara.Frontend.Controllers.Billings;
 using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Services.Invoices;
-using AutoX.Gara.Contracts.Protocol.Billings;
+using AutoX.Gara.Contracts.Billings;
 using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
 using System;
@@ -55,4 +55,5 @@ public partial class TransactionsPage : ContentPage
         await PickerActionSheetHelper.ShowAsync(sender as VisualElement, UiTextConfiguration.Current.TransactionsPickerStatusText, vm.StatusOptions, idx => vm.PickerStatusIndex = idx);
     }
 }
+
 

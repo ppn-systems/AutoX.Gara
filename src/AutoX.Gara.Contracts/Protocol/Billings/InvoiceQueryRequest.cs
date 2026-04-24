@@ -2,11 +2,10 @@
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using System;
-namespace AutoX.Gara.Contracts.Protocol.Billings;
+namespace AutoX.Gara.Contracts.Billings;
 /// <summary>
 /// Packet gui tu client len server de truy van danh sach hoa don (Invoice)
 /// co ho tro phan trang, tim kiem, loc va sap xep.
@@ -14,35 +13,35 @@ namespace AutoX.Gara.Contracts.Protocol.Billings;
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class InvoiceQueryRequest : PacketBase<InvoiceQueryRequest>
 {
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int Page { get; set; } = 1;
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int PageSize { get; set; } = 20;
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public InvoiceSortField SortBy { get; set; } = InvoiceSortField.InvoiceDate;
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public bool SortDescending { get; set; } = true;
     /// <summary>
     /// Loc theo customer id. 0 = khong loc.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public int FilterCustomerId { get; set; } = 0;
     /// <summary>
     /// Loc theo trang thai thanh toan. null = khong loc.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public PaymentStatus? FilterPaymentStatus { get; set; } = null;
     /// <summary>
     /// Loc theo khoang thoi gian (InvoiceDate). null = khong loc.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public DateTime? FilterFromDate { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public DateTime? FilterToDate { get; set; } = null;
     /// <summary>
     /// Tim kiem theo so hoa don. Dynamic field - dat cuoi.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 9)]
+    [SerializeOrder(8)]
     public string SearchTerm { get; set; } = string.Empty;
     public InvoiceQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
     public override void ResetForPool()
@@ -61,4 +60,6 @@ public sealed class InvoiceQueryRequest : PacketBase<InvoiceQueryRequest>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

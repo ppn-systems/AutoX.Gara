@@ -1,10 +1,9 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Enums.Cars;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using System;
-namespace AutoX.Gara.Contracts.Protocol.Vehicles;
+namespace AutoX.Gara.Contracts.Vehicles;
 /// <summary>
 /// Packet truy?n dữ liệu xe cho c�c thao t�c t?o, c?p nh?t, truy v?n.
 /// S? d?ng PacketBase d? auto serialize/pooling.
@@ -14,33 +13,33 @@ public sealed class VehicleDto : PacketBase<VehicleDto>
 {
     // --- Fixed-size fields -----------------------------------------------
     /// <summary>Id c?a xe. null khi t?o m?i.</summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int? VehicleId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int CustomerId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public CarType Type { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public CarColor Color { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public CarBrand Brand { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public int Year { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public double Mileage { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public DateTime RegistrationDate { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 9)]
+    [SerializeOrder(8)]
     public DateTime? InsuranceExpiryDate { get; set; }
     // --- Dynamic fields (string) -----------------------------------------
     // Theo Pattern, ph?i d?ng sau fixed size field
-    [SerializeOrder(PacketHeaderOffset.Region + 10)]
+    [SerializeOrder(9)]
     public string Model { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 11)]
+    [SerializeOrder(10)]
     public string LicensePlate { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 12)]
+    [SerializeOrder(11)]
     public string EngineNumber { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 13)]
+    [SerializeOrder(12)]
     public string FrameNumber { get; set; }
     // --- Constructor ----------??-----------------------------------------
     public VehicleDto()
@@ -78,4 +77,6 @@ public sealed class VehicleDto : PacketBase<VehicleDto>
         OpCode = 0;
     }
 }
+
+
 

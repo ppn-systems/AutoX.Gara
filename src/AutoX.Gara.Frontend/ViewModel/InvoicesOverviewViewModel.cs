@@ -4,7 +4,7 @@ using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Services.Billings;
-using AutoX.Gara.Contracts.Protocol.Billings;
+using AutoX.Gara.Contracts.Billings;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Maui.Controls;
@@ -180,4 +180,5 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
         public Boolean IsFullyPaid => Dto.IsFullyPaid || Dto.PaymentStatus == PaymentStatus.Paid;
     }
 }
+
 

@@ -1,13 +1,13 @@
 using AutoX.Gara.Contracts.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
 using System.Collections.Generic;
-namespace AutoX.Gara.Contracts.Protocol.Suppliers;
+using Nalix.Common.Networking.Packets;
+namespace AutoX.Gara.Contracts.Suppliers;
 /// <summary>
 /// Packet tr? v? danh s�ch nh� cung c?p theo trang t? server xu?ng client.
 /// <para>
@@ -53,13 +53,13 @@ public sealed class SupplierQueryResponse : PacketBase<SupplierQueryResponse>
     /// PH?I d?ng tru?c <see cref="Suppliers"/> ? d�y l� fixed-size field.
     /// </para>
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int TotalCount { get; set; }
     /// <summary>
     /// Danh s�ch nh� cung c?p tr�n trang hi?n t?i.
     /// Dynamic field ? ph?i d?ng CU?I C�NG trong SerializeOrder.
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public List<SupplierDto> Suppliers { get; set; } = [];
     /// <summary>Kh?i t?o v?i gi� tr? m?c d?nh.</summary>
     public SupplierQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();
@@ -85,4 +85,7 @@ public sealed class SupplierQueryResponse : PacketBase<SupplierQueryResponse>
         base.ResetForPool();
     }
 }
+
+
+
 

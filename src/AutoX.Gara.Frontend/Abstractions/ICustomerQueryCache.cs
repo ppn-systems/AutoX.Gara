@@ -1,6 +1,6 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Frontend.Services.Customers;
-using AutoX.Gara.Contracts.Protocol.Customers;
+using AutoX.Gara.Contracts.Customers;
 using System.Collections.Generic;
 namespace AutoX.Gara.Frontend.Abstractions;
 /// <summary>
@@ -25,4 +25,5 @@ public interface ICustomerQueryCache
     /// </summary>
     void Invalidate();
 }
+
 

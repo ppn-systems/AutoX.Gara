@@ -3,7 +3,7 @@ using AutoX.Gara.Domain.Enums.Customers;
 using AutoX.Gara.Frontend.Abstractions;
 using AutoX.Gara.Frontend.Models.Results.Customer;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Customers;
+using AutoX.Gara.Contracts.Customers;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
@@ -83,4 +83,5 @@ public sealed class CustomerService : ICustomerService
         catch (Exception ex) { return CustomerWriteResult.Failure(ex.Message, ProtocolAdvice.NONE); }
     }
 }
+
 

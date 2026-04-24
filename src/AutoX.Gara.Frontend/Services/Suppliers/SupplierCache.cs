@@ -1,6 +1,6 @@
 using AutoX.Gara.Contracts.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Contracts.Protocol.Suppliers;
+using AutoX.Gara.Contracts.Suppliers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -88,4 +88,5 @@ public interface ISupplierQueryCache
     void Set(SupplierCacheKey key, List<SupplierDto> suppliers, int totalCount);
     void Invalidate();
 }
+
 

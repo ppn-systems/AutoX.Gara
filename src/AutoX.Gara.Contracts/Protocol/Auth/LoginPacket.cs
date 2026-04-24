@@ -1,10 +1,9 @@
 using AutoX.Gara.Contracts.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
-namespace AutoX.Gara.Contracts.Protocol.Auth;
+namespace AutoX.Gara.Contracts.Auth;
 /// <summary>
 /// Represents a login packet that carries authentication credentials
 /// (username, hashed password, metadata) from the client to the server.
@@ -16,7 +15,7 @@ public sealed class LoginPacket : PacketBase<LoginPacket>
     /// <summary>
     /// Gets or sets the login credentials model (username, hashed password, metadata).
     /// </summary>
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public LoginRequestModel Account { get; set; }
     /// <summary>
     /// Initializes a new instance of <see cref="LoginPacket"/> with default values.
@@ -51,4 +50,6 @@ public sealed class LoginPacket : PacketBase<LoginPacket>
         OpCode = OpCommand.LOGIN.AsUInt16();
     }
 }
+
+
 

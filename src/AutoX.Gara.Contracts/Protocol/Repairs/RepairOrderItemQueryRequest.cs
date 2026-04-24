@@ -1,26 +1,25 @@
 using AutoX.Gara.Contracts.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
-namespace AutoX.Gara.Contracts.Protocol.Repairs;
+namespace AutoX.Gara.Contracts.Repairs;
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class RepairOrderItemQueryRequest : PacketBase<RepairOrderItemQueryRequest>
 {
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int Page { get; set; } = 1;
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int PageSize { get; set; } = 20;
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public RepairOrderItemSortField SortBy { get; set; } = RepairOrderItemSortField.Id;
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public bool SortDescending { get; set; } = true;
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public int FilterRepairOrderId { get; set; } = 0;
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public int FilterPartId { get; set; } = 0;
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public string SearchTerm { get; set; } = string.Empty;
     public RepairOrderItemQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
     public override void ResetForPool()
@@ -37,4 +36,6 @@ public sealed class RepairOrderItemQueryRequest : PacketBase<RepairOrderItemQuer
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

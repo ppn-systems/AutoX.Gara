@@ -4,7 +4,7 @@ using AutoX.Gara.Backend.Transport.Common;
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Models;
-using AutoX.Gara.Contracts.Protocol.Inventory;
+using AutoX.Gara.Contracts.Inventory;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
@@ -195,4 +195,5 @@ public sealed class PartHandler(PartAppService partService)
         }
     }
 }
+
 

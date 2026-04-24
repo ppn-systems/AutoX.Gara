@@ -3,7 +3,7 @@ using AutoX.Gara.Frontend.Controllers;
 using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Services.Vehicles;
-using AutoX.Gara.Contracts.Protocol.Customers;
+using AutoX.Gara.Contracts.Customers;
 using Microsoft.Maui.Controls;
 using Nalix.Framework.Injection;
 using System;
@@ -65,4 +65,5 @@ public partial class VehiclesPage : ContentPage
         await PickerActionSheetHelper.ShowAsync(sender as VisualElement, UiTextConfiguration.Current.VehiclesPickerFormColorText, vm.FormColorOptions, idx => vm.FormPickerColorIndex = idx);
     }
 }
+
 

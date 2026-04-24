@@ -7,10 +7,10 @@ using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Frontend.Services.Billings;
 using AutoX.Gara.Frontend.Services.Employees;
 using AutoX.Gara.Frontend.Services.Invoices;
-using AutoX.Gara.Contracts.Protocol.Billings;
-using AutoX.Gara.Contracts.Protocol.Employees;
-using AutoX.Gara.Contracts.Protocol.Invoices;
-using AutoX.Gara.Contracts.Protocol.Repairs;
+using AutoX.Gara.Contracts.Billings;
+using AutoX.Gara.Contracts.Employees;
+using AutoX.Gara.Contracts.Invoices;
+using AutoX.Gara.Contracts.Repairs;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nalix.Common.Networking.Protocols;
@@ -497,4 +497,5 @@ public sealed partial class RepairTasksViewModel : ObservableObject, System.IDis
         IsPopupVisible = true;
     }
 }
+
 

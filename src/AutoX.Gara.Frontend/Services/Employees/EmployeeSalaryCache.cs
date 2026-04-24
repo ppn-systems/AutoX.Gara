@@ -1,7 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Employees;
+using AutoX.Gara.Contracts.Employees;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -57,4 +57,5 @@ public interface IEmployeeSalaryQueryCache
     void Set(EmployeeSalaryCacheKey key, List<EmployeeSalaryDto> salaries, int totalCount);
     void Invalidate();
 }
+
 

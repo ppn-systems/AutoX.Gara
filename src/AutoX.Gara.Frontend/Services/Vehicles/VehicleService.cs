@@ -1,7 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Frontend.Models.Results.Vehicles;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Vehicles;
+using AutoX.Gara.Contracts.Vehicles;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
@@ -71,4 +71,5 @@ public sealed class VehicleService
         catch (Exception ex) { return VehicleWriteResult.Failure(ex.Message, ProtocolAdvice.NONE); }
     }
 }
+
 

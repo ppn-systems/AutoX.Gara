@@ -2,31 +2,30 @@
 using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using System;
-namespace AutoX.Gara.Contracts.Protocol.Employees;
+namespace AutoX.Gara.Contracts.Employees;
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class EmployeeSalaryDto : PacketBase<EmployeeSalaryDto>
 {
     // Fixed-size fields
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int? EmployeeSalaryId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int EmployeeId { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public decimal Salary { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public SalaryType SalaryType { get; set; } = SalaryType.Monthly;
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public decimal SalaryUnit { get; set; } = 1;
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public DateTime EffectiveFrom { get; set; } = DateTime.UtcNow;
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public DateTime? EffectiveTo { get; set; }
     // Dynamic field(s)
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public string Note { get; set; } = string.Empty;
     public EmployeeSalaryDto() => OpCode = OpCommand.NONE.AsUInt16();
     public override void ResetForPool()
@@ -44,4 +43,6 @@ public sealed class EmployeeSalaryDto : PacketBase<EmployeeSalaryDto>
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

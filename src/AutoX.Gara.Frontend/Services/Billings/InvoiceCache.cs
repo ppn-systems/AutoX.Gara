@@ -1,7 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Billings;
+using AutoX.Gara.Contracts.Billings;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -51,4 +51,5 @@ public sealed class InvoiceQueryCache
     }
     public void Invalidate() => _store.Clear();
 }
+
 

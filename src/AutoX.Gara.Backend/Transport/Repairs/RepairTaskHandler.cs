@@ -4,7 +4,7 @@ using AutoX.Gara.Backend.Transport.Common;
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Models;
-using AutoX.Gara.Contracts.Protocol.Repairs;
+using AutoX.Gara.Contracts.Repairs;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
@@ -143,4 +143,5 @@ public sealed class RepairTaskHandler(RepairTaskAppService repairTaskService)
         IsCompleted = t.IsCompleted
     };
 }
+
 

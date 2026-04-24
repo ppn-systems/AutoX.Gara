@@ -2,7 +2,7 @@
 using AutoX.Gara.Domain.Enums.Payments;
 using AutoX.Gara.Domain.Enums.Transactions;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Invoices;
+using AutoX.Gara.Contracts.Invoices;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -52,4 +52,5 @@ public sealed class TransactionQueryCache
     }
     public void Invalidate() => _store.Clear();
 }
+
 

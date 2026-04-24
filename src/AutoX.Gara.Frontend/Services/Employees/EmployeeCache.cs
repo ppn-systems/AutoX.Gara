@@ -2,7 +2,7 @@
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Employees;
+using AutoX.Gara.Contracts.Employees;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -69,4 +69,5 @@ public interface IEmployeeQueryCache
     void Set(EmployeeCacheKey key, List<EmployeeDto> employees, int totalCount);
     void Invalidate();
 }
+
 

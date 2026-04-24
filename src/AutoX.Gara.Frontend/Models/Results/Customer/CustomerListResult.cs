@@ -1,5 +1,5 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Contracts.Protocol.Customers;
+using AutoX.Gara.Contracts.Customers;
 using Nalix.Common.Networking.Protocols;
 using System.Collections.Generic;
 namespace AutoX.Gara.Frontend.Models.Results.Customer;
@@ -53,4 +53,5 @@ public sealed class CustomerListResult
             Advice = ProtocolAdvice.BACKOFF_RETRY
         };
 }
+
 

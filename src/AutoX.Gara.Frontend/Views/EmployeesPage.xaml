@@ -14,7 +14,7 @@
 
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
 
-    xmlns:pkt="clr-namespace:AutoX.Gara.Contracts.Protocol.Employees;assembly=AutoX.Gara.Contracts"
+    xmlns:pkt="clr-namespace:AutoX.Gara.Contracts.Employees;assembly=AutoX.Gara.Contracts"
 
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
 
@@ -983,5 +983,6 @@
     </Grid>
 
 </ContentPage>
+
 
 

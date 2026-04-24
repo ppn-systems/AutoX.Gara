@@ -3,7 +3,7 @@ using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Repairs;
+using AutoX.Gara.Contracts.Repairs;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
@@ -124,4 +124,5 @@ public sealed class RepairOrderItemHandler(RepairOrderItemAppService itemService
         Quantity = i.Quantity
     };
 }
+
 

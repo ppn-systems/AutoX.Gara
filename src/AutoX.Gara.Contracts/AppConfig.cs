@@ -1,16 +1,16 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Contracts.Protocol.Auth;
-using AutoX.Gara.Contracts.Protocol.Billings;
-using AutoX.Gara.Contracts.Protocol.Customers;
-using AutoX.Gara.Contracts.Protocol.Employees;
-using AutoX.Gara.Contracts.Protocol.Inventory;
-using AutoX.Gara.Contracts.Protocol.Invoices;
-using AutoX.Gara.Contracts.Protocol.Repairs;
-using AutoX.Gara.Contracts.Protocol.Suppliers;
-using AutoX.Gara.Contracts.Protocol.Vehicles;
-using Nalix.Common.Networking.Packets;
+using AutoX.Gara.Contracts.Auth;
+using AutoX.Gara.Contracts.Billings;
+using AutoX.Gara.Contracts.Customers;
+using AutoX.Gara.Contracts.Employees;
+using AutoX.Gara.Contracts.Inventory;
+using AutoX.Gara.Contracts.Invoices;
+using AutoX.Gara.Contracts.Repairs;
+using AutoX.Gara.Contracts.Suppliers;
+using AutoX.Gara.Contracts.Vehicles;
 using Nalix.Framework.DataFrames;
 using Nalix.Framework.Injection;
+using Nalix.Common.Networking.Packets;
 namespace AutoX.Gara.Contracts;
 public static class AppConfig
 {
@@ -63,4 +63,7 @@ public static class AppConfig
         InstanceManager.Instance.Register<IPacketRegistry>(catalog);
     }
 }
+
+
+
 

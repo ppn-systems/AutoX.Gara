@@ -4,7 +4,7 @@ using AutoX.Gara.Backend.Transport.Common;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Models;
-using AutoX.Gara.Contracts.Protocol.Customers;
+using AutoX.Gara.Contracts.Customers;
 using Nalix.Common.Networking;
 using Nalix.Common.Networking.Packets;
 using Nalix.Common.Networking.Protocols;
@@ -194,4 +194,5 @@ public sealed class CustomerHandler(CustomerAppService customerService)
         }
     }
 }
+
 

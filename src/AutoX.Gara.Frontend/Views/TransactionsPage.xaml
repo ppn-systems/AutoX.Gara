@@ -14,7 +14,7 @@
 
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
 
-    xmlns:pkt="clr-namespace:AutoX.Gara.Contracts.Protocol.Billings;assembly=AutoX.Gara.Contracts"
+    xmlns:pkt="clr-namespace:AutoX.Gara.Contracts.Billings;assembly=AutoX.Gara.Contracts"
 
     x:DataType="ctrl:TransactionsViewModel"
 
@@ -293,5 +293,6 @@
     </Grid>
 
 </ContentPage>
+
 
 

@@ -1,13 +1,13 @@
 using AutoX.Gara.Contracts.Enums;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
 using Nalix.Framework.Injection;
 using Nalix.Framework.Memory.Objects;
 using System.Collections.Generic;
-namespace AutoX.Gara.Contracts.Protocol.Invoices;
+using Nalix.Common.Networking.Packets;
+namespace AutoX.Gara.Contracts.Invoices;
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class RepairOrderQueryResponse : PacketBase<RepairOrderQueryResponse>
 {
@@ -27,9 +27,9 @@ public sealed class RepairOrderQueryResponse : PacketBase<RepairOrderQueryRespon
             return total;
         }
     }
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int TotalCount { get; set; }
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public List<RepairOrderDto> RepairOrders { get; set; } = [];
     public RepairOrderQueryResponse() => OpCode = OpCommand.NONE.AsUInt16();
     public override void ResetForPool()
@@ -52,4 +52,7 @@ public sealed class RepairOrderQueryResponse : PacketBase<RepairOrderQueryRespon
         base.ResetForPool();
     }
 }
+
+
+
 

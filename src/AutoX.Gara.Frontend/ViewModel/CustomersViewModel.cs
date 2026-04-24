@@ -6,7 +6,7 @@ using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Customer;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Customers;
+using AutoX.Gara.Contracts.Customers;
 using AutoX.Gara.Contracts.Validation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -606,4 +606,5 @@ public sealed partial class CustomersViewModel : ObservableObject, System.IDispo
         IsPopupVisible = true;
     }
 }
+
 

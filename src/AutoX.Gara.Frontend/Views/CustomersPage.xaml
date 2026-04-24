@@ -44,7 +44,7 @@
 
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
 
-    xmlns:pkt="clr-namespace:AutoX.Gara.Contracts.Protocol.Customers;assembly=AutoX.Gara.Contracts"
+    xmlns:pkt="clr-namespace:AutoX.Gara.Contracts.Customers;assembly=AutoX.Gara.Contracts"
 
     xmlns:conv="clr-namespace:AutoX.Gara.Frontend.Converters"
 
@@ -1368,5 +1368,6 @@
     <!-- /root -->
 
 </ContentPage>
+
 
 

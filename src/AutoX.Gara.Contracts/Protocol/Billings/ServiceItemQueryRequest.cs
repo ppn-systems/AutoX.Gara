@@ -2,28 +2,27 @@
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Contracts.Enums;
 using AutoX.Gara.Contracts.Extensions;
-using Nalix.Common.Networking.Packets;
 using Nalix.Common.Serialization;
 using Nalix.Framework.DataFrames;
-namespace AutoX.Gara.Contracts.Protocol.Billings;
+namespace AutoX.Gara.Contracts.Billings;
 [SerializePackable(SerializeLayout.Explicit)]
 public sealed class ServiceItemQueryRequest : PacketBase<ServiceItemQueryRequest>
 {
-    [SerializeOrder(PacketHeaderOffset.Region + 1)]
+    [SerializeOrder(0)]
     public int Page { get; set; } = 1;
-    [SerializeOrder(PacketHeaderOffset.Region + 2)]
+    [SerializeOrder(1)]
     public int PageSize { get; set; } = 20;
-    [SerializeOrder(PacketHeaderOffset.Region + 3)]
+    [SerializeOrder(2)]
     public ServiceItemSortField SortBy { get; set; } = ServiceItemSortField.Description;
-    [SerializeOrder(PacketHeaderOffset.Region + 4)]
+    [SerializeOrder(3)]
     public bool SortDescending { get; set; } = false;
-    [SerializeOrder(PacketHeaderOffset.Region + 5)]
+    [SerializeOrder(4)]
     public ServiceType? FilterType { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 6)]
+    [SerializeOrder(5)]
     public decimal? FilterMinUnitPrice { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 7)]
+    [SerializeOrder(6)]
     public decimal? FilterMaxUnitPrice { get; set; } = null;
-    [SerializeOrder(PacketHeaderOffset.Region + 8)]
+    [SerializeOrder(7)]
     public string SearchTerm { get; set; } = string.Empty;
     public ServiceItemQueryRequest() => OpCode = OpCommand.NONE.AsUInt16();
     public override void ResetForPool()
@@ -41,4 +40,6 @@ public sealed class ServiceItemQueryRequest : PacketBase<ServiceItemQueryRequest
         OpCode = OpCommand.NONE.AsUInt16();
     }
 }
+
+
 

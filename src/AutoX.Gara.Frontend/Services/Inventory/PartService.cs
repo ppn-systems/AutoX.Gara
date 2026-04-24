@@ -2,7 +2,7 @@
 using AutoX.Gara.Domain.Enums.Parts;
 using AutoX.Gara.Frontend.Models.Results.Parts;
 using AutoX.Gara.Contracts.Enums;
-using AutoX.Gara.Contracts.Protocol.Inventory;
+using AutoX.Gara.Contracts.Inventory;
 using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.SignalFrames;
 using Nalix.Framework.Injection;
@@ -111,4 +111,5 @@ public interface IPartService
     /// </summary>
     System.Threading.Tasks.Task<PartWriteResult> DeleteAsync(PartDto data, System.Threading.CancellationToken ct = default);
 }
+
 
