@@ -4,6 +4,7 @@
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Payments;
+using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Frontend.Models.Results.Parts;
@@ -261,7 +262,9 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
 
 
-        public string PayNowText => CanPay ? "Thanh to�n" : "�ã thanh to�n";
+        public string PayNowText => CanPay
+            ? UiText.Get("invoices.action.pay_now", "Thanh toán")
+            : UiText.Get("invoices.action.paid", "Đã thanh toán");
 
 
 
@@ -301,7 +304,9 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
 
 
-    public string PageTitle => Owner is null ? "H�a don" : $"H�a don {Owner.Name}";
+    public string PageTitle => Owner is null
+        ? UiText.Get("invoices.page_title", "Hóa đơn")
+        : UiText.Format("invoices.page_title_with_owner", "Hóa đơn {0}", Owner.Name);
 
 
 
@@ -651,7 +656,10 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
             {
 
-                HandleError("Kh�ng t?i được h�a don", result.ErrorMessage ?? "Thao t�c th?t b?i.", result.Advice);
+                HandleError(
+                    UiText.Get("invoices.error.load_failed", "Không tải được hóa đơn"),
+                    result.ErrorMessage ?? UiText.Get("common.error.action_failed", "Thao tác thất bại."),
+                    result.Advice);
 
 
 
@@ -1019,7 +1027,7 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
 
 
-            ErrorMessage = "S? h�a don kh�ng được d? tr?ng.";
+            ErrorMessage = UiText.Get("invoices.validation.invoice_number_required", "Số hóa đơn không được để trống.");
 
 
 
@@ -1121,7 +1129,10 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
             {
 
-                HandleError("Luu th?t b?i", result.ErrorMessage ?? "Thao t�c th?t b?i.", result.Advice);
+                HandleError(
+                    UiText.Get("invoices.error.save_failed", "Lưu thất bại"),
+                    result.ErrorMessage ?? UiText.Get("common.error.action_failed", "Thao tác thất bại."),
+                    result.Advice);
 
 
 
@@ -1261,7 +1272,10 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
 
 
-            HandleError("Kh�ng th? m? giao d?ch", "Vui l�ng th? l?i.", ProtocolAdvice.BACKOFF_RETRY);
+            HandleError(
+                UiText.Get("invoices.error.open_transactions_failed", "Không thể mở giao dịch"),
+                UiText.Get("common.error.try_again", "Vui lòng thử lại."),
+                ProtocolAdvice.BACKOFF_RETRY);
 
 
 
@@ -1337,7 +1351,10 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
 
 
-            HandleError("Kh�ng th? thanh to�n", "Vui l�ng th? l?i.", ProtocolAdvice.BACKOFF_RETRY);
+            HandleError(
+                UiText.Get("invoices.error.pay_now_failed", "Không thể thanh toán"),
+                UiText.Get("common.error.try_again", "Vui lòng thử lại."),
+                ProtocolAdvice.BACKOFF_RETRY);
 
 
 
@@ -1467,7 +1484,10 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
             {
 
-                HandleError("X�a th?t b?i", result.ErrorMessage ?? "Thao t�c th?t b?i.", result.Advice);
+                HandleError(
+                    UiText.Get("invoices.error.delete_failed", "Xóa thất bại"),
+                    result.ErrorMessage ?? UiText.Get("common.error.action_failed", "Thao tác thất bại."),
+                    result.Advice);
 
 
 
@@ -1939,7 +1959,9 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
         {
 
-            MoneyPopupLineItemsError = "Kh�ng x�c d?nh được l?nh li�n k?t c?a h�a don. B?n c� th? b?m 'Xem l?nh' d? ki?m tra.";
+            MoneyPopupLineItemsError = UiText.Get(
+                "invoices.money_popup.error.linked_order_missing",
+                "Không xác định được lệnh liên kết của hóa đơn. Bạn có thể bấm 'Xem lệnh' để kiểm tra.");
 
 
 
@@ -2083,7 +2105,8 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
                 {
 
-                    MoneyPopupLineItemsError = res.ErrorMessage ?? "Kh�ng t?i được danh s�ch d?ch v?.";
+                    MoneyPopupLineItemsError = res.ErrorMessage
+                        ?? UiText.Get("invoices.money_popup.error.load_service_lines_failed", "Không tải được danh sách dịch vụ.");
 
 
 
@@ -2157,7 +2180,8 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
                 {
 
-                    MoneyPopupLineItemsError = res.ErrorMessage ?? "Kh�ng t?i được danh s�ch ph? t�ng.";
+                    MoneyPopupLineItemsError = res.ErrorMessage
+                        ?? UiText.Get("invoices.money_popup.error.load_part_lines_failed", "Không tải được danh sách phụ tùng.");
 
 
 
@@ -2265,15 +2289,10 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
 
 
+                string fallbackTitle = UiText.Format("invoices.money_popup.service_fallback", "Dịch vụ #{0}", id);
                 string title = svc is null
-
-
-
-                    ? $"D?ch v? #{id}"
-
-
-
-                    : (string.IsNullOrWhiteSpace(svc.Description) ? $"D?ch v? #{id}" : svc.Description);
+                    ? fallbackTitle
+                    : (string.IsNullOrWhiteSpace(svc.Description) ? fallbackTitle : svc.Description);
 
 
 
@@ -2315,15 +2334,10 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
 
 
+                string fallbackTitle = UiText.Format("invoices.money_popup.part_fallback", "Phụ tùng #{0}", id);
                 string title = part is null
-
-
-
-                    ? $"Ph? t�ng #{id}"
-
-
-
-                    : (string.IsNullOrWhiteSpace(part.PartName) ? $"Ph? t�ng #{id}" : part.PartName);
+                    ? fallbackTitle
+                    : (string.IsNullOrWhiteSpace(part.PartName) ? fallbackTitle : part.PartName);
 
 
 
@@ -2371,7 +2385,9 @@ public sealed partial class InvoicesViewModel : ObservableObject, System.IDispos
 
 
 
-            MoneyPopupLineItemsError = "Kh�ng t?i được chi ti?t d?ch v?/ph? t�ng.";
+            MoneyPopupLineItemsError = UiText.Get(
+                "invoices.money_popup.error.load_line_details_failed",
+                "Không tải được chi tiết dịch vụ/phụ tùng.");
 
 
 

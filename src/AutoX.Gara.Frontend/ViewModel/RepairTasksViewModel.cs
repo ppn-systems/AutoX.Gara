@@ -4,6 +4,7 @@
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Repairs;
+using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Frontend.Services.Billings;

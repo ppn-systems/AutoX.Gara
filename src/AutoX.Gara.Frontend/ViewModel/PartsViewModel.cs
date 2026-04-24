@@ -3,6 +3,7 @@
 
 
 using AutoX.Gara.Domain.Enums.Parts;
+using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Parts;
 using AutoX.Gara.Frontend.Services.Inventory;
@@ -168,19 +169,39 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-    public string[] InStockFilterOptions { get; } = ["T?t c?", "C�n h�ng", "H?t h�ng"];
+    public string[] InStockFilterOptions { get; } =
+    [
+        UiText.Get("common.filter.all", "Tất cả"),
+        UiText.Get("parts.filter.in_stock", "Còn hàng"),
+        UiText.Get("parts.filter.out_of_stock", "Hết hàng")
+    ];
 
 
 
-    public string[] DefectiveFilterOptions { get; } = ["T?t c?", "B�nh thu?ng", "B? l?i"];
+    public string[] DefectiveFilterOptions { get; } =
+    [
+        UiText.Get("common.filter.all", "Tất cả"),
+        UiText.Get("parts.filter.normal", "Bình thường"),
+        UiText.Get("parts.filter.defective", "Bị lỗi")
+    ];
 
 
 
-    public string[] ExpiredFilterOptions { get; } = ["T?t c?", "C�n h�ng", "H?t h�ng"];
+    public string[] ExpiredFilterOptions { get; } =
+    [
+        UiText.Get("common.filter.all", "Tất cả"),
+        UiText.Get("parts.filter.not_expired", "Còn hạn"),
+        UiText.Get("parts.filter.expired", "Hết hạn")
+    ];
 
 
 
-    public string[] DiscontinuedFilterOptions { get; } = ["T?t c?", "�ang b�n", "Ng?ng b�n"];
+    public string[] DiscontinuedFilterOptions { get; } =
+    [
+        UiText.Get("common.filter.all", "Tất cả"),
+        UiText.Get("parts.filter.active", "Đang bán"),
+        UiText.Get("parts.filter.discontinued", "Ngừng bán")
+    ];
 
 
 
@@ -304,7 +325,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-    [ObservableProperty] public partial string PopupButtonText { get; set; } = "OK";
+    [ObservableProperty] public partial string PopupButtonText { get; set; } = UiText.Get("common.popup.ok", "OK");
 
 
 
@@ -328,11 +349,17 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-    public string FormTitle => IsEditing ? "S?a ph? t�ng" : "Th�m ph? t�ng";
+    public string FormTitle =>
+        IsEditing
+            ? UiText.Get("parts.form.title.edit", "Sửa phụ tùng")
+            : UiText.Get("parts.form.title.create", "Thêm phụ tùng");
 
 
 
-    public string FormSaveText => IsEditing ? "Luu thay d?i" : "Th�m ph? t�ng";
+    public string FormSaveText =>
+        IsEditing
+            ? UiText.Get("common.form.save_changes", "Lưu thay đổi")
+            : UiText.Get("parts.form.save.create", "Thêm phụ tùng");
 
 
 
@@ -464,7 +491,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-        PartCategoryFilterOptions = ["T?t c? lo?i", .. allCategories.Select(EnumText.Get)];
+        PartCategoryFilterOptions = [UiText.Get("parts.filter.category.all", "Tất cả loại"), .. allCategories.Select(EnumText.Get)];
 
 
 
@@ -1106,7 +1133,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
             {
 
-                HandleError("T?i danh s�ch th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError(UiText.Get("parts.error.load_failed", "Tải danh sách thất bại"), result.ErrorMessage!, result.Advice);
 
 
 
@@ -1494,7 +1521,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
             {
 
-                SetFormError(result.ErrorMessage ?? "Thao t�c th?t b?i.");
+                SetFormError(result.ErrorMessage ?? UiText.Get("common.error.action_failed", "Thao tác thất bại."));
 
 
 
@@ -1666,7 +1693,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
             {
 
-                HandleError("X�a th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError(UiText.Get("parts.error.delete_failed", "Xóa thất bại"), result.ErrorMessage!, result.Advice);
 
 
 
@@ -1988,7 +2015,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-        { SetFormError("M� SKU kh�ng được d? tr?ng."); return false; }
+        { SetFormError(UiText.Get("parts.validation.sku_required", "Mã SKU không được để trống.")); return false; }
 
 
 
@@ -2002,7 +2029,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-            { SetFormError("M� SKU kh�ng được d? tr?ng."); return false; }
+            { SetFormError(UiText.Get("parts.validation.sku_required", "Mã SKU không được để trống.")); return false; }
 
 
 
@@ -2010,7 +2037,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-            { SetFormError("M� SKU T?i da 12 k� t?, ch? g?m ch? v� s?."); return false; }
+            { SetFormError(UiText.Get("parts.validation.sku_format", "Mã SKU tối đa 12 ký tự, chỉ gồm chữ và số.")); return false; }
 
 
 
@@ -2022,7 +2049,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-        { SetFormError("T�n ph? t�ng kh�ng được d? tr?ng."); return false; }
+        { SetFormError(UiText.Get("parts.validation.name_required", "Tên phụ tùng không được để trống.")); return false; }
 
 
 
@@ -2030,7 +2057,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-        { SetFormError("T�n kh�ng được vượt qu� 100 k� t?."); return false; }
+        { SetFormError(UiText.Get("parts.validation.name_max_length", "Tên không được vượt quá 100 ký tự.")); return false; }
 
 
 
@@ -2038,7 +2065,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-        { SetFormError("Gi� nh?p kh�ng h?p l?."); return false; }
+        { SetFormError(UiText.Get("parts.validation.cost_invalid", "Giá nhập không hợp lệ.")); return false; }
 
 
 
@@ -2046,7 +2073,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-        { SetFormError("Gi� b�n kh�ng h?p l?."); return false; }
+        { SetFormError(UiText.Get("parts.validation.price_invalid", "Giá bán không hợp lệ.")); return false; }
 
 
 
@@ -2054,7 +2081,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-        { SetFormError("Gi� b�n kh�ng được th?p hon gi� nh?p."); return false; }
+        { SetFormError(UiText.Get("parts.validation.price_not_less_than_cost", "Giá bán không được thấp hơn giá nhập.")); return false; }
 
 
 
@@ -2062,7 +2089,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-        { SetFormError("S? lu?ng ph?i l� s? nguy�n kh�ng �m."); return false; }
+        { SetFormError(UiText.Get("parts.validation.quantity_non_negative", "Số lượng phải là số nguyên không âm.")); return false; }
 
 
 
@@ -2070,7 +2097,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-        { SetFormError("Vui l�ng ch?n nh� cung c?p."); return false; }
+        { SetFormError(UiText.Get("parts.validation.supplier_required", "Vui lòng chọn nhà cung cấp.")); return false; }
 
 
 
@@ -2078,7 +2105,7 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-        { SetFormError("Ng�y h?t h?n ph?i sau ng�y nh?p kho."); return false; }
+        { SetFormError(UiText.Get("parts.validation.expiry_after_received", "Ngày hết hạn phải sau ngày nhập kho.")); return false; }
 
 
 
@@ -2312,7 +2339,9 @@ public sealed partial class PartsViewModel : ObservableObject, System.IDisposabl
 
 
 
-        PopupButtonText = isRetry ? "Th? l?i" : "OK";
+        PopupButtonText = isRetry
+            ? UiText.Get("common.popup.retry", "Thử lại")
+            : UiText.Get("common.popup.ok", "OK");
 
 
 

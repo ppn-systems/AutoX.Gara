@@ -2,6 +2,7 @@
 
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
+using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Employees;
 using AutoX.Gara.Frontend.Services.Employees;
@@ -112,11 +113,11 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     private static readonly Position[] FormPositionValues = System.Enum.GetValues<Position>();
 
-    public String[] FilterPositionOptions { get; } = [.. FilterPositionValues.Select((v, idx) => idx == 0 ? "T?t c? ch?c v?" : EnumText.Get(v))];
+    public String[] FilterPositionOptions { get; } = [.. FilterPositionValues.Select((v, idx) => idx == 0 ? UiText.Get("employees.filter.position.all", "Tất cả chức vụ") : EnumText.Get(v))];
 
-    public String[] FilterStatusOptions { get; } = [.. StatusValues.Select((v, idx) => idx == 0 ? "T?t c? tr?ng th�i" : EnumText.Get(v))];
+    public String[] FilterStatusOptions { get; } = [.. StatusValues.Select((v, idx) => idx == 0 ? UiText.Get("employees.filter.status.all", "Tất cả trạng thái") : EnumText.Get(v))];
 
-    public String[] FilterGenderOptions { get; } = [.. GenderValues.Select((v, idx) => idx == 0 ? "T?t c?" : EnumText.Get(v))];
+    public String[] FilterGenderOptions { get; } = [.. GenderValues.Select((v, idx) => idx == 0 ? UiText.Get("common.filter.all", "Tất cả") : EnumText.Get(v))];
 
     public String[] FormGenderOptions { get; } = [.. GenderValues.Select(EnumText.Get)];
 
@@ -138,17 +139,17 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     [
 
-        "T?t c? luong",
+        UiText.Get("employees.salary.filter.all", "Tất cả lương"),
 
-        "C� luong",
+        UiText.Get("employees.salary.filter.has_salary", "Có lương"),
 
-        "Chua c� luong",
+        UiText.Get("employees.salary.filter.no_salary", "Chưa có lương"),
 
-        "Theo th�ng",
+        UiText.Get("employees.salary.filter.monthly", "Theo tháng"),
 
-        "Theo ng�y",
+        UiText.Get("employees.salary.filter.daily", "Theo ngày"),
 
-        "Theo gi?",
+        UiText.Get("employees.salary.filter.hourly", "Theo giờ"),
 
     ];
 
@@ -202,7 +203,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     [ObservableProperty] public partial string PopupMessage { get; set; } = string.Empty;
 
-    [ObservableProperty] public partial string PopupButtonText { get; set; } = "OK";
+    [ObservableProperty] public partial string PopupButtonText { get; set; } = UiText.Get("common.popup.ok", "OK");
 
     public bool IsPopupNotRetry => !IsPopupRetry;
 
@@ -214,9 +215,15 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     [ObservableProperty] public partial EmployeeRow? SelectedEmployee { get; set; }
 
-    public string FormTitle => IsEditing ? "S?a nh�n vi�n" : "Th�m nh�n vi�n";
+    public string FormTitle =>
+        IsEditing
+            ? UiText.Get("employees.form.title.edit", "Sửa nhân viên")
+            : UiText.Get("employees.form.title.create", "Thêm nhân viên");
 
-    public string FormSaveText => IsEditing ? "Luu thay d?i" : "Th�m nh�n vi�n";
+    public string FormSaveText =>
+        IsEditing
+            ? UiText.Get("common.form.save_changes", "Lưu thay đổi")
+            : UiText.Get("employees.form.save.create", "Thêm nhân viên");
 
     [ObservableProperty] public partial string FormName { get; set; } = string.Empty;
 
@@ -275,7 +282,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     {
         public EmployeeDto Dto { get; }
 
-        private string _salaryText = "Chua c�";
+        private string _salaryText = UiText.Get("employees.salary.none", "Chưa có");
 
         public string SalaryText
 
@@ -348,9 +355,15 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
     [ObservableProperty] public partial string? SalaryFormErrorMessage { get; set; }
 
-    public String SalaryFormTitle => IsSalaryEditing ? "Ch?nh s?a luong" : "Thi?t l?p luong";
+    public String SalaryFormTitle =>
+        IsSalaryEditing
+            ? UiText.Get("employees.salary.form.title.edit", "Chỉnh sửa lương")
+            : UiText.Get("employees.salary.form.title.create", "Thiết lập lương");
 
-    public String SalaryFormSaveText => IsSalaryEditing ? "Luu" : "T?o";
+    public String SalaryFormSaveText =>
+        IsSalaryEditing
+            ? UiText.Get("common.form.save", "Lưu")
+            : UiText.Get("common.form.create", "Tạo");
 
     public string SelectedSalaryFormTypeText =>
 
@@ -685,7 +698,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
                     var row = new EmployeeRow(e)
 
                     {
-                        SalaryText = "Chua c�",
+                        SalaryText = UiText.Get("employees.salary.none", "Chưa có"),
 
                         HasSalary = false,
 
@@ -712,7 +725,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             else
 
             {
-                HandleError("T?i danh s�ch th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError(UiText.Get("employees.error.load_failed", "Tải danh sách thất bại"), result.ErrorMessage!, result.Advice);
 
             }
 
@@ -758,9 +771,14 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
         }
 
-        String pick = await page.DisplayActionSheetAsync("Ch?n ch?c v?", "H?y", null, FilterPositionOptions);
+        string cancelText = UiText.Get("common.action.cancel", "Hủy");
+        String pick = await page.DisplayActionSheetAsync(
+            UiText.Get("employees.picker.filter.position", "Chọn chức vụ"),
+            cancelText,
+            null,
+            FilterPositionOptions);
 
-        if (pick == "H?y" || String.IsNullOrWhiteSpace(pick))
+        if (pick == cancelText || String.IsNullOrWhiteSpace(pick))
 
         {
             return;
@@ -787,9 +805,14 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
         }
 
-        String pick = await page.DisplayActionSheetAsync("Ch?n tr?ng th�i", "H?y", null, FilterStatusOptions);
+        string cancelText = UiText.Get("common.action.cancel", "Hủy");
+        String pick = await page.DisplayActionSheetAsync(
+            UiText.Get("employees.picker.filter.status", "Chọn trạng thái"),
+            cancelText,
+            null,
+            FilterStatusOptions);
 
-        if (pick == "H?y" || String.IsNullOrWhiteSpace(pick))
+        if (pick == cancelText || String.IsNullOrWhiteSpace(pick))
 
         {
             return;
@@ -816,9 +839,14 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
         }
 
-        String pick = await page.DisplayActionSheetAsync("Ch?n gi?i t�nh", "H?y", null, FilterGenderOptions);
+        string cancelText = UiText.Get("common.action.cancel", "Hủy");
+        String pick = await page.DisplayActionSheetAsync(
+            UiText.Get("employees.picker.filter.gender", "Chọn giới tính"),
+            cancelText,
+            null,
+            FilterGenderOptions);
 
-        if (pick == "H?y" || String.IsNullOrWhiteSpace(pick))
+        if (pick == cancelText || String.IsNullOrWhiteSpace(pick))
 
         {
             return;
@@ -845,9 +873,14 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
         }
 
-        String pick = await page.DisplayActionSheetAsync("L?c theo luong", "H?y", null, SalaryFilterOptions);
+        string cancelText = UiText.Get("common.action.cancel", "Hủy");
+        String pick = await page.DisplayActionSheetAsync(
+            UiText.Get("employees.picker.filter.salary", "Lọc theo lương"),
+            cancelText,
+            null,
+            SalaryFilterOptions);
 
-        if (pick == "H?y" || String.IsNullOrWhiteSpace(pick))
+        if (pick == cancelText || String.IsNullOrWhiteSpace(pick))
 
         {
             return;
@@ -1042,7 +1075,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             else
 
             {
-                SetFormError(result.ErrorMessage ?? "Thao t�c th?t b?i.");
+                SetFormError(result.ErrorMessage ?? UiText.Get("common.error.action_failed", "Thao tác thất bại."));
 
             }
 
@@ -1144,7 +1177,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
             else
 
             {
-                HandleError("�?i tr?ng th�i th?t b?i", result.ErrorMessage!, result.Advice);
+                HandleError(UiText.Get("employees.error.change_status_failed", "Đổi trạng thái thất bại"), result.ErrorMessage!, result.Advice);
 
             }
 
@@ -1323,7 +1356,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         if (SalaryEmployeeId <= 0)
 
         {
-            SetSalaryFormError("Chua ch?n nh�n vi�n.");
+            SetSalaryFormError(UiText.Get("employees.salary.validation.employee_required", "Chưa chọn nhân viên."));
 
             return;
 
@@ -1332,7 +1365,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         if (SalaryFormSalary < 0)
 
         {
-            SetSalaryFormError("M?c luong ph?i >= 0.");
+            SetSalaryFormError(UiText.Get("employees.salary.validation.amount_non_negative", "Mức lương phải >= 0."));
 
             return;
 
@@ -1341,7 +1374,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         if (SalaryFormUnit < 0)
 
         {
-            SetSalaryFormError("S? don v? ph?i >= 0.");
+            SetSalaryFormError(UiText.Get("employees.salary.validation.unit_non_negative", "Số đơn vị phải >= 0."));
 
             return;
 
@@ -1383,7 +1416,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         {
             await Microsoft.Maui.ApplicationModel.MainThread.InvokeOnMainThreadAsync(() =>
 
-                SetSalaryFormError(result.ErrorMessage ?? "Luu th?t b?i."));
+                SetSalaryFormError(result.ErrorMessage ?? UiText.Get("employees.salary.error.save_failed", "Lưu thất bại.")));
 
             return;
 
@@ -1396,7 +1429,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
         if (SalaryEmployee is not null)
 
         {
-            String text = saved is null ? "Chua c�" : FormatSalaryText(saved);
+            String text = saved is null ? UiText.Get("employees.salary.none", "Chưa có") : FormatSalaryText(saved);
 
             Boolean has = saved is not null;
 
@@ -1465,7 +1498,7 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
             }
 
-            String text = latest is null ? "Chua c�" : FormatSalaryText(latest);
+            String text = latest is null ? UiText.Get("employees.salary.none", "Chưa có") : FormatSalaryText(latest);
 
             Boolean has = latest is not null;
 
@@ -1661,22 +1694,22 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
     {
         ClearFormError();
         if (!EmployeeValidation.IsValidName(FormName))
-        { SetFormError("Tên nhân viên không hợp lệ (2-100 ký tự)."); return false; }
+        { SetFormError(UiText.Get("employees.validation.name_invalid", "Tên nhân viên không hợp lệ (2-100 ký tự).")); return false; }
 
         if (!AccountValidation.IsValidEmail(FormEmail))
-        { SetFormError("Email không hợp lệ."); return false; }
+        { SetFormError(UiText.Get("employees.validation.email_invalid", "Email không hợp lệ.")); return false; }
 
         if (!string.IsNullOrWhiteSpace(FormPhoneNumber))
         {
             if (!AccountValidation.IsValidVietnamPhoneNumber(FormPhoneNumber))
-            { SetFormError("Số điện thoại không hợp lệ."); return false; }
+            { SetFormError(UiText.Get("employees.validation.phone_invalid", "Số điện thoại không hợp lệ.")); return false; }
         }
 
         if (!EmployeeValidation.IsValidDateOfBirth(FormDateOfBirth))
-        { SetFormError("Ngày sinh phải trong quá khứ."); return false; }
+        { SetFormError(UiText.Get("employees.validation.dob_in_past", "Ngày sinh phải trong quá khứ.")); return false; }
 
         if (!EmployeeValidation.IsValidDates(FormStartDate, FormEndDate))
-        { SetFormError("Ngày kết thúc phải sau ngày bắt đầu."); return false; }
+        { SetFormError(UiText.Get("employees.validation.end_after_start", "Ngày kết thúc phải sau ngày bắt đầu.")); return false; }
 
         return true;
     }
@@ -1780,7 +1813,9 @@ public sealed partial class EmployeesViewModel : ObservableObject, System.IDispo
 
         IsPopupRetry = isRetry;
 
-        PopupButtonText = isRetry ? "Th? l?i" : "OK";
+        PopupButtonText = isRetry
+            ? UiText.Get("common.popup.retry", "Thử lại")
+            : UiText.Get("common.popup.ok", "OK");
 
         IsPopupVisible = true;
 

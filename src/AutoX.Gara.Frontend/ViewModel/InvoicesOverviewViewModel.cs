@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
 
 using AutoX.Gara.Domain.Enums.Payments;
+using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Models.Results.Billings;
 
 using AutoX.Gara.Frontend.Helpers;
@@ -42,7 +43,7 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
 
         => _service = service ?? throw new ArgumentNullException(nameof(service));
 
-    public String PageTitle => "H�a don (t?ng)";
+    public String PageTitle => UiText.Get("invoices.overview.page_title", "Hóa đơn (tổng)");
 
     public ObservableCollection<InvoiceRow> Invoices { get; } = [];
 
@@ -64,7 +65,7 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
 
     public String[] PaymentStatusOptions { get; } =
 
-        ["T?t c?", .. PaymentStatusValues.Select(EnumText.Get)];
+        [UiText.Get("common.filter.all", "Tất cả"), .. PaymentStatusValues.Select(EnumText.Get)];
 
     [ObservableProperty] public partial int PickerPaymentStatusIndex { get; set; } = 0;
 
@@ -174,7 +175,10 @@ public sealed partial class InvoicesOverviewViewModel : ObservableObject, IDispo
             if (!result.IsSuccess)
 
             {
-                HandleError("Kh�ng t?i được h�a don", result.ErrorMessage ?? "Thao t�c th?t b?i.", result.Advice);
+                HandleError(
+                    UiText.Get("invoices.overview.error.load_failed", "Không tải được hóa đơn"),
+                    result.ErrorMessage ?? UiText.Get("common.error.action_failed", "Thao tác thất bại."),
+                    result.Advice);
 
                 return;
 

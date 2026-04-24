@@ -3,6 +3,7 @@
 
 
 using AutoX.Gara.Domain.Enums.Repairs;
+using AutoX.Gara.Frontend.Configuration;
 using AutoX.Gara.Frontend.Helpers;
 using AutoX.Gara.Frontend.Models.Results.Billings;
 using AutoX.Gara.Frontend.Services.Repairs;
@@ -61,7 +62,7 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
 
 
 
-        ? $"S?a ch?a {Vehicle.LicensePlate}"
+        ? UiText.Format("repair_orders.page_title_vehicle", "Sửa chữa {0}", Vehicle.LicensePlate)
 
 
 
@@ -69,11 +70,11 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
 
 
 
-            ? $"L?nh s?a ch?a ({Invoice.InvoiceNumber})"
+            ? UiText.Format("repair_orders.page_title_invoice", "Lệnh sửa chữa ({0})", Invoice.InvoiceNumber)
 
 
 
-            : "L?nh s?a ch?a";
+            : UiText.Get("repair_orders.page_title", "Lệnh sửa chữa");
 
 
 
@@ -153,7 +154,7 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
 
 
 
-    [ObservableProperty] public partial string PopupButtonText { get; set; } = "OK";
+    [ObservableProperty] public partial string PopupButtonText { get; set; } = UiText.Get("common.popup.ok", "OK");
 
 
 
@@ -177,11 +178,15 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
 
 
 
-    public string FormTitle => IsEditing ? "S?a l?nh" : "T?o l?nh";
+    public string FormTitle => IsEditing
+        ? UiText.Get("repair_orders.form.title.edit", "Sửa lệnh")
+        : UiText.Get("repair_orders.form.title.create", "Tạo lệnh");
 
 
 
-    public string FormSaveText => IsEditing ? "Luu" : "T?o";
+    public string FormSaveText => IsEditing
+        ? UiText.Get("common.form.save", "Lưu")
+        : UiText.Get("common.form.create", "Tạo");
 
 
 
@@ -253,11 +258,11 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
 
 
 
-        ? "X�c nh?n x�a"
+        ? UiText.Get("repair_orders.delete_confirm.title", "Xác nhận xóa")
 
 
 
-        : $"X�a l?nh #{SelectedRepairOrder.RepairOrderId}";
+        : UiText.Format("repair_orders.delete_confirm.message_with_id", "Xóa lệnh #{0}", SelectedRepairOrder.RepairOrderId);
 
 
 
@@ -461,7 +466,10 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
 
             {
 
-                HandleError("Kh�ng t?i được l?nh s?a ch?a", result.ErrorMessage ?? "Thao t�c th?t b?i.", result.Advice);
+                HandleError(
+                    UiText.Get("repair_orders.error.load_failed", "Không tải được lệnh sửa chữa"),
+                    result.ErrorMessage ?? UiText.Get("common.error.action_failed", "Thao tác thất bại."),
+                    result.Advice);
 
 
 
@@ -811,7 +819,10 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
 
             {
 
-                HandleError("Luu th?t b?i", result.ErrorMessage ?? "Thao t�c th?t b?i.", result.Advice);
+                HandleError(
+                    UiText.Get("repair_orders.error.save_failed", "Lưu thất bại"),
+                    result.ErrorMessage ?? UiText.Get("common.error.action_failed", "Thao tác thất bại."),
+                    result.Advice);
 
 
 
@@ -931,7 +942,10 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
 
             {
 
-                HandleError("X�a th?t b?i", result.ErrorMessage ?? "Thao t�c th?t b?i.", result.Advice);
+                HandleError(
+                    UiText.Get("repair_orders.error.delete_failed", "Xóa thất bại"),
+                    result.ErrorMessage ?? UiText.Get("common.error.action_failed", "Thao tác thất bại."),
+                    result.Advice);
 
 
 
@@ -1187,7 +1201,9 @@ public sealed partial class RepairOrdersViewModel(RepairOrderService service) : 
 
 
 
-        PopupButtonText = isRetry ? "Th? l?i" : "OK";
+        PopupButtonText = isRetry
+            ? UiText.Get("common.popup.retry", "Thử lại")
+            : UiText.Get("common.popup.ok", "OK");
 
 
 
