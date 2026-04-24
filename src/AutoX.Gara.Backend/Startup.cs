@@ -25,9 +25,7 @@ using Nalix.Logging;
 using Nalix.Logging.Sinks;
 using Nalix.Network.Hosting;
 using System;
-
 namespace AutoX.Gara.Backend;
-
 /// <summary>
 /// Quan ly cau hinh khoi dong cho he thong Backend.
 /// Tach biet logic khoi tao giup Program.cs chi tap trung vao luong thuc thi chinh.
@@ -39,21 +37,16 @@ public static class Startup
         // 1. Database & Persistence Layer
         var dbFactory = new AutoXDbContextFactory();
         var sessionFactory = new DataSessionFactory(dbFactory);
-
         InstanceManager.Instance.Register<AutoXDbContextFactory>(dbFactory);
         InstanceManager.Instance.Register<IDataSessionFactory>(sessionFactory);
-
         // Create a logger factory for typed loggers
         using var loggerFactory = LoggerFactory.Create(builder => { });
-
         // 2. Application Services Registration
         RegisterServices(sessionFactory, loggerFactory);
-
         // 3. Build Network Application with Hosting API (v12.1.0)
         var packetRegistry = InstanceManager.Instance.GetExistingInstance<IPacketRegistry>()
             ?? throw new InvalidOperationException("IPacketRegistry is not registered. Ensure AppConfig.Register() is called before Startup.Configure().");
         var inst = InstanceManager.Instance;
-
         return NetworkApplication.CreateBuilder()
             .ConfigureLogging(logger)
             .ConfigurePacketRegistry(packetRegistry)
@@ -88,7 +81,6 @@ public static class Startup
             .AddTcp<AutoXProtocol>(57206)
             .Build();
     }
-
     private static void RegisterServices(IDataSessionFactory factory, ILoggerFactory loggerFactory)
     {
         var inst = InstanceManager.Instance;
@@ -106,13 +98,9 @@ public static class Startup
         inst.Register<RepairTaskAppService>(new RepairTaskAppService(factory, loggerFactory.CreateLogger<RepairTaskAppService>()));
         inst.Register<RepairOrderItemAppService>(new RepairOrderItemAppService(factory, loggerFactory.CreateLogger<RepairOrderItemAppService>()));
     }
-
     public static ILogger CreateBootstrapLogger() => new NLogix(cfg => cfg.RegisterTarget(new BatchConsoleLogTarget(t => t.EnableColors = true)));
-
     private static T ResolveRequired<T>(InstanceManager inst)
         where T : class
         => inst.GetExistingInstance<T>()
         ?? throw new InvalidOperationException($"Service '{typeof(T).FullName}' is not registered in InstanceManager.");
 }
-
-

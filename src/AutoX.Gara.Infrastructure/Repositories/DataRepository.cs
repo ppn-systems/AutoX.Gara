@@ -1,14 +1,11 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 using AutoX.Gara.Domain.Abstractions;
 using AutoX.Gara.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
 namespace AutoX.Gara.Infrastructure.Repositories;
-
 /// <summary>
 /// Repository chung cho t?t c? entity.
 /// S? d?ng Entity Framework Core.
@@ -17,16 +14,11 @@ namespace AutoX.Gara.Infrastructure.Repositories;
 public class DataRepository<T>(AutoXDbContext context) where T : class
 {
     #region Fields
-
     private readonly AutoXDbContext _context = context
         ?? throw new System.ArgumentNullException(nameof(context));
-
     private readonly DbSet<T> _dbSet = context.Set<T>();
-
     #endregion Fields
-
     #region Query APIs
-
     /// <summary>
     /// Tr? v? <see cref="IQueryable{T}"/> c?a DbSet d? caller t? compose
     /// th�m filter / sort / projection tru?c khi th?c thi.
@@ -35,7 +27,6 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
     /// </para>
     /// </summary>
     public IQueryable<T> AsQueryable() => _dbSet.AsNoTracking().AsQueryable();
-
     /// <summary>
     /// L?y t?t c? entity theo trang (kh�ng filter, kh�ng sort).
     /// </summary>
@@ -50,7 +41,6 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
                  .Skip((pageNumber - 1) * pageSize)
                  .Take(pageSize)
                  .ToListAsync(cancellationToken);
-
     /// <summary>
     /// Th?c thi ph�n trang tr�n m?t <see cref="IQueryable{T}"/> d� được compose s?n
     /// (filter + sort �p d?ng b�n ngo�i).
@@ -79,14 +69,12 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
         => query.Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
-
     /// <summary>
     /// �?m t?ng s? entity trong to�n b? b?ng (kh�ng filter).
     /// </summary>
     public System.Threading.Tasks.Task<int> CountAsync(
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.CountAsync(cancellationToken);
-
     /// <summary>
     /// �?m s? entity kh?p v?i m?t <see cref="IQueryable{T}"/> d� được compose s?n.
     /// D�ng d? l?y <c>TotalCount</c> tru?c khi ph�n trang.
@@ -97,7 +85,6 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
         IQueryable<T> query,
         System.Threading.CancellationToken cancellationToken = default)
         => query.CountAsync(cancellationToken);
-
     /// <summary>
     /// Ki?m tra c� entity n�o th?a m�n di?u ki?n kh�ng.
     /// </summary>
@@ -105,7 +92,6 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
         System.Linq.Expressions.Expression<System.Func<T, bool>> predicate,
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.AnyAsync(predicate, cancellationToken);
-
     /// <summary>
     /// L?y entity theo kh�a ch�nh.
     /// </summary>
@@ -118,7 +104,6 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
         => _dbSet.FindAsync([id], cancellationToken).AsTask();
     // ? Fix bug: cancellationToken KH�NG được nh�t v�o m?ng keyValues.
     //   FindAsync([id, ct]) khi?n EF d�ng ct nhu m?t composite key � runtime error.
-
     /// <summary>
     /// L?y danh s�ch entity v?i filter + sort + include + ph�n trang t�y ch?n.
     /// </summary>
@@ -137,30 +122,25 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
         System.Threading.CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet.AsQueryable();
-
         if (filter is not null)
         {
             query = query.Where(filter);
         }
-
         foreach (string prop in includeProperties.Split(
             ',', StringSplitOptions.RemoveEmptyEntries))
         {
             query = query.Include(prop.Trim());
         }
-
         if (orderBy is not null)
         {
             query = orderBy(query);
         }
-
         return query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
-
     /// <summary>
     /// T�m entity d?u ti�n th?a m�n predicate, ho?c <c>null</c>.
     /// </summary>
@@ -168,26 +148,20 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
         System.Linq.Expressions.Expression<System.Func<T, bool>> predicate,
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.AsNoTracking().FirstOrDefaultAsync(predicate, cancellationToken);
-
     #endregion Query APIs
-
     #region Modification APIs
-
     /// <summary>Th�m m?i m?t entity.</summary>
     public System.Threading.Tasks.Task AddAsync(
         T entity,
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.AddAsync(entity, cancellationToken).AsTask();
-
     /// <summary>Th�m m?i nhi?u entity.</summary>
     public System.Threading.Tasks.Task AddRangeAsync(
         IEnumerable<T> entities,
         System.Threading.CancellationToken cancellationToken = default)
         => _dbSet.AddRangeAsync(entities, cancellationToken);
-
     /// <summary>C?p nh?t m?t entity (dua v�o tr?ng th�i Modified).</summary>
     public void Update(T entity) => _dbSet.Update(entity);
-
     /// <summary>X�a entity theo kh�a ch�nh.</summary>
     public async System.Threading.Tasks.Task DeleteAsync(
         System.Object id,
@@ -200,7 +174,6 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
             Delete(entity);
         }
     }
-
     /// <summary>X�a m?t entity d� được tracked.</summary>
     public void Delete(T entity)
     {
@@ -210,10 +183,8 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
             _dbSet.Update(entity);
             return;
         }
-
         _dbSet.Remove(entity);
     }
-
     /// <summary>X�a nhi?u entity.</summary>
     public void DeleteRange(IEnumerable<T> entities)
     {
@@ -222,12 +193,9 @@ public class DataRepository<T>(AutoXDbContext context) where T : class
             Delete(entity);
         }
     }
-
     /// <summary>Luu t?t c? thay d?i v�o database.</summary>
     public System.Threading.Tasks.Task<int> SaveChangesAsync(
         System.Threading.CancellationToken cancellationToken = default)
         => _context.SaveChangesAsync(cancellationToken);
-
     #endregion Modification APIs
 }
-

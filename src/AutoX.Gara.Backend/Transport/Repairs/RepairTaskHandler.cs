@@ -1,7 +1,6 @@
 using AutoX.Gara.Application.Repairs;
 using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 using AutoX.Gara.Domain.Entities.Repairs;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
@@ -13,10 +12,7 @@ using Nalix.Common.Security;
 using Nalix.Framework.DataFrames.Pooling;
 using System;
 using System.Threading.Tasks;
-
-
 namespace AutoX.Gara.Backend.Transport.Repairs;
-
 /// <summary>
 /// Packet Handler for repair task related operations.
 /// </summary>
@@ -24,7 +20,6 @@ namespace AutoX.Gara.Backend.Transport.Repairs;
 public sealed class RepairTaskHandler(RepairTaskAppService repairTaskService)
 {
     private readonly RepairTaskAppService _repairTaskService = repairTaskService ?? throw new ArgumentNullException(nameof(repairTaskService));
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.REPAIR_TASK_GET)]
@@ -32,7 +27,6 @@ public sealed class RepairTaskHandler(RepairTaskAppService repairTaskService)
     {
         RepairTaskQueryRequest packet = context.Packet;
         IConnection connection = context.Connection;
-
         var query = new RepairTaskListQuery(
             packet.Page,
             packet.PageSize,
@@ -52,17 +46,13 @@ public sealed class RepairTaskHandler(RepairTaskAppService repairTaskService)
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         using var lease = PacketPool<RepairTaskQueryResponse>.Rent();
         var response = lease.Value;
         response.TotalCount = result.Data!.totalCount;
         response.SequenceId = packet.SequenceId;
         response.RepairTasks = result.Data.items.ConvertAll(t => MapToPacket(t, 0));
-
         await connection.TCP.SendAsync(response).ConfigureAwait(false);
-
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.REPAIR_TASK_CREATE)]
@@ -70,7 +60,6 @@ public sealed class RepairTaskHandler(RepairTaskAppService repairTaskService)
     {
         RepairTaskDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         var task = new RepairTask
         {
             RepairOrderId = packet.RepairOrderId,
@@ -81,18 +70,14 @@ public sealed class RepairTaskHandler(RepairTaskAppService repairTaskService)
             EstimatedDuration = packet.EstimatedDuration,
             CompletionDate = packet.CompletionDate
         };
-
         var result = await _repairTaskService.CreateAsync(task).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         await connection.TCP.SendAsync(MapToPacket(result.Data!, packet.SequenceId)).ConfigureAwait(false);
-
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.REPAIR_TASK_UPDATE)]
@@ -100,13 +85,11 @@ public sealed class RepairTaskHandler(RepairTaskAppService repairTaskService)
     {
         RepairTaskDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (packet.RepairTaskId == null)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var task = new RepairTask
         {
             Id = packet.RepairTaskId.Value,
@@ -118,18 +101,14 @@ public sealed class RepairTaskHandler(RepairTaskAppService repairTaskService)
             EstimatedDuration = packet.EstimatedDuration,
             CompletionDate = packet.CompletionDate
         };
-
         var result = await _repairTaskService.UpdateAsync(task).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         await connection.TCP.SendAsync(MapToPacket(result.Data!, packet.SequenceId)).ConfigureAwait(false);
-
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
     [PacketOpcode((ushort)OpCommand.REPAIR_TASK_DELETE)]
@@ -137,24 +116,19 @@ public sealed class RepairTaskHandler(RepairTaskAppService repairTaskService)
     {
         RepairTaskDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (packet.RepairTaskId == null)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var result = await _repairTaskService.DeleteAsync(packet.RepairTaskId.Value).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         await context.OkAsync().ConfigureAwait(false);
-
     }
-
     private static RepairTaskDto MapToPacket(RepairTask t, ushort sequenceId) => new()
     {
         SequenceId = sequenceId,
@@ -168,8 +142,4 @@ public sealed class RepairTaskHandler(RepairTaskAppService repairTaskService)
         CompletionDate = t.CompletionDate,
         IsCompleted = t.IsCompleted
     };
-
-
 }
-
-

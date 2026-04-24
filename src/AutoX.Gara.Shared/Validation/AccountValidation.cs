@@ -1,7 +1,5 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 namespace AutoX.Gara.Shared.Validation;
-
 /// <summary>
 /// Validation rules cho credentials � gi?ng server d? early-reject tru?c khi g?i packet.
 /// N?u server thay d?i rules, ch? c?n s?a ? d�y + AccountOps.
@@ -17,12 +15,10 @@ public static class AccountValidation
         {
             return false;
         }
-
         if (username.Length > 50)
         {
             return false;
         }
-
         foreach (System.Char c in username)
         {
             if (!IsAllowedUsernameChar(c))
@@ -30,10 +26,8 @@ public static class AccountValidation
                 return false;
             }
         }
-
         return true;
     }
-
     /// <summary>
     /// Validate password: =8 k� t?, c� hoa, thu?ng, s?, k� t? d?c bi?t.
     /// </summary>
@@ -44,7 +38,6 @@ public static class AccountValidation
         && System.Linq.Enumerable.Any(password, System.Char.IsUpper)
         && System.Linq.Enumerable.Any(password, System.Char.IsDigit)
         && !System.Linq.Enumerable.All(password, System.Char.IsLetterOrDigit);
-
     /// <summary>
     /// Validates an email address using a lightweight algorithm.
     /// </summary>
@@ -68,35 +61,28 @@ public static class AccountValidation
         {
             return false;
         }
-
         if (email.Contains(' '))
         {
             return false;
         }
-
         int atIndex = email.IndexOf('@');
         int dotIndex = email.LastIndexOf('.');
-
         if (atIndex <= 0)
         {
             return false;
         }
-
         if (dotIndex < atIndex + 2)
         {
             return false;
         }
-
         if (dotIndex == email.Length - 1)
         {
             return false;
         }
-
         if (email.IndexOf('@', atIndex + 1) != -1)
         {
             return false;
         }
-
         for (int i = 1; i < email.Length; i++)
         {
             if (email[i] == '.' && email[i - 1] == '.')
@@ -104,16 +90,13 @@ public static class AccountValidation
                 return false;
             }
         }
-
         string local = email[..atIndex];
         string domain = email.Substring(atIndex + 1, dotIndex - atIndex - 1);
         string tld = email[(dotIndex + 1)..];
-
         return !string.IsNullOrWhiteSpace(local)
             && !string.IsNullOrWhiteSpace(domain)
             && !string.IsNullOrWhiteSpace(tld);
     }
-
     /// <summary>
     /// Validates a Vietnamese phone number using a lightweight algorithm.
     /// </summary>
@@ -136,12 +119,10 @@ public static class AccountValidation
         {
             return false;
         }
-
         if (phone.Contains(' '))
         {
             return false;
         }
-
         foreach (System.Char c in phone)
         {
             if (c is < '0' or > '9')
@@ -149,20 +130,16 @@ public static class AccountValidation
                 return false;
             }
         }
-
         if (phone.Length is not 10 and not 11)
         {
             return false;
         }
-
         if (phone[0] != '0')
         {
             return false;
         }
-
         bool prefixOk = false;
         string[] validPrefixes = ["03", "05", "07", "08", "09"];
-
         foreach (string prefix in validPrefixes)
         {
             if (phone.StartsWith(prefix))
@@ -171,10 +148,8 @@ public static class AccountValidation
                 break;
             }
         }
-
         return prefixOk;
     }
-
     private static bool IsAllowedUsernameChar(System.Char c)
         => c is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '_' or '-';
 }

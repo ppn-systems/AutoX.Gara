@@ -1,7 +1,5 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 namespace AutoX.Gara.Shared.Enums;
-
 public enum RepairTaskSortField : byte
 {
     Id = 0,

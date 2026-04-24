@@ -13,16 +13,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using System.Reflection;
-
 namespace AutoX.Gara.Infrastructure.Database;
-
 /// <summary>
 /// DbContext cho ung dung quan ly gara o to.
 /// </summary>
 public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : DbContext(options), IAutoXDbContext
 {
     #region Properties
-
     public DbSet<Part> Parts => Set<Part>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<Account> Accounts => Set<Account>();
@@ -37,39 +34,25 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<RepairOrderItem> RepairOrderItems => Set<RepairOrderItem>();
     public DbSet<SupplierContactPhone> SupplierContactPhones => Set<SupplierContactPhone>();
-
     #endregion Properties
-
     #region Override
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.AddInterceptors(new AuditInterceptor());
-
-
-
         // Performance Monitoring
-
         var loggerFactory = optionsBuilder.Options.FindExtension<CoreOptionsExtension>()?.LoggerFactory;
         if (loggerFactory != null)
         {
             optionsBuilder.AddInterceptors(new DbPerformanceInterceptor(loggerFactory.CreateLogger<DbPerformanceInterceptor>()));
         }
-
         base.OnConfiguring(optionsBuilder);
     }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-
-
         ApplySoftDeleteFilters(modelBuilder);
-
         base.OnModelCreating(modelBuilder);
     }
-
     private static void ApplySoftDeleteFilters(ModelBuilder modelBuilder)
     {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
@@ -86,6 +69,5 @@ public sealed class AutoXDbContext(DbContextOptions<AutoXDbContext> options) : D
             }
         }
     }
-
     #endregion Override
 }

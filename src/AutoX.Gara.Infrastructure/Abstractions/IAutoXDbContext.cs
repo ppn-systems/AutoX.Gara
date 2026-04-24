@@ -8,9 +8,7 @@ using AutoX.Gara.Domain.Entities.Suppliers;
 using Microsoft.EntityFrameworkCore;
 using System.Threading;
 using System.Threading.Tasks;
-
 namespace AutoX.Gara.Infrastructure.Abstractions;
-
 /// <summary>
 /// Dinh nghia abstraction cho DbContext cua he thong gara AutoX.
 /// </summary>
@@ -30,7 +28,6 @@ public interface IAutoXDbContext
     DbSet<Transaction> Transactions { get; }
     DbSet<RepairOrderItem> RepairOrderItems { get; }
     DbSet<SupplierContactPhone> SupplierContactPhones { get; }
-
     int SaveChanges();
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

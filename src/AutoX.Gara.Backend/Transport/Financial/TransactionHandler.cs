@@ -1,7 +1,6 @@
 using AutoX.Gara.Application.Invoices;
 using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
@@ -13,10 +12,7 @@ using Nalix.Common.Security;
 using Nalix.Framework.DataFrames.Pooling;
 using System;
 using System.Threading.Tasks;
-
-
 namespace AutoX.Gara.Backend.Transport.Financial;
-
 /// <summary>
 /// Packet Handler for financial transaction related operations.
 /// </summary>
@@ -24,7 +20,6 @@ namespace AutoX.Gara.Backend.Transport.Financial;
 public sealed class TransactionHandler(TransactionAppService transactionService)
 {
     private readonly TransactionAppService _transactionService = transactionService ?? throw new ArgumentNullException(nameof(transactionService));
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.TRANSACTION_GET)]
@@ -32,7 +27,6 @@ public sealed class TransactionHandler(TransactionAppService transactionService)
     {
         TransactionQueryRequest packet = context.Packet;
         IConnection connection = context.Connection;
-
         var query = new TransactionListQuery(
             packet.Page,
             packet.PageSize,
@@ -48,24 +42,19 @@ public sealed class TransactionHandler(TransactionAppService transactionService)
             packet.FilterFromDate,
             packet.FilterToDate
         );
-
         var result = await _transactionService.GetPageAsync(query).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         using var lease = PacketPool<TransactionQueryResponse>.Rent();
         var response = lease.Value;
         response.TotalCount = result.Data!.totalCount;
         response.SequenceId = packet.SequenceId;
         response.Transactions = result.Data.items.ConvertAll(t => MapToPacket(t, 0));
-
         await connection.TCP.SendAsync(response).ConfigureAwait(false);
-
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.TRANSACTION_CREATE)]
@@ -73,13 +62,11 @@ public sealed class TransactionHandler(TransactionAppService transactionService)
     {
         TransactionDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (packet.InvoiceId <= 0 || packet.Amount <= 0)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var transaction = new Transaction
         {
             InvoiceId = packet.InvoiceId,
@@ -91,18 +78,14 @@ public sealed class TransactionHandler(TransactionAppService transactionService)
             Description = packet.Description ?? string.Empty,
             IsReversed = packet.IsReversed
         };
-
         var result = await _transactionService.CreateAsync(transaction).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         await connection.TCP.SendAsync(MapToPacket(result.Data!, packet.SequenceId)).ConfigureAwait(false);
-
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
     [PacketOpcode((ushort)OpCommand.TRANSACTION_DELETE)]
@@ -110,24 +93,19 @@ public sealed class TransactionHandler(TransactionAppService transactionService)
     {
         TransactionDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (packet.TransactionId == null)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var result = await _transactionService.DeleteAsync(packet.TransactionId.Value).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         await context.OkAsync().ConfigureAwait(false);
-
     }
-
     private static TransactionDto MapToPacket(Transaction t, ushort sequenceId) => new()
     {
         SequenceId = sequenceId,
@@ -141,8 +119,4 @@ public sealed class TransactionHandler(TransactionAppService transactionService)
         Description = t.Description,
         IsReversed = t.IsReversed
     };
-
-
 }
-
-

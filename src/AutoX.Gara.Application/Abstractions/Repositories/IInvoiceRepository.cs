@@ -1,9 +1,7 @@
 ﻿using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Shared.Models;
 using System.Collections.Generic;
-
 namespace AutoX.Gara.Application.Abstractions.Repositories;
-
 public interface IInvoiceRepository
 {
     System.Threading.Tasks.Task<Invoice> GetInvoiceWithFullGraphTrackedAsync(int id);

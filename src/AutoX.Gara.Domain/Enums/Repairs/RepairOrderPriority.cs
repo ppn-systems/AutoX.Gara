@@ -1,7 +1,5 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 namespace AutoX.Gara.Domain.Enums.Repairs;
-
 /// <summary>
 /// Mức độ ưu tiên của lệnh sửa chữa.
 /// </summary>

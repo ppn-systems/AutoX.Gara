@@ -1,5 +1,4 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Domain.Entities.Suppliers;
@@ -11,14 +10,11 @@ using Nalix.Common.Networking.Protocols;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
 namespace AutoX.Gara.Application.Inventory;
-
 public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogger<PartAppService> logger)
 {
     private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory ?? throw new ArgumentNullException(nameof(dataSessionFactory));
     private readonly ILogger<PartAppService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task<ServiceResult<(List<Part> items, int totalCount)>> GetPageAsync(PartListQuery query)
     {
         try
@@ -33,24 +29,20 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
             return ServiceResult<(List<Part> items, int totalCount)>.Failure("Lỗi khi lấy danh sách phụ tùng.");
         }
     }
-
     public async Task<ServiceResult<Part>> CreateAsync(Part part)
     {
         if (!PartValidation.IsValidName(part.PartName))
         {
             return ServiceResult<Part>.Failure("Tên phụ tùng không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
         }
-
         if (!PartValidation.IsValidPrice(part.PurchasePrice, part.SellingPrice))
         {
             return ServiceResult<Part>.Failure("Giá bán không được nhỏ hơn giá nhập.", ProtocolReason.VALIDATION_FAILED);
         }
-
         if (!PartValidation.IsValidQuantity(part.InventoryQuantity))
         {
             return ServiceResult<Part>.Failure("Số lượng tồn kho không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
         }
-
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -62,15 +54,12 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
             {
                 return ServiceResult<Part>.Failure("Không tìm thấy nhà cung cấp.", ProtocolReason.NOT_FOUND);
             }
-
             if (await session.Parts.ExistsByPartCodeAsync(part.PartCode).ConfigureAwait(false))
             {
                 return ServiceResult<Part>.Failure("Mã phụ tùng đã tồn tại.", ProtocolReason.ALREADY_EXISTS);
             }
-
             await session.Parts.AddAsync(part).ConfigureAwait(false);
             await session.Parts.SaveChangesAsync().ConfigureAwait(false);
-
             return ServiceResult<Part>.Success(part);
         }
         catch (Exception ex)
@@ -79,24 +68,20 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
             return ServiceResult<Part>.Failure("Lỗi khi tạo phụ tùng mới.");
         }
     }
-
     public async Task<ServiceResult<Part>> UpdateAsync(Part part)
     {
         if (!PartValidation.IsValidName(part.PartName))
         {
             return ServiceResult<Part>.Failure("Tên phụ tùng không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
         }
-
         if (!PartValidation.IsValidPrice(part.PurchasePrice, part.SellingPrice))
         {
             return ServiceResult<Part>.Failure("Giá bán không được nhỏ hơn giá nhập.", ProtocolReason.VALIDATION_FAILED);
         }
-
         if (!PartValidation.IsValidQuantity(part.InventoryQuantity))
         {
             return ServiceResult<Part>.Failure("Số lượng tồn kho không hợp lệ.", ProtocolReason.VALIDATION_FAILED);
         }
-
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -105,7 +90,6 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
             {
                 return ServiceResult<Part>.Failure("Không tìm thấy phụ tùng.", ProtocolReason.NOT_FOUND);
             }
-
             if (existing.SupplierId != part.SupplierId)
             {
                 bool supplierExists = await session.Context.Set<Supplier>()
@@ -117,7 +101,6 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
                     return ServiceResult<Part>.Failure("Không tìm thấy nhà cung cấp mới.", ProtocolReason.NOT_FOUND);
                 }
             }
-
             existing.PartName = part.PartName;
             existing.SupplierId = part.SupplierId;
             existing.Manufacturer = part.Manufacturer;
@@ -128,7 +111,6 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
             existing.DateAdded = part.DateAdded;
             existing.ExpiryDate = part.ExpiryDate;
             existing.IsDiscontinued = part.IsDiscontinued;
-
             if (part.IsDefective && !existing.IsDefective)
             {
                 existing.MarkAsDefective();
@@ -137,10 +119,8 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
             {
                 existing.UnmarkAsDefective();
             }
-
             session.Parts.Update(existing);
             await session.Parts.SaveChangesAsync().ConfigureAwait(false);
-
             return ServiceResult<Part>.Success(existing);
         }
         catch (Exception ex)
@@ -149,7 +129,6 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
             return ServiceResult<Part>.Failure("Lỗi khi cập nhật phụ tùng.");
         }
     }
-
     public async Task<ServiceResult<bool>> DeleteAsync(int partId)
     {
         try
@@ -160,11 +139,9 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
             {
                 return ServiceResult<bool>.Failure("Không tìm thấy phụ tùng.", ProtocolReason.NOT_FOUND);
             }
-
             existing.IsDiscontinued = true;
             session.Parts.Delete(existing);
             await session.Parts.SaveChangesAsync().ConfigureAwait(false);
-
             return ServiceResult<bool>.Success(true);
         }
         catch (Exception ex)
@@ -174,5 +151,3 @@ public sealed class PartAppService(IDataSessionFactory dataSessionFactory, ILogg
         }
     }
 }
-
-

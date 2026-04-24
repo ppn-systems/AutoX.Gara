@@ -4,9 +4,7 @@ using AutoX.Gara.Domain.Enums.Employees;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-
 namespace AutoX.Gara.Domain.Entities.Identity;
-
 /// <summary>
 /// Lớp đại diện cho nhân viên.
 /// </summary>
@@ -14,20 +12,15 @@ namespace AutoX.Gara.Domain.Entities.Identity;
 public class Employee : AuditEntity<int>
 {
     #region Fields
-
     private string _name = string.Empty;
     private string _email = string.Empty;
     private string _address = string.Empty;
     private string _phoneNumber = string.Empty;
-
     private DateTime? _dateOfBirth;
     private DateTime? _endDate;
     private DateTime _startDate = DateTime.UtcNow;
-
     #endregion
-
     #region Identification Properties
-
     /// <summary>
     /// Tên nhân viên.
     /// </summary>
@@ -38,16 +31,12 @@ public class Employee : AuditEntity<int>
         get => _name;
         set => _name = value?.Trim() ?? string.Empty;
     }
-
     #endregion
-
     #region Personal Information Properties
-
     /// <summary>
     /// Giới tính.
     /// </summary>
     public Gender Gender { get; set; } = Gender.None;
-
     /// <summary>
     /// Ngày sinh.
     /// </summary>
@@ -60,15 +49,11 @@ public class Employee : AuditEntity<int>
             {
                 throw new ArgumentException("Date of birth cannot be in the future.");
             }
-
             _dateOfBirth = value;
         }
     }
-
     #endregion
-
     #region Contact Information Properties
-
     /// <summary>
     /// Địa chỉ nhân viên.
     /// </summary>
@@ -78,7 +63,6 @@ public class Employee : AuditEntity<int>
         get => _address;
         set => _address = value?.Trim() ?? string.Empty;
     }
-
     /// <summary>
     /// Số điện thoại nhân viên.
     /// </summary>
@@ -89,7 +73,6 @@ public class Employee : AuditEntity<int>
         get => _phoneNumber;
         set => _phoneNumber = value?.Trim() ?? string.Empty;
     }
-
     /// <summary>
     /// Email nhân viên.
     /// </summary>
@@ -100,16 +83,12 @@ public class Employee : AuditEntity<int>
         get => _email;
         set => _email = value?.Trim() ?? string.Empty;
     }
-
     #endregion
-
     #region Employment Details Properties
-
     /// <summary>
     /// Chức vụ.
     /// </summary>
     public Position Position { get; set; } = Position.None;
-
     /// <summary>
     /// Ngày bắt đầu làm việc.
     /// </summary>
@@ -122,12 +101,10 @@ public class Employee : AuditEntity<int>
             {
                 throw new ArgumentException("Start date cannot be later than end date.");
             }
-
             _startDate = value;
             UpdateStatus();
         }
     }
-
     /// <summary>
     /// Ngày kết thúc hợp đồng.
     /// </summary>
@@ -140,16 +117,12 @@ public class Employee : AuditEntity<int>
             UpdateStatus();
         }
     }
-
     /// <summary>
     /// Trạng thái công việc.
     /// </summary>
     public EmploymentStatus Status { get; set; } = EmploymentStatus.None;
-
     #endregion
-
     #region Methods
-
     /// <summary>
     /// Cập nhật trạng thái công việc.
     /// </summary>
@@ -159,6 +132,5 @@ public class Employee : AuditEntity<int>
             ? EmploymentStatus.Inactive
             : StartDate > DateTime.UtcNow ? EmploymentStatus.Pending : EmploymentStatus.Active;
     }
-
     #endregion
 }

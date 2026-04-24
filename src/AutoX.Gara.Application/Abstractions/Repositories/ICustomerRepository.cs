@@ -1,9 +1,7 @@
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Shared.Models;
 using System.Collections.Generic;
-
 namespace AutoX.Gara.Application.Abstractions.Repositories;
-
 public interface ICustomerRepository
 {
     System.Threading.Tasks.Task<(List<Customer> Items, int TotalCount)> GetPageAsync(CustomerListQuery query, System.Threading.CancellationToken ct = default);

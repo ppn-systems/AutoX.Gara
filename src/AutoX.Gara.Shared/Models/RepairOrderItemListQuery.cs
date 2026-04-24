@@ -1,10 +1,7 @@
 ﻿using AutoX.Gara.Shared.Enums;
 using System;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-
-
 namespace AutoX.Gara.Shared.Models;
-
 public sealed record RepairOrderItemListQuery(
     int Page,
     int PageSize,
@@ -20,7 +17,6 @@ public sealed record RepairOrderItemListQuery(
         {
             throw new ArgumentException("Page must be at least 1.");
         }
-
         if (PageSize < 1)
         {
             throw new ArgumentException("PageSize must be at least 1.");

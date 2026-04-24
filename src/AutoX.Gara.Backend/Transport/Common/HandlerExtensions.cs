@@ -3,10 +3,7 @@ using Nalix.Common.Networking.Protocols;
 using Nalix.Framework.DataFrames.Pooling;
 using Nalix.Framework.DataFrames.SignalFrames;
 using System.Threading.Tasks;
-
-
 namespace AutoX.Gara.Backend.Transport.Common;
-
 public static class HandlerExtensions
 {
     public static async ValueTask FailAsync<TPacket>(this IPacketContext<TPacket> context, ProtocolReason reason)
@@ -19,10 +16,8 @@ public static class HandlerExtensions
             reason,
             ProtocolAdvice.DO_NOT_RETRY,
             context.Packet.SequenceId);
-
         await context.Connection.TCP.SendAsync(directive).ConfigureAwait(false);
     }
-
     public static async ValueTask OkAsync<TPacket>(this IPacketContext<TPacket> context)
         where TPacket : class, IPacket
     {
@@ -33,9 +28,6 @@ public static class HandlerExtensions
             ProtocolReason.NONE,
             ProtocolAdvice.NONE,
             context.Packet.SequenceId);
-
         await context.Connection.TCP.SendAsync(directive).ConfigureAwait(false);
     }
 }
-
-

@@ -3,9 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
-
 namespace AutoX.Gara.Infrastructure.Persistence.Interceptors;
-
 /// <summary>
 /// Interceptor giám sát hiệu năng truy vấn cơ sở dữ liệu.
 /// Log cảnh báo nếu truy vấn vượt quá ngưỡng cho phép (100ms).
@@ -14,7 +12,6 @@ public sealed class DbPerformanceInterceptor(ILogger<DbPerformanceInterceptor> l
 {
     private readonly ILogger _logger = logger;
     private const long SlowQueryThresholdMs = 100;
-
     public override async ValueTask<DbDataReader> ReaderExecutedAsync(
         DbCommand command,
         CommandExecutedEventData eventData,
@@ -27,7 +24,6 @@ public sealed class DbPerformanceInterceptor(ILogger<DbPerformanceInterceptor> l
         }
         return await base.ReaderExecutedAsync(command, eventData, result, cancellationToken).ConfigureAwait(false);
     }
-
     public override DbDataReader ReaderExecuted(DbCommand command, CommandExecutedEventData eventData, DbDataReader result)
     {
         if (eventData.Duration.TotalMilliseconds > SlowQueryThresholdMs)

@@ -1,9 +1,7 @@
 using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Shared.Models;
 using System.Collections.Generic;
-
 namespace AutoX.Gara.Application.Abstractions.Repositories;
-
 public interface ISupplierRepository
 {
     System.Threading.Tasks.Task<(List<Supplier> Items, int TotalCount)> GetPageAsync(SupplierListQuery query, System.Threading.CancellationToken ct = default);

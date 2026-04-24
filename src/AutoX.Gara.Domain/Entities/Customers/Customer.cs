@@ -6,9 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-
 namespace AutoX.Gara.Domain.Entities.Customers;
-
 /// <summary>
 /// Lớp đại diện cho khách hàng.
 /// </summary>
@@ -16,18 +14,14 @@ namespace AutoX.Gara.Domain.Entities.Customers;
 public class Customer : AuditEntity<int>
 {
     #region Fields
-
     private DateTime? _dateOfBirth;
     private string _email = string.Empty;
     private string _address = string.Empty;
     private string _taxCode = string.Empty;
     private string _fullName = string.Empty;
     private string _phoneNumber = string.Empty;
-
     #endregion
-
     #region Identification Properties
-
     /// <summary>
     /// Họ và tên khách hàng.
     /// </summary>
@@ -38,11 +32,8 @@ public class Customer : AuditEntity<int>
         get => _fullName;
         set => _fullName = value?.Trim() ?? string.Empty;
     }
-
     #endregion
-
     #region Contact Information Properties
-
     /// <summary>
     /// Số điện thoại của khách hàng.
     /// </summary>
@@ -55,7 +46,6 @@ public class Customer : AuditEntity<int>
         get => _phoneNumber;
         set => _phoneNumber = value?.Trim() ?? string.Empty;
     }
-
     /// <summary>
     /// Email của khách hàng.
     /// </summary>
@@ -66,7 +56,6 @@ public class Customer : AuditEntity<int>
         get => _email;
         set => _email = value?.Trim() ?? string.Empty;
     }
-
     /// <summary>
     /// Địa chỉ của khách hàng.
     /// </summary>
@@ -76,21 +65,16 @@ public class Customer : AuditEntity<int>
         get => _address;
         set => _address = value?.Trim() ?? string.Empty;
     }
-
     /// <summary>
     /// Giới tính.
     /// </summary>
     public Gender Gender { get; set; } = Gender.None;
-
     /// <summary>
     /// Thông tin bổ sung về khách hàng (nếu có).
     /// </summary>
     public string Notes { get; set; }
-
     #endregion
-
     #region Personal Details Properties
-
     /// <summary>
     /// Sinh nhật của khách hàng.
     /// </summary>
@@ -103,11 +87,9 @@ public class Customer : AuditEntity<int>
             {
                 throw new ArgumentException("Date of birth cannot be in the future.");
             }
-
             _dateOfBirth = value;
         }
     }
-
     /// <summary>
     /// Mã số thuế của khách hàng (nếu có).
     /// </summary>
@@ -117,41 +99,31 @@ public class Customer : AuditEntity<int>
         get => _taxCode;
         set => _taxCode = value?.Trim() ?? string.Empty;
     }
-
     #endregion
-
     #region Membership and Financial Properties
-
     /// <summary>
     /// Loại khách hàng.
     /// </summary>
     public CustomerType? Type { get; set; } = CustomerType.Individual;
-
     /// <summary>
     /// Cấp độ thành viên.
     /// </summary>
     public MembershipLevel? Membership { get; set; } = MembershipLevel.Standard;
-
     /// <summary>
     /// Công nợ của khách hàng.
     /// </summary>
     [Column(TypeName = "decimal(18,2)")]
     [Range(0, double.MaxValue, ErrorMessage = "Debt cannot be negative.")]
     public decimal Debt { get; set; } = 0;
-
     #endregion
-
     #region Related Entities Properties
-
     /// <summary>
     /// Danh sách xe của khách hàng.
     /// </summary>
     public virtual ICollection<Vehicle> Vehicles { get; set; } = [];
-
     /// <summary>
     /// Lịch sử sửa chữa của khách hàng.
     /// </summary>
     public virtual ICollection<RepairOrder> RepairOrders { get; set; } = [];
-
     #endregion
 }

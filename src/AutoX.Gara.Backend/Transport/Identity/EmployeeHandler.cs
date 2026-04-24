@@ -1,7 +1,6 @@
 using AutoX.Gara.Application.Employees;
 using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
@@ -16,9 +15,7 @@ using Nalix.Framework.Memory.Objects;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
 namespace AutoX.Gara.Backend.Transport.Identity;
-
 /// <summary>
 /// Packet Handler for employee related operations.
 /// </summary>
@@ -26,7 +23,6 @@ namespace AutoX.Gara.Backend.Transport.Identity;
 public sealed class EmployeeHandler(EmployeeAppService employeeService)
 {
     private readonly EmployeeAppService _employeeService = employeeService ?? throw new ArgumentNullException(nameof(employeeService));
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.EMPLOYEE_GET)]
@@ -34,31 +30,26 @@ public sealed class EmployeeHandler(EmployeeAppService employeeService)
     {
         EmployeeQueryRequest packet = context.Packet;
         IConnection connection = context.Connection;
-
         var result = await _employeeService.GetPageAsync(BuildListQuery(packet)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         using var lease = PacketPool<EmployeeQueryResponse>.Rent();
         var response = lease.Value;
         response.TotalCount = result.Data!.totalCount;
         response.SequenceId = packet.SequenceId;
         response.Employees = result.Data.items.ConvertAll(e => MapToPacket(e, packet.SequenceId));
-
         try
         {
             await connection.TCP.SendAsync(response).ConfigureAwait(false);
-
         }
         finally
         {
             ReturnDtos(response.Employees);
         }
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
     [PacketOpcode((ushort)OpCommand.EMPLOYEE_CREATE)]
@@ -66,13 +57,11 @@ public sealed class EmployeeHandler(EmployeeAppService employeeService)
     {
         EmployeeDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (string.IsNullOrWhiteSpace(packet.Name))
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var employee = new Employee
         {
             Name = packet.Name,
@@ -86,26 +75,22 @@ public sealed class EmployeeHandler(EmployeeAppService employeeService)
             StartDate = packet.StartDate ?? DateTime.UtcNow,
             EndDate = packet.EndDate
         };
-
         var result = await _employeeService.CreateAsync(employee).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         var confirmed = MapToPacket(result.Data!, packet.SequenceId);
         try
         {
             await connection.TCP.SendAsync(confirmed).ConfigureAwait(false);
-
         }
         finally
         {
             InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(confirmed);
         }
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
     [PacketOpcode((ushort)OpCommand.EMPLOYEE_UPDATE)]
@@ -113,13 +98,11 @@ public sealed class EmployeeHandler(EmployeeAppService employeeService)
     {
         EmployeeDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (packet.EmployeeId == null)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var employee = new Employee
         {
             Id = packet.EmployeeId.Value,
@@ -134,26 +117,22 @@ public sealed class EmployeeHandler(EmployeeAppService employeeService)
             StartDate = packet.StartDate ?? DateTime.UtcNow,
             EndDate = packet.EndDate
         };
-
         var result = await _employeeService.UpdateAsync(employee).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         var confirmed = MapToPacket(result.Data!, packet.SequenceId);
         try
         {
             await connection.TCP.SendAsync(confirmed).ConfigureAwait(false);
-
         }
         finally
         {
             InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(confirmed);
         }
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
     [PacketOpcode((ushort)OpCommand.EMPLOYEE_CHANGE_STATUS)]
@@ -161,27 +140,21 @@ public sealed class EmployeeHandler(EmployeeAppService employeeService)
     {
         EmployeeDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (packet.EmployeeId == null || packet.Status == null)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var result = await _employeeService.ChangeStatusAsync(packet.EmployeeId.Value, packet.Status.Value).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         await context.OkAsync().ConfigureAwait(false);
-
     }
-
     private static EmployeeListQuery BuildListQuery(EmployeeQueryRequest request)
         => new(request.Page, request.PageSize, request.SearchTerm, request.SortBy, request.SortDescending, request.FilterPosition, request.FilterStatus, request.FilterGender);
-
     private static EmployeeDto MapToPacket(Employee e, ushort sequenceId)
     {
         var data = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<EmployeeDto>();
@@ -199,22 +172,16 @@ public sealed class EmployeeHandler(EmployeeAppService employeeService)
         data.EndDate = e.EndDate;
         return data;
     }
-
     private static void ReturnDtos(IEnumerable<EmployeeDto> dtos)
     {
         if (dtos == null)
         {
             return;
         }
-
         var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
         foreach (var dto in dtos)
         {
             pool.Return(dto);
         }
     }
-
-
 }
-
-

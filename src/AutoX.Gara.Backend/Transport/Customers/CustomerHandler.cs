@@ -1,7 +1,6 @@
 using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
@@ -16,10 +15,7 @@ using Nalix.Framework.Memory.Objects;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
-
 namespace AutoX.Gara.Backend.Transport.Customers;
-
 /// <summary>
 /// Packet Handler for customer related operations.
 /// </summary>
@@ -27,7 +23,6 @@ namespace AutoX.Gara.Backend.Transport.Customers;
 public sealed class CustomerHandler(CustomerAppService customerService)
 {
     private readonly CustomerAppService _customerService = customerService ?? throw new ArgumentNullException(nameof(customerService));
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.CUSTOMER_GET)]
@@ -35,20 +30,17 @@ public sealed class CustomerHandler(CustomerAppService customerService)
     {
         CustomerQueryRequest packet = context.Packet;
         IConnection connection = context.Connection;
-
         var result = await _customerService.GetPageAsync(BuildListQuery(packet)).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         using var lease = PacketPool<CustomerQueryResponse>.Rent();
         var response = lease.Value;
         response.TotalCount = result.Data!.totalCount;
         response.SequenceId = packet.SequenceId;
         response.Customers = result.Data.items.ConvertAll(c => MapToPacket(c, 0));
-
         try
         {
             await connection.TCP.SendAsync(response).ConfigureAwait(false);
@@ -58,7 +50,6 @@ public sealed class CustomerHandler(CustomerAppService customerService)
             ReturnDtos(response.Customers);
         }
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.CUSTOMER_CREATE)]
@@ -66,13 +57,11 @@ public sealed class CustomerHandler(CustomerAppService customerService)
     {
         CustomerDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (string.IsNullOrWhiteSpace(packet.Name))
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var customer = new Customer
         {
             Name = packet.Name,
@@ -86,26 +75,22 @@ public sealed class CustomerHandler(CustomerAppService customerService)
             Gender = packet.Gender ?? AutoX.Gara.Domain.Enums.Gender.None,
             Notes = packet.Notes ?? string.Empty
         };
-
         var result = await _customerService.CreateAsync(customer).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         var confirmed = MapToPacket(result.Data!, packet.SequenceId);
         try
         {
             await connection.TCP.SendAsync(confirmed).ConfigureAwait(false);
-
         }
         finally
         {
             ReturnToPool(confirmed);
         }
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.CUSTOMER_UPDATE)]
@@ -113,13 +98,11 @@ public sealed class CustomerHandler(CustomerAppService customerService)
     {
         CustomerDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (packet.CustomerId == null)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var customer = new Customer
         {
             Id = packet.CustomerId.Value,
@@ -134,26 +117,22 @@ public sealed class CustomerHandler(CustomerAppService customerService)
             Gender = packet.Gender ?? AutoX.Gara.Domain.Enums.Gender.None,
             Notes = packet.Notes ?? string.Empty
         };
-
         var result = await _customerService.UpdateAsync(customer).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         var confirmed = MapToPacket(result.Data!, packet.SequenceId);
         try
         {
             await connection.TCP.SendAsync(confirmed).ConfigureAwait(false);
-
         }
         finally
         {
             ReturnToPool(confirmed);
         }
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
     [PacketOpcode((ushort)OpCommand.CUSTOMER_DELETE)]
@@ -161,26 +140,21 @@ public sealed class CustomerHandler(CustomerAppService customerService)
     {
         CustomerDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (packet.CustomerId == null)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var result = await _customerService.DeleteAsync(packet.CustomerId.Value).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         await context.OkAsync().ConfigureAwait(false);
     }
-
     private static CustomerListQuery BuildListQuery(CustomerQueryRequest request)
         => new(request.Page, request.PageSize, request.SearchTerm, request.SortBy, request.SortDescending, request.FilterType, request.FilterMembership);
-
     private static CustomerDto MapToPacket(Customer c, ushort sequenceId)
     {
         var data = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<CustomerDto>();
@@ -200,21 +174,18 @@ public sealed class CustomerHandler(CustomerAppService customerService)
         data.UpdatedAt = c.UpdatedAt;
         return data;
     }
-
     private static void ReturnDtos(IEnumerable<CustomerDto> dtos)
     {
         if (dtos == null)
         {
             return;
         }
-
         var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
         foreach (var dto in dtos)
         {
             pool.Return(dto);
         }
     }
-
     private static void ReturnToPool(CustomerDto dto)
     {
         if (dto != null)
@@ -223,5 +194,3 @@ public sealed class CustomerHandler(CustomerAppService customerService)
         }
     }
 }
-
-

@@ -1,11 +1,8 @@
 ﻿// Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 using AutoX.Gara.Domain.Enums;
 using AutoX.Gara.Domain.Enums.Employees;
 using AutoX.Gara.Shared.Enums;
-
 namespace AutoX.Gara.Shared.Models;
-
 /// <summary>
 /// Value object d�ng g�i c�c tham s? truy v?n danh s�ch nh�n vi�n.
 /// </summary>

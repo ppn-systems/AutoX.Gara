@@ -1,8 +1,6 @@
 using AutoX.Gara.Domain.Entities.Customers;
 using System.Collections.Generic;
-
 namespace AutoX.Gara.Application.Abstractions.Repositories;
-
 public interface IVehicleRepository
 {
     System.Threading.Tasks.Task<Vehicle> GetByIdAsync(int id, System.Threading.CancellationToken ct = default);

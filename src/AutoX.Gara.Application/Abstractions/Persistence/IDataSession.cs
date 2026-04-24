@@ -1,7 +1,5 @@
 ﻿using AutoX.Gara.Application.Abstractions.Repositories;
-
 namespace AutoX.Gara.Application.Abstractions.Persistence;
-
 public interface IDataSession : System.IAsyncDisposable
 {
     Microsoft.EntityFrameworkCore.DbContext Context { get; }
@@ -18,7 +16,6 @@ public interface IDataSession : System.IAsyncDisposable
     ISupplierRepository Suppliers { get; }
     ITransactionRepository Transactions { get; }
     IVehicleRepository Vehicles { get; }
-
     void ClearTracker();
     System.Threading.Tasks.Task<int> SaveChangesAsync(System.Threading.CancellationToken ct = default);
     System.Threading.Tasks.Task<IDataSessionTransaction> BeginTransactionAsync(System.Threading.CancellationToken ct = default);

@@ -1,9 +1,7 @@
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Shared.Models;
 using System.Collections.Generic;
-
 namespace AutoX.Gara.Application.Abstractions.Repositories;
-
 public interface IEmployeeRepository
 {
     System.Threading.Tasks.Task<(List<Employee> Items, int TotalCount)> GetPageAsync(EmployeeListQuery query, System.Threading.CancellationToken ct = default);

@@ -1,5 +1,4 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 using AutoX.Gara.Application.Abstractions.Persistence;
 using AutoX.Gara.Application.Employees;
 using AutoX.Gara.Backend.Transport.Common;
@@ -12,10 +11,7 @@ using Nalix.Common.Security;
 using Nalix.Framework.Injection;
 using System;
 using System.Threading.Tasks;
-
-
 namespace AutoX.Gara.Backend.Transport.Auth;
-
 /// <summary>
 /// Packet Handler for account related operations (Login, Register).
 /// </summary>
@@ -24,9 +20,7 @@ public sealed class AccountHandler(AccountAppService accountService, IDataSessio
 {
     private readonly AccountAppService _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
     private readonly IDataSessionFactory _dataSessionFactory = dataSessionFactory ?? throw new ArgumentNullException(nameof(dataSessionFactory));
-
     private const string AttributeUsername = "Username";
-
     [PacketPermission(PermissionLevel.NONE)]
     [PacketOpcode((ushort)OpCommand.LOGIN)]
     [PacketRateLimit(requestsPerSecond: 1, burst: 1)]
@@ -34,24 +28,19 @@ public sealed class AccountHandler(AccountAppService accountService, IDataSessio
     {
         LoginPacket packet = context.Packet;
         IConnection connection = context.Connection;
-
         // Gọi Business Logic Service
         var result = await _accountService.AuthenticateAsync(packet.Account.Username, packet.Account.Password).ConfigureAwait(false);
-
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         // Đăng ký session trong hạ tầng Networking
         connection.Level = Enum.Parse<PermissionLevel>(result.Data!.Role);
         connection.OnCloseEvent += OnAccountLogout;
         connection.Attributes[AttributeUsername] = result.Data.Username;
-
         await context.OkAsync().ConfigureAwait(false);
     }
-
     [PacketPermission(PermissionLevel.NONE)]
     [PacketRateLimit(requestsPerSecond: 1, burst: 1)]
     [PacketOpcode((ushort)OpCommand.REGISTER)]
@@ -59,29 +48,22 @@ public sealed class AccountHandler(AccountAppService accountService, IDataSessio
     {
         LoginPacket packet = context.Packet;
         IConnection connection = context.Connection;
-
         var result = await _accountService.RegisterAsync(packet.Account.Username, packet.Account.Password).ConfigureAwait(false);
-
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         await context.OkAsync().ConfigureAwait(false);
     }
-
     private async void OnAccountLogout(object sender, IConnectEventArgs args)
     {
         args.Connection.OnCloseEvent -= OnAccountLogout;
-
         if (!args.Connection.Attributes.TryGetValue(AttributeUsername, out object val) || val is not string username || string.IsNullOrEmpty(username))
         {
             return;
         }
-
         args.Connection.Attributes.Remove(AttributeUsername);
-
         try
         {
             await using var session = _dataSessionFactory.Create();
@@ -98,5 +80,3 @@ public sealed class AccountHandler(AccountAppService accountService, IDataSessio
         }
     }
 }
-
-

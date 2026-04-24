@@ -3,9 +3,7 @@ using Nalix.Common.Security;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-
 namespace AutoX.Gara.Domain.Entities.Identity;
-
 /// <summary>
 /// Entity đại diện cho tài khoản người dùng trong hệ thống.
 /// </summary>
@@ -13,13 +11,9 @@ namespace AutoX.Gara.Domain.Entities.Identity;
 public sealed class Account : AuditEntity<int>
 {
     #region Fields
-
     private string _username = string.Empty;
-
     #endregion Fields
-
     #region Identification Properties
-
     /// <summary>
     /// Tên đăng nhập (username). Dùng để đăng nhập hệ thống.
     /// </summary>
@@ -32,7 +26,6 @@ public sealed class Account : AuditEntity<int>
         get => _username;
         set => _username = value?.Trim().ToLower() ?? string.Empty;
     }
-
     /// <summary>
     /// Chuỗi salt ngẫu nhiên được tạo ra để băm mật khẩu.
     /// Salt giúp bảo vệ mật khẩu khỏi các cuộc tấn công từ điển và rainbow table.
@@ -41,7 +34,6 @@ public sealed class Account : AuditEntity<int>
     [MaxLength(64)]
     [Column(TypeName = "binary(64)")]
     public byte[] Salt { get; set; }
-
     /// <summary>
     /// Mật khẩu sau khi được băm bằng thuật toán PBKDF2.
     /// Giá trị này được lưu trữ trong cơ sở dữ liệu để xác minh mật khẩu khi đăng nhập.
@@ -50,55 +42,41 @@ public sealed class Account : AuditEntity<int>
     [MaxLength(64)]
     [Column(TypeName = "binary(64)")]
     public byte[] Hash { get; set; }
-
     #endregion Identification Properties
-
     #region Role and Status Properties
-
     /// <summary>
     /// Vai trò của tài khoản trong hệ thống.
     /// </summary>
     [Required]
     public PermissionLevel Role { get; set; } = PermissionLevel.NONE;
-
     /// <summary>
     /// Trạng thái hoạt động của tài khoản.
     /// </summary>
     public bool IsActive { get; private set; }
-
     #endregion Role and Status Properties
-
     #region Login Tracking Properties
-
     /// <summary>
     /// Số lần đăng nhập thất bại.
     /// </summary>
     [Required]
     public byte FailedLoginAttempts { get; set; } = 0;
-
     /// <summary>
     /// Thời gian đăng nhập thất bại gần nhất.
     /// </summary>
     public DateTime? LastFailedLogin { get; set; }
-
     /// <summary>
     /// Thời gian đăng nhập gần nhất.
     /// </summary>
     public DateTime? LastLogin { get; set; }
-
     #endregion Login Tracking Properties
-
     #region APIs
-
     /// <summary>
     /// Kích hoạt tài khoản, đặt trạng thái IsActive thành true.
     /// </summary>
     public void Activate() => IsActive = true;
-
     /// <summary>
     /// Hủy hoạt động tài khoản, đặt trạng thái IsActive thành false.
     /// </summary>
     public void Deactivate() => IsActive = false;
-
     #endregion APIs
 }

@@ -3,9 +3,7 @@ using AutoX.Gara.Application.Abstractions.Repositories;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Repositories;
 using System.Threading.Tasks;
-
 namespace AutoX.Gara.Infrastructure.Persistence;
-
 public sealed class DataSession : IDataSession
 {
     private readonly AutoXDbContext _context;
@@ -22,14 +20,11 @@ public sealed class DataSession : IDataSession
     private ISupplierRepository _suppliers = null!;
     private ITransactionRepository _transactions = null!;
     private IVehicleRepository _vehicles = null!;
-
     public DataSession(AutoXDbContext context)
     {
         _context = context;
     }
-
     public Microsoft.EntityFrameworkCore.DbContext Context => _context;
-
     public IAccountRepository Accounts => _accounts ??= new AccountRepository(_context);
     public ICustomerRepository Customers => _customers ??= new CustomerRepository(_context);
     public IEmployeeRepository Employees => _employees ??= new EmployeeRepository(_context);
@@ -43,14 +38,10 @@ public sealed class DataSession : IDataSession
     public ISupplierRepository Suppliers => _suppliers ??= new SupplierRepository(_context);
     public ITransactionRepository Transactions => _transactions ??= new TransactionRepository(_context);
     public IVehicleRepository Vehicles => _vehicles ??= new VehicleRepository(_context);
-
     public void ClearTracker() => _context.ChangeTracker.Clear();
-
     public System.Threading.Tasks.Task<int> SaveChangesAsync(System.Threading.CancellationToken ct = default)
         => _context.SaveChangesAsync(ct);
-
     public async System.Threading.Tasks.Task<IDataSessionTransaction> BeginTransactionAsync(System.Threading.CancellationToken ct = default)
         => new DataSessionTransaction(await _context.Database.BeginTransactionAsync(ct));
-
     public async ValueTask DisposeAsync() => await _context.DisposeAsync();
 }

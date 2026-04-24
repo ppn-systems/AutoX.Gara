@@ -1,7 +1,6 @@
 using AutoX.Gara.Application.Billings;
 using AutoX.Gara.Backend.Transport.Common;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Shared.Enums;
 using AutoX.Gara.Shared.Models;
@@ -17,10 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-
 namespace AutoX.Gara.Backend.Transport.Financial;
-
 /// <summary>
 /// Packet Handler for invoice related operations.
 /// </summary>
@@ -28,7 +24,6 @@ namespace AutoX.Gara.Backend.Transport.Financial;
 public sealed class InvoiceHandler(InvoiceAppService invoiceService)
 {
     private readonly InvoiceAppService _invoiceService = invoiceService ?? throw new ArgumentNullException(nameof(invoiceService));
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.INVOICE_GET)]
@@ -36,34 +31,28 @@ public sealed class InvoiceHandler(InvoiceAppService invoiceService)
     {
         InvoiceQueryRequest packet = context.Packet;
         IConnection connection = context.Connection;
-
         var query = new InvoiceListQuery(packet.Page, packet.PageSize, packet.SearchTerm, packet.SortBy, packet.SortDescending,
             packet.FilterCustomerId <= 0 ? null : packet.FilterCustomerId, packet.FilterPaymentStatus, packet.FilterFromDate, packet.FilterToDate);
-
         var result = await _invoiceService.GetPageAsync(query).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         using var lease = PacketPool<InvoiceQueryResponse>.Rent();
         var response = lease.Value;
         response.TotalCount = result.Data!.totalCount;
         response.SequenceId = packet.SequenceId;
         response.Invoices = result.Data.items.ConvertAll(i => MapToPacket(i, 0));
-
         try
         {
             await connection.TCP.SendAsync(response).ConfigureAwait(false);
-
         }
         finally
         {
             ReturnDtos(response.Invoices);
         }
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.INVOICE_CREATE)]
@@ -71,13 +60,11 @@ public sealed class InvoiceHandler(InvoiceAppService invoiceService)
     {
         InvoiceDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (packet.CustomerId <= 0 || string.IsNullOrWhiteSpace(packet.InvoiceNumber))
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var invoice = new Invoice
         {
             CustomerId = packet.CustomerId,
@@ -89,26 +76,22 @@ public sealed class InvoiceHandler(InvoiceAppService invoiceService)
             Discount = packet.Discount,
             Notes = packet.Notes ?? string.Empty
         };
-
         var result = await _invoiceService.CreateAsync(invoice, packet.RepairOrderId > 0 ? packet.RepairOrderId : null).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         var confirmed = MapToPacket(result.Data!, packet.SequenceId);
         try
         {
             await connection.TCP.SendAsync(confirmed).ConfigureAwait(false);
-
         }
         finally
         {
             ReturnToPool(confirmed);
         }
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.USER)]
     [PacketOpcode((ushort)OpCommand.INVOICE_UPDATE)]
@@ -116,13 +99,11 @@ public sealed class InvoiceHandler(InvoiceAppService invoiceService)
     {
         InvoiceDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (packet.InvoiceId == null)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var invoice = new Invoice
         {
             Id = packet.InvoiceId.Value,
@@ -135,26 +116,22 @@ public sealed class InvoiceHandler(InvoiceAppService invoiceService)
             Discount = packet.Discount,
             Notes = packet.Notes ?? string.Empty
         };
-
         var result = await _invoiceService.UpdateAsync(invoice, packet.RepairOrderId > 0 ? packet.RepairOrderId : null).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         var confirmed = MapToPacket(result.Data!, packet.SequenceId);
         try
         {
             await connection.TCP.SendAsync(confirmed).ConfigureAwait(false);
-
         }
         finally
         {
             ReturnToPool(confirmed);
         }
     }
-
     [PacketEncryption(true)]
     [PacketPermission(PermissionLevel.SUPERVISOR)]
     [PacketOpcode((ushort)OpCommand.INVOICE_DELETE)]
@@ -162,24 +139,19 @@ public sealed class InvoiceHandler(InvoiceAppService invoiceService)
     {
         InvoiceDto packet = context.Packet;
         IConnection connection = context.Connection;
-
         if (packet.InvoiceId == null)
         {
             await context.FailAsync(ProtocolReason.MALFORMED_PACKET).ConfigureAwait(false);
             return;
         }
-
         var result = await _invoiceService.DeleteAsync(packet.InvoiceId.Value).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
             await context.FailAsync(result.Reason).ConfigureAwait(false);
             return;
         }
-
         await context.OkAsync().ConfigureAwait(false);
-
     }
-
     private static InvoiceDto MapToPacket(Invoice invoice, ushort sequenceId)
     {
         var dto = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Get<InvoiceDto>();
@@ -200,31 +172,26 @@ public sealed class InvoiceHandler(InvoiceAppService invoiceService)
         dto.ServiceSubtotal = invoice.ServiceSubtotal;
         dto.PartsSubtotal = invoice.PartsSubtotal;
         dto.IsFullyPaid = invoice.IsFullyPaid;
-
         int roId = 0;
         if (invoice.RepairOrders != null && invoice.RepairOrders.Any())
         {
             roId = invoice.RepairOrders.First().Id;
         }
         dto.RepairOrderId = roId;
-
         return dto;
     }
-
     private static void ReturnDtos(IEnumerable<InvoiceDto> dtos)
     {
         if (dtos == null)
         {
             return;
         }
-
         var pool = InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>();
         foreach (var dto in dtos)
         {
             pool.Return(dto);
         }
     }
-
     private static void ReturnToPool(InvoiceDto dto)
     {
         if (dto != null)
@@ -232,8 +199,4 @@ public sealed class InvoiceHandler(InvoiceAppService invoiceService)
             InstanceManager.Instance.GetOrCreateInstance<ObjectPoolManager>().Return(dto);
         }
     }
-
-
 }
-
-
