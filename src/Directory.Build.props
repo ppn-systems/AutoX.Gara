@@ -18,4 +18,9 @@
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
 	</PropertyGroup>
+
+	<PropertyGroup>
+		<!-- CI/dev environments in this repo are often offline from audit feeds -->
+		<NuGetAudit>false</NuGetAudit>
+	</PropertyGroup>
 </Project>
