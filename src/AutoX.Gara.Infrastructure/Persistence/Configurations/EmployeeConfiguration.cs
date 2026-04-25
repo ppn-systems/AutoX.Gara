@@ -1,7 +1,7 @@
-﻿using AutoX.Gara.Domain.Entities.Identity;
+using AutoX.Gara.Domain.Entities.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-namespace AutoX.Gara.Infrastructure.Persistence.Configurations;
+namespace AutoX.Gara.Infrastructure.Configurations;
 public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 {
     public void Configure(EntityTypeBuilder<Employee> builder)
@@ -16,3 +16,4 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.Property(e => e.Status).HasConversion<byte>();
     }
 }
+

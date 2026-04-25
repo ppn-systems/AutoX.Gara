@@ -1,9 +1,9 @@
-﻿using AutoX.Gara.Domain.Entities.Billings;
+using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Entities.Invoices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-namespace AutoX.Gara.Infrastructure.Persistence.Configurations;
+namespace AutoX.Gara.Infrastructure.Configurations;
 public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
 {
     public void Configure(EntityTypeBuilder<Transaction> builder)
@@ -40,3 +40,4 @@ public class ServiceItemConfiguration : IEntityTypeConfiguration<ServiceItem>
         builder.HasIndex(si => si.Type);
     }
 }
+

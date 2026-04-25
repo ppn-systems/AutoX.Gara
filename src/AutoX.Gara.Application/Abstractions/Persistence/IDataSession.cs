@@ -1,4 +1,4 @@
-﻿using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Application.Repositories;
 namespace AutoX.Gara.Application.Abstractions.Persistence;
 public interface IDataSession : System.IAsyncDisposable
 {
@@ -20,3 +20,4 @@ public interface IDataSession : System.IAsyncDisposable
     System.Threading.Tasks.Task<int> SaveChangesAsync(System.Threading.CancellationToken ct = default);
     System.Threading.Tasks.Task<IDataSessionTransaction> BeginTransactionAsync(System.Threading.CancellationToken ct = default);
 }
+

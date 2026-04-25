@@ -1,7 +1,7 @@
-﻿using AutoX.Gara.Domain.Entities.Customers;
+using AutoX.Gara.Domain.Entities.Customers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-namespace AutoX.Gara.Infrastructure.Persistence.Configurations;
+namespace AutoX.Gara.Infrastructure.Configurations;
 public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
 {
     public void Configure(EntityTypeBuilder<Vehicle> builder)
@@ -15,3 +15,4 @@ public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
         builder.HasIndex(v => new { v.Brand, v.Type, v.Color, v.Year });
     }
 }
+

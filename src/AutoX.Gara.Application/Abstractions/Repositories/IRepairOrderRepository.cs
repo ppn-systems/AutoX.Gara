@@ -1,7 +1,7 @@
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
-namespace AutoX.Gara.Application.Abstractions.Repositories;
+namespace AutoX.Gara.Application.Repositories;
 public interface IRepairOrderRepository
 {
     System.Threading.Tasks.Task<(List<RepairOrder> Items, int TotalCount)> GetPageAsync(RepairOrderListQuery query);
@@ -11,4 +11,5 @@ public interface IRepairOrderRepository
     void Delete(RepairOrder repairOrder);
     System.Threading.Tasks.Task SaveChangesAsync();
 }
+
 

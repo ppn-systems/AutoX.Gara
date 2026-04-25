@@ -1,7 +1,7 @@
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
-namespace AutoX.Gara.Application.Abstractions.Repositories;
+namespace AutoX.Gara.Application.Repositories;
 public interface IInvoiceRepository
 {
     System.Threading.Tasks.Task<Invoice> GetInvoiceWithFullGraphTrackedAsync(int id);
@@ -14,4 +14,5 @@ public interface IInvoiceRepository
     void Delete(Invoice invoice);
     System.Threading.Tasks.Task SaveChangesAsync();
 }
+
 

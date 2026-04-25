@@ -1,7 +1,7 @@
-﻿using AutoX.Gara.Domain.Entities.Billings;
+using AutoX.Gara.Domain.Entities.Billings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-namespace AutoX.Gara.Infrastructure.Persistence.Configurations;
+namespace AutoX.Gara.Infrastructure.Configurations;
 public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
 {
     public void Configure(EntityTypeBuilder<Invoice> builder)
@@ -21,3 +21,4 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.HasIndex(i => i.InvoiceDate);
     }
 }
+

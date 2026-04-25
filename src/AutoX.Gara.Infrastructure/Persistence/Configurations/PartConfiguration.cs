@@ -1,7 +1,7 @@
-﻿using AutoX.Gara.Domain.Entities.Inventory;
+using AutoX.Gara.Domain.Entities.Inventory;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-namespace AutoX.Gara.Infrastructure.Persistence.Configurations;
+namespace AutoX.Gara.Infrastructure.Configurations;
 public class PartConfiguration : IEntityTypeConfiguration<Part>
 {
     public void Configure(EntityTypeBuilder<Part> builder)
@@ -19,3 +19,4 @@ public class PartConfiguration : IEntityTypeConfiguration<Part>
                .OnDelete(DeleteBehavior.Restrict);
     }
 }
+

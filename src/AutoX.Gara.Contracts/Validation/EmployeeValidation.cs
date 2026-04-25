@@ -5,7 +5,7 @@ namespace AutoX.Gara.Contracts.Validation;
 /// </summary>
 public static class EmployeeValidation
 {
-    public static bool IsValidName(string? name) => !string.IsNullOrWhiteSpace(name) && name.Length >= 2 && name.Length <= 100;
+    public static bool IsValidName(string name) => !string.IsNullOrWhiteSpace(name) && name.Length >= 2 && name.Length <= 100;
     public static bool IsValidDates(DateTime startDate, DateTime? endDate) => !endDate.HasValue || endDate.Value > startDate;
     public static bool IsValidDateOfBirth(DateTime? dob)
     {
@@ -17,4 +17,5 @@ public static class EmployeeValidation
         return dob.Value < today && dob.Value > today.AddYears(-100);
     }
 }
+
 

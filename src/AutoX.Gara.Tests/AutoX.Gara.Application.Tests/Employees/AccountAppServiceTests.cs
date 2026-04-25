@@ -1,5 +1,5 @@
 using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Application.Repositories;
 using AutoX.Gara.Application.Employees;
 using AutoX.Gara.Domain.Entities.Identity;
 using FluentAssertions;
@@ -88,3 +88,4 @@ public class AccountAppServiceTests
         return account;
     }
 }
+

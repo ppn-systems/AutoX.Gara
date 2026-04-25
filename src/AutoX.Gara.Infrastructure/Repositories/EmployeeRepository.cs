@@ -1,4 +1,4 @@
-using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Application.Repositories;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Domain.Enums;
@@ -102,4 +102,5 @@ public sealed class EmployeeRepository(AutoXDbContext context) : IEmployeeReposi
         System.Threading.CancellationToken ct = default)
         => _context.SaveChangesAsync(ct);
 }
+
 

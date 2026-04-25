@@ -5,8 +5,8 @@ namespace AutoX.Gara.Contracts.Validation;
 /// </summary>
 public static class SupplierValidation
 {
-    public static bool IsValidName(string? name) => !string.IsNullOrWhiteSpace(name) && name.Length >= 2 && name.Length <= 200;
-    public static bool IsValidTaxCode(string? taxCode)
+    public static bool IsValidName(string name) => !string.IsNullOrWhiteSpace(name) && name.Length >= 2 && name.Length <= 200;
+    public static bool IsValidTaxCode(string taxCode)
     {
         if (string.IsNullOrEmpty(taxCode))
         {
@@ -16,4 +16,5 @@ public static class SupplierValidation
     }
     public static bool IsValidDates(DateTime contractStart, DateTime? contractEnd) => !contractEnd.HasValue || contractEnd.Value >= contractStart;
 }
+
 

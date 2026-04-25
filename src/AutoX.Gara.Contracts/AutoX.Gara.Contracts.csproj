@@ -9,6 +9,8 @@
 		<IsTrimmable>false</IsTrimmable>
 		<Deterministic>true</Deterministic>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<!-- Temporary: keep packet orders starting at 0 while waiting for Nalix analyzer fix -->
+		<NoWarn>$(NoWarn);NALIX022</NoWarn>
 
 		<!-- Versions -->
 		<Version>10.0.0</Version>

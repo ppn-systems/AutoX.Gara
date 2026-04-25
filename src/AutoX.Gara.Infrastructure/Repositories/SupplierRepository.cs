@@ -1,4 +1,4 @@
-using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Application.Repositories;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Entities.Suppliers;
 using AutoX.Gara.Domain.Enums;
@@ -108,4 +108,5 @@ public sealed class SupplierRepository(AutoXDbContext context) : ISupplierReposi
         System.Threading.CancellationToken ct = default)
         => _context.SaveChangesAsync(ct);
 }
+
 

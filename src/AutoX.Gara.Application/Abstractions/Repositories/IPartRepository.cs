@@ -1,7 +1,7 @@
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
-namespace AutoX.Gara.Application.Abstractions.Repositories;
+namespace AutoX.Gara.Application.Repositories;
 public interface IPartRepository
 {
     System.Threading.Tasks.Task<(List<Part> items, int totalCount)> GetPageAsync(PartListQuery query);
@@ -12,4 +12,5 @@ public interface IPartRepository
     void Delete(Part part);
     System.Threading.Tasks.Task SaveChangesAsync();
 }
+
 

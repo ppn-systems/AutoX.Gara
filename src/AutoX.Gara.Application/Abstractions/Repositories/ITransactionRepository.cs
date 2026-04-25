@@ -1,7 +1,7 @@
 using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
-namespace AutoX.Gara.Application.Abstractions.Repositories;
+namespace AutoX.Gara.Application.Repositories;
 public interface ITransactionRepository
 {
     System.Threading.Tasks.Task<(List<Transaction> Items, int TotalCount)> GetPageAsync(TransactionListQuery query);
@@ -11,4 +11,5 @@ public interface ITransactionRepository
     void Delete(Transaction transaction);
     System.Threading.Tasks.Task SaveChangesAsync();
 }
+
 

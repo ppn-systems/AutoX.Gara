@@ -1,7 +1,7 @@
-﻿using AutoX.Gara.Domain.Entities.Suppliers;
+using AutoX.Gara.Domain.Entities.Suppliers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-namespace AutoX.Gara.Infrastructure.Persistence.Configurations;
+namespace AutoX.Gara.Infrastructure.Configurations;
 public class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
 {
     public void Configure(EntityTypeBuilder<Supplier> builder)
@@ -19,3 +19,4 @@ public class SupplierContactPhoneConfiguration : IEntityTypeConfiguration<Suppli
 {
     public void Configure(EntityTypeBuilder<SupplierContactPhone> builder) => builder.HasIndex(sp => new { sp.SupplierId, sp.PhoneNumber });
 }
+

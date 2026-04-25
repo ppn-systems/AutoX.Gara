@@ -1,5 +1,5 @@
 using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Application.Repositories;
 using AutoX.Gara.Application.Customers;
 using AutoX.Gara.Domain.Entities.Customers;
 using FluentAssertions;
@@ -35,3 +35,4 @@ public class CustomerAppServiceTests
         result.ErrorMessage.Should().Be("Email hoặc số điện thoại đã tồn tại.");
     }
 }
+

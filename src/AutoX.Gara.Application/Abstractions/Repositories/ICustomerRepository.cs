@@ -1,7 +1,7 @@
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
-namespace AutoX.Gara.Application.Abstractions.Repositories;
+namespace AutoX.Gara.Application.Repositories;
 public interface ICustomerRepository
 {
     System.Threading.Tasks.Task<(List<Customer> Items, int TotalCount)> GetPageAsync(CustomerListQuery query, System.Threading.CancellationToken ct = default);
@@ -12,4 +12,5 @@ public interface ICustomerRepository
     void Delete(Customer customer);
     System.Threading.Tasks.Task SaveChangesAsync(System.Threading.CancellationToken ct = default);
 }
+
 

@@ -1,4 +1,4 @@
-﻿using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Application.Repositories;
 using AutoX.Gara.Domain.Entities.Identity;
 using AutoX.Gara.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -15,3 +15,4 @@ public sealed class AccountRepository(AutoXDbContext context) : IAccountReposito
     public System.Threading.Tasks.Task SaveChangesAsync(System.Threading.CancellationToken ct = default)
         => _context.SaveChangesAsync(ct);
 }
+

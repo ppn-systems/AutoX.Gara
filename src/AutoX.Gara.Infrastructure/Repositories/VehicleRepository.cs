@@ -1,5 +1,5 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
-using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Application.Repositories;
 using AutoX.Gara.Domain.Entities.Customers;
 using AutoX.Gara.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -74,3 +74,4 @@ public sealed class VehicleRepository(AutoXDbContext context) : IVehicleReposito
     public Task SaveChangesAsync(CancellationToken ct = default)
         => _context.SaveChangesAsync(ct);
 }
+

@@ -1,7 +1,7 @@
-﻿using AutoX.Gara.Domain.Entities.Identity;
+using AutoX.Gara.Domain.Entities.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-namespace AutoX.Gara.Infrastructure.Persistence.Configurations;
+namespace AutoX.Gara.Infrastructure.Configurations;
 public class AccountConfiguration : IEntityTypeConfiguration<Account>
 {
     public void Configure(EntityTypeBuilder<Account> builder)
@@ -12,3 +12,4 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.Hash).HasColumnType("binary(64)");
     }
 }
+

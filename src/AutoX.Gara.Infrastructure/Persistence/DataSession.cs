@@ -1,5 +1,5 @@
 using AutoX.Gara.Application.Abstractions.Persistence;
-using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Application.Repositories;
 using AutoX.Gara.Infrastructure.Database;
 using AutoX.Gara.Infrastructure.Repositories;
 using System.Threading.Tasks;
@@ -45,3 +45,4 @@ public sealed class DataSession : IDataSession
         => new DataSessionTransaction(await _context.Database.BeginTransactionAsync(ct));
     public async ValueTask DisposeAsync() => await _context.DisposeAsync();
 }
+

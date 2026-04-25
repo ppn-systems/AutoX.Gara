@@ -1,8 +1,8 @@
-﻿using AutoX.Gara.Domain.Entities.Invoices;
+using AutoX.Gara.Domain.Entities.Invoices;
 using AutoX.Gara.Domain.Entities.Repairs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-namespace AutoX.Gara.Infrastructure.Persistence.Configurations;
+namespace AutoX.Gara.Infrastructure.Configurations;
 public class RepairOrderConfiguration : IEntityTypeConfiguration<RepairOrder>
 {
     public void Configure(EntityTypeBuilder<RepairOrder> builder)
@@ -54,3 +54,4 @@ public class RepairOrderItemConfiguration : IEntityTypeConfiguration<RepairOrder
         builder.HasIndex(rsp => rsp.PartId);
     }
 }
+

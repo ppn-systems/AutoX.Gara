@@ -1,4 +1,4 @@
-using AutoX.Gara.Application.Abstractions.Repositories;
+using AutoX.Gara.Application.Repositories;
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 using AutoX.Gara.Domain.Entities.Inventory;
 using AutoX.Gara.Infrastructure.Database;
@@ -148,4 +148,5 @@ public sealed class PartRepository
     /// </summary>
     public async Task SaveChangesAsync() => await _dbContext.SaveChangesAsync();
 }
+
 

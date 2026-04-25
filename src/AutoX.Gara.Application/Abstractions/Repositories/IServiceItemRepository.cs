@@ -1,7 +1,7 @@
 using AutoX.Gara.Domain.Entities.Billings;
 using AutoX.Gara.Contracts.Models;
 using System.Collections.Generic;
-namespace AutoX.Gara.Application.Abstractions.Repositories;
+namespace AutoX.Gara.Application.Repositories;
 public interface IServiceItemRepository
 {
     System.Threading.Tasks.Task<(List<ServiceItem> Items, int TotalCount)> GetPageAsync(ServiceItemListQuery query);
@@ -11,4 +11,5 @@ public interface IServiceItemRepository
     void Delete(ServiceItem serviceItem);
     System.Threading.Tasks.Task SaveChangesAsync();
 }
+
 

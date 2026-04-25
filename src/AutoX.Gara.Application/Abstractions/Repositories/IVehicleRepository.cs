@@ -1,6 +1,6 @@
 using AutoX.Gara.Domain.Entities.Customers;
 using System.Collections.Generic;
-namespace AutoX.Gara.Application.Abstractions.Repositories;
+namespace AutoX.Gara.Application.Repositories;
 public interface IVehicleRepository
 {
     System.Threading.Tasks.Task<Vehicle> GetByIdAsync(int id, System.Threading.CancellationToken ct = default);
@@ -11,3 +11,4 @@ public interface IVehicleRepository
     void Delete(Vehicle vehicle);
     System.Threading.Tasks.Task SaveChangesAsync(System.Threading.CancellationToken ct = default);
 }
+
